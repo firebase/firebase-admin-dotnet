@@ -1,0 +1,62 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26124.0
+MinimumVisualStudioVersion = 15.0.26124.0
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebaseAdmin", "FirebaseAdmin\FirebaseAdmin.csproj", "{20D3B9D9-7461-441A-A798-6B124417F7A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebaseAdmin.Tests", "FirebaseAdmin.Tests\FirebaseAdmin.Tests.csproj", "{112BBB08-E51B-422B-864D-023FCCF212D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebaseAdmin.IntegrationTests", "FirebaseAdmin.IntegrationTests\FirebaseAdmin.IntegrationTests.csproj", "{709FCC13-249A-4752-972F-B770B0652919}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Debug|x64.ActiveCfg = Debug|x64
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Debug|x64.Build.0 = Debug|x64
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Debug|x86.ActiveCfg = Debug|x86
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Debug|x86.Build.0 = Debug|x86
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Release|x64.ActiveCfg = Release|x64
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Release|x64.Build.0 = Release|x64
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Release|x86.ActiveCfg = Release|x86
+		{20D3B9D9-7461-441A-A798-6B124417F7A3}.Release|x86.Build.0 = Release|x86
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Debug|x64.ActiveCfg = Debug|x64
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Debug|x64.Build.0 = Debug|x64
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Debug|x86.ActiveCfg = Debug|x86
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Debug|x86.Build.0 = Debug|x86
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Release|x64.ActiveCfg = Release|x64
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Release|x64.Build.0 = Release|x64
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Release|x86.ActiveCfg = Release|x86
+		{112BBB08-E51B-422B-864D-023FCCF212D2}.Release|x86.Build.0 = Release|x86
+		{709FCC13-249A-4752-972F-B770B0652919}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Debug|x64.Build.0 = Debug|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Debug|x86.Build.0 = Debug|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Release|Any CPU.Build.0 = Release|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Release|x64.ActiveCfg = Release|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Release|x64.Build.0 = Release|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Release|x86.ActiveCfg = Release|Any CPU
+		{709FCC13-249A-4752-972F-B770B0652919}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
