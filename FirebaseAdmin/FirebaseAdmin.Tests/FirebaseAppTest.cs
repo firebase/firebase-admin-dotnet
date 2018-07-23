@@ -22,6 +22,11 @@ namespace FirebaseAdmin.Tests
 {
     public class FirebaseAppTest: IDisposable
     {
+        private static readonly AppOptions TestOptions = new AppOptions()
+        {
+            Credential = GoogleCredential.FromAccessToken("token"),
+        };
+
         [Fact]
         public void GetNonExistingDefaultInstance()
         {
@@ -37,11 +42,11 @@ namespace FirebaseAdmin.Tests
         [Fact]
         public void DefaultInstance()
         {
-            var app = FirebaseApp.Create();
+            var app = FirebaseApp.Create(TestOptions);
             Assert.Equal("[DEFAULT]", app.Name);
             Assert.NotNull(app.Options);
             Assert.Same(app, FirebaseApp.DefaultInstance);
-            Assert.Throws<ArgumentException>(() => FirebaseApp.Create());
+            Assert.Throws<ArgumentException>(() => FirebaseApp.Create(TestOptions));
             app.Delete();
             Assert.Null(FirebaseApp.DefaultInstance);
         }
@@ -50,19 +55,19 @@ namespace FirebaseAdmin.Tests
         public void CreateNamedInstance()
         {
             const string name = "MyApp";
-            var app = FirebaseApp.Create(name);
+            var app = FirebaseApp.Create(TestOptions, name);
             Assert.Equal(name, app.Name);
             Assert.NotNull(app.Options);
             Assert.Same(app, FirebaseApp.GetInstance(name));
-            Assert.Throws<ArgumentException>(() => FirebaseApp.Create(name: name));
+            Assert.Throws<ArgumentException>(() => FirebaseApp.Create(TestOptions, name));
             app.Delete();
-            Assert.Null(FirebaseApp.GetInstance(name: name));
+            Assert.Null(FirebaseApp.GetInstance(name));
         }
 
         [Fact]
         public void CreateWithInvalidName()
         {
-            Assert.Throws<ArgumentException>(() => FirebaseApp.Create((String) null));
+            Assert.Throws<ArgumentException>(() => FirebaseApp.Create(name: null));
             Assert.Throws<ArgumentException>(() => FirebaseApp.Create(name: string.Empty));
         }
 
@@ -114,10 +119,27 @@ namespace FirebaseAdmin.Tests
             Assert.NotSame(options, copy);
             Assert.NotSame(credential, copy.Credential);
             Assert.IsType<ServiceAccountCredential>(copy.Credential.UnderlyingCredential);
-            var credentialScopes = (copy.Credential.UnderlyingCredential as ServiceAccountCredential).Scopes;
+            var credentialScopes = (copy.Credential.UnderlyingCredential
+                as ServiceAccountCredential).Scopes;
             foreach (var scope in FirebaseApp.DefaultScopes)
             {
                 Assert.Contains(scope, credentialScopes);
+            }
+        }
+
+        [Fact]
+        public void ApplicationDefaultCredentials()
+        {
+            Environment.SetEnvironmentVariable(
+                "GOOGLE_APPLICATION_CREDENTIALS", "./resources/service_account.json");
+            try
+            {
+                var app = FirebaseApp.Create();
+                Assert.NotNull(app.Options.Credential.ToServiceAccountCredential());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "");
             }
         }
 
@@ -127,19 +149,50 @@ namespace FirebaseAdmin.Tests
             var options = new AppOptions()
             {
                 Credential = GoogleCredential.FromAccessToken("token"),
-                ProjectId = "test-project",
+                ProjectId = "explicit-project",
+            };
+            var app = FirebaseApp.Create(options);
+            Assert.Equal("explicit-project", app.GetProjectId());
+        }
+
+        [Fact]
+        public void GetProjectIdFromServiceAccount()
+        {
+            var options = new AppOptions()
+            {
+                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
             };
             var app = FirebaseApp.Create(options);
             Assert.Equal("test-project", app.GetProjectId());
         }
 
         [Fact]
+        public void GetProjectIdFromEnvironment()
+        {
+            foreach (var name in new string[]{"GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT"})
+            {
+                Environment.SetEnvironmentVariable(name, "env-project");
+                try
+                {
+                    var app = FirebaseApp.Create(TestOptions);
+                    Assert.Equal("env-project", app.GetProjectId());
+                    app.Delete();
+                }
+                finally
+                {
+                    Environment.SetEnvironmentVariable(name, "");    
+                }
+            }
+        }
+
+        [Fact]
         public void GetOrInitService()
         {
-            ServiceFactory<MockService> factory = () => {
+            ServiceFactory<MockService> factory = () =>
+            {
                 return new MockService();
             };
-            var app = FirebaseApp.Create();
+            var app = FirebaseApp.Create(TestOptions);
             var service1 = app.GetOrInit("MockService", factory);
             var service2 = app.GetOrInit("MockService", factory);
             Assert.Same(service1, service2);

@@ -154,9 +154,14 @@ namespace FirebaseAdmin
             {
                 return Options.ProjectId;
             }
+            var projectId = Options.Credential.ToServiceAccountCredential()?.ProjectId;
+            if (!String.IsNullOrEmpty(projectId))
+            {
+                return projectId;
+            }
             foreach (var variableName in new [] {"GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT"})
             {
-                string projectId = Environment.GetEnvironmentVariable(variableName);
+                projectId = Environment.GetEnvironmentVariable(variableName);
                 if (!String.IsNullOrEmpty(projectId))
                 {
                     return projectId;
