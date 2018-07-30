@@ -81,6 +81,10 @@ namespace FirebaseAdmin.Auth
                     }
                 }
             }
+            catch (HttpRequestException e)
+            {
+                throw new FirebaseException("Failed to retrieve latest public keys.", e);
+            }
             finally
             {
                 _lock.Release();

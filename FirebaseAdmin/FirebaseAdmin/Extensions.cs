@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
+using Google.Apis.Json;
 using Google.Apis.Util;
-using System;
 
 namespace FirebaseAdmin
 {
@@ -29,11 +33,13 @@ namespace FirebaseAdmin
         /// <see cref="GoogleCredential"/>. Returns null if the <c>GoogleCredential</c> is not
         /// based on a service account.
         /// </summary>
-        public static ServiceAccountCredential ToServiceAccountCredential(this GoogleCredential credential)
+        public static ServiceAccountCredential ToServiceAccountCredential(
+            this GoogleCredential credential)
         {
             if (credential.UnderlyingCredential is GoogleCredential)
             {
-                return ((GoogleCredential) credential.UnderlyingCredential).ToServiceAccountCredential();
+                return ((GoogleCredential) credential.UnderlyingCredential)
+                    .ToServiceAccountCredential();
             }
             return credential.UnderlyingCredential as ServiceAccountCredential;
         }
@@ -42,9 +48,34 @@ namespace FirebaseAdmin
         /// Creates a default (unauthenticated) <see cref="ConfigurableHttpClient"/> from the
         /// factory.
         /// </summary> 
-        public static ConfigurableHttpClient CreateDefaultHttpClient(this HttpClientFactory clientFactory)
+        public static ConfigurableHttpClient CreateDefaultHttpClient(
+            this HttpClientFactory clientFactory)
         {
             return clientFactory.CreateHttpClient(new CreateHttpClientArgs());
+        }
+
+        /// <summary>
+        /// Creates an authenticated <see cref="ConfigurableHttpClient"/> from the
+        /// factory.
+        /// </summary>
+        public static ConfigurableHttpClient CreateAuthorizedHttpClient(
+            this HttpClientFactory clientFactory, GoogleCredential credential)
+        {
+            var args = new CreateHttpClientArgs();
+            args.Initializers.Add(credential.ThrowIfNull(nameof(credential)));
+            return clientFactory.CreateHttpClient(args);
+        }
+
+        /// <summary>
+        /// Makes a JSON POST request using the given parameters.
+        /// </summary>
+        public static async Task<HttpResponseMessage> PostJsonAsync<T>(
+            this HttpClient client, string requestUri, T body, CancellationToken cancellationToken)
+        {
+            var payload = NewtonsoftJsonSerializer.Instance.Serialize(body);
+            var content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
+            return await client.PostAsync(requestUri, content, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>

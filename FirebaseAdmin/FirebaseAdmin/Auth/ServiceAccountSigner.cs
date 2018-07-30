@@ -47,5 +47,7 @@ namespace FirebaseAdmin.Auth
             var signature = _credential.CreateSignature(data);
             return Task.FromResult(Convert.FromBase64String(signature));
         }
+
+        public void Dispose() {}
     }
 }

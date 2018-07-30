@@ -50,7 +50,7 @@ namespace FirebaseAdmin.Auth
             return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
 
-        private static string Base64Decode(string input)
+        public static string Base64Decode(string input)
         {
             var raw = Base64DecodeToBytes(input);
             return Encoding.UTF8.GetString(raw);

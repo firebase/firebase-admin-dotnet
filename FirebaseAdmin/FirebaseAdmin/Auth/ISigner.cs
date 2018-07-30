@@ -22,7 +22,7 @@ namespace FirebaseAdmin.Auth
     /// Represents an object can be used to cryptographically sign data. Mainly used for signing
     /// custom JWT tokens issued to Firebase users.
     /// </summary>
-    internal interface ISigner
+    internal interface ISigner: IDisposable
     {
         /// <summary>
         /// Returns the ID (client email) of the service account used to sign payloads.

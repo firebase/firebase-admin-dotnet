@@ -60,6 +60,63 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task UseAfterDelete()
+        {
+            var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+            app.Delete();
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await auth.CreateCustomTokenAsync("user"));
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await auth.VerifyIdTokenAsync("user"));
+        }
+
+        [Fact]
+        public async Task CreateCustomToken()
+        {
+            var cred = GoogleCredential.FromFile("./resources/service_account.json");
+            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            var token = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1");
+            VerifyCustomToken(token, "user1", null);
+        }
+
+        [Fact]
+        public async Task CreateCustomTokenWithClaims()
+        {
+            var cred = GoogleCredential.FromFile("./resources/service_account.json");
+            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            var developerClaims = new Dictionary<string, object>()
+            {
+                {"admin", true},
+                {"package", "gold"},
+                {"magicNumber", 42L},
+            };
+            var token = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
+                "user2", developerClaims);
+            VerifyCustomToken(token, "user2", developerClaims);
+        }
+
+        [Fact]
+        public async Task CreateCustomTokenCancel()
+        {
+            var cred = GoogleCredential.FromFile("./resources/service_account.json");
+            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            var canceller = new CancellationTokenSource();
+            canceller.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                async () => await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
+                    "user1", canceller.Token));
+        }
+
+        [Fact]
+        public async Task CreateCustomTokenInvalidCredential()
+        {
+            FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1"));
+        }
+
+        [Fact]
         public async Task VerifyIdTokenNoProjectId()
         {
             FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
@@ -82,6 +139,38 @@ namespace FirebaseAdmin.Auth.Tests
             await Assert.ThrowsAsync<OperationCanceledException>(
                 async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
                     idToken, canceller.Token));
+        }
+
+        private static void VerifyCustomToken(string token, string uid, Dictionary<string, object> claims)
+        {
+            String[] segments = token.Split(".");
+            Assert.Equal(3, segments.Length);
+
+            var payload = JwtUtils.Decode<CustomTokenPayload>(segments[1]);
+            Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Issuer);
+            Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Subject);
+            Assert.Equal(uid, payload.Uid);
+            if (claims == null)
+            {
+                Assert.Null(payload.Claims);
+            }
+            else
+            {
+                Assert.Equal(claims.Count, payload.Claims.Count);
+                foreach (var entry in claims)
+                {
+                    object value;
+                    Assert.True(payload.Claims.TryGetValue(entry.Key, out value));
+                    Assert.Equal(entry.Value, value);
+                }
+            }
+
+            var x509cert = new X509Certificate2(File.ReadAllBytes("./resources/public_cert.pem"));
+            var rsa = (RSA) x509cert.PublicKey.Key;
+            var tokenData = Encoding.UTF8.GetBytes(segments[0] + "." + segments[1]);
+            var signature = JwtUtils.Base64DecodeToBytes(segments[2]);
+            var verified = rsa.VerifyData(tokenData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            Assert.True(verified);
         }
 
         public void Dispose()
