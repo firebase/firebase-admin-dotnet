@@ -83,10 +83,8 @@ namespace FirebaseAdmin.Auth
             string error = null;
             try
             {
-                var signError = new { Error = new { Message = string.Empty } };
-                dynamic result = NewtonsoftJsonSerializer.Instance.Deserialize(
-                    content, signError.GetType());
-                error = result.Error.Message;
+                var result = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobError>(content);
+                error = result?.Error.Message;
             }
             catch (Exception) {} // Ignore any errors encountered while parsing the originl error.
             if (string.IsNullOrEmpty(error))
@@ -148,6 +146,24 @@ namespace FirebaseAdmin.Auth
     {
         [Newtonsoft.Json.JsonProperty("signature")]
         public string Signature { get; set; }
+    }
+
+    /// <summary>
+    /// Represents an error response sent by the remote IAM service.
+    /// </summary>
+    internal class SignBlobError
+    {
+        [Newtonsoft.Json.JsonProperty("error")]
+        public SignBlobErrorDetail Error { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the error details embedded in an IAM error response.
+    /// </summary>
+    internal class SignBlobErrorDetail
+    {
+        [Newtonsoft.Json.JsonProperty("message")]
+        public string Message { get; set; }
     }
 
     /// <summary>

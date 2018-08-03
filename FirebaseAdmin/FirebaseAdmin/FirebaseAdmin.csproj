@@ -1,10 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.5</TargetFramework>
+    <Version>0.1.0</Version>
+    <TargetFrameworks>netstandard1.5;net45</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.5</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <SignAssembly>true</SignAssembly>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Description>
+      Firebase Admin SDK enables server-side .NET developers to integrate Firebase into their
+      services and applications.
+    </Description>
+    <PackageTags>firebase;Google;Cloud</PackageTags>
     <Copyright>Copyright 2018 Google LLC</Copyright>
     <Authors>Google Inc.</Authors>
+    <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Firebase/firebase-admin-dotnet</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Firebase/firebase-admin-dotnet</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
