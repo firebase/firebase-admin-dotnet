@@ -87,7 +87,14 @@ information on using pull requests.
 
 ### Initial Setup
 
-Run the following commands from the command line to get your local environment set up:
+This section explains how to set up a development environment on Linux or Mac. Windows users
+should be able to import the solution file (`FirebaseAdmin/FirebaseAdmin.sln`) into Visual
+Studio.
+
+Start by installing [.NET Core](https://www.microsoft.com/net/download) 2.1 or higher. This
+installs the `dotnet` command-line utility into the system.
+
+Run the following commands from the command line to get your local environmentset up:
 
 ```bash
 $ git clone https://github.com/firebase/firebase-admin-dotnet.git
@@ -133,5 +140,6 @@ Here are some highlights of the directory structure and notable source files
   * `FirebaseAdmin.sln/` - Visual Studio solution file for the project.
   * `FirebaseAdmin/` - Source directory.
   * `FirebaseAdmin.Tests/` - Unit tests directory.
-  * `FirebaseAdmin.IntegrationTests/` - Integrarion tests directory. 
+  * `FirebaseAdmin.IntegrationTests/` - Integration tests directory.
+  * `FirebaseAdmin.Snippets/` - Example code snippets for the SDK.
   

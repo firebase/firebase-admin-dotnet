@@ -26,7 +26,13 @@ requests, code review feedback, and also pull requests.
 
 ## Supported Frameworks
 
-We support .NET Core 2.0 and higher.
+Admin .NET SDK supports the following frameworks:
+
+* .NET Framework 4.5+
+* netstandard 1.5, providing .NET Core support
+
+This is consistent with the frameworks supported by other .NET libraries
+associated with Google Cloud Platform.
 
 ## Documentation
 
