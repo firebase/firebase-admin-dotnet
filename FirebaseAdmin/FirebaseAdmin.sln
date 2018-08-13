@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
@@ -8,6 +8,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebaseAdmin.Tests", "FirebaseAdmin.Tests\FirebaseAdmin.Tests.csproj", "{112BBB08-E51B-422B-864D-023FCCF212D2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebaseAdmin.IntegrationTests", "FirebaseAdmin.IntegrationTests\FirebaseAdmin.IntegrationTests.csproj", "{709FCC13-249A-4752-972F-B770B0652919}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebaseAdmin.Snippets", "FirebaseAdmin.Snippets\FirebaseAdmin.Snippets.csproj", "{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,5 +60,17 @@ Global
 		{709FCC13-249A-4752-972F-B770B0652919}.Release|x64.Build.0 = Release|Any CPU
 		{709FCC13-249A-4752-972F-B770B0652919}.Release|x86.ActiveCfg = Release|Any CPU
 		{709FCC13-249A-4752-972F-B770B0652919}.Release|x86.Build.0 = Release|Any CPU
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Debug|x64.ActiveCfg = Debug|x64
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Debug|x64.Build.0 = Debug|x64
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Debug|x86.ActiveCfg = Debug|x86
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Debug|x86.Build.0 = Debug|x86
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Release|x64.ActiveCfg = Release|x64
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Release|x64.Build.0 = Release|x64
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Release|x86.ActiveCfg = Release|x86
+		{2AEFFFD2-2C76-492B-9326-01BC75B8A79B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal
