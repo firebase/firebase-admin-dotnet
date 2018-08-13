@@ -46,14 +46,15 @@ Great, we love hearing how we can improve our products! Share you idea through o
 
 ## <a name="submit"></a>Want to submit a pull request?
 
-Sweet, we'd love to accept your contribution!
+Sweet, we'd love to accept your contribution! In fact this project is mainly
+driven by contributions from our community.
 [Open a new pull request](https://github.com/firebase/firebase-admin-dotnet/pull/new/master) and fill
 out the provided template.
 
 **If you want to implement a new feature, please open an issue with a proposal first so that we can
 figure out if the feature makes sense and how it will work.**
 
-Make sure your changes pass our linter and the tests all pass on your local machine. We've hooked
+Make sure your changes pass our tests on your local machine. We've hooked
 up this repo with continuous integration to double check those things for you.
 
 Most non-trivial changes should include some extra test coverage. If you aren't sure how to add

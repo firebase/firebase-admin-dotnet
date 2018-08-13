@@ -12,17 +12,29 @@
 [Firebase](https://firebase.google.com) provides the tools and infrastructure
 you need to develop apps, grow your user base, and earn money. The Firebase
 Admin .NET SDK enables access to Firebase services from privileged environments
-(such as servers or cloud) in .NET. Currently this SDK provides
-Firebase custom authentication support.
+(such as servers or cloud) in .NET. Currently this SDK provides Firebase custom
+authentication support.
 
-For more information, visit the
+For more information, please visit the
 [Firebase Admin SDK setup guide](https://firebase.google.com/docs/admin/setup/).
 
 ## Contributing
 
+Development of the Admin .NET SDK is mostly driven by our open source community.
+We welcome and encourage contributions from the developer community to further
+improve and expand this project. If you would like a new feature or an API
+added to this SDK, please file an issue and provide a pull request.
+You can use other Firebase Admin SDKs as a reference on how certain features
+should be implemented:
+
+ * [Node.js](https://github.com/firebase/firebase-admin-node)
+ * [Java](https://github.com/firebase/firebase-admin-java)
+ * [Python](https://github.com/firebase/firebase-admin-python)
+ * [Go](https://github.com/firebase/firebase-admin-go)
+
 Please refer to the [CONTRIBUTING page](./CONTRIBUTING.md) for more information
-about how you can contribute to this project. We welcome bug reports, feature
-requests, code review feedback, and also pull requests.
+about how you can contribute to this project. In addition to the pull requests,
+We also welcome bug reports, feature requests, and code review feedback.
 
 ## Supported Frameworks
 
