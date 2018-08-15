@@ -3,7 +3,9 @@
 ## Table of Contents
 
  * [Overview](#overview)
+ * [Installation](#installation)
  * [Contributing](#contributing)
+ * [Supported Frameworks](#supported-frameworks)
  * [Documentation](#documentation)
  * [License and Terms](#license-and-terms)
 
@@ -17,6 +19,21 @@ authentication support.
 
 For more information, please visit the
 [Firebase Admin SDK setup guide](https://firebase.google.com/docs/admin/setup/).
+
+## Installation
+
+The Firebase Admin .NET SDK is available on Nuget as `FirebaseAdmin`. Use the
+following command to install it with the Nuget package manager:
+
+```
+$ Install-Package FirebaseAdmin -Version $VERSION
+```
+
+Or use the `dotnet` command-line utility as follows:
+
+```
+$ dotnet add package FirebaseAdmin --version $VERSION
+```
 
 ## Contributing
 
@@ -50,6 +67,8 @@ associated with Google Cloud Platform.
 
 * [Setup Guide](https://firebase.google.com/docs/admin/setup/)
 * [Authentication Guide](https://firebase.google.com/docs/auth/admin/)
+* [API Reference](https://firebase.google.com/docs/reference/admin/dotnet/)
+* [Release Notes](https://firebase.google.com/support/release-notes/admin/dotnet)
 
 ## License and Terms
 
