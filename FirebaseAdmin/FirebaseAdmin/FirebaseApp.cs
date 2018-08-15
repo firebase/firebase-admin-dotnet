@@ -21,7 +21,12 @@ using Google;
 using Google.Apis.Logging;
 using Google.Apis.Auth.OAuth2;
 
-[assembly: InternalsVisibleToAttribute("FirebaseAdmin.Tests")]
+[assembly: InternalsVisibleToAttribute("FirebaseAdmin.Tests,PublicKey="+
+"002400000480000094000000060200000024000052534131000400000100010081328559eaab41"+
+"055b84af73469863499d81625dcbba8d8decb298b69e0f783a0958cf471fd4f76327b85a7d4b02"+
+"3003684e85e61cf15f13150008c81f0b75a252673028e530ea95d0c581378da8c6846526ab9597"+
+"4c6d0bc66d2462b51af69968a0e25114bde8811e0d6ee1dc22d4a59eee6a8bba4712cba839652f"+
+"badddb9c")]
 namespace FirebaseAdmin 
 {
     internal delegate TResult ServiceFactory<out TResult>() where TResult: IFirebaseService;
