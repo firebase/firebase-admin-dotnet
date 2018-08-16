@@ -7,4 +7,5 @@ matrix:
       mono: none
       script:
        - dotnet build FirebaseAdmin/FirebaseAdmin
+       - dotnet build FirebaseAdmin/FirebaseAdmin.Snippets
        - dotnet test FirebaseAdmin/FirebaseAdmin.Tests
