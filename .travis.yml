@@ -1,0 +1,10 @@
+language: csharp
+solution: FirebaseAdmin/FirebaseAdmin.sln
+
+matrix:
+  include:
+    - dotnet: 2.0.0
+      mono: none
+      script:
+       - dotnet build FirebaseAdmin/FirebaseAdmin
+       - dotnet test FirebaseAdmin/FirebaseAdmin.Tests
