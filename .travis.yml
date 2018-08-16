@@ -3,7 +3,7 @@ solution: FirebaseAdmin/FirebaseAdmin.sln
 
 matrix:
   include:
-    - dotnet: 2.0.0
+    - dotnet: 2.1.0
       mono: none
       script:
        - dotnet build FirebaseAdmin/FirebaseAdmin
