@@ -52,6 +52,12 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 
+CURRENT_DIR=$(pwd)
+SLN_FILE="${CURRENT_DIR}/FirebaseAdmin/FirebaseAdmin.sln"
+if [[ ! -f "${SLN_FILE}" ]]; then
+    echo "[ERROR] Prepare script must be executed from the root of the project."
+    exit 1
+fi
 
 #############################
 #  VALIDATE VERSION NUMBER  #
@@ -103,24 +109,22 @@ fi
 # Ensure the checked out branch is master
 CHECKED_OUT_BRANCH="$(git branch | grep "*" | awk -F ' ' '{print $2}')"
 if [[ $CHECKED_OUT_BRANCH != "master" ]]; then
-    read -p "[WARN] You are on the '${CHECKED_OUT_BRANCH}' branch, not 'master'. Continue? (Y/n) " CONTINUE
-    echo
-
-    if ! [[ $CONTINUE == "Y" ]]; then
-        echo "[INFO] You chose not to continue."
-        exit 1
-    fi
+    read -p "[WARN] You are on the '${CHECKED_OUT_BRANCH}' branch, not 'master'. Continue? (y/N) " CONTINUE
+    case $CONTINUE in
+        y|Y) ;;
+        *) echo "[INFO] You chose not to continue." ;
+           exit 1 ;;
+    esac
 fi
 
 # Ensure the branch does not have local changes
 if [[ $(git status --porcelain) ]]; then
-    read -p "[WARN] Local changes exist in the repo. Continue? (Y/n) " CONTINUE
-    echo
-
-    if ! [[ $CONTINUE == "Y" ]]; then
-        echo "[INFO] You chose not to continue."
-        exit 1
-    fi
+    read -p "[WARN] Local changes exist in the repo. Continue? (y/N) " CONTINUE
+    case $CONTINUE in
+        y|Y) ;;
+        *) echo "[INFO] You chose not to continue." ;
+           exit 1 ;;
+    esac
 fi
 
 
@@ -131,10 +135,12 @@ fi
 HOST=$(uname)
 echo "[INFO] Updating FirebaseAdmin.csproj and CHANGELOG.md"
 sed -i -e "s/<Version>$CUR_VERSION<\/Version>/<Version>$VERSION<\/Version>/" "${PROJECT_FILE}"
-sed -i -e "1 s/# Unreleased//" "CHANGELOG.md"
 
-
-echo -e "# Unreleased\n\n-\n\n# v${VERSION}" | cat - CHANGELOG.md > TEMP_CHANGELOG.md
+awk '
+BEGIN { print "# Unreleased\n\n-\n\n# v'${VERSION}'" }
+/^# Unreleased$/ { next }
+{ print }
+' CHANGELOG.md > TEMP_CHANGELOG.md
 mv TEMP_CHANGELOG.md CHANGELOG.md
 
 

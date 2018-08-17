@@ -16,6 +16,13 @@
 
 set -e
 
+CURRENT_DIR=$(pwd)
+SLN_FILE="${CURRENT_DIR}/FirebaseAdmin/FirebaseAdmin.sln"
+if [[ ! -f "${SLN_FILE}" ]]; then
+    echo "[ERROR] Package script must be executed from the root of the project."
+    exit 1
+fi
+
 if [[ -z "${FrameworkPathOverride}" ]]; then
     echo "[INFO] FrameworkPathOverride not set. Using default."
     FrameworkPathOverride="/usr/lib/mono/4.5/"
