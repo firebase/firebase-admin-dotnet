@@ -26,6 +26,14 @@ using Google.Apis.Json;
 using Google.Apis.Http;
 using Google.Apis.Util;
 
+#if NETSTANDARD1_5 || NETSTANDARD2_0
+using RsaKey = System.Security.Cryptography.RSA;
+#elif NET45
+using RsaKey = System.Security.Cryptography.RSACryptoServiceProvider;
+#else
+#error Unsupported target
+#endif  
+
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
@@ -104,7 +112,14 @@ namespace FirebaseAdmin.Auth
             foreach (var entry in rawKeys)
             {
                 var x509cert = new X509Certificate2(Encoding.UTF8.GetBytes(entry.Value));
-                var rsa = x509cert.GetRSAPublicKey();
+                RsaKey rsa;
+#if NETSTANDARD1_5 || NETSTANDARD2_0
+                rsa = x509cert.GetRSAPublicKey();
+#elif NET45
+                rsa = (RSACryptoServiceProvider) x509cert.PublicKey.Key;
+#else
+#error Unsupported target
+#endif                
                 builder.Add(new PublicKey(entry.Key, rsa));
             }
             return builder.ToImmutableList();
