@@ -1,5 +1,7 @@
 version: '1.0.{build}'
-image: Visual Studio 2017
+image:
+   - Visual Studio 2017
+   - Ubuntu
 init:
   # Good practise, because Windows line endings are different from Unix/Linux ones
   - cmd: git config --global core.autocrlf true
@@ -11,14 +13,11 @@ before_build:
   # Display minimal restore text
   - cmd: dotnet restore FirebaseAdmin/FirebaseAdmin.sln --verbosity m
 build_script:
-  # output will be in ./src/bin/debug/netcoreapp1.1/publish
-  - cmd: dotnet build FirebaseAdmin/FirebaseAdmin
-  - cmd: dotnet build FirebaseAdmin/FirebaseAdmin.Snippets
+  - cmd: dotnet build FirebaseAdmin
 after_build:
   # For once the build has completed
 clone_depth: 1
 test_script:
-  # restore packages for our unit tests
   - cmd: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
 on_finish :
   # any cleanup in here
