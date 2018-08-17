@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Security.Cryptography;
+#if NETSTANDARD1_5 || NETSTANDARD2_0
+using RsaKey = System.Security.Cryptography.RSA;
+#elif NET45
+using RsaKey = System.Security.Cryptography.RSACryptoServiceProvider;
+#else
+#error Unsupported target
+#endif  
 
 namespace FirebaseAdmin.Auth
 {
@@ -30,9 +36,9 @@ namespace FirebaseAdmin.Auth
         /// A <see cref="System.Security.Cryptography.RSA"/> instance containing the contents of
         /// the public key.
         /// </summary>
-        public RSA RSA { get; }
+        public RsaKey RSA { get; }
 
-        public PublicKey(string keyId, RSA rsa)
+        public PublicKey(string keyId, RsaKey rsa)
         {
             Id = keyId;
             RSA = rsa;

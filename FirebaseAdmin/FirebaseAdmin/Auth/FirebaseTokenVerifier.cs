@@ -40,6 +40,9 @@ namespace FirebaseAdmin.Auth
         private static readonly IReadOnlyList<string> StandardClaims =
             ImmutableList.Create<string>("iss", "aud", "exp", "iat", "sub", "uid");
 
+        // See http://oid-info.com/get/2.16.840.1.101.3.4.2.1
+        private const string Sha256Oid = "2.16.840.1.101.3.4.2.1";
+
         public string ProjectId { get; }
         private readonly string _shortName;
         private readonly string _articledShortName;
@@ -172,8 +175,17 @@ namespace FirebaseAdmin.Auth
             var keys = await _keySource.GetPublicKeysAsync(cancellationToken)
                 .ConfigureAwait(false);
             var verified = keys.Any(key =>
-                key.Id == keyId && key.RSA.VerifyHash(
-                    hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1));
+            {
+#if NETSTANDARD1_5 || NETSTANDARD2_0                
+                return key.Id == keyId && key.RSA.VerifyHash(
+                    hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#elif NET45
+                return key.Id == keyId && 
+                    ((RSACryptoServiceProvider) key.RSA).VerifyHash(hash, Sha256Oid, signature);
+#else
+#error Unsupported target
+#endif  
+            });
             if (!verified)
             {
                 throw new FirebaseException($"Failed to verify {_shortName} signature.");
