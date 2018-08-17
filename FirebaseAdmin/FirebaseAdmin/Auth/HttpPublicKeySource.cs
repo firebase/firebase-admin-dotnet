@@ -115,7 +115,7 @@ namespace FirebaseAdmin.Auth
 #if NETSTANDARD1_5 || NETSTANDARD2_0
                 rsa = x509cert.GetRSAPublicKey();
 #elif NET45
-                rsa = x509cert.PublicKey.Key;
+                rsa = (RSACryptoServiceProvider) x509cert.PublicKey.Key;
 #else
 #error Unsupported target
 #endif                
