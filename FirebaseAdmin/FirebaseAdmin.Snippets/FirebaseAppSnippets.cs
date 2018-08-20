@@ -13,9 +13,11 @@
 // limitations under the License.
 
 using System;
+// [START using_namespace_decl]
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
+// [END using_namespace_decl]
 
 namespace FirebaseAdmin.Snippets
 {
