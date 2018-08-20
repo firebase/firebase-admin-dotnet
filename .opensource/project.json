@@ -1,7 +1,7 @@
 {
   "name": "Firebase Admin SDK - .NET",
   "platforms": [
-      ".NET",
+      "DotNet",
       "Admin"
   ],
   "content": "README.md",
