@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -25,6 +24,14 @@ using System.Threading.Tasks;
 using Google.Apis.Json;
 using Google.Apis.Http;
 using Google.Apis.Util;
+
+#if NETSTANDARD1_5 || NETSTANDARD2_0
+using RSAKey = System.Security.Cryptography.RSA;
+#elif NET45
+using RSAKey = System.Security.Cryptography.RSACryptoServiceProvider;
+#else
+#error Unsupported target
+#endif
 
 namespace FirebaseAdmin.Auth
 {
@@ -104,7 +111,14 @@ namespace FirebaseAdmin.Auth
             foreach (var entry in rawKeys)
             {
                 var x509cert = new X509Certificate2(Encoding.UTF8.GetBytes(entry.Value));
-                var rsa = x509cert.GetRSAPublicKey();
+                RSAKey rsa;
+#if NETSTANDARD1_5 || NETSTANDARD2_0
+                rsa = x509cert.GetRSAPublicKey();
+#elif NET45
+                rsa = (RSAKey) x509cert.PublicKey.Key;
+#else
+#error Unsupported target
+#endif
                 builder.Add(new PublicKey(entry.Key, rsa));
             }
             return builder.ToImmutableList();
