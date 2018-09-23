@@ -31,20 +31,24 @@ namespace FirebaseAdmin.Messaging
         private readonly ConfigurableHttpClient _httpClient;
         private readonly string _sendUrl;
 
-        internal FirebaseMessagingClient(HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
+        internal FirebaseMessagingClient(
+            HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
         {
             if (string.IsNullOrEmpty(projectId))
             {
                 throw new FirebaseException(
-                    "Project ID is required to access messaging service. Use a service account credential or "
-                    + "set the project ID explicitly via AppOptions. Alternatively you can also "
-                    + "set the project ID via the GOOGLE_CLOUD_PROJECT environment variable.");
+                    "Project ID is required to access messaging service. Use a service account "
+                    + "credential or set the project ID explicitly via AppOptions. Alternatively "
+                    + "you can set the project ID via the GOOGLE_CLOUD_PROJECT environment "
+                    + "variable.");
             }
-            _httpClient = clientFactory.ThrowIfNull(nameof(clientFactory)).CreateAuthorizedHttpClient(credential);
+            _httpClient = clientFactory.ThrowIfNull(nameof(clientFactory))
+                .CreateAuthorizedHttpClient(credential);
             _sendUrl = string.Format(FcmUrl, projectId);
         }
 
-        public async Task<string> SendAsync(Message message, bool dryRun, CancellationToken cancellationToken)
+        public async Task<string> SendAsync(Message message,
+            bool dryRun = false, CancellationToken cancellationToken = default(CancellationToken))
         {
             var payload = new Dictionary<string, object>()
             {
@@ -56,8 +60,8 @@ namespace FirebaseAdmin.Messaging
             }
             try
             {
-                var response = await _httpClient.PostJsonAsync(_sendUrl, payload, cancellationToken)
-                    .ConfigureAwait(false);
+                var response = await _httpClient.PostJsonAsync(
+                    _sendUrl, payload, cancellationToken).ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                 {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -32,22 +33,26 @@ namespace FirebaseAdmin.Messaging.Tests
         public void NoProjectId()
         {
             var clientFactory = new HttpClientFactory();
-            Assert.Throws<FirebaseException>(() => new FirebaseMessagingClient(clientFactory, mockCredential, null));
-            Assert.Throws<FirebaseException>(() => new FirebaseMessagingClient(clientFactory, mockCredential, ""));
+            Assert.Throws<FirebaseException>(
+                () => new FirebaseMessagingClient(clientFactory, mockCredential, null));
+            Assert.Throws<FirebaseException>(
+                () => new FirebaseMessagingClient(clientFactory, mockCredential, ""));
         }
 
         [Fact]
         public void NoCredential()
         {
             var clientFactory = new HttpClientFactory();
-            Assert.Throws<ArgumentNullException>(() => new FirebaseMessagingClient(clientFactory, null, "test-project"));
+            Assert.Throws<ArgumentNullException>(
+                () => new FirebaseMessagingClient(clientFactory, null, "test-project"));
         }
 
         [Fact]
         public void NoClientFactory()
         {
             var clientFactory = new HttpClientFactory();
-            Assert.Throws<ArgumentNullException>(() => new FirebaseMessagingClient(null, mockCredential, "test-project"));
+            Assert.Throws<ArgumentNullException>(
+                () => new FirebaseMessagingClient(null, mockCredential, "test-project"));
         }
 
         [Fact]
@@ -57,7 +62,7 @@ namespace FirebaseAdmin.Messaging.Tests
             {
                 Response = new SendResponse()
                 {
-                        Name = "test-response",
+                    Name = "test-response",
                 },
             };
             var factory = new MockHttpClientFactory(handler);
@@ -66,7 +71,7 @@ namespace FirebaseAdmin.Messaging.Tests
             {
                 Topic = "test-topic"
             };
-            var response = await client.SendAsync(message, false, default(CancellationToken));
+            var response = await client.SendAsync(message);
             Assert.Equal("test-response", response);
             var req = NewtonsoftJsonSerializer.Instance.Deserialize<SendRequest>(handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
@@ -74,12 +79,35 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(1, handler.Calls);
 
             // Send in dryRun mode.
-            response = await client.SendAsync(message, true, default(CancellationToken));
+            response = await client.SendAsync(message, dryRun: true);
             Assert.Equal("test-response", response);
             req = NewtonsoftJsonSerializer.Instance.Deserialize<SendRequest>(handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.True(req.ValidateOnly);
             Assert.Equal(2, handler.Calls);
+        }
+
+        [Fact]
+        public async Task HttpError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = "not json",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = new FirebaseMessagingClient(factory, mockCredential, "test-project");
+            var message = new Message()
+            {
+                Topic = "test-topic"
+            };
+            var ex = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await client.SendAsync(message));
+            Assert.Contains("not json", ex.Message);
+            var req = NewtonsoftJsonSerializer.Instance.Deserialize<SendRequest>(handler.Request);
+            Assert.Equal("test-topic", req.Message.Topic);
+            Assert.False(req.ValidateOnly);
+            Assert.Equal(1, handler.Calls);
         }
     }
 
