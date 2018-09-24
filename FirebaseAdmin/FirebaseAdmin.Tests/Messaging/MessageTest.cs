@@ -32,22 +32,13 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void EmptyMessage()
         {
-            var message = new Message()
-            {
-                Token = "test-token"
-            };
+            var message = new Message(){Token = "test-token"};
             AssertJsonEquals(new JObject(){{"token", "test-token"}}, message);
 
-            message = new Message()
-            {
-                Topic = "test-topic"
-            };
+            message = new Message(){Topic = "test-topic"};
             AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
 
-            message = new Message()
-            {
-                Condition = "test-condition"
-            };
+            message = new Message(){Condition = "test-condition"};
             AssertJsonEquals(new JObject(){{"condition", "test-condition"}}, message);
         }
 
@@ -112,10 +103,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             foreach (var topic in topics)
             {
-                var message = new Message()
-                {
-                    Topic = topic
-                };
+                var message = new Message(){Topic = topic};
                 Assert.Throws<ArgumentException>(() => message.Validate());
             }
         }
@@ -123,10 +111,7 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void PrefixedTopicName()
         {
-            var message = new Message()
-            {
-                Topic = "/topics/test-topic"
-            };
+            var message = new Message(){Topic = "/topics/test-topic"};
             AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
         }
 

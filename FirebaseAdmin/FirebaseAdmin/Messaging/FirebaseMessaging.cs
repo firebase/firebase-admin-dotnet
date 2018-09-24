@@ -34,11 +34,15 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends a message via the FCM service.
+        /// Sends a message to the FCM service for delivery. The message gets validated both by
+        /// the Admin SDK, and the remote FCM service. A successful return value indicates
+        /// that the message has been successfully sent to FCM, where it has been accepted by the
+        /// FCM service.
         /// </summary>
-        /// <returns>A task that completes with a message ID string, which represents a
+        /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
         /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         public async Task<string> SendAsync(Message message)
@@ -47,11 +51,15 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends a message via the FCM service.
+        /// Sends a message to the FCM service for delivery. The message gets validated both by
+        /// the Admin SDK, and the remote FCM service. A successful return value indicates
+        /// that the message has been successfully sent to FCM, where it has been accepted by the
+        /// FCM service.
         /// </summary>
-        /// <returns>A task that completes with a message ID string, which represents a
+        /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
         /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
@@ -62,14 +70,19 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends a message via the FCM service.
+        /// Sends a message to the FCM service for delivery. The message gets validated both by
+        /// the Admin SDK, and the remote FCM service. A successful return value indicates
+        /// that the message has been successfully sent to FCM, where it has been accepted by the
+        /// FCM service.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
-        /// actually sent. Instead, FCM performs all the necessary validations, and emulates the
-        /// send operation.</para>
+        /// actually sent to the recipients. Instead, the FCM service performs all the necessary
+        /// validations, and emulates the send operation. This is a good way to check if a
+        /// certain message will be accepted by FCM for delivery.</para>
         /// </summary>
-        /// <returns>A task that completes with a message ID string, which represents a
+        /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
         /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -80,14 +93,19 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends a message via the FCM service.
+        /// Sends a message to the FCM service for delivery. The message gets validated both by
+        /// the Admin SDK, and the remote FCM service. A successful return value indicates
+        /// that the message has been successfully sent to FCM, where it has been accepted by the
+        /// FCM service.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
-        /// actually sent. Instead, FCM performs all the necessary validations, and emulates the
-        /// send operation.</para>
+        /// actually sent to the recipients. Instead, the FCM service performs all the necessary
+        /// validations, and emulates the send operation. This is a good way to check if a
+        /// certain message will be accepted by FCM for delivery.</para>
         /// </summary>
-        /// <returns>A task that completes with a message ID string, which represents a
+        /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
         /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation

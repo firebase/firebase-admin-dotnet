@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Google.Apis.Auth.OAuth2;
@@ -21,7 +22,7 @@ using FirebaseAdmin.Tests;
 
 namespace FirebaseAdmin.Messaging.Tests
 {
-    public class FirebaseMessagingTest
+    public class FirebaseMessagingTest: IDisposable
     {
         private static readonly GoogleCredential mockCredential =
             GoogleCredential.FromFile("./resources/service_account.json");
@@ -58,12 +59,25 @@ namespace FirebaseAdmin.Messaging.Tests
             var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
             FirebaseMessaging messaging = FirebaseMessaging.DefaultInstance;
             app.Delete();
-            var message = new Message()
-            {
-                Topic = "test-topic",
-            };
             await Assert.ThrowsAsync<ObjectDisposedException>(
-                async () => await messaging.SendAsync(message));
+                async () => await messaging.SendAsync(new Message(){Topic = "test-topic"}));
+        }
+
+        [Fact]
+        public async Task SendMessageCancel()
+        {
+            var cred = GoogleCredential.FromFile("./resources/service_account.json");
+            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            var canceller = new CancellationTokenSource();
+            canceller.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                async () => await FirebaseMessaging.DefaultInstance.SendAsync(
+                    new Message(){Topic = "test-topic"}, canceller.Token));
+        }
+
+        public void Dispose()
+        {
+            FirebaseApp.DeleteAll();
         }
     }   
 }
