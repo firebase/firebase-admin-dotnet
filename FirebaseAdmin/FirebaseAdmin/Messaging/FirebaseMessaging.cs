@@ -20,7 +20,8 @@ using Google.Apis.Http;
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Something.
+    /// This is the entry point to all server-side Firebase Cloud Messaging (FCM) operations. You
+    /// can get an instance of this class via <c>FirebaseMessaging.DefaultInstance</c>.
     /// </summary>
     public sealed class FirebaseMessaging: IFirebaseService
     {
@@ -33,32 +34,66 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Something.
+        /// Sends a message via the FCM service.
         /// </summary>
+        /// <returns>A task that completes with a message ID string, which represents a
+        /// successful handoff to FCM.</returns>
+        /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
         public async Task<string> SendAsync(Message message)
         {
             return await SendAsync(message, false);
         }
 
         /// <summary>
-        /// Something.
+        /// Sends a message via the FCM service.
         /// </summary>
+        /// <returns>A task that completes with a message ID string, which represents a
+        /// successful handoff to FCM.</returns>
+        /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
         public async Task<string> SendAsync(Message message, CancellationToken cancellationToken)
         {
             return await SendAsync(message, false, cancellationToken);
         }
 
         /// <summary>
-        /// Something.
+        /// Sends a message via the FCM service.
+        /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
+        /// actually sent. Instead, FCM performs all the necessary validations, and emulates the
+        /// send operation.</para>
         /// </summary>
+        /// <returns>A task that completes with a message ID string, which represents a
+        /// successful handoff to FCM.</returns>
+        /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send.</param>
         public async Task<string> SendAsync(Message message, bool dryRun)
         {
             return await SendAsync(message, dryRun, default(CancellationToken));
         }
 
         /// <summary>
-        /// Something.
+        /// Sends a message via the FCM service.
+        /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
+        /// actually sent. Instead, FCM performs all the necessary validations, and emulates the
+        /// send operation.</para>
         /// </summary>
+        /// <returns>A task that completes with a message ID string, which represents a
+        /// successful handoff to FCM.</returns>
+        /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
         public async Task<string> SendAsync(Message message, bool dryRun, CancellationToken cancellationToken)
         {
             return await _messagingClient.SendAsync(message, dryRun, cancellationToken).ConfigureAwait(false);
@@ -70,7 +105,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Something.
+        /// The messaging instance associated with the default Firebase app. This property is
+        /// <c>null</c> if the default app doesn't yet exist.
         /// </summary>
         public static FirebaseMessaging DefaultInstance
         {
@@ -86,8 +122,12 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Something.
+        /// Returns the messaging instance for the specified app.
         /// </summary>
+        /// <returns>The <see cref="FirebaseMessaging"/> instance associated with the specified
+        /// app.</returns>
+        /// <exception cref="System.ArgumentNullException">If the app argument is null.</exception>
+        /// <param name="app">An app instance.</param>
         public static FirebaseMessaging GetMessaging(FirebaseApp app)
         {
             if (app == null)

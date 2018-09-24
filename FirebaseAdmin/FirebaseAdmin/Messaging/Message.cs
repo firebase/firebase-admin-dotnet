@@ -24,33 +24,46 @@ using FirebaseAdmin;
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Something.
+    /// Represents a message that can be sent via Firebase Cloud Messaging (FCM). Contains payload
+    /// information as well as the recipient information. The recipient information must be
+    /// specified by setting exactly one of the <see cref="Token"/>, <see cref="Topic"/> or
+    /// <see cref="Condition"/> fields.
     /// </summary>
     public sealed class Message
     {
         /// <summary>
-        /// Something.
+        /// The registration token of the device to which the message should be sent.
         /// </summary>
         [JsonProperty("token")]
         public string Token { internal get; set; }
 
         /// <summary>
-        /// Something.
+        /// The name of the FCM topic to which the message should be sent. Topic names may
+        /// contain the <c>/topics/</c> prefix.
         /// </summary>
         [JsonProperty("topic")]
         public string Topic { internal get; set; }
 
         /// <summary>
-        /// Something.
+        /// The FCM condition to which the message should be sent. Must be a valid condition
+        /// string such as <c>"'foo' in topics"</c>.
         /// </summary>
         [JsonProperty("condition")]
         public string Condition { internal get; set; }
 
         /// <summary>
-        /// Something.
+        /// A collection of key-value pairs that will be added to the message as data fields. Keys
+        /// and the values must not be null.
         /// </summary>
         [JsonProperty("data")]
         public IDictionary<string, string> Data { internal get; set; }
+
+        /// <summary>
+        /// The <see cref="FirebaseAdmin.Messaging.Notification"/> information to be included in
+        /// the message.
+        /// </summary>
+        [JsonProperty("notification")]
+        public Notification Notification { internal get; set; }
 
         internal Message Validate()
         {
@@ -69,6 +82,7 @@ namespace FirebaseAdmin.Messaging
                 Topic = ValidateTopic(Topic),
                 Condition = Condition,
                 Data = Data,
+                Notification = Notification,
             };
         }
 

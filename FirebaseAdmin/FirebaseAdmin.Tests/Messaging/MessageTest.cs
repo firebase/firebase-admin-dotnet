@@ -21,7 +21,7 @@ using Google.Apis.Json;
 
 namespace FirebaseAdmin.Messaging.Tests
 {
-    public class MessagingTest
+    public class MessageTest
     {
         [Fact]
         public void MessageWithoutTarget()
@@ -130,11 +130,39 @@ namespace FirebaseAdmin.Messaging.Tests
             AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
         }
 
+        [Fact]
+        public void Notification()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Notification = new Notification()
+                {
+                    Title = "title",
+                    Body = "body",
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "notification", new JObject()
+                    {
+                        {"title", "title"},
+                        {"body", "body"},
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
         private void AssertJsonEquals(JObject expected, Message actual)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.Validate());
             var parsed = JObject.Parse(json);
-            Assert.True(JToken.DeepEquals(expected, parsed));
+            Assert.True(
+                JToken.DeepEquals(expected, parsed),
+                $"Expected: {expected.ToString()}\nActual: {parsed.ToString()}");
         }
     }
 }

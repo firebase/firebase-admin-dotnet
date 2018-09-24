@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,18 +49,15 @@ namespace FirebaseAdmin.Messaging
         public async Task<string> SendAsync(Message message,
             bool dryRun = false, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var payload = new Dictionary<string, object>()
+            var request = new SendRequest()
             {
-                { "message", message.ThrowIfNull(nameof(message)).Validate() },
+                Message = message.ThrowIfNull(nameof(message)).Validate(),
+                ValidateOnly = dryRun,
             };
-            if (dryRun)
-            {
-                payload["validate_only"] = true;
-            }
             try
             {
                 var response = await _httpClient.PostJsonAsync(
-                    _sendUrl, payload, cancellationToken).ConfigureAwait(false);
+                    _sendUrl, request, cancellationToken).ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                 {
@@ -83,6 +79,15 @@ namespace FirebaseAdmin.Messaging
         {
             _httpClient.Dispose();
         }
+    }
+
+    internal sealed class SendRequest
+    {
+        [Newtonsoft.Json.JsonProperty("message")]
+        public Message Message { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("validate_only")]
+        public bool ValidateOnly { get; set; }
     }
 
     internal sealed class SendResponse
