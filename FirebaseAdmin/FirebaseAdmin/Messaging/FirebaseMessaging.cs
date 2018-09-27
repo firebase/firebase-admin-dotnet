@@ -42,8 +42,10 @@ namespace FirebaseAdmin.Messaging
         /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
-        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid
+        /// fields.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         public async Task<string> SendAsync(Message message)
         {
@@ -59,8 +61,10 @@ namespace FirebaseAdmin.Messaging
         /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
-        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid
+        /// fields.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -82,8 +86,10 @@ namespace FirebaseAdmin.Messaging
         /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
-        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid
+        /// fields.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send.</param>
@@ -105,16 +111,20 @@ namespace FirebaseAdmin.Messaging
         /// <returns>A task that completes with a message ID string, which represents
         /// successful handoff to FCM.</returns>
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
-        /// <exception cref="ArgumentException">If the message contains any invalid fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the message.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid
+        /// fields.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        public async Task<string> SendAsync(Message message, bool dryRun, CancellationToken cancellationToken)
+        public async Task<string> SendAsync(
+            Message message, bool dryRun, CancellationToken cancellationToken)
         {
-            return await _messagingClient.SendAsync(message, dryRun, cancellationToken).ConfigureAwait(false);
+            return await _messagingClient.SendAsync(
+                message, dryRun, cancellationToken).ConfigureAwait(false);
         }
 
         void IFirebaseService.Delete()

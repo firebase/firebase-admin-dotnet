@@ -25,12 +25,12 @@ namespace FirebaseAdmin.Messaging
         /// Title of the notification.
         /// </summary>
         [JsonProperty("title")]
-        public string Title { get; set; }
+        public string Title { internal get; set; }
 
         /// <summary>
         /// Body of the notification.
         /// </summary>
         [JsonProperty("body")]
-        public string Body { get; set; }
+        public string Body { internal get; set; }
     }
 }

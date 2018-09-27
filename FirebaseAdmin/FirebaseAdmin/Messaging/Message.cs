@@ -74,7 +74,8 @@ namespace FirebaseAdmin.Messaging
             var targets = list.FindAll((target) => !string.IsNullOrEmpty(target));
             if (targets.Count != 1)
             {
-                throw new ArgumentException("Exactly one of Token, Topic or Condition is required.");
+                throw new ArgumentException(
+                    "Exactly one of Token, Topic or Condition is required.");
             }
             return new Message()
             {
