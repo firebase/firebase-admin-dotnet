@@ -129,7 +129,7 @@ namespace FirebaseAdmin.Messaging
 
         void IFirebaseService.Delete()
         {
-            _messagingClient.Dispose();   
+            _messagingClient.Dispose();
         }
 
         /// <summary>
