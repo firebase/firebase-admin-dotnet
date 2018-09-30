@@ -141,6 +141,90 @@ namespace FirebaseAdmin.Messaging.Tests
             AssertJsonEquals(expected, message);
         }
 
+        [Fact]
+        public void AndroidConfig()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidConfig = new AndroidConfig()
+                {
+                    CollapseKey = "collapse-key",
+                    Priority = Priority.HIGH,
+                    Ttl = TimeSpan.FromMilliseconds(10),
+                    RestrictedPackageName = "test-pkg-name",
+                    Data = new Dictionary<string, string>()
+                    {
+                        { "k1", "v1" },
+                        { "k2", "v2" },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "android", new JObject()
+                    {
+                        { "collapse_key", "collapse-key" },
+                        { "priority", "high" },
+                        { "ttl", "0.010000000s" },
+                        { "restricted_package_name", "test-pkg-name" },
+                        {"data", new JObject(){{"k1", "v1"}, {"k2", "v2"}}},
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void AndroidConfigFullSecondsTTL()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidConfig = new AndroidConfig()
+                {
+                    Ttl = TimeSpan.FromHours(1),                    
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "android", new JObject()
+                    {
+                        { "ttl", "3600s" },                        
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void AndroidConfigInvalidTTL()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidConfig = new AndroidConfig()
+                {
+                    Ttl = TimeSpan.FromHours(-1),                    
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "android", new JObject()
+                    {
+                        { "ttl", "3600s" },                        
+                    }
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.Validate());
+        }
+
         private void AssertJsonEquals(JObject expected, Message actual)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.Validate());

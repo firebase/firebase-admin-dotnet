@@ -34,38 +34,37 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// The registration token of the device to which the message should be sent.
         /// </summary>
-        [JsonProperty("token")]
-        public string Token { internal get; set; }
+        public string Token { private get; set; }
 
         /// <summary>
         /// The name of the FCM topic to which the message should be sent. Topic names may
         /// contain the <c>/topics/</c> prefix.
         /// </summary>
-        [JsonProperty("topic")]
-        public string Topic { internal get; set; }
+        public string Topic { private get; set; }
 
         /// <summary>
         /// The FCM condition to which the message should be sent. Must be a valid condition
         /// string such as <c>"'foo' in topics"</c>.
         /// </summary>
-        [JsonProperty("condition")]
-        public string Condition { internal get; set; }
+        public string Condition { private get; set; }
 
         /// <summary>
         /// A collection of key-value pairs that will be added to the message as data fields. Keys
         /// and the values must not be null.
         /// </summary>
-        [JsonProperty("data")]
-        public IDictionary<string, string> Data { internal get; set; }
+        public IDictionary<string, string> Data { private get; set; }
 
         /// <summary>
-        /// The <see cref="FirebaseAdmin.Messaging.Notification"/> information to be included in
-        /// the message.
+        /// The notification information to be included in the message.
         /// </summary>
-        [JsonProperty("notification")]
-        public Notification Notification { internal get; set; }
+        public Notification Notification { private get; set; }
 
-        internal Message Validate()
+        /// <summary>
+        /// The Android-specific information to be included in the message.
+        /// </summary>
+        public AndroidConfig AndroidConfig { private get; set; }
+
+        internal ValidatedMessage Validate()
         {
             var list = new List<string>()
             {
@@ -77,31 +76,57 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException(
                     "Exactly one of Token, Topic or Condition is required.");
             }
-            return new Message()
+            return new ValidatedMessage()
             {
-                Token = Token,
-                Topic = ValidateTopic(Topic),
-                Condition = Condition,
-                Data = Data,
-                Notification = Notification,
+                Token = this.Token,
+                Topic = this.ValidatedTopic,
+                Condition = this.Condition,
+                Data = this.Data,
+                Notification = this.Notification,
+                AndroidConfig = this.AndroidConfig?.Validate(),
             };
         }
 
-        private static string ValidateTopic(string topic)
+        private string ValidatedTopic
         {
-            if (string.IsNullOrEmpty(topic))
+            get
             {
-                return null;
+                if (string.IsNullOrEmpty(Topic))
+                {
+                    return null;
+                }
+                var topic = Topic;
+                if (topic.StartsWith("/topics/"))
+                {
+                    topic = topic.Substring("/topics/".Length);
+                }
+                if (!Regex.IsMatch(topic, "^[a-zA-Z0-9-_.~%]+$"))
+                {
+                    throw new ArgumentException("Malformed topic name.");
+                }
+                return topic;
             }
-            if (topic.StartsWith("/topics/"))
-            {
-                topic = topic.Substring("/topics/".Length);
-            }
-            if (!Regex.IsMatch(topic, "^[a-zA-Z0-9-_.~%]+$"))
-            {
-                throw new ArgumentException("Malformed topic name.");
-            }
-            return topic;
         }
+    }
+
+    internal sealed class ValidatedMessage
+    {
+        [JsonProperty("token")]
+        internal string Token { get; set; }
+
+        [JsonProperty("topic")]
+        internal string Topic { get; set; }
+
+        [JsonProperty("condition")]
+        internal string Condition { get; set; }
+
+        [JsonProperty("data")]
+        internal IDictionary<string, string> Data { get; set; }
+
+        [JsonProperty("notification")]
+        internal Notification Notification { get; set; }
+
+        [JsonProperty("android")]
+        internal ValidatedAndroidConfig AndroidConfig { get; set; }
     }
 }

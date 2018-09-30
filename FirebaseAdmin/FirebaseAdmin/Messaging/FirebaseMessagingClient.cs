@@ -84,7 +84,7 @@ namespace FirebaseAdmin.Messaging
     internal sealed class SendRequest
     {
         [Newtonsoft.Json.JsonProperty("message")]
-        public Message Message { get; set; }
+        public ValidatedMessage Message { get; set; }
 
         [Newtonsoft.Json.JsonProperty("validate_only")]
         public bool ValidateOnly { get; set; }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
@@ -36,6 +37,12 @@ namespace FirebaseAdmin.IntegrationTests
                 {
                     Title = "Title",
                     Body = "Body",
+                },
+                AndroidConfig = new AndroidConfig()
+                {
+                    Priority = Priority.NORMAL,
+                    Ttl = TimeSpan.FromHours(1),
+                    RestrictedPackageName = "com.google.firebase.testing",
                 },
             };
             var id = await FirebaseMessaging.DefaultInstance.SendAsync(message, dryRun: true);
