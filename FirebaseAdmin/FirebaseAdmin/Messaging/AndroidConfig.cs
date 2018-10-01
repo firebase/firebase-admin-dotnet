@@ -33,7 +33,7 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// The priority of the message.
         /// </summary>
-        public Priority Priority { internal get; set; }
+        public Priority? Priority { internal get; set; }
 
         /// <summary>
         /// The time-to-live duration of the message.
@@ -59,7 +59,7 @@ namespace FirebaseAdmin.Messaging
             {
                 CollapseKey = this.CollapseKey,
                 Priority = this.PriorityString,
-                Ttl = this.TTLString,
+                Ttl = this.TtlString,
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data,
             };
@@ -81,7 +81,7 @@ namespace FirebaseAdmin.Messaging
             }
         }
 
-        private string TTLString
+        private string TtlString
         {
             get
             {
@@ -124,23 +124,18 @@ namespace FirebaseAdmin.Messaging
      }
 
     /// <summary>
-    /// Something.
+    /// Priority levels that can be set on an <see cref="AndroidConfig"/>.
     /// </summary>
     public enum Priority
-    {
+    {        
         /// <summary>
-        /// Something.
+        /// High priority message.
         /// </summary>
-        UNSPECIFIED = 0,
+        HIGH,
         
         /// <summary>
-        /// Something.
+        /// Normal priority message.
         /// </summary>
-        HIGH = 1,
-        
-        /// <summary>
-        /// Something.
-        /// </summary>
-        NORMAL = 2,
+        NORMAL,
     }
 }
