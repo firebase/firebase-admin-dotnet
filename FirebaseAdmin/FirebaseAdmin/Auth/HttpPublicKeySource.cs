@@ -68,7 +68,7 @@ namespace FirebaseAdmin.Auth
         {
             if (_cachedKeys == null || _clock.UtcNow >= _expirationTime)
             {
-                await _lock.WaitAsync().ConfigureAwait(false);
+                await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 try
                 {
@@ -83,7 +83,7 @@ namespace FirebaseAdmin.Auth
                             _cachedKeys = ParseKeys(await response.Content.ReadAsStringAsync()
                                 .ConfigureAwait(false));
                             var cacheControl = response.Headers.CacheControl;
-                            if (cacheControl != null && cacheControl.MaxAge.HasValue)
+                            if (cacheControl?.MaxAge != null)
                             {
                                 _expirationTime = now.Add(cacheControl.MaxAge.Value)
                                     .Subtract(ClockSkew);
