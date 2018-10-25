@@ -66,36 +66,41 @@ namespace FirebaseAdmin.Auth
         public async Task<IReadOnlyList<PublicKey>> GetPublicKeysAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            await _lock.WaitAsync().ConfigureAwait(false);
-            var now = _clock.UtcNow;
-            try
+            if (_cachedKeys == null || _clock.UtcNow >= _expirationTime)
             {
-                if (_cachedKeys == null || now >= _expirationTime)
+                await _lock.WaitAsync().ConfigureAwait(false);
+
+                try
                 {
-                    using (var httpClient = _clientFactory.CreateDefaultHttpClient())
+                    if (_cachedKeys == null || _clock.UtcNow >= _expirationTime)
                     {
-                        var response = await httpClient.GetAsync(_certUrl, cancellationToken)
-                            .ConfigureAwait(false);
-                        response.EnsureSuccessStatusCode();
-                        _cachedKeys = ParseKeys(await response.Content.ReadAsStringAsync()
-                            .ConfigureAwait(false));
-                        var cacheControl = response.Headers.CacheControl;
-                        if (cacheControl != null && cacheControl.MaxAge.HasValue)
+                        using (var httpClient = _clientFactory.CreateDefaultHttpClient())
                         {
-                            _expirationTime = now.Add(cacheControl.MaxAge.Value)
-                                .Subtract(ClockSkew);
+                            var now = _clock.UtcNow;
+                            var response = await httpClient.GetAsync(_certUrl, cancellationToken)
+                                .ConfigureAwait(false);
+                            response.EnsureSuccessStatusCode();
+                            _cachedKeys = ParseKeys(await response.Content.ReadAsStringAsync()
+                                .ConfigureAwait(false));
+                            var cacheControl = response.Headers.CacheControl;
+                            if (cacheControl != null && cacheControl.MaxAge.HasValue)
+                            {
+                                _expirationTime = now.Add(cacheControl.MaxAge.Value)
+                                    .Subtract(ClockSkew);
+                            }
                         }
                     }
                 }
+                catch (HttpRequestException e)
+                {
+                    throw new FirebaseException("Failed to retrieve latest public keys.", e);
+                }
+                finally
+                {
+                    _lock.Release();
+                }
             }
-            catch (HttpRequestException e)
-            {
-                throw new FirebaseException("Failed to retrieve latest public keys.", e);
-            }
-            finally
-            {
-                _lock.Release();
-            }
+
             return _cachedKeys;
         }
 
