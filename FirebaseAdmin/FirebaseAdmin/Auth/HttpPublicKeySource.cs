@@ -72,11 +72,11 @@ namespace FirebaseAdmin.Auth
 
                 try
                 {
+                    var now = _clock.UtcNow;
                     if (_cachedKeys == null || _clock.UtcNow >= _expirationTime)
                     {
                         using (var httpClient = _clientFactory.CreateDefaultHttpClient())
                         {
-                            var now = _clock.UtcNow;
                             var response = await httpClient.GetAsync(_certUrl, cancellationToken)
                                 .ConfigureAwait(false);
                             response.EnsureSuccessStatusCode();
