@@ -136,7 +136,7 @@ namespace FirebaseAdmin.Auth.Tests
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
             var idToken = await FirebaseTokenVerifierTest.CreateTestTokenAsync();
-            await Assert.ThrowsAsync<OperationCanceledException>(
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
                 async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
                     idToken, canceller.Token));
         }
