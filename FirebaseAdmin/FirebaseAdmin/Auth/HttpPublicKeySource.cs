@@ -73,7 +73,7 @@ namespace FirebaseAdmin.Auth
                 try
                 {
                     var now = _clock.UtcNow;
-                    if (_cachedKeys == null || _clock.UtcNow >= _expirationTime)
+                    if (_cachedKeys == null || now >= _expirationTime)
                     {
                         using (var httpClient = _clientFactory.CreateDefaultHttpClient())
                         {
