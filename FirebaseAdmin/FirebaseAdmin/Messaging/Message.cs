@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Google.Apis.Json;
@@ -52,7 +51,7 @@ namespace FirebaseAdmin.Messaging
         /// A collection of key-value pairs that will be added to the message as data fields. Keys
         /// and the values must not be null.
         /// </summary>
-        public IEnumerable<KeyValuePair<string, string>> Data { private get; set; }
+        public IReadOnlyDictionary<string, string> Data { private get; set; }
 
         /// <summary>
         /// The notification information to be included in the message.
@@ -121,7 +120,7 @@ namespace FirebaseAdmin.Messaging
         internal string Condition { get; set; }
 
         [JsonProperty("data")]
-        internal IEnumerable<KeyValuePair<string, string>> Data { get; set; }
+        internal IReadOnlyDictionary<string, string> Data { get; set; }
 
         [JsonProperty("notification")]
         internal Notification Notification { get; set; }

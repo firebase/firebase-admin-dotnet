@@ -51,7 +51,7 @@ namespace FirebaseAdmin.Messaging
         /// and the values must not be null. When set, overrides any data fields set on the top-level
         /// <see cref="Message"/>.
         /// </summary>
-        public IEnumerable<KeyValuePair<string, string>> Data { internal get; set; }
+        public IReadOnlyDictionary<string, string> Data { internal get; set; }
 
         internal ValidatedAndroidConfig Validate()
         {
@@ -120,7 +120,7 @@ namespace FirebaseAdmin.Messaging
         internal string RestrictedPackageName { get; set; }
 
         [JsonProperty("data")]
-        internal IEnumerable<KeyValuePair<string, string>> Data { get; set; }
+        internal IReadOnlyDictionary<string, string> Data { get; set; }
      }
 
     /// <summary>
