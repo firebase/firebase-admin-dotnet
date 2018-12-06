@@ -40,8 +40,8 @@ namespace FirebaseAdmin.IntegrationTests
                 },
                 AndroidConfig = new AndroidConfig()
                 {
-                    Priority = Priority.NORMAL,
-                    Ttl = TimeSpan.FromHours(1),
+                    Priority = Priority.Normal,
+                    TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
                 },
             };

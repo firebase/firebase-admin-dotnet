@@ -38,7 +38,7 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// The time-to-live duration of the message.
         /// </summary>
-        public TimeSpan Ttl { internal get; set; }
+        public TimeSpan TimeToLive { internal get; set; }
 
         /// <summary>
         /// The package name of the application where the registration tokens must match in order
@@ -51,7 +51,7 @@ namespace FirebaseAdmin.Messaging
         /// and the values must not be null. When set, overrides any data fields set on the top-level
         /// <see cref="Message"/>.
         /// </summary>
-        public IDictionary<string, string> Data { internal get; set; }
+        public IEnumerable<KeyValuePair<string, string>> Data { internal get; set; }
 
         internal ValidatedAndroidConfig Validate()
         {
@@ -59,7 +59,7 @@ namespace FirebaseAdmin.Messaging
             {
                 CollapseKey = this.CollapseKey,
                 Priority = this.PriorityString,
-                Ttl = this.TtlString,
+                TimeToLive = this.TtlString,
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data,
             };
@@ -71,9 +71,9 @@ namespace FirebaseAdmin.Messaging
             {
                 switch (Priority)
                 {
-                    case Messaging.Priority.HIGH:
+                    case Messaging.Priority.High:
                         return "high";
-                    case Messaging.Priority.NORMAL:
+                    case Messaging.Priority.Normal:
                         return "normal";
                     default:
                         return null;
@@ -85,11 +85,11 @@ namespace FirebaseAdmin.Messaging
         {
             get
             {
-                if (Ttl == null)
+                if (TimeToLive == null)
                 {
                     return null;
                 }
-                var totalSeconds = Ttl.TotalSeconds;
+                var totalSeconds = TimeToLive.TotalSeconds;
                 if (totalSeconds < 0)
                 {
                     throw new ArgumentException("TTL must not be negative.");
@@ -114,13 +114,13 @@ namespace FirebaseAdmin.Messaging
         internal string Priority { get; set; }
         
         [JsonProperty("ttl")]
-        internal string Ttl { get; set; }
+        internal string TimeToLive { get; set; }
 
         [JsonProperty("restricted_package_name")]
         internal string RestrictedPackageName { get; set; }
 
         [JsonProperty("data")]
-        internal IDictionary<string, string> Data { get; set; }        
+        internal IEnumerable<KeyValuePair<string, string>> Data { get; set; }
      }
 
     /// <summary>
@@ -131,11 +131,11 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// High priority message.
         /// </summary>
-        HIGH,
+        High,
         
         /// <summary>
         /// Normal priority message.
         /// </summary>
-        NORMAL,
+        Normal,
     }
 }

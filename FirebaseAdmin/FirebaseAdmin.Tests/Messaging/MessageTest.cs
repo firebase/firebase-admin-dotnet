@@ -150,8 +150,8 @@ namespace FirebaseAdmin.Messaging.Tests
                 AndroidConfig = new AndroidConfig()
                 {
                     CollapseKey = "collapse-key",
-                    Priority = Priority.HIGH,
-                    Ttl = TimeSpan.FromMilliseconds(10),
+                    Priority = Priority.High,
+                    TimeToLive = TimeSpan.FromMilliseconds(10),
                     RestrictedPackageName = "test-pkg-name",
                     Data = new Dictionary<string, string>()
                     {
@@ -185,7 +185,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Topic = "test-topic",
                 AndroidConfig = new AndroidConfig()
                 {
-                    Ttl = TimeSpan.FromHours(1),                    
+                    TimeToLive = TimeSpan.FromHours(1),
                 },
             };
             var expected = new JObject()
@@ -209,7 +209,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Topic = "test-topic",
                 AndroidConfig = new AndroidConfig()
                 {
-                    Ttl = TimeSpan.FromHours(-1),                    
+                    TimeToLive = TimeSpan.FromHours(-1),
                 },
             };
             var expected = new JObject()
