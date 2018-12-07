@@ -33,35 +33,35 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// The registration token of the device to which the message should be sent.
         /// </summary>
-        public string Token { private get; set; }
+        public string Token { get; set; }
 
         /// <summary>
         /// The name of the FCM topic to which the message should be sent. Topic names may
         /// contain the <c>/topics/</c> prefix.
         /// </summary>
-        public string Topic { private get; set; }
+        public string Topic { get; set; }
 
         /// <summary>
         /// The FCM condition to which the message should be sent. Must be a valid condition
         /// string such as <c>"'foo' in topics"</c>.
         /// </summary>
-        public string Condition { private get; set; }
+        public string Condition { get; set; }
 
         /// <summary>
         /// A collection of key-value pairs that will be added to the message as data fields. Keys
         /// and the values must not be null.
         /// </summary>
-        public IReadOnlyDictionary<string, string> Data { private get; set; }
+        public IReadOnlyDictionary<string, string> Data { get; set; }
 
         /// <summary>
         /// The notification information to be included in the message.
         /// </summary>
-        public Notification Notification { private get; set; }
+        public Notification Notification { get; set; }
 
         /// <summary>
         /// The Android-specific information to be included in the message.
         /// </summary>
-        public AndroidConfig AndroidConfig { private get; set; }
+        public AndroidConfig AndroidConfig { get; set; }
 
         internal ValidatedMessage Validate()
         {

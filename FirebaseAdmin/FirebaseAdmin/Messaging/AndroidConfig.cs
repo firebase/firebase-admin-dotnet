@@ -28,30 +28,30 @@ namespace FirebaseAdmin.Messaging
         /// messages that can be collapsed, so that only the last message gets sent when delivery can be
         /// resumed. A maximum of 4 different collapse keys may be active at any given time.
         /// </summary>
-        public string CollapseKey { internal get; set; }
+        public string CollapseKey { get; set; }
 
         /// <summary>
         /// The priority of the message.
         /// </summary>
-        public Priority? Priority { internal get; set; }
+        public Priority? Priority { get; set; }
 
         /// <summary>
         /// The time-to-live duration of the message.
         /// </summary>
-        public TimeSpan TimeToLive { internal get; set; }
+        public TimeSpan TimeToLive { get; set; }
 
         /// <summary>
         /// The package name of the application where the registration tokens must match in order
         /// to receive the message.
         /// </summary>
-        public string RestrictedPackageName { internal get; set; }
+        public string RestrictedPackageName { get; set; }
 
         /// <summary>
         /// A collection of key-value pairs that will be added to the message as data fields. Keys
         /// and the values must not be null. When set, overrides any data fields set on the top-level
         /// <see cref="Message"/>.
         /// </summary>
-        public IReadOnlyDictionary<string, string> Data { internal get; set; }
+        public IReadOnlyDictionary<string, string> Data { get; set; }
 
         internal ValidatedAndroidConfig Validate()
         {
