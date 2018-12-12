@@ -65,6 +65,10 @@ namespace FirebaseAdmin.Messaging
             };
         }
 
+        /// <summary>
+        /// String representation of the <see cref="Priority"/> as accepted by the FCM backend
+        /// service.
+        /// </summary>
         private string PriorityString
         {
             get

@@ -18,8 +18,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
-using Google.Apis.Json;
 using Google.Apis.Util;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -66,7 +66,7 @@ namespace FirebaseAdmin.Messaging
                             + $"{Environment.NewLine}{json}";
                     throw new FirebaseException(error);   
                 }
-                var parsed = NewtonsoftJsonSerializer.Instance.Deserialize<SendResponse>(json);
+                var parsed = JsonConvert.DeserializeObject<SendResponse>(json);
                 return parsed.Name;
             }
             catch (HttpRequestException e)

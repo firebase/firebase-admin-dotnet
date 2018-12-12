@@ -63,6 +63,11 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         public AndroidConfig AndroidConfig { get; set; }
 
+        /// <summary>
+        /// Validates the content and structure of this message instance, and converts it into the
+        /// <see cref="ValidatedMessage"/> type. This return type can be safely serialized into
+        /// a JSON string that is acceptable to the FCM backend service.
+        /// </summary>
         internal ValidatedMessage Validate()
         {
             var list = new List<string>()
@@ -86,6 +91,11 @@ namespace FirebaseAdmin.Messaging
             };
         }
 
+        /// <summary>
+        /// Validated and formatted representation of the <see cref="Topic"/>. Checks for any
+        /// illegal characters in the topic name, and removes the <code>/topics/</code> prefix if
+        /// present.
+        /// </summary>
         private string ValidatedTopic
         {
             get
