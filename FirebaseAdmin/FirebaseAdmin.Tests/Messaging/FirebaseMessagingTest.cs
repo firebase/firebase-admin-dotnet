@@ -38,6 +38,7 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
             FirebaseMessaging messaging = FirebaseMessaging.DefaultInstance;
+            Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.DefaultInstance);
             app.Delete();
             Assert.Null(FirebaseMessaging.DefaultInstance);
@@ -48,6 +49,7 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential}, "MyApp");
             FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
+            Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
             app.Delete();
             Assert.Throws<InvalidOperationException>(() => FirebaseMessaging.GetMessaging(app));

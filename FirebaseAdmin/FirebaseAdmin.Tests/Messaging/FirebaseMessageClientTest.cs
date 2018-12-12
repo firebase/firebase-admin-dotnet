@@ -16,10 +16,10 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Xunit;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
-using Google.Apis.Json;
 using FirebaseAdmin.Tests;
 
 namespace FirebaseAdmin.Messaging.Tests
@@ -56,7 +56,7 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
-        public async Task Send()
+        public async Task SendAsync()
         {
             var handler = new MockMessageHandler()
             {
@@ -73,7 +73,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var response = await client.SendAsync(message);
             Assert.Equal("test-response", response);
-            var req = NewtonsoftJsonSerializer.Instance.Deserialize<SendRequest>(handler.Request);
+            var req = JsonConvert.DeserializeObject<SendRequest>(handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
@@ -81,14 +81,14 @@ namespace FirebaseAdmin.Messaging.Tests
             // Send in dryRun mode.
             response = await client.SendAsync(message, dryRun: true);
             Assert.Equal("test-response", response);
-            req = NewtonsoftJsonSerializer.Instance.Deserialize<SendRequest>(handler.Request);
+            req = JsonConvert.DeserializeObject<SendRequest>(handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.True(req.ValidateOnly);
             Assert.Equal(2, handler.Calls);
         }
 
         [Fact]
-        public async Task HttpError()
+        public async Task HttpErrorAsync()
         {
             var handler = new MockMessageHandler()
             {
@@ -104,7 +104,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var ex = await Assert.ThrowsAsync<FirebaseException>(
                 async () => await client.SendAsync(message));
             Assert.Contains("not json", ex.Message);
-            var req = NewtonsoftJsonSerializer.Instance.Deserialize<SendRequest>(handler.Request);
+            var req = JsonConvert.DeserializeObject<SendRequest>(handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);

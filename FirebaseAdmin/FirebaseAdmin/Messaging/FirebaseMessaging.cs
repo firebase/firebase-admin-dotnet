@@ -92,7 +92,8 @@ namespace FirebaseAdmin.Messaging
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
-        /// only) of the send.</param>
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
         public async Task<string> SendAsync(Message message, bool dryRun)
         {
             return await SendAsync(message, dryRun, default(CancellationToken));
@@ -117,7 +118,8 @@ namespace FirebaseAdmin.Messaging
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
-        /// only) of the send.</param>
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         public async Task<string> SendAsync(
