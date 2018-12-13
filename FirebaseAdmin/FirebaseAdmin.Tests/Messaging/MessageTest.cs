@@ -158,6 +158,21 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "k1", "v1" },
                         { "k2", "v2" },
                     },
+                    Notification = new AndroidNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                        Color = "#112233",
+                        Sound = "sound",
+                        Tag = "tag",
+                        ClickAction = "click-action",
+                        TitleLocKey = "title-loc-key",
+                        TitleLocArgs = new List<string>(){ "arg1", "arg2" },
+                        BodyLocKey = "body-loc-key",
+                        BodyLocArgs = new List<string>(){ "arg3", "arg4" },
+                        ChannelId = "channel-id",
+                    },
                 },
             };
             var expected = new JObject()
@@ -170,7 +185,24 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "priority", "high" },
                         { "ttl", "0.010000000s" },
                         { "restricted_package_name", "test-pkg-name" },
-                        {"data", new JObject(){{"k1", "v1"}, {"k2", "v2"}}},
+                        { "data", new JObject(){{"k1", "v1"}, {"k2", "v2"}} },
+                        {
+                            "notification", new JObject()
+                            {
+                                { "title", "title" },
+                                { "body", "body" },
+                                { "icon", "icon" },
+                                { "color", "#112233" },
+                                { "sound", "sound" },
+                                { "tag", "tag" },
+                                { "click_action", "click-action" },
+                                { "title_loc_key", "title-loc-key" },
+                                { "title_loc_args", new JArray(){"arg1", "arg2"} },
+                                { "body_loc_key", "body-loc-key" },
+                                { "body_loc_args", new JArray(){"arg3", "arg4"} },
+                                { "channel_id", "channel-id" },
+                            }
+                        },
                     }
                 },
             };
@@ -220,6 +252,57 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         { "ttl", "3600s" },                        
                     }
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.Validate());
+        }
+
+        [Fact]
+        public void AndroidNotificationInvalidColor()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidConfig = new AndroidConfig()
+                {
+                    Notification = new AndroidNotification()
+                    {
+                        Color = "not-a-color"
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.Validate());
+        }
+
+        [Fact]
+        public void AndroidNotificationInvalidTitleLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidConfig = new AndroidConfig()
+                {
+                    Notification = new AndroidNotification()
+                    {
+                        TitleLocArgs = new List<string>(){"arg"},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.Validate());
+        }
+
+        [Fact]
+        public void AndroidNotificationInvalidBodyLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidConfig = new AndroidConfig()
+                {
+                    Notification = new AndroidNotification()
+                    {
+                        BodyLocArgs = new List<string>(){"arg"},
+                    },
                 },
             };
             Assert.Throws<ArgumentException>(() => message.Validate());
