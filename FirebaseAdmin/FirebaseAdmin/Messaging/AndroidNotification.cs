@@ -143,6 +143,10 @@ namespace FirebaseAdmin.Messaging
         }
     }
 
+    /// <summary>
+    /// Represents a validated Android notification that can be serialized into the JSON format
+    /// accepted by the FCM backend service.
+    /// </summary>
     internal sealed class ValidatedAndroidNotification
     {
         [JsonProperty("title")]
