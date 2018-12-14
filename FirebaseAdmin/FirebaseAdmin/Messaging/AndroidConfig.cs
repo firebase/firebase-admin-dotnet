@@ -91,6 +91,11 @@ namespace FirebaseAdmin.Messaging
             }
         }
 
+        /// <summary>
+        /// String representation of <see cref="TimeToLive"/> as accepted by the FCM backend
+        /// service. The string ends in the suffix "s" (indicating seconds) and is preceded
+        /// by the number of seconds, with nanoseconds expressed as fractional seconds.
+        /// </summary>
         private string TtlString
         {
             get
@@ -115,6 +120,10 @@ namespace FirebaseAdmin.Messaging
         }
     }
 
+    /// <summary>
+    /// Represents a validated Android configuration that can be serialized into the JSON format
+    /// accepted by the FCM backend service.
+    /// </summary>
     internal sealed class ValidatedAndroidConfig
     {
         [JsonProperty("collapse_key")]

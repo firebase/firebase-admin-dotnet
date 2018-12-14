@@ -23,6 +23,10 @@ using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
+    /// <summary>
+    /// A client for making authorized HTTP calls to the FCM backend service. Handles request
+    /// serialization, response parsing, and HTTP error handling.
+    /// </summary>
     internal sealed class FirebaseMessagingClient: IDisposable
     {
         private const string FcmUrl = "https://fcm.googleapis.com/v1/projects/{0}/messages:send";
@@ -46,7 +50,26 @@ namespace FirebaseAdmin.Messaging
             _sendUrl = string.Format(FcmUrl, projectId);
         }
 
-        public async Task<string> SendAsync(Message message,
+        /// <summary>
+        /// Sends a message to the FCM service for delivery. The message gets validated both by
+        /// the Admin SDK, and the remote FCM service. A successful return value indicates
+        /// that the message has been successfully sent to FCM, where it has been accepted by the
+        /// FCM service.
+        /// </summary>
+        /// <returns>A task that completes with a message ID string, which represents
+        /// successful handoff to FCM.</returns>
+        /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
+        /// <exception cref="ArgumentException">If the message contains any invalid
+        /// fields.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// message.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        internal async Task<string> SendAsync(Message message,
             bool dryRun = false, CancellationToken cancellationToken = default(CancellationToken))
         {
             var request = new SendRequest()
@@ -81,6 +104,10 @@ namespace FirebaseAdmin.Messaging
         }
     }
 
+    /// <summary>
+    /// Represents the envelope message accepted by the FCM backend service, including the message
+    /// payload and other options like <code>validate_only</code>.
+    /// </summary>
     internal sealed class SendRequest
     {
         [Newtonsoft.Json.JsonProperty("message")]
@@ -90,6 +117,10 @@ namespace FirebaseAdmin.Messaging
         public bool ValidateOnly { get; set; }
     }
 
+    /// <summary>
+    /// Represents the response messages sent by the FCM backend service. Primarily consists of the
+    /// message ID (Name) that indicates success handoff to FCM.
+    /// </summary>
     internal sealed class SendResponse
     {
         [Newtonsoft.Json.JsonProperty("name")]

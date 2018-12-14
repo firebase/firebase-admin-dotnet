@@ -118,6 +118,10 @@ namespace FirebaseAdmin.Messaging
         }
     }
 
+    /// <summary>
+    /// Represents a validated message that can be serialized into the JSON format accepted by the
+    /// FCM backend service.
+    /// </summary>
     internal sealed class ValidatedMessage
     {
         [JsonProperty("token")]
