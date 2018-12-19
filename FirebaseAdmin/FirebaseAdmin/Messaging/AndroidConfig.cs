@@ -53,6 +53,11 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
+        /// <summary>
+        /// The Android notification to be included in the message.
+        /// </summary>
+        public AndroidNotification Notification { get; set; }
+
         internal ValidatedAndroidConfig Validate()
         {
             return new ValidatedAndroidConfig()
@@ -62,6 +67,7 @@ namespace FirebaseAdmin.Messaging
                 TimeToLive = this.TtlString,
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data,
+                Notification = this.Notification?.Validate(),
             };
         }
 
@@ -134,6 +140,9 @@ namespace FirebaseAdmin.Messaging
 
         [JsonProperty("data")]
         internal IReadOnlyDictionary<string, string> Data { get; set; }
+
+        [JsonProperty("notification")]
+        internal ValidatedAndroidNotification Notification { get; set; }
      }
 
     /// <summary>
