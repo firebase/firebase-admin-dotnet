@@ -27,48 +27,34 @@ namespace FirebaseAdmin.Messaging
         /// Webpush HTTP headers. Refer <see href="https://tools.ietf.org/html/rfc8030#section-5">
         /// Webpush specification</see> for supported headers.
         /// </summary>
+        [JsonProperty("headers")]
         public IReadOnlyDictionary<string, string> Headers { get; set; }
 
         /// <summary>
         /// Webpush data fields. When set, overrides any data fields set via
         /// <see cref="Message.Data"/>.
         /// </summary>
-        public IReadOnlyDictionary<string, string> Data { get; set; }
-        
-        /// <summary>
-        /// The Webpush notification to be included in the message.
-        /// </summary>
-        public WebpushNotification Notification { get; set; }
-
-        /// <summary>
-        /// Validates the content and structure of this Webpush configuration, and converts it into
-        /// the <see cref="ValidatedWebpushConfig"/> type. This return type can be safely
-        /// serialized into a JSON string that is acceptable to the FCM backend service.
-        /// </summary>
-        internal ValidatedWebpushConfig Validate()
-        {
-            return new ValidatedWebpushConfig()
-            {
-                Headers = this.Headers,
-                Data = this.Data,
-                Notification = this.Notification?.Validate(),
-            };
-        }
-    }
-
-    /// <summary>
-    /// Represents a validated Webpush configuration that can be serialized into the JSON format
-    /// accepted by the FCM backend service.
-    /// </summary>
-    internal sealed class ValidatedWebpushConfig
-    {
-        [JsonProperty("headers")]
-        public IReadOnlyDictionary<string, string> Headers { get; set; }
-
         [JsonProperty("data")]
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
+        /// <summary>
+        /// The Webpush notification to be included in the message.
+        /// </summary>
         [JsonProperty("notification")]
-        internal IReadOnlyDictionary<string, object> Notification { get; set; }   
+        public WebpushNotification Notification { get; set; }
+
+        /// <summary>
+        /// Copies this Webpush config, and validates the content of it to ensure that it can be
+        /// serialized into the JSON format expected by the FCM service.
+        /// </summary>
+        internal WebpushConfig CopyAndValidate()
+        {
+            return new WebpushConfig()
+            {
+                Headers = this.Headers?.Copy(),
+                Data = this.Data?.Copy(),
+                Notification = this.Notification?.CopyAndValidate(),
+            };
+        }
     }
 }

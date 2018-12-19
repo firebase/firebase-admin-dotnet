@@ -14,13 +14,14 @@
 
 using System;
 using System.Collections.Generic;
+using Google.Apis.Json;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// Represents the Webpush-specific notification options that can be included in a
-    /// <see cref="Message"/>. Supports most standard options defined in the 
+    /// <see cref="Message"/>. Supports most standard options defined in the
     /// <see href="https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification">
     /// Web Notification specification</see>
     /// </summary>
@@ -35,33 +36,39 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Body text of the notification.
         /// </summary>
+        [JsonProperty("body")]
         public string Body { get; set; }
 
         /// <summary>
         /// The URL to the icon of the notification.
         /// </summary>
+        [JsonProperty("icon")]
         public string Icon { get; set; }
 
         /// <summary>
         /// The URL of the image used to represent the notification when there is not enough space
         /// to display the notification itself.
         /// </summary>
+        [JsonProperty("badge")]
         public string Badge { get; set; }
 
         /// <summary>
         /// Any arbitrary data that should be associated with the notification.
         /// </summary>
+        [JsonProperty("data")]
         public object Data { get; set; }
 
         /// <summary>
         /// The direction in which to display the notification.
         /// </summary>
+        [JsonIgnore]
         public Direction? Direction { get; set; }
 
         /// <summary>
         /// Converts the <see cref="Direction"/> property into a string value that can be included
         /// in the json output.
         /// </summary>
+        [JsonProperty("dir")]
         internal string DirectionString
         {
             get
@@ -83,49 +90,80 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// The URL of an image to be displayed in the notification.
         /// </summary>
+        [JsonProperty("image")]
         public string Image { get; set; }
 
         /// <summary>
         /// The language of the notification.
         /// </summary>
+        [JsonProperty("lang")]
         public string Language { get; set; }
 
         /// <summary>
         /// Whether the user should be notified after a new notification replaces an old one.
         /// </summary>
+        [JsonProperty("renotify")]
         public bool? Renotify { get; set; }
 
         /// <summary>
         /// Whether a notification should remain active until the user clicks or dismisses it,
         /// rather than closing automatically.
         /// </summary>
+        [JsonProperty("requireInteraction")]
         public bool? RequireInteraction { get; set; }
 
         /// <summary>
         /// Whether the notification should be silent.
         /// </summary>
+        [JsonProperty("silent")]
         public bool? Silent { get; set; }
 
         /// <summary>
         /// An identifying tag for the notification.
         /// </summary>
+        [JsonProperty("tag")]
         public string Tag { get; set; }
 
         /// <summary>
         /// A timestamp value in milliseconds on the notification.
         /// </summary>
+        [JsonProperty("timestamp")]
         public long? TimestampMillis { get; set; }
 
         /// <summary>
         /// A vibration pattern for the receiving device's vibration hardware to emit when the
         /// notification fires.
         /// </summary>
+        [JsonProperty("vibrate")]
         public int[] Vibrate { get; set; }
 
         /// <summary>
         /// A collection of arbitrary key-value data to be included in the notification.
         /// </summary>
+        [JsonIgnore]
         public IReadOnlyDictionary<string, object> CustomData;
+
+        /// <summary>
+        /// A copy of <see cref="CustomData"/> exposed an <code>IDictionary</code> so it
+        /// works with <code>JsonExtensionData</code> annotation.
+        /// </summary>
+        [JsonExtensionData]
+        internal IDictionary<string, object> ExtensionCustomData
+        {
+            get
+            {
+                if (CustomData?.Count > 0)
+                {
+                    var result = new Dictionary<string, object>();
+                    foreach (var entry in CustomData)
+                    {
+                        result[entry.Key] = entry.Value;
+                    }
+                    return result;
+                }
+                return null;
+            }
+        }
 
         /// <summary>
         /// A collection of notification actions to be associated with the notification.
@@ -133,57 +171,49 @@ namespace FirebaseAdmin.Messaging
         [JsonProperty("actions")]
         public IEnumerable<Action> Actions;
 
-        private delegate void AddString(string key, string value);
-        private delegate void AddObject(string key, object value);
-
         /// <summary>
-        /// Validates the content and structure of this Webpush notification, and converts it into
-        /// a dictionary.
+        /// Copies this Webpush notification, and validates the content of it to ensure that it can
+        /// be serialized into the JSON format expected by the FCM service.
         /// </summary>
-        internal IReadOnlyDictionary<string, object> Validate()
+        internal WebpushNotification CopyAndValidate()
         {
-            var result = new Dictionary<string, object>();
-            AddString addString = delegate(string key, string value)
+            var copy = new WebpushNotification()
             {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    result[key] = value;
-                }
+                Title = this.Title,
+                Body = this.Body,
+                Icon = this.Icon,
+                Image = this.Image,
+                Language = this.Language,
+                Tag = this.Tag,
+                Direction = this.Direction,
+                Badge = this.Badge,
+                Renotify = this.Renotify,
+                RequireInteraction = this.RequireInteraction,
+                Silent = this.Silent,
+                Actions = this.Actions?.Copy(),
+                Vibrate = this.Vibrate,
+                TimestampMillis = this.TimestampMillis,
+                Data = this.Data,
             };
-            AddObject addObject = delegate(string key, object value)
+
+            var customDataCopy = this.CustomData?.Copy();
+            if (customDataCopy?.Count > 0)
             {
-                if (value != null)
+                var serializer = NewtonsoftJsonSerializer.Instance;
+                // Serialize the notification without CustomData for validation.
+                var json = serializer.Serialize(copy);
+                var dict = serializer.Deserialize<Dictionary<string, object>>(json);
+                foreach (var entry in customDataCopy)
                 {
-                    result[key] = value;
-                }
-            };
-            addString("title", Title);
-            addString("body", Body);
-            addString("icon", Icon);
-            addString("image", Image);
-            addString("lang", Language);
-            addString("tag", Tag);
-            addString("dir", DirectionString);
-            addString("badge", Badge);
-            addObject("renotify", Renotify);
-            addObject("requireInteraction", RequireInteraction);
-            addObject("silent", Silent);
-            addObject("actions", Actions);
-            addObject("vibrate", Vibrate);
-            addObject("timestamp", TimestampMillis);
-            addObject("data", Data);
-            if (CustomData != null)
-            {
-                foreach (var entry in CustomData)
-                {
-                    if (result.ContainsKey(entry.Key))
+                    if (dict.ContainsKey(entry.Key))
                     {
-                        throw new ArgumentException($"Multiple specification for key {entry.Key}");
+                        throw new ArgumentException(
+                            $"Multiple specifications for WebpushNotification key: {entry.Key}");
                     }
-                    addObject(entry.Key, entry.Value);
                 }
+                copy.CustomData = customDataCopy;
             }
-            return result;
+            return copy;
         }
     }
 
@@ -197,7 +227,7 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         [JsonProperty("action")]
         public string ActionName { get; set; }
-        
+
         /// <summary>
         /// Title text.
         /// </summary>
@@ -220,12 +250,12 @@ namespace FirebaseAdmin.Messaging
         /// Direction automatically determined.
         /// </summary>
         Auto,
-        
+
         /// <summary>
         /// Left to right.
         /// </summary>
         LeftToRight,
-        
+
         /// <summary>
         /// Right to left.
         /// </summary>
