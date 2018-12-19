@@ -38,7 +38,7 @@ namespace FirebaseAdmin.IntegrationTests
                     Title = "Title",
                     Body = "Body",
                 },
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     Priority = Priority.Normal,
                     TimeToLive = TimeSpan.FromHours(1),

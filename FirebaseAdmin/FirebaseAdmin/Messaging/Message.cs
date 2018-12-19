@@ -61,7 +61,12 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// The Android-specific information to be included in the message.
         /// </summary>
-        public AndroidConfig AndroidConfig { get; set; }
+        public AndroidConfig Android { get; set; }
+
+        /// <summary>
+        /// The Webpush-specific information to be included in the message.
+        /// </summary>
+        public WebpushConfig Webpush { get; set; }
 
         /// <summary>
         /// Validates the content and structure of this message instance, and converts it into the
@@ -87,7 +92,8 @@ namespace FirebaseAdmin.Messaging
                 Condition = this.Condition,
                 Data = this.Data,
                 Notification = this.Notification,
-                AndroidConfig = this.AndroidConfig?.Validate(),
+                Android = this.Android?.Validate(),
+                Webpush = this.Webpush?.Validate(),
             };
         }
 
@@ -140,6 +146,9 @@ namespace FirebaseAdmin.Messaging
         internal Notification Notification { get; set; }
 
         [JsonProperty("android")]
-        internal ValidatedAndroidConfig AndroidConfig { get; set; }
+        internal ValidatedAndroidConfig Android { get; set; }
+
+        [JsonProperty("webpush")]
+        internal ValidatedWebpushConfig Webpush { get; set; }
     }
 }

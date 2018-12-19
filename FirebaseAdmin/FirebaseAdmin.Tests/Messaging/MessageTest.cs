@@ -147,7 +147,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     CollapseKey = "collapse-key",
                     Priority = Priority.High,
@@ -215,7 +215,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     TimeToLive = TimeSpan.FromHours(1),
                 },
@@ -239,7 +239,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     TimeToLive = TimeSpan.FromHours(-1),
                 },
@@ -263,7 +263,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     Notification = new AndroidNotification()
                     {
@@ -280,7 +280,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     Notification = new AndroidNotification()
                     {
@@ -297,11 +297,194 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     Notification = new AndroidNotification()
                     {
                         BodyLocArgs = new List<string>(){"arg"},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.Validate());
+        }
+
+        [Fact]
+        public void WebpushConfig()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Headers = new Dictionary<string, string>()
+                    {
+                        {"header1", "header-value1"},
+                        {"header2", "header-value2"},
+                    },
+                    Data = new Dictionary<string, string>()
+                    {
+                        {"key1", "value1"},
+                        {"key2", "value2"},
+                    },
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                        Badge = "badge",
+                        Data = new Dictionary<string, object>()
+                        {
+                            {"some", "data"},
+                        },
+                        Direction = Direction.LeftToRight,
+                        Image = "image",
+                        Language = "language",
+                        Tag = "tag",
+                        Silent = true,
+                        RequireInteraction = true,
+                        Renotify = true,
+                        TimestampMillis = 100,
+                        Vibrate = new int[]{10, 5, 10},
+                        Actions = new List<Action>()
+                        {
+                            new Action()
+                            {
+                                ActionName = "Accept",
+                                Title = "Ok",
+                                Icon = "ok-button",
+                            },
+                            new Action()
+                            {
+                                ActionName = "Reject",
+                                Title = "Cancel",
+                                Icon = "cancel-button",
+                            },
+                        },
+                        CustomData = new Dictionary<string, object>()
+                        {
+                            {"custom-key1", "custom-data"},
+                            {"custom-key2", true},
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "webpush", new JObject()
+                    {
+                        {
+                            "headers", new JObject()
+                            {
+                                {"header1", "header-value1"},
+                                {"header2", "header-value2"},
+                            }
+                        },
+                        {
+                            "data", new JObject()
+                            {
+                                {"key1", "value1"},
+                                {"key2", "value2"},
+                            }
+                        },
+                        {
+                            "notification", new JObject()
+                            {
+                                {"title", "title"},
+                                {"body", "body"},
+                                {"icon", "icon"},
+                                {"badge", "badge"},
+                                {
+                                    "data", new JObject()
+                                    {
+                                        {"some", "data"},
+                                    }
+                                },
+                                {"dir", "ltr"},
+                                {"image", "image"},
+                                {"lang", "language"},
+                                {"renotify", true},
+                                {"requireInteraction", true},
+                                {"silent", true},
+                                {"tag", "tag"},
+                                {"timestamp", 100},
+                                {"vibrate", new JArray(){10, 5, 10}},
+                                {
+                                    "actions", new JArray()
+                                    {
+                                        new JObject()
+                                        {
+                                            {"action", "Accept"},
+                                            {"title", "Ok"},
+                                            {"icon", "ok-button"},
+                                        },
+                                        new JObject()
+                                        {
+                                            {"action", "Reject"},
+                                            {"title", "Cancel"},
+                                            {"icon", "cancel-button"},
+                                        },
+                                    }
+                                },
+                                {"custom-key1", "custom-data"},
+                                {"custom-key2", true},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void WebpushConfigMinimalNotification()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "webpush", new JObject()
+                    {
+                        {
+                            "notification", new JObject()
+                            {
+                                {"title", "title"},
+                                {"body", "body"},
+                                {"icon", "icon"},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void WebpushConfigDuplicateKeys()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        CustomData = new Dictionary<string, object>(){{"title", "other"}},
                     },
                 },
             };
