@@ -31,39 +31,46 @@ namespace FirebaseAdmin.Messaging
         /// The title of the Android notification. When provided, overrides the title set
         /// via <see cref="Notification.Title"/>.
         /// </summary>
+        [JsonProperty("title")]
         public string Title { get; set; }
 
         /// <summary>
         /// The title of the Android notification. When provided, overrides the title set
         /// via <see cref="Notification.Body"/>.
         /// </summary>
+        [JsonProperty("body")]
         public string Body { get; set; }
 
         /// <summary>
         /// The icon of the Android notification.
         /// </summary>
+        [JsonProperty("icon")]
         public string Icon { get; set; }
 
         /// <summary>
         /// The notification icon color. Must be of the form <code>#RRGGBB</code>.
         /// </summary>
+        [JsonProperty("color")]
         public string Color { get; set; }
 
         /// <summary>
         /// The sound to be played when the device receives the notification.
         /// </summary>
+        [JsonProperty("sound")]
         public string Sound { get; set; }
 
         /// <summary>
         /// The notification tag. This is an identifier used to replace existing notifications in
         /// the notification drawer. If not specified, each request creates a new notification.
         /// </summary>
+        [JsonProperty("tag")]
         public string Tag { get; set; }
 
         /// <summary>
         /// The action associated with a user click on the notification. If specified, an activity
         /// with a matching Intent Filter is launched when a user clicks on the notification.
         /// </summary>
+        [JsonProperty("click_action")]
         public string ClickAction { get; set; }
 
         /// <summary>
@@ -71,12 +78,14 @@ namespace FirebaseAdmin.Messaging
         /// title text.
         /// <see cref="Message"/>.
         /// </summary>
+        [JsonProperty("title_loc_key")]
         public string TitleLocKey { get; set; }
 
         /// <summary>
         /// The collection of resource key strings that will be used in place of the format
         /// specifiers in <see cref="TitleLocKey"/>.
         /// </summary>
+        [JsonProperty("title_loc_args")]
         public IEnumerable<string> TitleLocArgs { get; set; }
 
         /// <summary>
@@ -84,12 +93,14 @@ namespace FirebaseAdmin.Messaging
         /// body text.
         /// <see cref="Message"/>.
         /// </summary>
+        [JsonProperty("body_loc_key")]
         public string BodyLocKey { get; set; }
 
         /// <summary>
         /// The collection of resource key strings that will be used in place of the format
         /// specifiers in <see cref="BodyLocKey"/>.
         /// </summary>
+        [JsonProperty("body_loc_args")]
         public IEnumerable<string> BodyLocArgs { get; set; }
 
         /// <summary>
@@ -98,34 +109,16 @@ namespace FirebaseAdmin.Messaging
         /// If you don't send this channel ID in the request, or if the channel ID provided has
         /// not yet been created by the app, FCM uses the channel ID specified in the app manifest.
         /// </summary>
+        [JsonProperty("channel_id")]
         public string ChannelId { get; set; }
 
         /// <summary>
-        /// Validates the content and structure of this notification, and converts it into the
-        /// <see cref="ValidatedAndroidNotification"/> type. This return type can be safely
-        /// serialized into a JSON string that is acceptable to the FCM backend service.
+        /// Copies this notification, and validates the content of it to ensure that it can be
+        /// serialized into the JSON format expected by the FCM service.
         /// </summary>
-        internal ValidatedAndroidNotification Validate()
+        internal AndroidNotification CopyAndValidate()
         {
-            if (Color != null) {
-                if (!Regex.Match(Color, "^#[0-9a-fA-F]{6}$").Success)
-                {
-                    throw new ArgumentException("Color must be in the form #RRGGBB");
-                }
-            }
-            if (TitleLocArgs != null && TitleLocArgs.Any()) {
-                if (string.IsNullOrEmpty(TitleLocKey))
-                {
-                    throw new ArgumentException("TitleLocKey is required when specifying TitleLocArgs");
-                }
-            }
-            if (BodyLocArgs != null && BodyLocArgs.Any()) {
-                if (string.IsNullOrEmpty(BodyLocKey))
-                {
-                    throw new ArgumentException("BodyLocKey is required when specifying BodyLocArgs");
-                }
-            }
-            return new ValidatedAndroidNotification()
+            var copy = new AndroidNotification()
             {
                 Title = this.Title,
                 Body = this.Body,
@@ -140,49 +133,25 @@ namespace FirebaseAdmin.Messaging
                 BodyLocArgs = this.BodyLocArgs,
                 ChannelId = this.ChannelId,
             };
+            if (copy.Color != null && !Regex.Match(copy.Color, "^#[0-9a-fA-F]{6}$").Success)
+            {
+                throw new ArgumentException("Color must be in the form #RRGGBB");
+            }
+            if (copy.TitleLocArgs != null && copy.TitleLocArgs.Any())
+            {
+                if (string.IsNullOrEmpty(copy.TitleLocKey))
+                {
+                    throw new ArgumentException("TitleLocKey is required when specifying TitleLocArgs");
+                }
+            }
+            if (copy.BodyLocArgs != null && copy.BodyLocArgs.Any())
+            {
+                if (string.IsNullOrEmpty(copy.BodyLocKey))
+                {
+                    throw new ArgumentException("BodyLocKey is required when specifying BodyLocArgs");
+                }
+            }
+            return copy;
         }
-    }
-
-    /// <summary>
-    /// Represents a validated Android notification that can be serialized into the JSON format
-    /// accepted by the FCM backend service.
-    /// </summary>
-    internal sealed class ValidatedAndroidNotification
-    {
-        [JsonProperty("title")]
-        internal string Title { get; set; }
-
-        [JsonProperty("body")]
-        internal string Body { get; set; }
-
-        [JsonProperty("icon")]
-        internal string Icon { get; set; }
-
-        [JsonProperty("color")]
-        internal string Color { get; set; }
-
-        [JsonProperty("sound")]
-        internal string Sound { get; set; }
-
-        [JsonProperty("tag")]
-        internal string Tag { get; set; }
-
-        [JsonProperty("click_action")]
-        internal string ClickAction { get; set; }
-
-        [JsonProperty("title_loc_key")]
-        internal string TitleLocKey { get; set; }
-
-        [JsonProperty("title_loc_args")]
-        internal IEnumerable<string> TitleLocArgs { get; set; }
-
-        [JsonProperty("body_loc_key")]
-        internal string BodyLocKey { get; set; }
-
-        [JsonProperty("body_loc_args")]
-        internal IEnumerable<string> BodyLocArgs { get; set; }
-
-        [JsonProperty("channel_id")]
-        internal string ChannelId { get; set; }
     }
 }
