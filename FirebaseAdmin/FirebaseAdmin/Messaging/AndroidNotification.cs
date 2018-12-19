@@ -26,7 +26,7 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class AndroidNotification
     {
-        
+
         /// <summary>
         /// The title of the Android notification. When provided, overrides the title set
         /// via <see cref="Notification.Title"/>.
@@ -128,9 +128,9 @@ namespace FirebaseAdmin.Messaging
                 Tag = this.Tag,
                 ClickAction = this.ClickAction,
                 TitleLocKey = this.TitleLocKey,
-                TitleLocArgs = this.TitleLocArgs,
+                TitleLocArgs = this.TitleLocArgs?.Copy(),
                 BodyLocKey = this.BodyLocKey,
-                BodyLocArgs = this.BodyLocArgs,
+                BodyLocArgs = this.BodyLocArgs?.Copy(),
                 ChannelId = this.ChannelId,
             };
             if (copy.Color != null && !Regex.Match(copy.Color, "^#[0-9a-fA-F]{6}$").Success)

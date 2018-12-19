@@ -18,7 +18,6 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Google.Apis.Json;
 using Google.Apis.Util;
-using FirebaseAdmin;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -92,9 +91,9 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Copies this message, and validates the content of it to ensure that it can be
-        /// serialized into the JSON format expected by the FCM service. Each property is
-        /// copied before validated to make sure the original is not modified in the user
-        /// code post-validation.
+        /// serialized into the JSON format expected by the FCM service. Each property is copied
+        /// before validation to guard against the original being modified in the user code
+        /// post-validation.
         /// </summary>
         internal Message CopyAndValidate()
         {

@@ -48,7 +48,7 @@ namespace FirebaseAdmin
         /// <summary>
         /// Creates a default (unauthenticated) <see cref="ConfigurableHttpClient"/> from the
         /// factory.
-        /// </summary> 
+        /// </summary>
         public static ConfigurableHttpClient CreateDefaultHttpClient(
             this HttpClientFactory clientFactory)
         {
@@ -99,6 +99,14 @@ namespace FirebaseAdmin
                 copy[entry.Key] = entry.Value;
             }
             return copy;
+        }
+
+        /// <summary>
+        /// Creates a shallow copy of a collection of items.
+        /// </summary>
+        public static IEnumerable<T> Copy<T>(this IEnumerable<T> source)
+        {
+            return new List<T>(source);
         }
     }
 }
