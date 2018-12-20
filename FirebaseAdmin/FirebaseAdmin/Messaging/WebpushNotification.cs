@@ -70,7 +70,7 @@ namespace FirebaseAdmin.Messaging
         /// in the json output.
         /// </summary>
         [JsonProperty("dir")]
-        internal string DirectionString
+        private string DirectionString
         {
             get
             {

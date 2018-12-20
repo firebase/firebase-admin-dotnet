@@ -285,16 +285,6 @@ namespace FirebaseAdmin.Messaging.Tests
                     TimeToLive = TimeSpan.FromHours(-1),
                 },
             };
-            var expected = new JObject()
-            {
-                {"topic", "test-topic"},
-                {
-                    "android", new JObject()
-                    {
-                        { "ttl", "3600s" },
-                    }
-                },
-            };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
@@ -314,6 +304,8 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfig>(json);
+            Assert.Equal(original.CollapseKey, copy.CollapseKey);
+            Assert.Equal(original.RestrictedPackageName, copy.RestrictedPackageName);
             Assert.Equal(original.Priority, copy.Priority);
             Assert.Equal(original.TimeToLive, copy.TimeToLive);
             Assert.Equal(original.Data, copy.Data);

@@ -47,7 +47,7 @@ namespace FirebaseAdmin.Messaging
         /// prefix if present. This is what's ultimately sent to the FCM service.
         /// </summary>
         [JsonProperty("topic")]
-        internal string UnprefixedTopic
+        private string UnprefixedTopic
         {
             get
             {
