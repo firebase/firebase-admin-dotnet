@@ -76,18 +76,6 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
-        public void MessageDeserialization()
-        {
-            var original = new Message()
-            {
-                Topic = "test-topic",
-            };
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
-            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
-            Assert.Equal(original.Topic, copy.Topic);
-        }
-
-        [Fact]
         public void DataMessage()
         {
             var message = new Message()
@@ -125,6 +113,23 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var message = new Message(){Topic = "/topics/test-topic"};
             AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
+        }
+
+        [Fact]
+        public void MessageDeserialization()
+        {
+            var original = new Message()
+            {
+                Topic = "test-topic",
+                Data = new Dictionary<string, string>()
+                {
+                    { "key", "value" },
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
+            Assert.Equal(original.Topic, copy.Topic);
+            Assert.Equal(original.Data, copy.Data);
         }
 
         [Fact]
@@ -298,13 +303,20 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var original = new AndroidConfig()
             {
+                CollapseKey = "collapse-key",
+                RestrictedPackageName = "test-pkg-name",
                 TimeToLive = TimeSpan.FromSeconds(10.5),
                 Priority = Priority.High,
+                Data = new Dictionary<string, string>()
+                {
+                    { "key", "value" },
+                },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfig>(json);
             Assert.Equal(original.Priority, copy.Priority);
             Assert.Equal(original.TimeToLive, copy.TimeToLive);
+            Assert.Equal(original.Data, copy.Data);
         }
 
         [Fact]
@@ -546,7 +558,6 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var original = new WebpushNotification()
             {
-                Direction = Direction.LeftToRight,
                 CustomData = new Dictionary<string, object>()
                 {
                     {"custom-key1", "custom-data"},
@@ -555,7 +566,6 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<WebpushNotification>(json);
-            Assert.Equal(original.Direction, copy.Direction);
             Assert.Equal(original.CustomData, copy.CustomData);
         }
 
@@ -566,29 +576,6 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.True(
                 JToken.DeepEquals(expected, parsed),
                 $"Expected: {expected.ToString()}\nActual: {parsed.ToString()}");
-        }
-    }
-
-    public class Foo
-    {
-        [JsonExtensionData(ReadData = true, WriteData = true)]
-        private IDictionary<string, object> _data = new Dictionary<string, object>();
-
-        [JsonIgnore]
-        public IReadOnlyDictionary<string, object> CustomData
-        {
-            get
-            {
-                return _data.Copy();
-            }
-            set
-            {
-                _data = new Dictionary<string, object>();
-                foreach (var entry in value)
-                {
-                    _data[entry.Key] = entry.Value;
-                }
-            }
         }
     }
 }

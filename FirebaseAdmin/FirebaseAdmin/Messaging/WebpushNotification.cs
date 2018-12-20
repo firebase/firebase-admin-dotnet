@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Google.Apis.Json;
 using Newtonsoft.Json;
 
@@ -153,28 +154,12 @@ namespace FirebaseAdmin.Messaging
         public int[] Vibrate { get; set; }
 
         /// <summary>
-        /// A collection of arbitrary key-value data to be included in the notification.
-        /// </summary>
-        [JsonIgnore]
-        public IReadOnlyDictionary<string, object> CustomData
-        {
-            get { return ExtensionCustomData; }
-            set
-            {
-                ExtensionCustomData = new Dictionary<string, object>();
-                foreach (var entry in value)
-                {
-                    ExtensionCustomData[entry.Key] = entry.Value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// A copy of <see cref="CustomData"/> exposed an <code>IDictionary</code> so it
-        /// works with <code>JsonExtensionData</code> annotation.
+        /// A collection of arbitrary key-value data to be included in the notification. This is
+        /// exposed as an <see cref="IDictionary{TKey, TValue}"/> to support correct
+        /// deserialization of custom properties.
         /// </summary>
         [JsonExtensionData]
-        private Dictionary<string, object> ExtensionCustomData;
+        public IDictionary<string, object> CustomData { get; set; }
 
         /// <summary>
         /// A collection of notification actions to be associated with the notification.
@@ -201,7 +186,7 @@ namespace FirebaseAdmin.Messaging
                 Renotify = this.Renotify,
                 RequireInteraction = this.RequireInteraction,
                 Silent = this.Silent,
-                Actions = this.Actions?.Copy(),
+                Actions = this.Actions?.Select((item, _) => new Action(item)).ToList(),
                 Vibrate = this.Vibrate,
                 TimestampMillis = this.TimestampMillis,
                 Data = this.Data,
@@ -250,6 +235,18 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         [JsonProperty("icon")]
         public string Icon { get; set; }
+
+        /// <summary>
+        /// Creates a new Action instance.
+        /// </summary>
+        public Action() { }
+
+        internal Action(Action action)
+        {
+            ActionName = action.ActionName;
+            Title = action.Title;
+            Icon = action.Icon;
+        }
     }
 
     /// <summary>

@@ -100,13 +100,5 @@ namespace FirebaseAdmin
             }
             return copy;
         }
-
-        /// <summary>
-        /// Creates a shallow copy of a collection of items.
-        /// </summary>
-        public static IEnumerable<T> Copy<T>(this IEnumerable<T> source)
-        {
-            return new List<T>(source);
-        }
     }
 }

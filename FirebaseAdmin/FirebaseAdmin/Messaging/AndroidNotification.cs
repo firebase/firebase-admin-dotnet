@@ -128,9 +128,9 @@ namespace FirebaseAdmin.Messaging
                 Tag = this.Tag,
                 ClickAction = this.ClickAction,
                 TitleLocKey = this.TitleLocKey,
-                TitleLocArgs = this.TitleLocArgs?.Copy(),
+                TitleLocArgs = this.TitleLocArgs?.ToList(),
                 BodyLocKey = this.BodyLocKey,
-                BodyLocArgs = this.BodyLocArgs?.Copy(),
+                BodyLocArgs = this.BodyLocArgs?.ToList(),
                 ChannelId = this.ChannelId,
             };
             if (copy.Color != null && !Regex.Match(copy.Color, "^#[0-9a-fA-F]{6}$").Success)
