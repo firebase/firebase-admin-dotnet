@@ -85,6 +85,21 @@ namespace FirebaseAdmin.Messaging
                         return null;
                 }
             }
+            set
+            {
+                switch (value)
+                {
+                    case "auto":
+                        Direction = Messaging.Direction.Auto;
+                        return;
+                    case "ltr":
+                        Direction = Messaging.Direction.LeftToRight;
+                        return;
+                    case "rtl":
+                        Direction = Messaging.Direction.RightToLeft;
+                        return;
+                }
+            }
         }
 
         /// <summary>
@@ -141,29 +156,25 @@ namespace FirebaseAdmin.Messaging
         /// A collection of arbitrary key-value data to be included in the notification.
         /// </summary>
         [JsonIgnore]
-        public IReadOnlyDictionary<string, object> CustomData;
+        public IReadOnlyDictionary<string, object> CustomData
+        {
+            get { return ExtensionCustomData; }
+            set
+            {
+                ExtensionCustomData = new Dictionary<string, object>();
+                foreach (var entry in value)
+                {
+                    ExtensionCustomData[entry.Key] = entry.Value;
+                }
+            }
+        }
 
         /// <summary>
         /// A copy of <see cref="CustomData"/> exposed an <code>IDictionary</code> so it
         /// works with <code>JsonExtensionData</code> annotation.
         /// </summary>
         [JsonExtensionData]
-        internal IDictionary<string, object> ExtensionCustomData
-        {
-            get
-            {
-                if (CustomData?.Count > 0)
-                {
-                    var result = new Dictionary<string, object>();
-                    foreach (var entry in CustomData)
-                    {
-                        result[entry.Key] = entry.Value;
-                    }
-                    return result;
-                }
-                return null;
-            }
-        }
+        private Dictionary<string, object> ExtensionCustomData;
 
         /// <summary>
         /// A collection of notification actions to be associated with the notification.
@@ -196,14 +207,14 @@ namespace FirebaseAdmin.Messaging
                 Data = this.Data,
             };
 
-            var customDataCopy = this.CustomData?.Copy();
-            if (customDataCopy?.Count > 0)
+            var customData = this.CustomData;
+            if (customData?.Count > 0)
             {
                 var serializer = NewtonsoftJsonSerializer.Instance;
                 // Serialize the notification without CustomData for validation.
                 var json = serializer.Serialize(copy);
                 var dict = serializer.Deserialize<Dictionary<string, object>>(json);
-                foreach (var entry in customDataCopy)
+                foreach (var entry in customData)
                 {
                     if (dict.ContainsKey(entry.Key))
                     {
@@ -211,7 +222,7 @@ namespace FirebaseAdmin.Messaging
                             $"Multiple specifications for WebpushNotification key: {entry.Key}");
                     }
                 }
-                copy.CustomData = customDataCopy;
+                copy.CustomData = customData;
             }
             return copy;
         }

@@ -16,8 +16,8 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using FirebaseAdmin.Messaging;
 using Google.Apis.Json;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging.Tests
 {
@@ -541,6 +541,24 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
+        [Fact]
+        public void WebpushNotificationDeserialization()
+        {
+            var original = new WebpushNotification()
+            {
+                Direction = Direction.LeftToRight,
+                CustomData = new Dictionary<string, object>()
+                {
+                    {"custom-key1", "custom-data"},
+                    {"custom-key2", true},
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<WebpushNotification>(json);
+            Assert.Equal(original.Direction, copy.Direction);
+            Assert.Equal(original.CustomData, copy.CustomData);
+        }
+
         private void AssertJsonEquals(JObject expected, Message actual)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.CopyAndValidate());
@@ -548,6 +566,29 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.True(
                 JToken.DeepEquals(expected, parsed),
                 $"Expected: {expected.ToString()}\nActual: {parsed.ToString()}");
+        }
+    }
+
+    public class Foo
+    {
+        [JsonExtensionData(ReadData = true, WriteData = true)]
+        private IDictionary<string, object> _data = new Dictionary<string, object>();
+
+        [JsonIgnore]
+        public IReadOnlyDictionary<string, object> CustomData
+        {
+            get
+            {
+                return _data.Copy();
+            }
+            set
+            {
+                _data = new Dictionary<string, object>();
+                foreach (var entry in value)
+                {
+                    _data[entry.Key] = entry.Value;
+                }
+            }
         }
     }
 }
