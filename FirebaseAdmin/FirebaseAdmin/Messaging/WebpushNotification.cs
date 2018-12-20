@@ -154,18 +154,18 @@ namespace FirebaseAdmin.Messaging
         public int[] Vibrate { get; set; }
 
         /// <summary>
+        /// A collection of notification actions to be associated with the notification.
+        /// </summary>
+        [JsonProperty("actions")]
+        public IEnumerable<Action> Actions;
+
+        /// <summary>
         /// A collection of arbitrary key-value data to be included in the notification. This is
         /// exposed as an <see cref="IDictionary{TKey, TValue}"/> to support correct
         /// deserialization of custom properties.
         /// </summary>
         [JsonExtensionData]
         public IDictionary<string, object> CustomData { get; set; }
-
-        /// <summary>
-        /// A collection of notification actions to be associated with the notification.
-        /// </summary>
-        [JsonProperty("actions")]
-        public IEnumerable<Action> Actions;
 
         /// <summary>
         /// Copies this Webpush notification, and validates the content of it to ensure that it can
@@ -199,6 +199,7 @@ namespace FirebaseAdmin.Messaging
                 // Serialize the notification without CustomData for validation.
                 var json = serializer.Serialize(copy);
                 var dict = serializer.Deserialize<Dictionary<string, object>>(json);
+                customData = new Dictionary<string, object>(customData);
                 foreach (var entry in customData)
                 {
                     if (dict.ContainsKey(entry.Key))
