@@ -26,7 +26,7 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void MessageWithoutTarget()
         {
-            Assert.Throws<ArgumentException>(() => new Message().Validate());
+            Assert.Throws<ArgumentException>(() => new Message().CopyAndValidate());
         }
 
         [Fact]
@@ -50,21 +50,21 @@ namespace FirebaseAdmin.Messaging.Tests
                 Token = "test-token",
                 Topic = "test-topic",
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
 
             message = new Message()
             {
                 Token = "test-token",
                 Condition = "test-condition",
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
 
             message = new Message()
             {
                 Condition = "test-condition",
                 Topic = "test-topic",
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
 
             message = new Message()
             {
@@ -72,7 +72,19 @@ namespace FirebaseAdmin.Messaging.Tests
                 Topic = "test-topic",
                 Condition = "test-condition",
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void MessageDeserialization()
+        {
+            var original = new Message()
+            {
+                Topic = "test-topic",
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
+            Assert.Equal(original.Topic, copy.Topic);
         }
 
         [Fact]
@@ -104,7 +116,7 @@ namespace FirebaseAdmin.Messaging.Tests
             foreach (var topic in topics)
             {
                 var message = new Message(){Topic = topic};
-                Assert.Throws<ArgumentException>(() => message.Validate());
+                Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
             }
         }
 
@@ -147,7 +159,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     CollapseKey = "collapse-key",
                     Priority = Priority.High,
@@ -210,12 +222,36 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void AndroidConfigMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Android = new AndroidConfig()
+                {
+                    RestrictedPackageName = "test-pkg-name",
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "android", new JObject()
+                    {
+                        { "restricted_package_name", "test-pkg-name" },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
         public void AndroidConfigFullSecondsTTL()
         {
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     TimeToLive = TimeSpan.FromHours(1),
                 },
@@ -226,7 +262,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     "android", new JObject()
                     {
-                        { "ttl", "3600s" },                        
+                        { "ttl", "3600s" },
                     }
                 },
             };
@@ -239,7 +275,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     TimeToLive = TimeSpan.FromHours(-1),
                 },
@@ -250,11 +286,25 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     "android", new JObject()
                     {
-                        { "ttl", "3600s" },                        
+                        { "ttl", "3600s" },
                     }
                 },
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidConfigDeserialization()
+        {
+            var original = new AndroidConfig()
+            {
+                TimeToLive = TimeSpan.FromSeconds(10.5),
+                Priority = Priority.High,
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfig>(json);
+            Assert.Equal(original.Priority, copy.Priority);
+            Assert.Equal(original.TimeToLive, copy.TimeToLive);
         }
 
         [Fact]
@@ -263,7 +313,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     Notification = new AndroidNotification()
                     {
@@ -271,7 +321,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     },
                 },
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
         [Fact]
@@ -280,7 +330,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     Notification = new AndroidNotification()
                     {
@@ -288,7 +338,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     },
                 },
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
         [Fact]
@@ -297,7 +347,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                AndroidConfig = new AndroidConfig()
+                Android = new AndroidConfig()
                 {
                     Notification = new AndroidNotification()
                     {
@@ -305,12 +355,12 @@ namespace FirebaseAdmin.Messaging.Tests
                     },
                 },
             };
-            Assert.Throws<ArgumentException>(() => message.Validate());
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
         private void AssertJsonEquals(JObject expected, Message actual)
         {
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.Validate());
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.CopyAndValidate());
             var parsed = JObject.Parse(json);
             Assert.True(
                 JToken.DeepEquals(expected, parsed),

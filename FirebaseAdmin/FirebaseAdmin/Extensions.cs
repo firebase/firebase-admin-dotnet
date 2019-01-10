@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,7 +48,7 @@ namespace FirebaseAdmin
         /// <summary>
         /// Creates a default (unauthenticated) <see cref="ConfigurableHttpClient"/> from the
         /// factory.
-        /// </summary> 
+        /// </summary>
         public static ConfigurableHttpClient CreateDefaultHttpClient(
             this HttpClientFactory clientFactory)
         {
@@ -84,6 +85,28 @@ namespace FirebaseAdmin
         public static long UnixTimestamp(this IClock clock)
         {
             return (long) (clock.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+        }
+
+        /// <summary>
+        /// Creates a shallow copy of a collection of key-value pairs.
+        /// </summary>
+        public static IReadOnlyDictionary<TKey, TValue> Copy<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> source)
+        {
+            var copy = new Dictionary<TKey, TValue>();
+            foreach (var entry in source)
+            {
+                copy[entry.Key] = entry.Value;
+            }
+            return copy;
+        }
+
+        /// <summary>
+        /// Creates a shallow copy of a collection of items.
+        /// </summary>
+        public static IEnumerable<T> Copy<T>(this IEnumerable<T> source)
+        {
+            return new List<T>(source);
         }
     }
 }

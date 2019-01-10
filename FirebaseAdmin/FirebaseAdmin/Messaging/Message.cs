@@ -18,7 +18,6 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Google.Apis.Json;
 using Google.Apis.Util;
-using FirebaseAdmin;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -33,46 +32,82 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// The registration token of the device to which the message should be sent.
         /// </summary>
+        [JsonProperty("token")]
         public string Token { get; set; }
 
         /// <summary>
         /// The name of the FCM topic to which the message should be sent. Topic names may
         /// contain the <c>/topics/</c> prefix.
         /// </summary>
+        [JsonIgnore]
         public string Topic { get; set; }
+
+        /// <summary>
+        /// Formatted representation of the <see cref="Topic"/>. Removes the <code>/topics/</code>
+        /// prefix if present. This is what's ultimately sent to the FCM service.
+        /// </summary>
+        [JsonProperty("topic")]
+        internal string UnprefixedTopic
+        {
+            get
+            {
+                if (Topic != null && Topic.StartsWith("/topics/"))
+                {
+                    return Topic.Substring("/topics/".Length);
+                }
+                return Topic;
+            }
+            set
+            {
+                Topic = value;
+            }
+        }
 
         /// <summary>
         /// The FCM condition to which the message should be sent. Must be a valid condition
         /// string such as <c>"'foo' in topics"</c>.
         /// </summary>
+        [JsonProperty("condition")]
         public string Condition { get; set; }
 
         /// <summary>
         /// A collection of key-value pairs that will be added to the message as data fields. Keys
         /// and the values must not be null.
         /// </summary>
+        [JsonProperty("data")]
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
         /// <summary>
         /// The notification information to be included in the message.
         /// </summary>
+        [JsonProperty("notification")]
         public Notification Notification { get; set; }
 
         /// <summary>
         /// The Android-specific information to be included in the message.
         /// </summary>
-        public AndroidConfig AndroidConfig { get; set; }
+        [JsonProperty("android")]
+        public AndroidConfig Android { get; set; }
 
         /// <summary>
-        /// Validates the content and structure of this message instance, and converts it into the
-        /// <see cref="ValidatedMessage"/> type. This return type can be safely serialized into
-        /// a JSON string that is acceptable to the FCM backend service.
+        /// Copies this message, and validates the content of it to ensure that it can be
+        /// serialized into the JSON format expected by the FCM service. Each property is copied
+        /// before validation to guard against the original being modified in the user code
+        /// post-validation.
         /// </summary>
-        internal ValidatedMessage Validate()
+        internal Message CopyAndValidate()
         {
+            // Copy and validate the leaf-level properties
+            var copy = new Message()
+            {
+                Token = this.Token,
+                Topic = this.Topic,
+                Condition = this.Condition,
+                Data = this.Data?.Copy(),
+            };
             var list = new List<string>()
             {
-                Token, Topic, Condition,
+                copy.Token, copy.Topic, copy.Condition,
             };
             var targets = list.FindAll((target) => !string.IsNullOrEmpty(target));
             if (targets.Count != 1)
@@ -80,66 +115,16 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException(
                     "Exactly one of Token, Topic or Condition is required.");
             }
-            return new ValidatedMessage()
+            var topic = copy.UnprefixedTopic;
+            if (topic != null && !Regex.IsMatch(topic, "^[a-zA-Z0-9-_.~%]+$"))
             {
-                Token = this.Token,
-                Topic = this.ValidatedTopic,
-                Condition = this.Condition,
-                Data = this.Data,
-                Notification = this.Notification,
-                AndroidConfig = this.AndroidConfig?.Validate(),
-            };
-        }
-
-        /// <summary>
-        /// Validated and formatted representation of the <see cref="Topic"/>. Checks for any
-        /// illegal characters in the topic name, and removes the <code>/topics/</code> prefix if
-        /// present.
-        /// </summary>
-        private string ValidatedTopic
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(Topic))
-                {
-                    return null;
-                }
-                var topic = Topic;
-                if (topic.StartsWith("/topics/"))
-                {
-                    topic = topic.Substring("/topics/".Length);
-                }
-                if (!Regex.IsMatch(topic, "^[a-zA-Z0-9-_.~%]+$"))
-                {
-                    throw new ArgumentException("Malformed topic name.");
-                }
-                return topic;
+                throw new ArgumentException("Malformed topic name.");
             }
+
+            // Copy and validate the child properties
+            copy.Notification = this.Notification?.CopyAndValidate();
+            copy.Android = this.Android?.CopyAndValidate();
+            return copy;
         }
-    }
-
-    /// <summary>
-    /// Represents a validated message that can be serialized into the JSON format accepted by the
-    /// FCM backend service.
-    /// </summary>
-    internal sealed class ValidatedMessage
-    {
-        [JsonProperty("token")]
-        internal string Token { get; set; }
-
-        [JsonProperty("topic")]
-        internal string Topic { get; set; }
-
-        [JsonProperty("condition")]
-        internal string Condition { get; set; }
-
-        [JsonProperty("data")]
-        internal IReadOnlyDictionary<string, string> Data { get; set; }
-
-        [JsonProperty("notification")]
-        internal Notification Notification { get; set; }
-
-        [JsonProperty("android")]
-        internal ValidatedAndroidConfig AndroidConfig { get; set; }
     }
 }

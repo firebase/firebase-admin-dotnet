@@ -74,7 +74,7 @@ namespace FirebaseAdmin.Messaging
         {
             var request = new SendRequest()
             {
-                Message = message.ThrowIfNull(nameof(message)).Validate(),
+                Message = message.ThrowIfNull(nameof(message)).CopyAndValidate(),
                 ValidateOnly = dryRun,
             };
             try
@@ -111,7 +111,7 @@ namespace FirebaseAdmin.Messaging
     internal sealed class SendRequest
     {
         [Newtonsoft.Json.JsonProperty("message")]
-        public ValidatedMessage Message { get; set; }
+        public Message Message { get; set; }
 
         [Newtonsoft.Json.JsonProperty("validate_only")]
         public bool ValidateOnly { get; set; }

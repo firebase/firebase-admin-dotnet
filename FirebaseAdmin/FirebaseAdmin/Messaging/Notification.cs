@@ -32,5 +32,18 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         [JsonProperty("body")]
         public string Body { get; set; }
+
+        /// <summary>
+        /// Copies this notification. There is nothing to be validated in this class, but we use
+        /// the same method name as in other classes in this namespace.
+        /// </summary>
+        internal Notification CopyAndValidate()
+        {
+            return new Notification()
+            {
+                Title = this.Title,
+                Body = this.Body,
+            };
+        }
     }
 }
