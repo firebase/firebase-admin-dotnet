@@ -99,6 +99,9 @@ namespace FirebaseAdmin.Messaging
                     case "rtl":
                         Direction = Messaging.Direction.RightToLeft;
                         return;
+                    default:
+                        throw new FirebaseException($"Invalid direction value: {value}. Only "
+                        + "'auto', 'rtl' and 'ltr' are allowed.");
                 }
             }
         }
