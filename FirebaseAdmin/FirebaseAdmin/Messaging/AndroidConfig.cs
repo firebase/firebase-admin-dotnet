@@ -66,6 +66,10 @@ namespace FirebaseAdmin.Messaging
                     case "normal":
                         Priority = Messaging.Priority.High;
                         return;
+                    default:
+                        throw new FirebaseException(
+                            $"Invalid priority value: {value}. Only 'high' and 'normal'"
+                            + " are allowed.");
                 }
             }
         }
