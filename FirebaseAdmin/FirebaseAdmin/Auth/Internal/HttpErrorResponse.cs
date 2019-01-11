@@ -1,4 +1,4 @@
-// Copyright 2018, Google Inc. All rights reserved.
+﻿// Copyright 2019, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using Newtonsoft.Json;
 
-namespace FirebaseAdmin
+namespace FirebaseAdmin.Auth.Internal
 {
-    /// <summary>
-    /// Common error type for all exceptions raised by Firebase APIs.
-    /// </summary>
-    public class FirebaseException: Exception
+    internal class HttpErrorResponse
     {
-        internal FirebaseException(string message): base(message) {}
-        
-        internal FirebaseException(string message, Exception inner): base(message, inner) {}
+        [JsonProperty("error")]
+        private NestedError Error { get; set; }
+
+        public string ErrorCode => string.IsNullOrEmpty(Error.Code) ? Error.Code : "unknown";
+
+        public class NestedError
+        {
+            [JsonProperty("message")]
+            public string Code { get; set; }
+        }
     }
 }

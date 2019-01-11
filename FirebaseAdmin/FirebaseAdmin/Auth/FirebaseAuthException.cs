@@ -1,4 +1,4 @@
-// Copyright 2018, Google Inc. All rights reserved.
+﻿// Copyright 2019, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 
-namespace FirebaseAdmin
+namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Common error type for all exceptions raised by Firebase APIs.
+    /// Generic exception related to Firebase Authentication. 
+    /// Check the error code and message for more details.
     /// </summary>
-    public class FirebaseException: Exception
+    internal sealed class FirebaseAuthException : FirebaseException
     {
-        internal FirebaseException(string message): base(message) {}
-        
-        internal FirebaseException(string message, Exception inner): base(message, inner) {}
+        /// <summary>
+        /// An error code that may provide more information about the error.
+        /// </summary>
+        public string ErrorCode { get; private set; }
+
+        public FirebaseAuthException(string errorCode, string message)
+            : base(message)
+        {
+            ErrorCode = errorCode;
+        }
     }
 }
