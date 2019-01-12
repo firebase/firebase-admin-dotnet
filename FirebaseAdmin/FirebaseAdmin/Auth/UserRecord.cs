@@ -22,7 +22,7 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    public class UserRecord
+    internal class UserRecord
     {
         private string _uid;
         private IReadOnlyDictionary<string, object> _customClaims;

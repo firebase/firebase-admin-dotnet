@@ -31,7 +31,7 @@ namespace FirebaseAdmin.Auth
     /// Google Identity Toolkit</a> via its REST API. This class does not hold any mutable state, 
     /// and is thread safe.
     /// </summary>
-    public class FirebaseUserManager
+    internal class FirebaseUserManager
     {
         private const string INTERNAL_ERROR = "internal-error";
 
