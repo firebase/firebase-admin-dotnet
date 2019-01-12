@@ -19,7 +19,7 @@ namespace FirebaseAdmin
     /// <summary>
     /// Common error type for all exceptions raised by Firebase APIs.
     /// </summary>
-    public class FirebaseException: Exception
+    public sealed class FirebaseException: Exception
     {
         internal FirebaseException(string message): base(message) {}
         

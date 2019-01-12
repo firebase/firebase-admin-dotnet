@@ -72,7 +72,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Update an existing user.
         /// </summary>
-        /// <exception cref="FirebaseAuthException">If the server responds that cannot update the user.</exception>
+        /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
         /// <param name="user">The user which we want to update.</param>
         public async Task UpdateUser(UserRecord user)
         {
@@ -82,7 +82,7 @@ namespace FirebaseAdmin.Auth
             var userResponse = resopnse.ToObject<UserRecord>();
             if (userResponse == null || userResponse.Uid != user.Uid)
             {
-                throw new FirebaseAuthException(INTERNAL_ERROR, $"Failed to update user: {user.Uid}");
+                throw new FirebaseException(INTERNAL_ERROR);
             }
         }
 
@@ -105,7 +105,7 @@ namespace FirebaseAdmin.Auth
             }
             catch (Exception)
             {
-                throw new FirebaseAuthException(INTERNAL_ERROR, "Error while calling user management backend service");
+                throw new FirebaseException(INTERNAL_ERROR);
             }
             finally
             {
@@ -126,7 +126,7 @@ namespace FirebaseAdmin.Auth
                     NewtonsoftJsonSerializer.Instance.Deserialize<HttpErrorResponse>(await response.Content.ReadAsStringAsync());
                 if (_errorCodes.TryGetValue(errorResponse.ErrorCode, out var code))
                 {
-                    throw new FirebaseAuthException(code, response.ReasonPhrase);
+                    throw new FirebaseException(code);
                 };
             }
             catch (Exception)
@@ -134,8 +134,7 @@ namespace FirebaseAdmin.Auth
                 // Ignored
             }
 
-            throw new FirebaseAuthException(INTERNAL_ERROR,
-                $"Unexpected HTTP response with status: {response.StatusCode}; body: {await response.Content.ReadAsStringAsync()}");
+            throw new FirebaseException(INTERNAL_ERROR);
         }
 
         internal static FirebaseUserManager Create(FirebaseApp app)
