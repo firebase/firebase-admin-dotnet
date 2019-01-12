@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Google.Apis.Json;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace FirebaseAdmin.Auth
 {
@@ -44,7 +46,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Returns custom claims set on this user.
         /// </summary>
-        [JsonProperty("customAttributes")]
+        [JsonIgnore]
         public IReadOnlyDictionary<string, object> CustomClaims
         {
             get => _customClaims;
@@ -54,6 +56,9 @@ namespace FirebaseAdmin.Auth
                 _customClaims = value;
             }
         }
+
+        [JsonProperty("customAttributes")]
+        internal string CustomClaimsString => SerializeClaims(CustomClaims);
 
         /// <summary>
         /// Checks if the given user ID is valid.
@@ -76,7 +81,8 @@ namespace FirebaseAdmin.Auth
         /// Checks if the given set of custom claims are valid.
         /// </summary>
         /// <param name="customClaims">The custom claims. Claim names must 
-        /// not be null or empty and must not be reserved.</param>
+        /// not be null or empty and must not be reserved and the serialized
+        /// claims have to be less than 1000 bytes.</param>
         public static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
         {
             if (customClaims == null)
@@ -95,6 +101,18 @@ namespace FirebaseAdmin.Auth
                     throw new ArgumentException($"Claim {key} is reserved and cannot be set");
                 }
             }
+
+            var customClaimsString = SerializeClaims(customClaims);
+            var byteCount = Encoding.Unicode.GetByteCount(customClaimsString);
+            if(byteCount >= 1000)
+            {
+                throw new ArgumentException($"Claims have to be less than 1000 bytes when serialized");
+            }
+        }
+
+        private static string SerializeClaims(IReadOnlyDictionary<string, object> claims)
+        {
+            return NewtonsoftJsonSerializer.Instance.Serialize(claims);
         }
     }
 }
