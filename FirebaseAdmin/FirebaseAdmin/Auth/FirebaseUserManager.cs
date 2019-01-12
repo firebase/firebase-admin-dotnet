@@ -31,7 +31,7 @@ namespace FirebaseAdmin.Auth
     /// Google Identity Toolkit</a> via its REST API. This class does not hold any mutable state, 
     /// and is thread safe.
     /// </summary>
-    internal class FirebaseUserManager
+    internal class FirebaseUserManager: IDisposable
     {
         private const string INTERNAL_ERROR = "internal-error";
 
@@ -154,6 +154,11 @@ namespace FirebaseAdmin.Auth
             };
 
             return new FirebaseUserManager(args);
+        }
+
+        public void Dispose()
+        {
+            _httpClient.Dispose();
         }
     }
 
