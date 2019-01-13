@@ -21,8 +21,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using FirebaseAdmin.Auth;
-using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -171,6 +169,30 @@ namespace FirebaseAdmin.Auth.Tests
             var signature = JwtUtils.Base64DecodeToBytes(segments[2]);
             var verified = rsa.VerifyData(tokenData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Assert.True(verified);
+        }
+
+        [Fact]
+        public async Task SetCustomUserClaimsInvalidCredential()
+        {
+            FirebaseApp.Create(new AppOptions() { Credential = mockCredential, ProjectId = "project1" });
+            var customClaims = new Dictionary<string, object>()
+            {
+                {"admin", true}
+            };
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
+        }
+
+        [Fact]
+        public async Task SetCustomUserClaimsNoProjectId()
+        {
+            FirebaseApp.Create(new AppOptions() { Credential = mockCredential });
+            var customClaims = new Dictionary<string, object>()
+            {
+                {"admin", true}
+            };
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
         }
 
         public void Dispose()
