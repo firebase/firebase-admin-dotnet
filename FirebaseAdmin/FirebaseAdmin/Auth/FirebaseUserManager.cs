@@ -74,7 +74,7 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
         /// <param name="user">The user which we want to update.</param>
-        public async Task UpdateUser(UserRecord user)
+        public async Task UpdateUserAsync(UserRecord user)
         {
             var updatePath = "/accounts:update";
             var resopnse = await PostAsync(updatePath, user);

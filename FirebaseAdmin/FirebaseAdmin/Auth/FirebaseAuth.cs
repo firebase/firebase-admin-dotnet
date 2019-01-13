@@ -269,7 +269,7 @@ namespace FirebaseAdmin.Auth
                 CustomClaims = claims
             };
 
-            await _userManager.Value.UpdateUser(user);
+            await _userManager.Value.UpdateUserAsync(user);
         }
 
         void IFirebaseService.Delete()
