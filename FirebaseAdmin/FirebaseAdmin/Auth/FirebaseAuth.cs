@@ -263,9 +263,8 @@ namespace FirebaseAdmin.Auth
                 }
             }
 
-            var user = new UserRecord
+            var user = new UserRecord(uid)
             {
-                Uid = uid,
                 CustomClaims = claims
             };
 

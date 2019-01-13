@@ -36,7 +36,7 @@ namespace FirebaseAdmin.Auth
         public string Uid
         {
             get => _uid;
-            set
+            private set
             {
                 CheckUid(value);
                 _uid = value;
@@ -59,6 +59,11 @@ namespace FirebaseAdmin.Auth
 
         [JsonProperty("customAttributes")]
         internal string CustomClaimsString => SerializeClaims(CustomClaims);
+
+        public UserRecord(string uid)
+        {
+            Uid = uid;
+        }
 
         /// <summary>
         /// Checks if the given user ID is valid.
