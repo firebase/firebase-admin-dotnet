@@ -109,9 +109,9 @@ namespace FirebaseAdmin.Auth
 
             var customClaimsString = SerializeClaims(customClaims);
             var byteCount = Encoding.Unicode.GetByteCount(customClaimsString);
-            if(byteCount >= 1000)
+            if (byteCount > 1000)
             {
-                throw new ArgumentException($"Claims have to be less than 1000 bytes when serialized");
+                throw new ArgumentException($"Claims have to be not greater than 1000 bytes when serialized");
             }
         }
 
