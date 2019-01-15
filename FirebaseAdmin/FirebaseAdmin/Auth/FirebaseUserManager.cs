@@ -36,7 +36,7 @@ namespace FirebaseAdmin.Auth
         private readonly ConfigurableHttpClient _httpClient;
         private readonly string _baseUrl;
 
-        private FirebaseUserManager(FirebaseUserManagerArgs args)
+        internal FirebaseUserManager(FirebaseUserManagerArgs args)
         {
             _httpClient = args.ClientFactory.CreateAuthorizedHttpClient(args.Credential);
             _baseUrl = string.Format(ID_TOOLKIT_URL, args.ProjectId);
@@ -52,8 +52,15 @@ namespace FirebaseAdmin.Auth
             var updatePath = "/accounts:update";
             var resopnse = await PostAsync(updatePath, user);
 
-            var userResponse = resopnse.ToObject<UserRecord>();
-            if (userResponse == null || userResponse.Uid != user.Uid)
+            try
+            {
+                var userResponse = resopnse.ToObject<UserRecord>();
+                if (userResponse.Uid != user.Uid)
+                {
+                    throw new FirebaseException(INTERNAL_ERROR);
+                }
+            }
+            catch (Exception)
             {
                 throw new FirebaseException(INTERNAL_ERROR);
             }
