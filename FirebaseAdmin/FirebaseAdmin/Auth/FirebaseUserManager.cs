@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using FirebaseAdmin.Auth.Internal;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
-using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -31,32 +27,9 @@ namespace FirebaseAdmin.Auth
     /// Google Identity Toolkit</a> via its REST API. This class does not hold any mutable state, 
     /// and is thread safe.
     /// </summary>
-    internal class FirebaseUserManager: IDisposable
+    internal class FirebaseUserManager : IDisposable
     {
         private const string INTERNAL_ERROR = "internal-error";
-
-        // Map of server-side error codes to SDK error codes.
-        // SDK error codes defined at: https://firebase.google.com/docs/auth/admin/errors
-        private static readonly IReadOnlyDictionary<string, string> _errorCodes =
-            new ReadOnlyDictionary<string, string>(new Dictionary<string, string>()
-            {
-                { "CLAIMS_TOO_LARGE", "claims-too-large" },
-                { "CONFIGURATION_NOT_FOUND", "project-not-found"  },
-                { "INSUFFICIENT_PERMISSION", "insufficient-permission" },
-                { "DUPLICATE_EMAIL", "email-already-exists" },
-                { "DUPLICATE_LOCAL_ID", "uid-already-exists" },
-                { "EMAIL_EXISTS", "email-already-exists" },
-                { "INVALID_CLAIMS", "invalid-claims" },
-                { "INVALID_EMAIL", "invalid-email" },
-                { "INVALID_PAGE_SELECTION", "invalid-page-token" },
-                { "INVALID_PHONE_NUMBER", "invalid-phone-number" },
-                { "PHONE_NUMBER_EXISTS", "phone-number-already-exists" },
-                { "PROJECT_NOT_FOUND", "project-not-found" },
-                { "USER_NOT_FOUND", "user-not-found" },
-                { "WEAK_PASSWORD", "invalid-password" },
-                { "UNAUTHORIZED_DOMAIN", "unauthorized-continue-uri" },
-                { "INVALID_DYNAMIC_LINK_DOMAIN", "invalid-dynamic-link-domain" }
-            });
 
         private const string ID_TOOLKIT_URL = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
@@ -93,48 +66,24 @@ namespace FirebaseAdmin.Auth
             try
             {
                 response = await _httpClient.PostJsonAsync(requestUri, user, default);
+                var json = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return JObject.Parse(await response.Content.ReadAsStringAsync());
+                    return JObject.Parse(json);
                 }
                 else
                 {
-                    await HandleHttpError(response);
+                    var error = "Response status code does not indicate success: "
+                            + $"{(int)response.StatusCode} ({response.StatusCode})"
+                            + $"{Environment.NewLine}{json}";
+                    throw new FirebaseException(error);
                 }
             }
-            catch (Exception)
+            catch (HttpRequestException e)
             {
-                throw new FirebaseException(INTERNAL_ERROR);
+                throw new FirebaseException("Error while calling Firebase Auth service", e);
             }
-            finally
-            {
-                if (response != null)
-                {
-                    response.Dispose();
-                }
-            }
-
-            return null;
-        }
-
-        private async Task HandleHttpError(HttpResponseMessage response)
-        {
-            try
-            {
-                var errorResponse =
-                    NewtonsoftJsonSerializer.Instance.Deserialize<HttpErrorResponse>(await response.Content.ReadAsStringAsync());
-                if (_errorCodes.TryGetValue(errorResponse.ErrorCode, out var code))
-                {
-                    throw new FirebaseException(code);
-                };
-            }
-            catch (Exception)
-            {
-                // Ignored
-            }
-
-            throw new FirebaseException(INTERNAL_ERROR);
         }
 
         internal static FirebaseUserManager Create(FirebaseApp app)
