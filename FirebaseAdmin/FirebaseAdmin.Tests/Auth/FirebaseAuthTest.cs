@@ -172,18 +172,6 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public async Task SetCustomUserClaimsInvalidCredential()
-        {
-            FirebaseApp.Create(new AppOptions() { Credential = mockCredential, ProjectId = "project1" });
-            var customClaims = new Dictionary<string, object>()
-            {
-                {"admin", true}
-            };
-            await Assert.ThrowsAsync<FirebaseException>(
-                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
-        }
-
-        [Fact]
         public async Task SetCustomUserClaimsNoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = mockCredential });

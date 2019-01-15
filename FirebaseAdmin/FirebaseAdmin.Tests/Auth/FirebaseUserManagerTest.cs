@@ -16,6 +16,9 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 using Google.Apis.Auth.OAuth2;
+using FirebaseAdmin.Tests;
+using System.Threading.Tasks;
+using System.Net;
 
 namespace FirebaseAdmin.Auth.Tests
 {
@@ -26,15 +29,8 @@ namespace FirebaseAdmin.Auth.Tests
         private const string mockProjectId = "project1";
 
         [Fact]
-        public void InvalidUid()
+        public void InvalidUidForUserRecord()
         {
-            var app = FirebaseApp.Create(new AppOptions() { Credential = mockCredential, ProjectId = mockProjectId });
-            var userManager = FirebaseUserManager.Create(app);
-            var customClaims = new Dictionary<string, object>()
-            {
-                {"admin", true}
-            };
-
             Assert.Throws<ArgumentException>(() => new UserRecord(null));
             Assert.Throws<ArgumentException>(() => new UserRecord(""));
             Assert.Throws<ArgumentException>(() => new UserRecord(new string('a', 129)));
@@ -64,14 +60,103 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void TooLargeClaimsPayload()
         {
-            var customClaims = new Dictionary<string, object>();
-
-            for(var i = 0; i < 100; ++i)
+            var customClaims = new Dictionary<string, object>()
             {
-                customClaims.Add($"claim{i}", $"value{i}");
-            }
+                { "testClaim", new string('a', 1001) },
+            };
 
             Assert.Throws<ArgumentException>(() => new UserRecord("user1") { CustomClaims = customClaims });
+        }
+
+        [Fact]
+        public async Task UpdateUser()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new UserRecord("user1")
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = mockCredential,
+                    ProjectId = mockProjectId,
+                    ClientFactory = factory
+                });
+            var customClaims = new Dictionary<string, object>(){
+                    {"admin", true},
+            };
+
+            await userManager.UpdateUserAsync(new UserRecord("user1") { CustomClaims = customClaims });
+        }
+
+        [Fact]
+        public async Task UpdateUserIncorrectResponseObject()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new object()
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = mockCredential,
+                    ProjectId = mockProjectId,
+                    ClientFactory = factory
+                });
+            var customClaims = new Dictionary<string, object>(){
+                    {"admin", true},
+            };
+
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.UpdateUserAsync(new UserRecord("user1") { CustomClaims = customClaims }));
+        }
+
+        [Fact]
+        public async Task UpdateUserIncorrectResponseUid()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new UserRecord("testuser")
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = mockCredential,
+                    ProjectId = mockProjectId,
+                    ClientFactory = factory
+                });
+            var customClaims = new Dictionary<string, object>(){
+                    {"admin", true},
+            };
+
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.UpdateUserAsync(new UserRecord("user1") { CustomClaims = customClaims }));
+        }
+
+        [Fact]
+        public async Task UpdateUserHttpError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = mockCredential,
+                    ProjectId = mockProjectId,
+                    ClientFactory = factory
+                });
+            var customClaims = new Dictionary<string, object>(){
+                    {"admin", true},
+            };
+
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.UpdateUserAsync(new UserRecord("user1") { CustomClaims = customClaims }));
         }
     }
 }
