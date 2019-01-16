@@ -29,8 +29,6 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal class FirebaseUserManager : IDisposable
     {
-        private const string INTERNAL_ERROR = "internal-error";
-
         private const string ID_TOOLKIT_URL = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
         private readonly ConfigurableHttpClient _httpClient;
@@ -57,12 +55,12 @@ namespace FirebaseAdmin.Auth
                 var userResponse = resopnse.ToObject<UserRecord>();
                 if (userResponse.Uid != user.Uid)
                 {
-                    throw new FirebaseException(INTERNAL_ERROR);
+                    throw new FirebaseException($"Failed to update user: {user.Uid}");
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw new FirebaseException(INTERNAL_ERROR);
+                throw new FirebaseException("Error while calling Firebase Auth service", e);
             }
         }
 
