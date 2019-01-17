@@ -96,6 +96,12 @@ namespace FirebaseAdmin.Messaging
         public WebpushConfig Webpush { get; set; }
 
         /// <summary>
+        /// The APNs-specific information to be included in the message.
+        /// </summary>
+        [JsonProperty("apns")]
+        public ApnsConfig Apns { get; set; }
+
+        /// <summary>
         /// Copies this message, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service. Each property is copied
         /// before validation to guard against the original being modified in the user code
@@ -131,6 +137,7 @@ namespace FirebaseAdmin.Messaging
             copy.Notification = this.Notification?.CopyAndValidate();
             copy.Android = this.Android?.CopyAndValidate();
             copy.Webpush = this.Webpush?.CopyAndValidate();
+            copy.Apns = this.Apns?.CopyAndValidate();
             return copy;
         }
     }

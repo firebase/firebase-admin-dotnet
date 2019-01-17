@@ -18,11 +18,21 @@ using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
+    /// <summary>
+    /// The sound configuration for APNs critical alerts.
+    /// </summary>
     public sealed class CriticalSound
     {
+        /// <summary>
+        /// Sets the critical alert flag on the sound configuration.
+        /// </summary>
         [JsonIgnore]
         public bool Critical { get; set; }
 
+        /// <summary>
+        /// Integer representation of the <see cref="Critical"/> property, which is how
+        /// APNs expects it.
+        /// </summary>
         [JsonProperty("critical")]
         private int? CriticalInt
         {
@@ -40,12 +50,25 @@ namespace FirebaseAdmin.Messaging
             }
         }
 
+        /// <summary>
+        /// The name of a sound file in your app's main bundle or in the
+        /// <code>Library/Sounds</code> folder of your app's container directory. Specify the
+        /// string <code>default</code> to play the system sound.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        /// The volume for the critical alert's sound. Must be a value between 0.0 (silent) and
+        /// 1.0 (full volume).
+        /// </summary>
         [JsonProperty("volume")]
         public double Volume { get; set; }
 
+        /// <summary>
+        /// Copies this critical sound configuration, and validates the content of it to ensure
+        /// that it can be serialized into the JSON format expected by the FCM and APNs services.
+        /// </summary>
         internal CriticalSound CopyAndValidate()
         {
             if (Volume < 0 || Volume > 1)
@@ -57,7 +80,7 @@ namespace FirebaseAdmin.Messaging
                 Critical = this.Critical,
                 Name = this.Name,
                 Volume = this.Volume,
-            }
+            };
         }
     }
 }

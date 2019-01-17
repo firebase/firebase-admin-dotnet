@@ -799,6 +799,81 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
+        [Fact]
+        public void ApnsConfig()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Headers = new Dictionary<string, string>()
+                    {
+                        {"k1", "v1"},
+                        {"k2", "v2"},
+                    },
+                    Aps = new Aps()
+                    {
+                        AlertString = "alert-text",
+                        Badge = 0,
+                        Category =  "test-category",
+                        ContentAvailable = true,
+                        MutableContent = true,
+                        Sound = "sound-file",
+                        ThreadId = "test-thread",
+                        CustomData = new Dictionary<string, object>()
+                        {
+                            {"custom-key1", "custom-data"},
+                            {"custom-key2", true},
+                        },
+                    },
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {"custom-key3", "custom-data"},
+                        {"custom-key4", true},
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "headers", new JObject()
+                            {
+                                {"k1", "v1"},
+                                {"k2", "v2"},
+                            }
+                        },
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {"alert", "alert-text"},
+                                        {"badge", 0},
+                                        {"category", "test-category"},
+                                        {"content-available", 1},
+                                        {"mutable-content", 1},
+                                        {"sound", "sound-file"},
+                                        {"thread-id", "test-thread"},
+                                        {"custom-key1", "custom-data"},
+                                        {"custom-key2", true},
+                                    }
+                                },
+                                {"custom-key3", "custom-data"},
+                                {"custom-key4", true},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
         private void AssertJsonEquals(JObject expected, Message actual)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.CopyAndValidate());

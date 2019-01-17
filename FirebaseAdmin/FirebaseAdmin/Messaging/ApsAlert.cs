@@ -19,41 +19,92 @@ using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
+    /// <summary>
+    /// Represents the <see href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html#//apple_ref/doc/uid/TP40008194-CH17-SW5">
+    /// alert property</see> that can be included in the <code>aps</code> dictionary of an APNs
+    /// payload.
+    /// </summary>
     public sealed class ApsAlert
     {
+        /// <summary>
+        /// The title of the alert. When provided, overrides the title set via
+        /// <see cref="Notification.Title"/>.
+        /// </summary>
         [JsonProperty("title")]
         public string Title { get; set; }
 
+        /// <summary>
+        /// The subtitle of the alert.
+        /// </summary>
         [JsonProperty("subtitle")]
         public string Subtitle { get; set; }
 
+        /// <summary>
+        /// The body of the alert. When provided, overrides the body set via
+        /// <see cref="Notification.Body"/>.
+        /// </summary>
         [JsonProperty("body")]
         public string Body { get; set; }
 
+        /// <summary>
+        /// The key of the body string in the app's string resources to use to localize the body
+        /// text.
+        /// </summary>
         [JsonProperty("loc-key")]
         public string LocKey { get; set; }
 
+        /// <summary>
+        /// Resource key strings that will be used in place of the format specifiers in
+        /// <see cref="LocKey"/>.
+        /// </summary>
         [JsonProperty("loc-args")]
         public IEnumerable<string> LocArgs { get; set; }
 
+        /// <summary>
+        /// The key of the title string in the app's string resources to use to localize the title
+        /// text.
+        /// </summary>
         [JsonProperty("title-loc-key")]
         public string TitleLocKey { get; set; }
 
+        /// <summary>
+        /// Resource key strings that will be used in place of the format specifiers in
+        /// <see cref="TitleLocKey"/>.
+        /// </summary>
         [JsonProperty("title-loc-args")]
         public IEnumerable<string> TitleLocArgs { get; set; }
 
+        /// <summary>
+        /// The key of the subtitle string in the app's string resources to use to localize the
+        /// subtitle text.
+        /// </summary>
         [JsonProperty("subtitle-loc-key")]
         public string SubtitleLocKey { get; set; }
 
+        /// <summary>
+        /// Resource key strings that will be used in place of the format specifiers in
+        /// <see cref="SubtitleLocKey"/>.
+        /// </summary>
         [JsonProperty("subtitle-loc-args")]
         public IEnumerable<string> SubtitleLocArgs { get; set; }
 
+        /// <summary>
+        /// The key of the text in the app's string resources to use to localize the action button
+        /// text.
+        /// </summary>
         [JsonProperty("action-loc-key")]
         public string ActionLocKey { get; set; }
 
+        /// <summary>
+        /// The launch image for the notification action.
+        /// </summary>
         [JsonProperty("launch-image")]
         public string LaunchImage { get; set; }
 
+        /// <summary>
+        /// Copies this alert dictionary, and validates the content of it to ensure that it can be
+        /// serialized into the JSON format expected by the FCM and APNs services.
+        /// </summary>
         internal ApsAlert CopyAndValidate()
         {
             return new ApsAlert()

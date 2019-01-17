@@ -14,13 +14,101 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Google.Apis.Json;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
+    /// <summary>
+    /// Represents the APNS-specific options that can be included in a <see cref="Message"/>. Refer
+    /// to <see href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/APNSOverview.html">
+    /// APNs documentation</see> for various headers and payload fields supported by APNS.
+    /// </summary>
     public sealed class ApnsConfig
     {
+        /// <summary>
+        /// A collection of APNs headers.
+        /// </summary>
+        [JsonProperty("headers")]
         public IReadOnlyDictionary<string, string> Headers;
 
+        /// <summary>
+        /// The <code>aps</code> dictionary to be included in the APNs payload.
+        /// </summary>
+        [JsonIgnore]
+        public Aps Aps;
+
+        /// <summary>
+        /// APNs payload as accepted by the FCM backend servers.
+        /// </summary>
+        [JsonProperty("payload")]
+        private IReadOnlyDictionary<string, object> Payload
+        {
+            get
+            {
+                var aps = this.Aps;
+                if (aps == null)
+                {
+                    throw new ArgumentException("Aps must not be null in ApnsConfig.");
+                }
+                var payload = new Dictionary<string, object>()
+                {
+                    { "aps", aps },
+                };
+                var customData = this.CustomData;
+                if (customData != null)
+                {
+                    if (customData.ContainsKey("aps"))
+                    {
+                        throw new ArgumentException(
+                            "Multiple specifications for Apns payload key: aps");
+                    }
+                    payload = payload.Concat(customData).ToDictionary(x=>x.Key, x=>x.Value);
+                }
+                return payload;
+            }
+            set
+            {
+                var copy = value.ToDictionary(x=>x.Key, x=>x.Value);
+                object aps;
+                if (copy.TryGetValue("aps", out aps))
+                {
+                    copy.Remove("aps");
+                    if (aps.GetType() == typeof(Aps))
+                    {
+                        this.Aps = (Aps) aps;
+                    }
+                    else
+                    {
+                        var json = NewtonsoftJsonSerializer.Instance.Serialize(aps);
+                        this.Aps = NewtonsoftJsonSerializer.Instance.Deserialize<Aps>(json);
+                    }
+                }
+                this.CustomData = copy;
+            }
+        }
+
+        /// <summary>
+        /// A collection of arbitrary key-value data to be included in the APNs payload.
+        /// </summary>
+        [JsonIgnore]
+        public IReadOnlyDictionary<string, object> CustomData { get; set; }
+
+        /// <summary>
+        /// Copies this APNs config, and validates the content of it to ensure that it can be
+        /// serialized into the JSON format expected by the FCM service.
+        /// </summary>
+
+        internal ApnsConfig CopyAndValidate()
+        {
+            var copy = new ApnsConfig()
+            {
+                Headers = this.Headers.Copy(),
+                Payload = this.Payload,
+            };
+            copy.Aps = copy.Aps?.CopyAndValidate();
+            return copy;
+        }
     }
 }
