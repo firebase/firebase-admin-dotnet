@@ -92,29 +92,18 @@ namespace FirebaseAdmin.Messaging
         /// Copies this APNs config, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service.
         /// </summary>
-
         internal ApnsConfig CopyAndValidate()
         {
             var copy = new ApnsConfig()
             {
                 Headers = this.Headers?.Copy(),
-                CustomData = this.CustomData?.Copy(),
+                Payload = this.Payload,
             };
-            var aps = this.Aps;
-            if (copy.CustomData != null && copy.CustomData.ContainsKey("aps"))
+            if (copy.Aps == null)
             {
-                if (aps != null)
-                {
-                    throw new ArgumentException(
-                        "Multiple specifications for Apns payload key: aps");
-                }
+                throw new ArgumentException("Aps dictionary is required in ApnsConfig");
             }
-            else if (aps == null)
-            {
-                throw new ArgumentException(
-                    "Aps dictionary is required in ApnsConfig");
-            }
-            copy.Aps = aps?.CopyAndValidate();
+            copy.Aps = copy.Aps.CopyAndValidate();
             return copy;
         }
     }

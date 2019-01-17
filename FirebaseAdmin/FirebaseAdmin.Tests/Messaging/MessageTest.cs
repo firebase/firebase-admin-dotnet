@@ -875,6 +875,214 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void ApnsConfigMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps(),
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {"aps", new JObject()},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsCriticalSound()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "default",
+                            Critical = true,
+                            Volume = 0.5,
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "sound", new JObject()
+                                            {
+                                                {"name", "default"},
+                                                {"critical", 1},
+                                                {"volume", 0.5},
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsCriticalSoundMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound(){Name = "default"},
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "sound", new JObject()
+                                            {
+                                                {"name", "default"},
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsCustomApsWithStandardProperties()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {
+                            "aps", new Dictionary<string, object>()
+                            {
+                                {"alert", "alert-text"},
+                                {"badge", 42},
+                            }
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {"alert", "alert-text"},
+                                        {"badge", 42},
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsCustomApsWithCustomProperties()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {
+                            "aps", new Dictionary<string, object>()
+                            {
+                                {"custom-key1", "custom-data"},
+                                {"custom-key2", true},
+                            }
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {"custom-key1", "custom-data"},
+                                        {"custom-key2", true},
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
         public void ApnsNoAps()
         {
             var message = new Message()
@@ -926,6 +1134,86 @@ namespace FirebaseAdmin.Messaging.Tests
                         Alert = new ApsAlert()
                         {
                             Body = "other-alert-text",
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsDuplicateSounds()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Sound = "default",
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "other=sound",
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsInvalidCriticalSoundNoName()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound(),
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsInvalidCriticalSoundVolumeTooLow()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "default",
+                            Volume = -0.1,
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsInvalidCriticalSoundVolumeTooHigh()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "default",
+                            Volume = 1.1,
                         },
                     },
                 },

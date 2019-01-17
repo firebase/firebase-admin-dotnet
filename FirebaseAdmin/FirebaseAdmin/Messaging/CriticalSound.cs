@@ -63,7 +63,7 @@ namespace FirebaseAdmin.Messaging
         /// 1.0 (full volume).
         /// </summary>
         [JsonProperty("volume")]
-        public double Volume { get; set; }
+        public double? Volume { get; set; }
 
         /// <summary>
         /// Copies this critical sound configuration, and validates the content of it to ensure
@@ -71,17 +71,21 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         internal CriticalSound CopyAndValidate()
         {
-            var volume = this.Volume;
-            if (volume < 0 || volume > 1)
-            {
-                throw new ArgumentException("Volume must be in the interval [0, 1]");
-            }
-            return new CriticalSound()
+            var copy = new CriticalSound()
             {
                 Critical = this.Critical,
                 Name = this.Name,
-                Volume = volume,
+                Volume = this.Volume,
             };
+            if (string.IsNullOrEmpty(copy.Name))
+            {
+                throw new ArgumentException("Name must be specified for CriticalSound");
+            }
+            if (copy.Volume < 0 || copy.Volume > 1)
+            {
+                throw new ArgumentException("Volume of CriticalSound must be in the interval [0, 1]");
+            }
+            return copy;
         }
     }
 }
