@@ -1121,6 +1121,20 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void ApsDuplicateKeys()
+        {
+            var aps = new Aps()
+            {
+                AlertString = "alert-text",
+                CustomData = new Dictionary<string, object>()
+                {
+                    {"alert", "other-alert-text"},
+                },
+            };
+            Assert.Throws<ArgumentException>(() => aps.CopyAndValidate());
+        }
+
+        [Fact]
         public void ApnsDuplicateApsAlerts()
         {
             var message = new Message()
@@ -1142,7 +1156,7 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
-        public void ApnsDuplicateSounds()
+        public void ApnsDuplicateApsSounds()
         {
             var message = new Message()
             {

@@ -135,21 +135,15 @@ namespace FirebaseAdmin.Messaging
             };
             if (copy.Color != null && !Regex.Match(copy.Color, "^#[0-9a-fA-F]{6}$").Success)
             {
-                throw new ArgumentException("Color must be in the form #RRGGBB");
+                throw new ArgumentException("Color must be in the form #RRGGBB.");
             }
-            if (copy.TitleLocArgs != null && copy.TitleLocArgs.Any())
+            if (copy.TitleLocArgs?.Any() == true && string.IsNullOrEmpty(copy.TitleLocKey))
             {
-                if (string.IsNullOrEmpty(copy.TitleLocKey))
-                {
-                    throw new ArgumentException("TitleLocKey is required when specifying TitleLocArgs");
-                }
+                throw new ArgumentException("TitleLocKey is required when specifying TitleLocArgs.");
             }
-            if (copy.BodyLocArgs != null && copy.BodyLocArgs.Any())
+            if (copy.BodyLocArgs?.Any() == true && string.IsNullOrEmpty(copy.BodyLocKey))
             {
-                if (string.IsNullOrEmpty(copy.BodyLocKey))
-                {
-                    throw new ArgumentException("BodyLocKey is required when specifying BodyLocArgs");
-                }
+                throw new ArgumentException("BodyLocKey is required when specifying BodyLocArgs.");
             }
             return copy;
         }

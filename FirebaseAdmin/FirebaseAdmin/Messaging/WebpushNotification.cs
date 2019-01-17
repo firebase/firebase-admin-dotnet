@@ -100,8 +100,9 @@ namespace FirebaseAdmin.Messaging
                         Direction = Messaging.Direction.RightToLeft;
                         return;
                     default:
-                        throw new FirebaseException($"Invalid direction value: {value}. Only "
-                        + "'auto', 'rtl' and 'ltr' are allowed.");
+                        throw new FirebaseException(
+                            $"Invalid direction value: {value}. Only 'auto', 'rtl' and 'ltr' "
+                            + "are allowed.");
                 }
             }
         }
@@ -195,21 +196,20 @@ namespace FirebaseAdmin.Messaging
                 Data = this.Data,
             };
 
-            var customData = this.CustomData;
+            var customData = this.CustomData?.ToDictionary(e => e.Key, e => e.Value);
             if (customData?.Count > 0)
             {
                 var serializer = NewtonsoftJsonSerializer.Instance;
-                // Serialize the notification without CustomData for validation.
                 var json = serializer.Serialize(copy);
-                var dict = serializer.Deserialize<Dictionary<string, object>>(json);
-                customData = new Dictionary<string, object>(customData);
-                foreach (var entry in customData)
+                var standardProperties = serializer.Deserialize<Dictionary<string, object>>(json);
+                var duplicates = customData.Keys
+                    .Where(customProperty => standardProperties.ContainsKey(customProperty))
+                    .ToList();
+                if (duplicates.Any())
                 {
-                    if (dict.ContainsKey(entry.Key))
-                    {
-                        throw new ArgumentException(
-                            $"Multiple specifications for WebpushNotification key: {entry.Key}");
-                    }
+                    throw new ArgumentException(
+                        "Multiple specifications for WebpushNotification keys: "
+                        + string.Join(",", duplicates));
                 }
                 copy.CustomData = customData;
             }

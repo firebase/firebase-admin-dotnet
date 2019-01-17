@@ -159,11 +159,7 @@ namespace FirebaseAdmin.Messaging
         {
             get
             {
-                if (ContentAvailable)
-                {
-                    return 1;
-                }
-                return null;
+                return ContentAvailable ? 1 : (int?) null;
             }
             set
             {
@@ -187,11 +183,7 @@ namespace FirebaseAdmin.Messaging
         {
             get
             {
-                if (MutableContent)
-                {
-                    return 1;
-                }
-                return null;
+                return MutableContent ? 1 : (int?) null;
             }
             set
             {
@@ -240,11 +232,10 @@ namespace FirebaseAdmin.Messaging
             if (customData?.Count > 0)
             {
                 var serializer = NewtonsoftJsonSerializer.Instance;
-                // Serialize the notification without CustomData for validation.
                 var json = serializer.Serialize(copy);
-                var standardApsProperties = serializer.Deserialize<Dictionary<string, object>>(json);
+                var standardProperties = serializer.Deserialize<Dictionary<string, object>>(json);
                 var duplicates = customData.Keys
-                    .Where(customKey => standardApsProperties.ContainsKey(customKey))
+                    .Where(customProperty => standardProperties.ContainsKey(customProperty))
                     .ToList();
                 if (duplicates.Any())
                 {
