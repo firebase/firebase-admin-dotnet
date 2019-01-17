@@ -71,7 +71,8 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         internal CriticalSound CopyAndValidate()
         {
-            if (Volume < 0 || Volume > 1)
+            var volume = this.Volume;
+            if (volume < 0 || volume > 1)
             {
                 throw new ArgumentException("Volume must be in the interval [0, 1]");
             }
@@ -79,7 +80,7 @@ namespace FirebaseAdmin.Messaging
             {
                 Critical = this.Critical,
                 Name = this.Name,
-                Volume = this.Volume,
+                Volume = volume,
             };
         }
     }

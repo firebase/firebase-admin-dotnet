@@ -47,24 +47,17 @@ namespace FirebaseAdmin.Messaging
         {
             get
             {
+                var payload = this.CustomData?.ToDictionary(e => e.Key, e => e.Value)
+                    ?? new Dictionary<string, object>();
                 var aps = this.Aps;
-                if (aps == null)
+                if (aps != null)
                 {
-                    throw new ArgumentException("Aps must not be null in ApnsConfig.");
-                }
-                var payload = new Dictionary<string, object>()
-                {
-                    { "aps", aps },
-                };
-                var customData = this.CustomData;
-                if (customData != null)
-                {
-                    if (customData.ContainsKey("aps"))
+                    if (payload.ContainsKey("aps"))
                     {
                         throw new ArgumentException(
                             "Multiple specifications for Apns payload key: aps");
                     }
-                    payload = payload.Concat(customData).ToDictionary(x=>x.Key, x=>x.Value);
+                    payload["aps"] = aps;
                 }
                 return payload;
             }
@@ -104,10 +97,24 @@ namespace FirebaseAdmin.Messaging
         {
             var copy = new ApnsConfig()
             {
-                Headers = this.Headers.Copy(),
-                Payload = this.Payload,
+                Headers = this.Headers?.Copy(),
+                CustomData = this.CustomData?.Copy(),
             };
-            copy.Aps = copy.Aps?.CopyAndValidate();
+            var aps = this.Aps;
+            if (copy.CustomData != null && copy.CustomData.ContainsKey("aps"))
+            {
+                if (aps != null)
+                {
+                    throw new ArgumentException(
+                        "Multiple specifications for Apns payload key: aps");
+                }
+            }
+            else if (aps == null)
+            {
+                throw new ArgumentException(
+                    "Aps dictionary is required in ApnsConfig");
+            }
+            copy.Aps = aps?.CopyAndValidate();
             return copy;
         }
     }

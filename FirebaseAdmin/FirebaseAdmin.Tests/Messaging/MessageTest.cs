@@ -874,6 +874,65 @@ namespace FirebaseAdmin.Messaging.Tests
             AssertJsonEquals(expected, message);
         }
 
+        [Fact]
+        public void ApnsNoAps()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {"test", "custom-data"},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsDuplicateAps()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        AlertString = "alert-text",
+                    },
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {"aps", "custom-data"},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsDuplicateApsAlerts()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        AlertString = "alert-text",
+                        Alert = new ApsAlert()
+                        {
+                            Body = "other-alert-text",
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
         private void AssertJsonEquals(JObject expected, Message actual)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.CopyAndValidate());

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Google.Apis.Json;
 using Newtonsoft.Json;
 
@@ -25,6 +26,8 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class Aps
     {
+        private static readonly NewtonsoftJsonSerializer Serializer = NewtonsoftJsonSerializer.Instance;
+
         /// <summary>
         /// An advanced alert configuration to be included in the message. It is an error to set
         /// both <see cref="Alert"/> and <see cref="AlertString"/> properties together.
@@ -73,8 +76,8 @@ namespace FirebaseAdmin.Messaging
                 }
                 else
                 {
-                    var json = NewtonsoftJsonSerializer.Instance.Serialize(value);
-                    Alert = NewtonsoftJsonSerializer.Instance.Deserialize<ApsAlert>(json);
+                    var json = Serializer.Serialize(value);
+                    Alert = Serializer.Deserialize<ApsAlert>(json);
                 }
             }
         }
@@ -135,8 +138,8 @@ namespace FirebaseAdmin.Messaging
                 }
                 else
                 {
-                    var json = NewtonsoftJsonSerializer.Instance.Serialize(value);
-                    CriticalSound = NewtonsoftJsonSerializer.Instance.Deserialize<CriticalSound>(json);
+                    var json = Serializer.Serialize(value);
+                    CriticalSound = Serializer.Deserialize<CriticalSound>(json);
                 }
             }
         }
@@ -226,33 +229,31 @@ namespace FirebaseAdmin.Messaging
             {
                 AlertObject = this.AlertObject,
                 Badge = this.Badge,
-                SoundObject = this.SoundObject,
                 ContentAvailable = this.ContentAvailable,
                 MutableContent = this.MutableContent,
                 Category = this.Category,
+                SoundObject = this.SoundObject,
                 ThreadId = this.ThreadId,
             };
 
-            var customData = this.CustomData;
+            var customData = this.CustomData?.ToDictionary(e => e.Key, e => e.Value);
             if (customData?.Count > 0)
             {
                 var serializer = NewtonsoftJsonSerializer.Instance;
                 // Serialize the notification without CustomData for validation.
                 var json = serializer.Serialize(copy);
-                var dict = serializer.Deserialize<Dictionary<string, object>>(json);
-                customData = new Dictionary<string, object>(customData);
-                foreach (var entry in customData)
+                var standardApsProperties = serializer.Deserialize<Dictionary<string, object>>(json);
+                var duplicates = customData.Keys
+                    .Where(customKey => standardApsProperties.ContainsKey(customKey))
+                    .ToList();
+                if (duplicates.Any())
                 {
-                    if (dict.ContainsKey(entry.Key))
-                    {
-                        throw new ArgumentException(
-                            $"Multiple specifications for Aps key: {entry.Key}");
-                    }
+                    throw new ArgumentException(
+                        $"Multiple specifications for Aps keys: {string.Join(",", duplicates)}");
                 }
                 copy.CustomData = customData;
             }
 
-            // Copy and validate the child properties
             copy.Alert = copy.Alert?.CopyAndValidate();
             copy.CriticalSound = copy.CriticalSound?.CopyAndValidate();
             return copy;
