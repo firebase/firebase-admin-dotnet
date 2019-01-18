@@ -931,6 +931,22 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void ApnsConfigCopy()
+        {
+            var original = new ApnsConfig()
+            {
+                Headers = new Dictionary<string, string>(),
+                Aps = new Aps(),
+                CustomData = new Dictionary<string, object>(),
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.Headers, copy.Headers);
+            Assert.NotSame(original.Aps, copy.Aps);
+            Assert.NotSame(original.CustomData, copy.CustomData);
+        }
+
+        [Fact]
         public void ApnsConfigCustomApsDeserialization()
         {
             var original = new ApnsConfig()
@@ -946,6 +962,8 @@ namespace FirebaseAdmin.Messaging.Tests
                         "aps", new Dictionary<string, object>()
                         {
                             {"alert", "alert-text"},
+                            {"custom-key1", "custom-data"},
+                            {"custom-key2", true},
                         }
                     },
                     {"custom-key3", "custom-data"},
@@ -958,6 +976,12 @@ namespace FirebaseAdmin.Messaging.Tests
             original.CustomData.Remove("aps");
             Assert.Equal(original.CustomData, copy.CustomData);
             Assert.Equal("alert-text", copy.Aps.AlertString);
+            var customApsData = new Dictionary<string, object>()
+            {
+                {"custom-key1", "custom-data"},
+                {"custom-key2", true},
+            };
+            Assert.Equal(customApsData, copy.Aps.CustomData);
         }
 
         [Fact]
@@ -1153,6 +1177,38 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApsAlertDeserialization()
+        {
+            var original = new ApsAlert()
+            {
+                ActionLocKey = "action-key",
+                Body = "test-body",
+                LaunchImage = "test-image",
+                LocArgs = new List<string>(){"arg1", "arg2"},
+                LocKey = "loc-key",
+                Subtitle = "test-subtitle",
+                SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                SubtitleLocKey = "subtitle-key",
+                Title = "test-title",
+                TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                TitleLocKey = "title-key",
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<ApsAlert>(json);
+            Assert.Equal(original.ActionLocKey, copy.ActionLocKey);
+            Assert.Equal(original.Body, copy.Body);
+            Assert.Equal(original.LaunchImage, copy.LaunchImage);
+            Assert.Equal(original.LocArgs, copy.LocArgs);
+            Assert.Equal(original.LocKey, copy.LocKey);
+            Assert.Equal(original.Subtitle, copy.Subtitle);
+            Assert.Equal(original.SubtitleLocArgs, copy.SubtitleLocArgs);
+            Assert.Equal(original.SubtitleLocKey, copy.SubtitleLocKey);
+            Assert.Equal(original.Title, copy.Title);
+            Assert.Equal(original.TitleLocArgs, copy.TitleLocArgs);
+            Assert.Equal(original.TitleLocKey, copy.TitleLocKey);
         }
 
         [Fact]
@@ -1463,29 +1519,6 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.True(
                 JToken.DeepEquals(expected, parsed),
                 $"Expected: {expected.ToString()}\nActual: {parsed.ToString()}");
-        }
-    }
-
-    internal class Hello
-    {
-
-        [JsonIgnore]
-        internal Aps Aps { get; set; }
-
-        [JsonProperty("payload")]
-        internal ApnsPayload Payload
-        {
-            get
-            {
-                return new ApnsPayload()
-                {
-                    Aps = this.Aps,
-                };
-            }
-            set
-            {
-                this.Aps = value.Aps;
-            }
         }
     }
 }

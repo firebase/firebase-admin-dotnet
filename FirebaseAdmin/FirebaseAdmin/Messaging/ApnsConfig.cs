@@ -102,7 +102,7 @@ namespace FirebaseAdmin.Messaging
         }
     }
 
-    internal class ApnsPayload
+    internal sealed class ApnsPayload
     {
         [JsonProperty("aps")]
         public Aps Aps { get; set; }
