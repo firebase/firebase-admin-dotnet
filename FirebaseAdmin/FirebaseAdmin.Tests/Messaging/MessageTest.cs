@@ -904,6 +904,63 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void ApnsConfigDeserialization()
+        {
+            var original = new ApnsConfig()
+            {
+                Headers = new Dictionary<string, string>()
+                {
+                    {"k1", "v1"},
+                    {"k2", "v2"},
+                },
+                Aps = new Aps()
+                {
+                    AlertString = "alert-text",
+                },
+                CustomData = new Dictionary<string, object>()
+                {
+                    {"custom-key3", "custom-data"},
+                    {"custom-key4", true},
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<ApnsConfig>(json);
+            Assert.Equal(original.Headers, copy.Headers);
+            Assert.Equal(original.CustomData, copy.CustomData);
+            Assert.Equal(original.Aps.AlertString, copy.Aps.AlertString);
+        }
+
+        [Fact]
+        public void ApnsConfigCustomApsDeserialization()
+        {
+            var original = new ApnsConfig()
+            {
+                Headers = new Dictionary<string, string>()
+                {
+                    {"k1", "v1"},
+                    {"k2", "v2"},
+                },
+                CustomData = new Dictionary<string, object>()
+                {
+                    {
+                        "aps", new Dictionary<string, object>()
+                        {
+                            {"alert", "alert-text"},
+                        }
+                    },
+                    {"custom-key3", "custom-data"},
+                    {"custom-key4", true},
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<ApnsConfig>(json);
+            Assert.Equal(original.Headers, copy.Headers);
+            original.CustomData.Remove("aps");
+            Assert.Equal(original.CustomData, copy.CustomData);
+            Assert.Equal("alert-text", copy.Aps.AlertString);
+        }
+
+        [Fact]
         public void ApnsCriticalSound()
         {
             var message = new Message()
@@ -992,6 +1049,170 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsApsAlert()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            ActionLocKey = "action-key",
+                            Body = "test-body",
+                            LaunchImage = "test-image",
+                            LocArgs = new List<string>(){"arg1", "arg2"},
+                            LocKey = "loc-key",
+                            Subtitle = "test-subtitle",
+                            SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                            SubtitleLocKey = "subtitle-key",
+                            Title = "test-title",
+                            TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                            TitleLocKey = "title-key",
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "alert", new JObject()
+                                            {
+                                                {"action-loc-key", "action-key"},
+                                                {"body", "test-body"},
+                                                {"launch-image", "test-image"},
+                                                {"loc-args", new JArray(){"arg1", "arg2"}},
+                                                {"loc-key", "loc-key"},
+                                                {"subtitle", "test-subtitle"},
+                                                {"subtitle-loc-args", new JArray(){"arg3", "arg4"}},
+                                                {"subtitle-loc-key", "subtitle-key"},
+                                                {"title", "test-title"},
+                                                {"title-loc-args", new JArray(){"arg5", "arg6"}},
+                                                {"title-loc-key", "title-key"},
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsApsAlertMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert(),
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "alert", new JObject(){}
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsApsAlertInvalidTitleLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            TitleLocArgs = new List<string>(){"arg1", "arg2"},
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsApsAlertInvalidSubtitleLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            SubtitleLocArgs = new List<string>(){"arg1", "arg2"},
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsApsAlertInvalidLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            LocArgs = new List<string>(){"arg1", "arg2"},
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
         [Fact]
@@ -1242,6 +1463,29 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.True(
                 JToken.DeepEquals(expected, parsed),
                 $"Expected: {expected.ToString()}\nActual: {parsed.ToString()}");
+        }
+    }
+
+    internal class Hello
+    {
+
+        [JsonIgnore]
+        internal Aps Aps { get; set; }
+
+        [JsonProperty("payload")]
+        internal ApnsPayload Payload
+        {
+            get
+            {
+                return new ApnsPayload()
+                {
+                    Aps = this.Aps,
+                };
+            }
+            set
+            {
+                this.Aps = value.Aps;
+            }
         }
     }
 }

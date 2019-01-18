@@ -27,58 +27,47 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class ApnsConfig
     {
+        private ApnsPayload _payload = new ApnsPayload();
+
         /// <summary>
         /// A collection of APNs headers.
         /// </summary>
         [JsonProperty("headers")]
-        public IReadOnlyDictionary<string, string> Headers;
+        public IReadOnlyDictionary<string, string> Headers { get; set; }
 
         /// <summary>
         /// The <code>aps</code> dictionary to be included in the APNs payload.
         /// </summary>
         [JsonIgnore]
-        public Aps Aps;
+        public Aps Aps
+        {
+            get
+            {
+                return Payload.Aps;
+            }
+            set
+            {
+                Payload.Aps = value;
+            }
+        }
 
         /// <summary>
         /// APNs payload as accepted by the FCM backend servers.
         /// </summary>
         [JsonProperty("payload")]
-        private IReadOnlyDictionary<string, object> Payload
+        private ApnsPayload Payload
         {
             get
             {
-                var payload = this.CustomData?.ToDictionary(e => e.Key, e => e.Value)
-                    ?? new Dictionary<string, object>();
-                var aps = this.Aps;
-                if (aps != null)
+                if (_payload.Aps != null && _payload.CustomData?.ContainsKey("aps") == true)
                 {
-                    if (payload.ContainsKey("aps"))
-                    {
-                        throw new ArgumentException(
-                            "Multiple specifications for Apns payload key: aps");
-                    }
-                    payload["aps"] = aps;
+                    throw new ArgumentException("Multiple specifications for ApnsConfig key: aps");
                 }
-                return payload;
+                return _payload;
             }
             set
             {
-                var copy = value.ToDictionary(x=>x.Key, x=>x.Value);
-                object aps;
-                if (copy.TryGetValue("aps", out aps))
-                {
-                    copy.Remove("aps");
-                    if (aps.GetType() == typeof(Aps))
-                    {
-                        this.Aps = (Aps) aps;
-                    }
-                    else
-                    {
-                        var json = NewtonsoftJsonSerializer.Instance.Serialize(aps);
-                        this.Aps = NewtonsoftJsonSerializer.Instance.Deserialize<Aps>(json);
-                    }
-                }
-                this.CustomData = copy;
+                _payload = value;
             }
         }
 
@@ -86,7 +75,17 @@ namespace FirebaseAdmin.Messaging
         /// A collection of arbitrary key-value data to be included in the APNs payload.
         /// </summary>
         [JsonIgnore]
-        public IReadOnlyDictionary<string, object> CustomData { get; set; }
+        public IDictionary<string, object> CustomData
+        {
+            get
+            {
+                return Payload.CustomData;
+            }
+            set
+            {
+                Payload.CustomData = value;
+            }
+        }
 
         /// <summary>
         /// Copies this APNs config, and validates the content of it to ensure that it can be
@@ -97,13 +96,32 @@ namespace FirebaseAdmin.Messaging
             var copy = new ApnsConfig()
             {
                 Headers = this.Headers?.Copy(),
-                Payload = this.Payload,
+                Payload = this.Payload.CopyAndValidate(),
             };
-            if (copy.Aps == null)
+            return copy;
+        }
+    }
+
+    internal class ApnsPayload
+    {
+        [JsonProperty("aps")]
+        public Aps Aps { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, object> CustomData { get; set; }
+
+        internal ApnsPayload CopyAndValidate()
+        {
+            var copy = new ApnsPayload()
+            {
+                CustomData = this.CustomData?.ToDictionary(e => e.Key, e => e.Value),
+            };
+            var aps = this.Aps;
+            if (aps == null && copy.CustomData?.ContainsKey("aps") == false)
             {
                 throw new ArgumentException("Aps dictionary is required in ApnsConfig");
             }
-            copy.Aps = copy.Aps.CopyAndValidate();
+            copy.Aps = aps?.CopyAndValidate();
             return copy;
         }
     }

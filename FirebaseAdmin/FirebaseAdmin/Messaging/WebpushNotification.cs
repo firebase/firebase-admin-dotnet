@@ -203,7 +203,7 @@ namespace FirebaseAdmin.Messaging
                 var json = serializer.Serialize(copy);
                 var standardProperties = serializer.Deserialize<Dictionary<string, object>>(json);
                 var duplicates = customData.Keys
-                    .Where(customProperty => standardProperties.ContainsKey(customProperty))
+                    .Where(customKey => standardProperties.ContainsKey(customKey))
                     .ToList();
                 if (duplicates.Any())
                 {

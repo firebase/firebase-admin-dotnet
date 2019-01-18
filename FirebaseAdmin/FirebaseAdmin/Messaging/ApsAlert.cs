@@ -107,7 +107,7 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         internal ApsAlert CopyAndValidate()
         {
-            return new ApsAlert()
+            var copy = new ApsAlert()
             {
                 Title = this.Title,
                 Subtitle = this.Subtitle,
@@ -121,6 +121,19 @@ namespace FirebaseAdmin.Messaging
                 ActionLocKey = this.ActionLocKey,
                 LaunchImage = this.LaunchImage,
             };
+            if (copy.TitleLocArgs?.Any() == true && string.IsNullOrEmpty(copy.TitleLocKey))
+            {
+                throw new ArgumentException("TitleLocKey is required when specifying TitleLocArgs.");
+            }
+            if (copy.SubtitleLocArgs?.Any() == true && string.IsNullOrEmpty(copy.SubtitleLocKey))
+            {
+                throw new ArgumentException("SubtitleLocKey is required when specifying SubtitleLocArgs.");
+            }
+            if (copy.LocArgs?.Any() == true && string.IsNullOrEmpty(copy.LocKey))
+            {
+                throw new ArgumentException("LocKey is required when specifying LocArgs.");
+            }
+            return copy;
         }
     }
 }
