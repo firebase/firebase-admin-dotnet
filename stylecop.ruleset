@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Rules for FirebaseAdmin" Description="Code analysis rules for FirebaseAdmin." ToolsVersion="14.0">
+  <Rules AnalyzerId="AsyncUsageAnalyzers" RuleNamespace="AsyncUsageAnalyzers">
+    <Rule Id="UseConfigureAwait" Action="Warning" />
+  </Rules>
+  <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <Rule Id="SA1003" Action="None" />
+    <Rule Id="SA1012" Action="None" />
+    <Rule Id="SA1013" Action="None" />
+    <Rule Id="SA1024" Action="None" />
+    <Rule Id="SA1028" Action="None" />
+    <Rule Id="SA1101" Action="None" />
+    <Rule Id="SA1111" Action="None" />
+    <Rule Id="SA1116" Action="None" />
+    <Rule Id="SA1200" Action="None" />
+    <Rule Id="SA1202" Action="None" />
+    <Rule Id="SA1210" Action="None" />
+    <Rule Id="SA1309" Action="None" />
+    <Rule Id="SA1402" Action="None" />
+    <Rule Id="SA1502" Action="None" />
+    <Rule Id="SA1513" Action="None" />
+    <Rule Id="SA1515" Action="None" />
+    <Rule Id="SA1600" Action="None" />
+    <Rule Id="SA1611" Action="None" />
+    <Rule Id="SA1615" Action="None" />
+    <Rule Id="SA1618" Action="None" />
+    <Rule Id="SA1623" Action="None" />
+    <Rule Id="SA1633" Action="None" />
+  </Rules>
+</RuleSet>

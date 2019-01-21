@@ -27,6 +27,12 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal sealed class PublicKey
     {
+        public PublicKey(string keyId, RSAKey rsa)
+        {
+            Id = keyId;
+            RSA = rsa;
+        }
+
         /// <summary>
         /// The unique identifier of this key.
         /// </summary>
@@ -37,11 +43,5 @@ namespace FirebaseAdmin.Auth
         /// the public key.
         /// </summary>
         public RSAKey RSA { get; }
-
-        public PublicKey(string keyId, RSAKey rsa)
-        {
-            Id = keyId;
-            RSA = rsa;
-        }
     }
 }

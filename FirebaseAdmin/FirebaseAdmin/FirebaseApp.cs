@@ -27,9 +27,10 @@ using Google.Apis.Auth.OAuth2;
 "3003684e85e61cf15f13150008c81f0b75a252673028e530ea95d0c581378da8c6846526ab9597"+
 "4c6d0bc66d2462b51af69968a0e25114bde8811e0d6ee1dc22d4a59eee6a8bba4712cba839652f"+
 "badddb9c")]
-namespace FirebaseAdmin 
+namespace FirebaseAdmin
 {
-    internal delegate TResult ServiceFactory<out TResult>() where TResult: IFirebaseService;
+    internal delegate TResult ServiceFactory<out TResult>()
+        where TResult : IFirebaseService;
 
     /// <summary>
     /// This is the entry point to the Firebase Admin SDK. It holds configuration and state common
@@ -43,31 +44,52 @@ namespace FirebaseAdmin
         private const string DefaultAppName = "[DEFAULT]";
 
         internal static readonly IReadOnlyList<string> DefaultScopes = ImmutableList.Create(
-            // Enables access to Firebase Realtime Database.
-            "https://www.googleapis.com/auth/firebase",
-
-            // Enables access to the email address associated with a project.
-            "https://www.googleapis.com/auth/userinfo.email",
-
-            // Enables access to Google Identity Toolkit (for user management APIs).
-            "https://www.googleapis.com/auth/identitytoolkit",
-
-            // Enables access to Google Cloud Storage.
-            "https://www.googleapis.com/auth/devstorage.full_control",
-
-            // Enables access to Google Cloud Firestore
-            "https://www.googleapis.com/auth/cloud-platform",
-            "https://www.googleapis.com/auth/datastore"
-        );
+            "https://www.googleapis.com/auth/firebase", // RTDB.
+            "https://www.googleapis.com/auth/userinfo.email", // RTDB
+            "https://www.googleapis.com/auth/identitytoolkit", // User management
+            "https://www.googleapis.com/auth/devstorage.full_control", // Cloud Storage
+            "https://www.googleapis.com/auth/cloud-platform", // Cloud Firestore
+            "https://www.googleapis.com/auth/datastore");
 
         private static readonly Dictionary<string, FirebaseApp> Apps = new Dictionary<string, FirebaseApp>();
 
         private static readonly ILogger Logger = ApplicationContext.Logger.ForType<FirebaseApp>();
 
         // Guards the mutable state local to an app instance.
-        private readonly Object _lock = new Object();
-        private bool _deleted = false;
+        private readonly object _lock = new object();
         private readonly AppOptions _options;
+
+        // A collection of stateful services initialized using this app instance (e.g.
+        // FirebaseAuth). Services are tracked here so they can be cleaned up when the app is
+        // deleted.
+        private readonly Dictionary<string, IFirebaseService> _services = new Dictionary<string, IFirebaseService>();
+        private bool _deleted = false;
+
+        private FirebaseApp(AppOptions options, string name)
+        {
+            _options = new AppOptions(options);
+            if (_options.Credential == null)
+            {
+                throw new ArgumentNullException("Credential must be set");
+            }
+            if (_options.Credential.IsCreateScopedRequired)
+            {
+                _options.Credential = _options.Credential.CreateScoped(DefaultScopes);
+            }
+            Name = name;
+        }
+
+        /// <summary>
+        /// The default app instance. This property is <c>null</c> if the default app instance
+        /// doesn't yet exist.
+        /// </summary>
+        public static FirebaseApp DefaultInstance
+        {
+            get
+            {
+                return GetInstance(DefaultAppName);
+            }
+        }
 
         /// <summary>
         /// A copy of the <see cref="AppOptions"/> this app was created with.
@@ -84,25 +106,6 @@ namespace FirebaseAdmin
         /// Name of this app.
         /// </summary>
         public string Name { get; }
-
-        // A collection of stateful services initialized using this app instance (e.g.
-        // FirebaseAuth). Services are tracked here so they can be cleaned up when the app is
-        // deleted.
-        private readonly Dictionary<string, IFirebaseService> _services = new Dictionary<string, IFirebaseService>();
-
-        private FirebaseApp(AppOptions options, string name)
-        {
-            _options = new AppOptions(options);
-            if (_options.Credential == null)
-            {
-                throw new ArgumentNullException("Credential must be set");
-            }
-            if (_options.Credential.IsCreateScopedRequired)
-            {
-                _options.Credential = _options.Credential.CreateScoped(DefaultScopes);
-            }
-            Name = name;
-        }
 
         /// <summary>
         /// Deletes this app instance and cleans up any state associated with it. Once an app has
@@ -135,7 +138,8 @@ namespace FirebaseAdmin
             }
         }
 
-        internal T GetOrInit<T>(string id, ServiceFactory<T> initializer) where T : class, IFirebaseService
+        internal T GetOrInit<T>(string id, ServiceFactory<T> initializer)
+            where T : class, IFirebaseService
         {
             lock (_lock)
             {
@@ -147,12 +151,20 @@ namespace FirebaseAdmin
                 if (!_services.TryGetValue(id, out service))
                 {
                     service = initializer();
-                    _services.Add(id, service);  
+                    _services.Add(id, service);
                 }
-                return (T) service;
+                return (T)service;
             }
         }
 
+        /// <summary>
+        /// Returns the Google Cloud Platform project ID associated with this Firebase app. If a
+        /// project ID is specified in <see cref="AppOptions"/>, that value is returned. If not
+        /// attempts to determine a project ID from the <see cref="GoogleCredential"/> used to
+        /// initialize the app. Looks up the GOOGLE_CLOUD_PROJECT environment variable when all
+        /// else fails.
+        /// </summary>
+        /// <returns>A project ID string or null.</returns>
         internal string GetProjectId()
         {
             if (!string.IsNullOrEmpty(Options.ProjectId))
@@ -160,14 +172,14 @@ namespace FirebaseAdmin
                 return Options.ProjectId;
             }
             var projectId = Options.Credential.ToServiceAccountCredential()?.ProjectId;
-            if (!String.IsNullOrEmpty(projectId))
+            if (!string.IsNullOrEmpty(projectId))
             {
                 return projectId;
             }
-            foreach (var variableName in new [] {"GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT"})
+            foreach (var variableName in new[] { "GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT" })
             {
                 projectId = Environment.GetEnvironmentVariable(variableName);
-                if (!String.IsNullOrEmpty(projectId))
+                if (!string.IsNullOrEmpty(projectId))
                 {
                     return projectId;
                 }
@@ -235,7 +247,7 @@ namespace FirebaseAdmin
                     {
                         throw new ArgumentException("The default FirebaseApp already exists.");
                     }
-                    else 
+                    else
                     {
                         throw new ArgumentException($"FirebaseApp named {name} already exists.");
                     }
@@ -255,18 +267,6 @@ namespace FirebaseAdmin
         }
 
         /// <summary>
-        /// The default app instance. This property is <c>null</c> if the default app instance
-        /// doesn't yet exist.
-        /// </summary>
-        public static FirebaseApp DefaultInstance
-        {
-            get
-            {
-                return GetInstance(DefaultAppName);
-            }
-        }
-
-        /// <summary>
         /// Returns the app instance identified by the given name.
         /// </summary>
         /// <returns>The <see cref="FirebaseApp"/> instance with the specified name or null if it
@@ -279,13 +279,13 @@ namespace FirebaseAdmin
             {
                 throw new ArgumentException("App name to lookup must not be null or empty");
             }
-            lock (Apps) 
+            lock (Apps)
             {
                 FirebaseApp app;
                 if (Apps.TryGetValue(name, out app))
                 {
                     return app;
-                }        
+                }
             }
             return null;
         }
@@ -306,7 +306,7 @@ namespace FirebaseAdmin
                 {
                     throw new InvalidOperationException("Failed to delete all apps");
                 }
-            }            
+            }
         }
     }
 }

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -43,7 +44,6 @@ namespace FirebaseAdmin.Auth
         private static readonly IReadOnlyList<string> StandardClaims =
             ImmutableList.Create<string>("iss", "aud", "exp", "iat", "sub", "uid");
 
-        public string ProjectId { get; }
         private readonly string _shortName;
         private readonly string _articledShortName;
         private readonly string _operation;
@@ -52,7 +52,7 @@ namespace FirebaseAdmin.Auth
         private readonly IClock _clock;
         private readonly IPublicKeySource _keySource;
 
-        public FirebaseTokenVerifier(FirebaseTokenVerifierArgs args)
+        internal FirebaseTokenVerifier(FirebaseTokenVerifierArgs args)
         {
             ProjectId = args.ProjectId.ThrowIfNullOrEmpty(nameof(args.ProjectId));
             _shortName = args.ShortName.ThrowIfNullOrEmpty(nameof(args.ShortName));
@@ -71,7 +71,9 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        public async Task<FirebaseToken> VerifyTokenAsync(
+        public string ProjectId { get; }
+
+        internal async Task<FirebaseToken> VerifyTokenAsync(
             string token, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(token))
@@ -94,7 +96,7 @@ namespace FirebaseAdmin.Auth
             string error = null;
             if (string.IsNullOrEmpty(header.KeyId))
             {
-                if (FirebaseAudience == payload.Audience)
+                if (payload.Audience == FirebaseAudience)
                 {
                     error = $"{_operation} expects {_articledShortName}, but was given a custom "
                         + "token.";
@@ -140,7 +142,7 @@ namespace FirebaseAdmin.Auth
             {
                 error = $"Firebase {_shortName} has a subject claim longer than 128 characters.";
             }
-            
+
             if (error != null)
             {
                 throw new FirebaseException(error);
@@ -162,6 +164,7 @@ namespace FirebaseAdmin.Auth
         /// Verifies the integrity of a JWT by validating its signature. The JWT must be specified
         /// as an array of three segments (header, body and signature).
         /// </summary>
+        [SuppressMessage("StyleCop.Analyzers", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "Use of directives.")]
         private async Task VerifySignatureAsync(
             string[] segments, string keyId, CancellationToken cancellationToken)
         {
@@ -179,7 +182,7 @@ namespace FirebaseAdmin.Auth
                 key.Id == keyId && key.RSA.VerifyHash(
                     hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1)
 #elif NET45
-                key.Id == keyId && 
+                key.Id == keyId &&
                     ((RSACryptoServiceProvider) key.RSA).VerifyHash(hash, Sha256Oid, signature)
 #else
 #error Unsupported target
@@ -218,11 +221,17 @@ namespace FirebaseAdmin.Auth
     internal sealed class FirebaseTokenVerifierArgs
     {
         public string ProjectId { get; set; }
+
         public string ShortName { get; set; }
+
         public string Operation { get; set; }
+
         public string Url { get; set; }
+
         public string Issuer { get; set; }
+
         public IClock Clock { get; set; }
+
         public IPublicKeySource PublicKeySource { get; set; }
     }
 }

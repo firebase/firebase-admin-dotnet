@@ -23,7 +23,7 @@ namespace FirebaseAdmin.Auth
     /// An <see cref="ISigner"/> implementation that uses service account credentials to sign
     /// data. Uses the private key present in the credential to produce signatures.
     /// </summary>
-    internal sealed class ServiceAccountSigner: ISigner
+    internal sealed class ServiceAccountSigner : ISigner
     {
         private readonly ServiceAccountCredential _credential;
 
@@ -48,6 +48,6 @@ namespace FirebaseAdmin.Auth
             return Task.FromResult(Convert.FromBase64String(signature));
         }
 
-        public void Dispose() {}
+        public void Dispose() { }
     }
 }

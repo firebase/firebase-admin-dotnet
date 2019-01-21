@@ -48,12 +48,12 @@ namespace FirebaseAdmin.Auth
         // pre-emptively refreshed instead of waiting until the last second.
         private static readonly TimeSpan ClockSkew = new TimeSpan(hours: 0, minutes: 5, seconds: 0);
 
-        private readonly string _certUrl;
-        private IReadOnlyList<PublicKey> _cachedKeys;
-        private DateTime _expirationTime;
         private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+        private readonly string _certUrl;
         private readonly IClock _clock;
         private readonly HttpClientFactory _clientFactory;
+        private DateTime _expirationTime;
+        private IReadOnlyList<PublicKey> _cachedKeys;
 
         public HttpPublicKeySource(string certUrl, IClock clock, HttpClientFactory clientFactory)
         {

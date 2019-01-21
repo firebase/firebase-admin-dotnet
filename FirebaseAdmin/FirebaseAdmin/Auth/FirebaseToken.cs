@@ -23,6 +23,17 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class FirebaseToken
     {
+        internal FirebaseToken(FirebaseTokenArgs args)
+        {
+            Issuer = args.Issuer;
+            Subject = args.Subject;
+            Audience = args.Audience;
+            ExpirationTimeSeconds = args.ExpirationTimeSeconds;
+            IssuedAtTimeSeconds = args.IssuedAtTimeSeconds;
+            Uid = args.Subject;
+            Claims = args.Claims;
+        }
+
         /// <summary>
         /// The issuer claim that identifies the principal that issued the JWT.
         /// </summary>
@@ -48,7 +59,7 @@ namespace FirebaseAdmin.Auth
         /// The issued at claim that identifies the time (in seconds) at which the JWT was issued.
         /// </summary>
         public long IssuedAtTimeSeconds { get; private set; }
-        
+
         /// <summary>
         /// User ID of the user to which this ID token belongs. This is same as <c>Subject</c>.
         /// </summary>
@@ -59,17 +70,6 @@ namespace FirebaseAdmin.Auth
         /// access custom claims of the token.
         /// </summary>
         public IReadOnlyDictionary<string, object> Claims { get; private set; }
-
-        internal FirebaseToken(FirebaseTokenArgs args)
-        {
-            Issuer = args.Issuer;
-            Subject = args.Subject;
-            Audience = args.Audience;
-            ExpirationTimeSeconds = args.ExpirationTimeSeconds;
-            IssuedAtTimeSeconds = args.IssuedAtTimeSeconds;
-            Uid = args.Subject;
-            Claims = args.Claims;            
-        }
     }
 
     internal sealed class FirebaseTokenArgs

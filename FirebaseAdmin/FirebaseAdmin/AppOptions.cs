@@ -26,6 +26,18 @@ namespace FirebaseAdmin
     public sealed class AppOptions
     {
         /// <summary>
+        /// Initializes a new instance of the  <see cref="AppOptions"/> class.
+        /// </summary>
+        public AppOptions() {}
+
+        internal AppOptions(AppOptions options)
+        {
+            Credential = options.Credential;
+            ProjectId = options.ProjectId;
+            ServiceAccountId = options.ServiceAccountId;
+        }
+
+        /// <summary>
         /// <see cref="GoogleCredential"/> used to authorize an app. All service calls made by
         /// the app will be authorized using this.
         /// </summary>
@@ -44,17 +56,5 @@ namespace FirebaseAdmin
         /// JSON.</para>
         /// </summary>
         public string ServiceAccountId { get; set; }
-
-        /// <summary>
-        /// Creates a new <see cref="AppOptions"/> instance.
-        /// </summary>
-        public AppOptions() {}
-
-        internal AppOptions(AppOptions options)
-        {
-            Credential = options.Credential;
-            ProjectId = options.ProjectId;
-            ServiceAccountId = options.ServiceAccountId;
-        }
     }
 }

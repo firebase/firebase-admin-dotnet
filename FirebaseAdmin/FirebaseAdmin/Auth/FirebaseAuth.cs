@@ -26,18 +26,54 @@ namespace FirebaseAdmin.Auth
     public sealed class FirebaseAuth: IFirebaseService
     {
         private readonly FirebaseApp _app;
-        private bool _deleted;
         private readonly Lazy<FirebaseTokenFactory> _tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> _idTokenVerifier;
-        private readonly Object _lock = new Object();
+        private readonly object _lock = new object();
+        private bool _deleted;
 
         private FirebaseAuth(FirebaseApp app)
         {
             _app = app;
-            _tokenFactory = new Lazy<FirebaseTokenFactory>(() => 
+            _tokenFactory = new Lazy<FirebaseTokenFactory>(() =>
                 FirebaseTokenFactory.Create(_app), true);
-            _idTokenVerifier = new Lazy<FirebaseTokenVerifier>(() => 
+            _idTokenVerifier = new Lazy<FirebaseTokenVerifier>(() =>
                 FirebaseTokenVerifier.CreateIDTokenVerifier(_app), true);
+        }
+
+        /// <summary>
+        /// The auth instance associated with the default Firebase app. This property is
+        /// <c>null</c> if the default app doesn't yet exist.
+        /// </summary>
+        public static FirebaseAuth DefaultInstance
+        {
+            get
+            {
+                var app = FirebaseApp.DefaultInstance;
+                if (app == null)
+                {
+                    return null;
+                }
+                return GetAuth(app);
+            }
+        }
+
+        /// <summary>
+        /// Returns the auth instance for the specified app.
+        /// </summary>
+        /// <returns>The <see cref="FirebaseAuth"/> instance associated with the specified
+        /// app.</returns>
+        /// <exception cref="System.ArgumentNullException">If the app argument is null.</exception>
+        /// <param name="app">An app instance.</param>
+        public static FirebaseAuth GetAuth(FirebaseApp app)
+        {
+            if (app == null)
+            {
+                throw new ArgumentNullException("App argument must not be null.");
+            }
+            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
+            {
+                return new FirebaseAuth(app);
+            });
         }
 
         /// <summary>
@@ -246,42 +282,6 @@ namespace FirebaseAdmin.Auth
                     _tokenFactory.Value.Dispose();
                 }
             }
-        }
-
-        /// <summary>
-        /// The auth instance associated with the default Firebase app. This property is
-        /// <c>null</c> if the default app doesn't yet exist.
-        /// </summary>
-        public static FirebaseAuth DefaultInstance
-        {
-            get
-            {
-                var app = FirebaseApp.DefaultInstance;
-                if (app == null)
-                {
-                    return null;
-                }
-                return GetAuth(app);
-            }
-        }
-
-        /// <summary>
-        /// Returns the auth instance for the specified app.
-        /// </summary>
-        /// <returns>The <see cref="FirebaseAuth"/> instance associated with the specified
-        /// app.</returns>
-        /// <exception cref="System.ArgumentNullException">If the app argument is null.</exception>
-        /// <param name="app">An app instance.</param>
-        public static FirebaseAuth GetAuth(FirebaseApp app)
-        {
-            if (app == null)
-            {
-                throw new ArgumentNullException("App argument must not be null.");
-            }
-            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () => 
-            {
-                return new FirebaseAuth(app);
-            });
         }
     }
 }

@@ -50,13 +50,13 @@ namespace FirebaseAdmin.Auth
             return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
 
-        public static string Base64Decode(string input)
+        internal static string Base64Decode(string input)
         {
             var raw = Base64DecodeToBytes(input);
             return Encoding.UTF8.GetString(raw);
         }
 
-        public static byte[] Base64DecodeToBytes(string input)
+        internal static byte[] Base64DecodeToBytes(string input)
         {
             // undo the url safe replacements
             input = input.Replace('-', '+').Replace('_', '/');
@@ -68,8 +68,10 @@ namespace FirebaseAdmin.Auth
             return Convert.FromBase64String(input);
         }
 
-        public static async Task<string> CreateSignedJwtAsync(
-            object header, object payload, ISigner signer,
+        internal static async Task<string> CreateSignedJwtAsync(
+            object header,
+            object payload,
+            ISigner signer,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             string encodedHeader = Encode(header);

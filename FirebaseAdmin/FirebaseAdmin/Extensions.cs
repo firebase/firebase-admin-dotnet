@@ -38,7 +38,7 @@ namespace FirebaseAdmin
         {
             if (credential.UnderlyingCredential is GoogleCredential)
             {
-                return ((GoogleCredential) credential.UnderlyingCredential)
+                return ((GoogleCredential)credential.UnderlyingCredential)
                     .ToServiceAccountCredential();
             }
             return credential.UnderlyingCredential as ServiceAccountCredential;
@@ -47,7 +47,7 @@ namespace FirebaseAdmin
         /// <summary>
         /// Creates a default (unauthenticated) <see cref="ConfigurableHttpClient"/> from the
         /// factory.
-        /// </summary> 
+        /// </summary>
         public static ConfigurableHttpClient CreateDefaultHttpClient(
             this HttpClientFactory clientFactory)
         {
@@ -83,7 +83,8 @@ namespace FirebaseAdmin
         /// </summary>
         public static long UnixTimestamp(this IClock clock)
         {
-            return (long) (clock.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            var timeSinceEpoch = clock.UtcNow.Subtract(new DateTime(1970, 1, 1));
+            return (long)timeSinceEpoch.TotalSeconds;
         }
     }
 }

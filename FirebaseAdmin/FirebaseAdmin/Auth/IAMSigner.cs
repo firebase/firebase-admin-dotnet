@@ -36,7 +36,8 @@ namespace FirebaseAdmin.Auth
     {
         private const string SignBlobUrl =
             "https://iam.googleapis.com/v1/projects/-/serviceAccounts/{0}:signBlob";
-        private const string MetadataServerUrl = 
+
+        private const string MetadataServerUrl =
             "http://metadata/computeMetadata/v1/instance/service-accounts/default/email";
 
         private readonly ConfigurableHttpClient _httpClient;
@@ -86,11 +87,14 @@ namespace FirebaseAdmin.Auth
                 var result = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobError>(content);
                 error = result?.Error.Message;
             }
-            catch (Exception) {} // Ignore any errors encountered while parsing the originl error.
+            catch (Exception)
+            {
+                // Ignore any errors encountered while parsing the originl error.
+            }
             if (string.IsNullOrEmpty(error))
             {
                 error = "Response status code does not indicate success: "
-                    + $"{(int) response.StatusCode} ({response.StatusCode})"
+                    + $"{(int)response.StatusCode} ({response.StatusCode})"
                     + $"{Environment.NewLine}{content}";
             }
             throw new FirebaseException(error);
@@ -175,8 +179,9 @@ namespace FirebaseAdmin.Auth
     {
         private readonly string _keyId;
 
-        public FixedAccountIAMSigner(HttpClientFactory clientFactory, GoogleCredential credential, 
-            string keyId): base(clientFactory, credential)
+        public FixedAccountIAMSigner(
+            HttpClientFactory clientFactory, GoogleCredential credential, string keyId)
+            : base(clientFactory, credential)
         {
             _keyId = keyId.ThrowIfNullOrEmpty(nameof(keyId));
         }

@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;  
+using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using Google.Apis.Auth;
 using Google.Apis.Http;
@@ -39,14 +39,28 @@ namespace FirebaseAdmin.Auth
     {
         public const string FirebaseAudience = "https://identitytoolkit.googleapis.com/"
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
-        
+
         public const int TokenDurationSeconds = 3600;
         public static readonly DateTime UnixEpoch = new DateTime(
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         public static readonly ImmutableList<string> ReservedClaims = ImmutableList.Create(
-            "acr", "amr", "at_hash", "aud", "auth_time", "azp", "cnf", "c_hash",
-	        "exp", "firebase", "iat", "iss", "jti", "nbf", "nonce", "sub"
-        );
+            "acr",
+            "amr",
+            "at_hash",
+            "aud",
+            "auth_time",
+            "azp",
+            "cnf",
+            "c_hash",
+            "exp",
+            "firebase",
+            "iat",
+            "iss",
+            "jti",
+            "nbf",
+            "nonce",
+            "sub");
 
         private readonly ISigner _signer;
         private readonly IClock _clock;
@@ -55,6 +69,31 @@ namespace FirebaseAdmin.Auth
         {
             _signer = signer.ThrowIfNull(nameof(signer));
             _clock = clock.ThrowIfNull(nameof(clock));
+        }
+
+        public static FirebaseTokenFactory Create(FirebaseApp app)
+        {
+            ISigner signer = null;
+            var serviceAccount = app.Options.Credential.ToServiceAccountCredential();
+            if (serviceAccount != null)
+            {
+                // If the app was initialized with a service account, use it to sign
+                // tokens locally.
+                signer = new ServiceAccountSigner(serviceAccount);
+            }
+            else if (string.IsNullOrEmpty(app.Options.ServiceAccountId))
+            {
+                // If no service account ID is specified, attempt to discover one and invoke the
+                // IAM service with it.
+                signer = new IAMSigner(new HttpClientFactory(), app.Options.Credential);
+            }
+            else
+            {
+                // If a service account ID is specified, invoke the IAM service with it.
+                signer = new FixedAccountIAMSigner(
+                    new HttpClientFactory(), app.Options.Credential, app.Options.ServiceAccountId);
+            }
+            return new FirebaseTokenFactory(signer, SystemClock.Default);
         }
 
         public async Task<string> CreateCustomTokenAsync(
@@ -85,9 +124,9 @@ namespace FirebaseAdmin.Auth
             var header = new JsonWebSignature.Header()
             {
                 Algorithm = "RS256",
-                Type = "JWT"
+                Type = "JWT",
             };
-            
+
             var issued = (int)(_clock.UtcNow - UnixEpoch).TotalSeconds;
             var keyId = await _signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
             var payload = new CustomTokenPayload()
@@ -97,7 +136,7 @@ namespace FirebaseAdmin.Auth
                 Subject = keyId,
                 Audience = FirebaseAudience,
                 IssuedAtTimeSeconds = issued,
-                ExpirationTimeSeconds = issued + TokenDurationSeconds,            
+                ExpirationTimeSeconds = issued + TokenDurationSeconds,
             };
             if (developerClaims != null && developerClaims.Count > 0)
             {
@@ -110,31 +149,6 @@ namespace FirebaseAdmin.Auth
         public void Dispose()
         {
             _signer.Dispose();
-        }
-
-        public static FirebaseTokenFactory Create(FirebaseApp app)
-        {
-            ISigner signer = null;
-            var serviceAccount = app.Options.Credential.ToServiceAccountCredential();            
-            if (serviceAccount != null)
-            {
-                // If the app was initialized with a service account, use it to sign
-                // tokens locally.
-                signer = new ServiceAccountSigner(serviceAccount);                
-            }
-            else if (string.IsNullOrEmpty(app.Options.ServiceAccountId))
-            {
-                // If no service account ID is specified, attempt to discover one and invoke the
-                // IAM service with it.
-                signer = new IAMSigner(new HttpClientFactory(), app.Options.Credential);
-            }
-            else
-            {
-                // If a service account ID is specified, invoke the IAM service with it.
-                signer = new FixedAccountIAMSigner(
-                    new HttpClientFactory(), app.Options.Credential, app.Options.ServiceAccountId);
-            }
-            return new FirebaseTokenFactory(signer, SystemClock.Default);
         }
     }
 
