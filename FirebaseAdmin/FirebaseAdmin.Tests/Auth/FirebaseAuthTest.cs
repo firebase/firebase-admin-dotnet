@@ -28,7 +28,7 @@ using Google.Apis.Auth.OAuth2;
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace FirebaseAdmin.Auth.Tests
 {
-    public class FirebaseAuthTest: IDisposable
+    public class FirebaseAuthTest : IDisposable
     {
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
@@ -87,9 +87,9 @@ namespace FirebaseAdmin.Auth.Tests
             FirebaseApp.Create(new AppOptions() { Credential = cred });
             var developerClaims = new Dictionary<string, object>()
             {
-                {"admin", true},
-                {"package", "gold"},
-                {"magicNumber", 42L},
+                { "admin", true },
+                { "package", "gold" },
+                { "magicNumber", 42L },
             };
             var token = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
                 "user2", developerClaims);

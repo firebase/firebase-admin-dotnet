@@ -40,7 +40,7 @@ namespace FirebaseAdmin.Auth
     /// HTTP server. Retrieved keys are cached in memory according to the HTTP cache-control
     /// directive.
     /// </summary>
-    internal sealed class HttpPublicKeySource: IPublicKeySource
+    internal sealed class HttpPublicKeySource : IPublicKeySource
     {
         // Default clock skew used by most GCP libraries. This interval is subtracted from the
         // cache expiry time, before any expiration checks. This helps correct for minor

@@ -28,7 +28,7 @@ namespace FirebaseAdmin
         /// <summary>
         /// Initializes a new instance of the  <see cref="AppOptions"/> class.
         /// </summary>
-        public AppOptions() {}
+        public AppOptions() { }
 
         internal AppOptions(AppOptions options)
         {

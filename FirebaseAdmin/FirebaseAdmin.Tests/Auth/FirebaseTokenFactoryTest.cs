@@ -56,9 +56,9 @@ namespace FirebaseAdmin.Auth.Tests
             var factory = new FirebaseTokenFactory(new MockSigner(), clock);
             var developerClaims = new Dictionary<string, object>()
             {
-                {"admin", true},
-                {"package", "gold"},
-                {"magicNumber", 42L},
+                { "admin", true },
+                { "package", "gold" },
+                { "magicNumber", 42L },
             };
             var token = await factory.CreateCustomTokenAsync("user2", developerClaims);
             VerifyCustomToken(token, "user2", developerClaims);
@@ -84,7 +84,7 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 var developerClaims = new Dictionary<string, object>()
                 {
-                    {key, "value"},
+                    { key, "value" },
                 };
                 await Assert.ThrowsAsync<ArgumentException>(
                     async () => await factory.CreateCustomTokenAsync("user", developerClaims));
@@ -142,6 +142,6 @@ namespace FirebaseAdmin.Auth.Tests
             return Task.FromResult(Encoding.UTF8.GetBytes(Signature));
         }
 
-        public void Dispose() {}
+        public void Dispose() { }
     }
 }

@@ -35,7 +35,7 @@ namespace FirebaseAdmin.Auth
         private const string IdTokenCertUrl = "https://www.googleapis.com/robot/v1/metadata/x509/"
             + "securetoken@system.gserviceaccount.com";
 
-        private const string FirebaseAudience ="https://identitytoolkit.googleapis.com/"
+        private const string FirebaseAudience = "https://identitytoolkit.googleapis.com/"
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
         // See http://oid-info.com/get/2.16.840.1.101.3.4.2.1

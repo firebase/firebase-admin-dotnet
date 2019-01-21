@@ -20,7 +20,7 @@ using Google.Apis.Auth.OAuth2;
 
 namespace FirebaseAdmin.Tests
 {
-    public class FirebaseAppTest: IDisposable
+    public class FirebaseAppTest : IDisposable
     {
         private static readonly AppOptions TestOptions = new AppOptions()
         {
@@ -169,7 +169,7 @@ namespace FirebaseAdmin.Tests
         [Fact]
         public void GetProjectIdFromEnvironment()
         {
-            foreach (var name in new string[] {"GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT"})
+            foreach (var name in new string[] { "GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT" })
             {
                 Environment.SetEnvironmentVariable(name, "env-project");
                 try
@@ -216,7 +216,7 @@ namespace FirebaseAdmin.Tests
         }
     }
 
-    internal class MockService: IFirebaseService
+    internal class MockService : IFirebaseService
     {
         public bool Deleted { get; private set; }
 
@@ -226,8 +226,8 @@ namespace FirebaseAdmin.Tests
         }
     }
 
-    internal class OtherMockService: IFirebaseService
+    internal class OtherMockService : IFirebaseService
     {
-        public void Delete() {}
+        public void Delete() { }
     }
 }

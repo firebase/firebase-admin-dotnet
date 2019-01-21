@@ -28,7 +28,7 @@ using FirebaseAdmin.Tests;
 
 namespace FirebaseAdmin.Auth.Tests
 {
-    public class FirebaseTokenVerifierTest: IDisposable
+    public class FirebaseTokenVerifierTest : IDisposable
     {
         private static readonly IPublicKeySource KeySource = new FileSystemPublicKeySource(
             "./resources/public_cert.pem");
@@ -57,7 +57,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"foo", "bar"},
+                { "foo", "bar" },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             var decoded = await TokenVerifier.VerifyTokenAsync(idToken);
@@ -95,7 +95,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var header = new Dictionary<string, object>()
             {
-                {"kid", string.Empty},
+                { "kid", string.Empty },
             };
             var idToken = await CreateTestTokenAsync(headerOverrides: header);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -107,7 +107,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var header = new Dictionary<string, object>()
             {
-                {"kid", "incorrect-key-id"},
+                { "kid", "incorrect-key-id" },
             };
             var idToken = await CreateTestTokenAsync(headerOverrides: header);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -119,7 +119,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var header = new Dictionary<string, object>()
             {
-                {"alg", "HS256"},
+                { "alg", "HS256" },
             };
             var idToken = await CreateTestTokenAsync(headerOverrides: header);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -131,7 +131,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"exp", Clock.UnixTimestamp() - 60},
+                { "exp", Clock.UnixTimestamp() - 60 },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -143,7 +143,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"iat", Clock.UnixTimestamp() + 60},
+                { "iat", Clock.UnixTimestamp() + 60 },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -155,7 +155,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"iss", "wrong-issuer"},
+                { "iss", "wrong-issuer" },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -167,7 +167,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"aud", "wrong-audience"},
+                { "aud", "wrong-audience" },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -179,7 +179,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"sub", string.Empty},
+                { "sub", string.Empty },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -256,9 +256,9 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var header = new Dictionary<string, object>()
             {
-                {"alg", "RS256"},
-                {"typ", "jwt"},
-                {"kid", "test-key-id"},
+                { "alg", "RS256" },
+                { "typ", "jwt" },
+                { "kid", "test-key-id" },
             };
             if (headerOverrides != null)
             {
