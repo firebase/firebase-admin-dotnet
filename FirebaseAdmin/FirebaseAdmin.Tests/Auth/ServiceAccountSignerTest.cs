@@ -30,7 +30,7 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task Signer()
         {
             var credential = GoogleCredential.FromFile("./resources/service_account.json");
-            var serviceAccount = (ServiceAccountCredential) credential.UnderlyingCredential; 
+            var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
             var signer = new ServiceAccountSigner(serviceAccount);
             Assert.Equal("client@test-project.iam.gserviceaccount.com",
                 await signer.GetKeyIdAsync());
@@ -48,7 +48,7 @@ namespace FirebaseAdmin.Auth.Tests
         private bool Verify(byte[] data, byte[] signature)
         {
             var x509cert = new X509Certificate2(File.ReadAllBytes("./resources/public_cert.pem"));
-            var rsa = (RSA) x509cert.PublicKey.Key;
+            var rsa = (RSA)x509cert.PublicKey.Key;
             return rsa.VerifyData(
                 data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }

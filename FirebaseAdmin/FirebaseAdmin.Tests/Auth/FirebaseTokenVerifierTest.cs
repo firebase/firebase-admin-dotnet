@@ -32,8 +32,11 @@ namespace FirebaseAdmin.Auth.Tests
     {
         private static readonly IPublicKeySource KeySource = new FileSystemPublicKeySource(
             "./resources/public_cert.pem");
+
         private static readonly IClock Clock = new MockClock();
+
         private static readonly ISigner Signer = CreateTestSigner();
+
         private static readonly FirebaseTokenVerifier TokenVerifier = new FirebaseTokenVerifier(
             new FirebaseTokenVerifierArgs()
         {
@@ -46,7 +49,7 @@ namespace FirebaseAdmin.Auth.Tests
             PublicKeySource = KeySource,
         });
 
-        private static readonly GoogleCredential mockCredential =
+        private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
         [Fact]
@@ -63,8 +66,8 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("testuser", decoded.Subject);
             // The default test token created by CreateTestTokenAsync has an issue time 10 minutes
             // ago, and an expiry time 50 minutes in the future.
-            Assert.Equal(Clock.UnixTimestamp() - 60 * 10, decoded.IssuedAtTimeSeconds);
-            Assert.Equal(Clock.UnixTimestamp() + 60 * 50, decoded.ExpirationTimeSeconds);
+            Assert.Equal(Clock.UnixTimestamp() - (60 * 10), decoded.IssuedAtTimeSeconds);
+            Assert.Equal(Clock.UnixTimestamp() + (60 * 50), decoded.ExpirationTimeSeconds);
             Assert.Single(decoded.Claims);
             object value;
             Assert.True(decoded.Claims.TryGetValue("foo", out value));
@@ -77,7 +80,7 @@ namespace FirebaseAdmin.Auth.Tests
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await TokenVerifier.VerifyTokenAsync(null));
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await TokenVerifier.VerifyTokenAsync(""));
+                async () => await TokenVerifier.VerifyTokenAsync(string.Empty));
         }
 
         [Fact]
@@ -92,7 +95,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var header = new Dictionary<string, object>()
             {
-                {"kid", ""},
+                {"kid", string.Empty},
             };
             var idToken = await CreateTestTokenAsync(headerOverrides: header);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -176,7 +179,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"sub", ""},
+                {"sub", string.Empty},
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -188,7 +191,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var payload = new Dictionary<string, object>()
             {
-                {"sub", new String('a', 129)},
+                { "sub", new string('a', 129) },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
             await Assert.ThrowsAsync<FirebaseException>(
@@ -200,7 +203,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var app = FirebaseApp.Create(new AppOptions()
             {
-                Credential = mockCredential,
+                Credential = MockCredential,
                 ProjectId = "explicit-project-id",
             });
             var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
@@ -226,14 +229,14 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 var app = FirebaseApp.Create(new AppOptions()
                 {
-                    Credential = mockCredential,
+                    Credential = MockCredential,
                 });
                 var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
                 Assert.Equal("env-project-id", verifier.ProjectId);
             }
             finally
             {
-                Environment.SetEnvironmentVariable("GOOGLE_CLOUD_PROJECT", "");
+                Environment.SetEnvironmentVariable("GOOGLE_CLOUD_PROJECT", string.Empty);
             }
         }
 
@@ -267,11 +270,11 @@ namespace FirebaseAdmin.Auth.Tests
 
             var payload = new Dictionary<string, object>()
             {
-                {"sub", "testuser"},
-                {"iss", "https://securetoken.google.com/test-project"},
-                {"aud", "test-project"},
-                {"iat", Clock.UnixTimestamp() - 60 * 10},
-                {"exp", Clock.UnixTimestamp() + 60 * 50},
+                { "sub", "testuser" },
+                { "iss", "https://securetoken.google.com/test-project" },
+                { "aud", "test-project" },
+                { "iat", Clock.UnixTimestamp() - (60 * 10) },
+                { "exp", Clock.UnixTimestamp() + (60 * 50) },
             };
             if (payloadOverrides != null)
             {
@@ -286,7 +289,7 @@ namespace FirebaseAdmin.Auth.Tests
         private static ISigner CreateTestSigner()
         {
             var credential = GoogleCredential.FromFile("./resources/service_account.json");
-            var serviceAccount = (ServiceAccountCredential) credential.UnderlyingCredential; 
+            var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
             return new ServiceAccountSigner(serviceAccount);
         }
     }
@@ -298,7 +301,7 @@ namespace FirebaseAdmin.Auth.Tests
         public FileSystemPublicKeySource(string file)
         {
             var x509cert = new X509Certificate2(File.ReadAllBytes(file));
-            var rsa = (RSA) x509cert.PublicKey.Key;
+            var rsa = (RSA)x509cert.PublicKey.Key;
             _rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
         }
 

@@ -19,14 +19,19 @@ namespace FirebaseAdmin.Tests
 {
     public class MockClock : IClock
     {
+        private object _lock = new object();
+        private DateTime _utcNow;
+
+        public MockClock()
+        {
+            Now = DateTime.Now;
+        }
+
         public DateTime Now
         {
             get { return UtcNow.ToLocalTime(); }
             set { UtcNow = value.ToUniversalTime(); }
         }
-
-        private object _lock = new object();
-        private DateTime _utcNow;
 
         public DateTime UtcNow
         {
@@ -37,6 +42,7 @@ namespace FirebaseAdmin.Tests
                     return _utcNow;
                 }
             }
+
             set
             {
                 lock (_lock)
@@ -44,11 +50,6 @@ namespace FirebaseAdmin.Tests
                     _utcNow = value;
                 }
             }
-        }
-
-        public MockClock()
-        {
-            Now = DateTime.Now;
         }
     }
 }

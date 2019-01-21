@@ -5,6 +5,9 @@
     <IsPackable>false</IsPackable>
     <AssemblyOriginatorKeyFile>../../FirebaseAdmin.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <CodeAnalysisRuleSet>../../stylecop_test.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +20,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FirebaseAdmin\FirebaseAdmin.csproj" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Update=".\resources\*">

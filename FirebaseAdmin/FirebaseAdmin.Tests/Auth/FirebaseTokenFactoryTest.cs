@@ -71,29 +71,30 @@ namespace FirebaseAdmin.Auth.Tests
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await factory.CreateCustomTokenAsync(null));
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await factory.CreateCustomTokenAsync(""));
+                async () => await factory.CreateCustomTokenAsync(string.Empty));
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await factory.CreateCustomTokenAsync(new String('a', 129)));
+                async () => await factory.CreateCustomTokenAsync(new string('a', 129)));
         }
 
         [Fact]
         public async Task ReservedClaims()
         {
             var factory = new FirebaseTokenFactory(new MockSigner(), new MockClock());
-            foreach(var key in FirebaseTokenFactory.ReservedClaims)
+            foreach (var key in FirebaseTokenFactory.ReservedClaims)
             {
-                var developerClaims = new Dictionary<string, object>(){
+                var developerClaims = new Dictionary<string, object>()
+                {
                     {key, "value"},
                 };
                 await Assert.ThrowsAsync<ArgumentException>(
-                    async () => await factory.CreateCustomTokenAsync("user", developerClaims));    
-            }    
+                    async () => await factory.CreateCustomTokenAsync("user", developerClaims));
+            }
         }
 
         private static void VerifyCustomToken(
             string token, string uid, Dictionary<string, object> claims)
         {
-            String[] segments = token.Split(".");
+            string[] segments = token.Split(".");
             Assert.Equal(3, segments.Length);
             // verify header
             var header = JwtUtils.Decode<GoogleJsonWebSignature.Header>(segments[0]);

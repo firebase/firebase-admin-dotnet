@@ -92,7 +92,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Throws<ArgumentException>(
                 () => new HttpPublicKeySource(null, clock, clientFactory));
             Assert.Throws<ArgumentException>(
-                () => new HttpPublicKeySource("", clock, clientFactory));
+                () => new HttpPublicKeySource(string.Empty, clock, clientFactory));
             Assert.Throws<ArgumentNullException>(
                 () => new HttpPublicKeySource("https://example.com/certs", null, clientFactory));
             Assert.Throws<ArgumentNullException>(

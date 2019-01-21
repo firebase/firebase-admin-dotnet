@@ -27,69 +27,6 @@ using FirebaseAdmin.Tests;
 
 namespace FirebaseAdmin.Auth.Tests
 {
-    public class FixedAccountIAMSignerTest
-    {
-        [Fact]
-        public async Task Signer()
-        {
-            var bytes = Encoding.UTF8.GetBytes("signature");
-            var handler = new MockMessageHandler()
-                {
-                    Response = new SignBlobResponse()
-                        {
-                                Signature = Convert.ToBase64String(bytes),
-                        },
-                };
-            var factory = new MockHttpClientFactory(handler);
-            var signer = new FixedAccountIAMSigner(
-                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
-            Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
-            byte[] data = Encoding.UTF8.GetBytes("Hello world");
-            byte[] signature = await signer.SignDataAsync(data);
-            Assert.Equal(bytes, signature);
-            var req = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobRequest>(
-                handler.Request);
-            Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
-            Assert.Equal(1, handler.Calls);
-        }
-
-        [Fact]
-        public async Task WelformedSignError()
-        {
-            var handler = new MockMessageHandler()
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    Response = @"{""error"": {""message"": ""test reason""}}"
-                };
-            var factory = new MockHttpClientFactory(handler);
-            var signer = new FixedAccountIAMSigner(
-                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
-            Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
-            byte[] data = Encoding.UTF8.GetBytes("Hello world");
-            var ex = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await signer.SignDataAsync(data));
-            Assert.Equal("test reason", ex.Message);
-        }
-
-        [Fact]
-        public async Task UnexpectedSignError()
-        {
-            var handler = new MockMessageHandler()
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    Response = "not json"
-                };
-            var factory = new MockHttpClientFactory(handler);
-            var signer = new FixedAccountIAMSigner(
-                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
-            Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
-            byte[] data = Encoding.UTF8.GetBytes("Hello world");
-            var ex = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await signer.SignDataAsync(data));
-            Assert.Contains("not json", ex.Message);
-        }
-    }
-
     public class IAMSignerTest
     {
         [Fact]
@@ -128,7 +65,7 @@ namespace FirebaseAdmin.Auth.Tests
             var bytes = Encoding.UTF8.GetBytes("signature");
             var handler = new MockMessageHandler()
                 {
-                    StatusCode = HttpStatusCode.InternalServerError,            
+                    StatusCode = HttpStatusCode.InternalServerError,
                 };
             var factory = new MockHttpClientFactory(handler);
             var signer = new IAMSigner(factory, GoogleCredential.FromAccessToken("token"));
@@ -138,6 +75,69 @@ namespace FirebaseAdmin.Auth.Tests
             await Assert.ThrowsAsync<FirebaseException>(
                 async () => await signer.GetKeyIdAsync());
             Assert.Equal(1, handler.Calls);
+        }
+    }
+
+    public class FixedAccountIAMSignerTest
+    {
+        [Fact]
+        public async Task Signer()
+        {
+            var bytes = Encoding.UTF8.GetBytes("signature");
+            var handler = new MockMessageHandler()
+                {
+                    Response = new SignBlobResponse()
+                        {
+                                Signature = Convert.ToBase64String(bytes),
+                        },
+                };
+            var factory = new MockHttpClientFactory(handler);
+            var signer = new FixedAccountIAMSigner(
+                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
+            byte[] data = Encoding.UTF8.GetBytes("Hello world");
+            byte[] signature = await signer.SignDataAsync(data);
+            Assert.Equal(bytes, signature);
+            var req = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobRequest>(
+                handler.Request);
+            Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
+        public async Task WelformedSignError()
+        {
+            var handler = new MockMessageHandler()
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    Response = @"{""error"": {""message"": ""test reason""}}",
+                };
+            var factory = new MockHttpClientFactory(handler);
+            var signer = new FixedAccountIAMSigner(
+                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
+            byte[] data = Encoding.UTF8.GetBytes("Hello world");
+            var ex = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await signer.SignDataAsync(data));
+            Assert.Equal("test reason", ex.Message);
+        }
+
+        [Fact]
+        public async Task UnexpectedSignError()
+        {
+            var handler = new MockMessageHandler()
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    Response = "not json",
+                };
+            var factory = new MockHttpClientFactory(handler);
+            var signer = new FixedAccountIAMSigner(
+                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
+            byte[] data = Encoding.UTF8.GetBytes("Hello world");
+            var ex = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await signer.SignDataAsync(data));
+            Assert.Contains("not json", ex.Message);
         }
     }
 }
