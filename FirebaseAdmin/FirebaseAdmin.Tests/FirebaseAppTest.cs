@@ -14,9 +14,9 @@
 
 using System;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Xunit;
 
 namespace FirebaseAdmin.Tests
 {

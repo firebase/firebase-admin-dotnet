@@ -18,9 +18,9 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
+using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {
@@ -32,8 +32,8 @@ namespace FirebaseAdmin.Auth.Tests
             var credential = GoogleCredential.FromFile("./resources/service_account.json");
             var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
             var signer = new ServiceAccountSigner(serviceAccount);
-            Assert.Equal("client@test-project.iam.gserviceaccount.com",
-                await signer.GetKeyIdAsync());
+            Assert.Equal(
+                "client@test-project.iam.gserviceaccount.com", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             byte[] signature = signer.SignDataAsync(data).Result;
             Assert.True(Verify(data, signature));

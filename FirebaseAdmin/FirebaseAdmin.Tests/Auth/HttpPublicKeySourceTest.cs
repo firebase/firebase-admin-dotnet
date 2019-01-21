@@ -18,9 +18,9 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using Xunit;
-using FirebaseAdmin.Tests;
 using FirebaseAdmin.Auth;
+using FirebaseAdmin.Tests;
+using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {

@@ -25,12 +25,6 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal static class JwtUtils
     {
-        private static string Encode(object obj)
-        {
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(obj);
-            return UrlSafeBase64Encode(Encoding.UTF8.GetBytes(json));
-        }
-
         /// <summary>
         /// Decodes a single JWT segment, and deserializes it into a value of type
         /// <typeparamref name="T"/>.
@@ -42,12 +36,6 @@ namespace FirebaseAdmin.Auth
         {
             var json = Base64Decode(value);
             return NewtonsoftJsonSerializer.Instance.Deserialize<T>(json);
-        }
-
-        private static string UrlSafeBase64Encode(byte[] bytes)
-        {
-            var base64Value = Convert.ToBase64String(bytes);
-            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
 
         internal static string Base64Decode(string input)
@@ -86,6 +74,18 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
             assertion.Append('.').Append(UrlSafeBase64Encode(signature));
             return assertion.ToString();
+        }
+
+        private static string Encode(object obj)
+        {
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(obj);
+            return UrlSafeBase64Encode(Encoding.UTF8.GetBytes(json));
+        }
+
+        private static string UrlSafeBase64Encode(byte[] bytes)
+        {
+            var base64Value = Convert.ToBase64String(bytes);
+            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
     }
 }

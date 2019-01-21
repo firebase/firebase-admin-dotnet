@@ -20,11 +20,11 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
-using FirebaseAdmin.Tests;
 using FirebaseAdmin.Auth;
+using FirebaseAdmin.Tests;
 using Google.Apis.Auth;
 using Google.Apis.Util;
+using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {

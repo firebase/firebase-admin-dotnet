@@ -4,14 +4,9 @@
     <Rule Id="UseConfigureAwait" Action="Warning" />
   </Rules>
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
-    <Rule Id="SA1028" Action="None" />
-    <Rule Id="SA1101" Action="None" />
-    <Rule Id="SA1111" Action="None" />
-    <Rule Id="SA1116" Action="None" />
-    <Rule Id="SA1200" Action="None" />
-    <Rule Id="SA1202" Action="None" />
-    <Rule Id="SA1210" Action="None" />
-    <Rule Id="SA1309" Action="None" />
+    <Rule Id="SA1101" Action="None" /> <!-- Prefix local calls with this -->
+    <Rule Id="SA1200" Action="None" /> <!-- Using clauses inside namespaces -->
+
     <Rule Id="SA1402" Action="None" />
     <Rule Id="SA1502" Action="None" />
     <Rule Id="SA1513" Action="None" />

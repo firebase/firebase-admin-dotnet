@@ -18,8 +18,8 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Google;
-using Google.Apis.Logging;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Logging;
 
 [assembly: InternalsVisibleToAttribute("FirebaseAdmin.Tests,PublicKey=" +
 "002400000480000094000000060200000024000052534131000400000100010081328559eaab41" +
@@ -41,8 +41,6 @@ namespace FirebaseAdmin
     /// </summary>
     public sealed class FirebaseApp
     {
-        private const string DefaultAppName = "[DEFAULT]";
-
         internal static readonly IReadOnlyList<string> DefaultScopes = ImmutableList.Create(
             "https://www.googleapis.com/auth/firebase", // RTDB.
             "https://www.googleapis.com/auth/userinfo.email", // RTDB
@@ -51,30 +49,32 @@ namespace FirebaseAdmin
             "https://www.googleapis.com/auth/cloud-platform", // Cloud Firestore
             "https://www.googleapis.com/auth/datastore");
 
+        private const string DefaultAppName = "[DEFAULT]";
+
         private static readonly Dictionary<string, FirebaseApp> Apps = new Dictionary<string, FirebaseApp>();
 
         private static readonly ILogger Logger = ApplicationContext.Logger.ForType<FirebaseApp>();
 
         // Guards the mutable state local to an app instance.
-        private readonly object _lock = new object();
-        private readonly AppOptions _options;
+        private readonly object appLock = new object();
+        private readonly AppOptions options;
 
         // A collection of stateful services initialized using this app instance (e.g.
         // FirebaseAuth). Services are tracked here so they can be cleaned up when the app is
         // deleted.
-        private readonly Dictionary<string, IFirebaseService> _services = new Dictionary<string, IFirebaseService>();
-        private bool _deleted = false;
+        private readonly Dictionary<string, IFirebaseService> services = new Dictionary<string, IFirebaseService>();
+        private bool deleted = false;
 
         private FirebaseApp(AppOptions options, string name)
         {
-            _options = new AppOptions(options);
-            if (_options.Credential == null)
+            this.options = new AppOptions(options);
+            if (options.Credential == null)
             {
                 throw new ArgumentNullException("Credential must be set");
             }
-            if (_options.Credential.IsCreateScopedRequired)
+            if (options.Credential.IsCreateScopedRequired)
             {
-                _options.Credential = _options.Credential.CreateScoped(DefaultScopes);
+                options.Credential = options.Credential.CreateScoped(DefaultScopes);
             }
             Name = name;
         }
@@ -98,7 +98,7 @@ namespace FirebaseAdmin
         {
             get
             {
-                return new AppOptions(_options);
+                return new AppOptions(this.options);
             }
         }
 
@@ -108,80 +108,24 @@ namespace FirebaseAdmin
         public string Name { get; }
 
         /// <summary>
-        /// Deletes this app instance and cleans up any state associated with it. Once an app has
-        /// been deleted, accessing any services related to it will result in an exception.
-        /// If the app is already deleted, this method is a no-op.
+        /// Returns the app instance identified by the given name.
         /// </summary>
-        public void Delete()
+        /// <returns>The <see cref="FirebaseApp"/> instance with the specified name or null if it
+        /// doesn't exist.</returns>
+        /// <exception cref="System.ArgumentException">If the name argument is null or empty.</exception>
+        /// <param name="name">Name of the app to retrieve.</param>
+        public static FirebaseApp GetInstance(string name)
         {
-            // Clean up local state
-            lock (_lock)
+            if (string.IsNullOrEmpty(name))
             {
-                _deleted = true;
-                foreach (var entry in _services)
-                {
-                    try
-                    {
-                        entry.Value.Delete();
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e, "Error while cleaning up service {0}", entry.Key);
-                    }
-                }
-                _services.Clear();
+                throw new ArgumentException("App name to lookup must not be null or empty");
             }
-            // Clean up global state
             lock (Apps)
             {
-                Apps.Remove(Name);
-            }
-        }
-
-        internal T GetOrInit<T>(string id, ServiceFactory<T> initializer)
-            where T : class, IFirebaseService
-        {
-            lock (_lock)
-            {
-                if (_deleted)
+                FirebaseApp app;
+                if (Apps.TryGetValue(name, out app))
                 {
-                    throw new InvalidOperationException("Cannot use an app after it has been deleted");
-                }
-                IFirebaseService service;
-                if (!_services.TryGetValue(id, out service))
-                {
-                    service = initializer();
-                    _services.Add(id, service);
-                }
-                return (T)service;
-            }
-        }
-
-        /// <summary>
-        /// Returns the Google Cloud Platform project ID associated with this Firebase app. If a
-        /// project ID is specified in <see cref="AppOptions"/>, that value is returned. If not
-        /// attempts to determine a project ID from the <see cref="GoogleCredential"/> used to
-        /// initialize the app. Looks up the GOOGLE_CLOUD_PROJECT environment variable when all
-        /// else fails.
-        /// </summary>
-        /// <returns>A project ID string or null.</returns>
-        internal string GetProjectId()
-        {
-            if (!string.IsNullOrEmpty(Options.ProjectId))
-            {
-                return Options.ProjectId;
-            }
-            var projectId = Options.Credential.ToServiceAccountCredential()?.ProjectId;
-            if (!string.IsNullOrEmpty(projectId))
-            {
-                return projectId;
-            }
-            foreach (var variableName in new[] { "GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT" })
-            {
-                projectId = Environment.GetEnvironmentVariable(variableName);
-                if (!string.IsNullOrEmpty(projectId))
-                {
-                    return projectId;
+                    return app;
                 }
             }
             return null;
@@ -258,36 +202,35 @@ namespace FirebaseAdmin
             }
         }
 
-        private static AppOptions GetOptionsFromEnvironment()
-        {
-            return new AppOptions()
-            {
-                Credential = GoogleCredential.GetApplicationDefault(),
-            };
-        }
-
         /// <summary>
-        /// Returns the app instance identified by the given name.
+        /// Deletes this app instance and cleans up any state associated with it. Once an app has
+        /// been deleted, accessing any services related to it will result in an exception.
+        /// If the app is already deleted, this method is a no-op.
         /// </summary>
-        /// <returns>The <see cref="FirebaseApp"/> instance with the specified name or null if it
-        /// doesn't exist.</returns>
-        /// <exception cref="System.ArgumentException">If the name argument is null or empty.</exception>
-        /// <param name="name">Name of the app to retrieve.</param>
-        public static FirebaseApp GetInstance(string name)
+        public void Delete()
         {
-            if (string.IsNullOrEmpty(name))
+            // Clean up local state
+            lock (this.appLock)
             {
-                throw new ArgumentException("App name to lookup must not be null or empty");
+                this.deleted = true;
+                foreach (var entry in this.services)
+                {
+                    try
+                    {
+                        entry.Value.Delete();
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e, "Error while cleaning up service {0}", entry.Key);
+                    }
+                }
+                this.services.Clear();
             }
+            // Clean up global state
             lock (Apps)
             {
-                FirebaseApp app;
-                if (Apps.TryGetValue(name, out app))
-                {
-                    return app;
-                }
+                Apps.Remove(Name);
             }
-            return null;
         }
 
         /// <summary>
@@ -307,6 +250,63 @@ namespace FirebaseAdmin
                     throw new InvalidOperationException("Failed to delete all apps");
                 }
             }
+        }
+
+        internal T GetOrInit<T>(string id, ServiceFactory<T> initializer)
+            where T : class, IFirebaseService
+        {
+            lock (this.appLock)
+            {
+                if (this.deleted)
+                {
+                    throw new InvalidOperationException("Cannot use an app after it has been deleted");
+                }
+                IFirebaseService service;
+                if (!this.services.TryGetValue(id, out service))
+                {
+                    service = initializer();
+                    this.services.Add(id, service);
+                }
+                return (T)service;
+            }
+        }
+
+        /// <summary>
+        /// Returns the Google Cloud Platform project ID associated with this Firebase app. If a
+        /// project ID is specified in <see cref="AppOptions"/>, that value is returned. If not
+        /// attempts to determine a project ID from the <see cref="GoogleCredential"/> used to
+        /// initialize the app. Looks up the GOOGLE_CLOUD_PROJECT environment variable when all
+        /// else fails.
+        /// </summary>
+        /// <returns>A project ID string or null.</returns>
+        internal string GetProjectId()
+        {
+            if (!string.IsNullOrEmpty(Options.ProjectId))
+            {
+                return Options.ProjectId;
+            }
+            var projectId = Options.Credential.ToServiceAccountCredential()?.ProjectId;
+            if (!string.IsNullOrEmpty(projectId))
+            {
+                return projectId;
+            }
+            foreach (var variableName in new[] { "GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT" })
+            {
+                projectId = Environment.GetEnvironmentVariable(variableName);
+                if (!string.IsNullOrEmpty(projectId))
+                {
+                    return projectId;
+                }
+            }
+            return null;
+        }
+
+        private static AppOptions GetOptionsFromEnvironment()
+        {
+            return new AppOptions()
+            {
+                Credential = GoogleCredential.GetApplicationDefault(),
+            };
         }
     }
 }

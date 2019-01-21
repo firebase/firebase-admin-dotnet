@@ -25,7 +25,7 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal sealed class ServiceAccountSigner : ISigner
     {
-        private readonly ServiceAccountCredential _credential;
+        private readonly ServiceAccountCredential credential;
 
         public ServiceAccountSigner(ServiceAccountCredential credential)
         {
@@ -33,18 +33,18 @@ namespace FirebaseAdmin.Auth
             {
                 throw new ArgumentNullException("Credential must not be null.");
             }
-            _credential = credential;
+            this.credential = credential;
         }
 
         public Task<string> GetKeyIdAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.FromResult(_credential.Id);
+            return Task.FromResult(credential.Id);
         }
 
         public Task<byte[]> SignDataAsync(byte[] data, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var signature = _credential.CreateSignature(data);
+            var signature = credential.CreateSignature(data);
             return Task.FromResult(Convert.FromBase64String(signature));
         }
 

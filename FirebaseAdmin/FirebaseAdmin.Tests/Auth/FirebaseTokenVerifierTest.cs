@@ -20,11 +20,11 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Util;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Tests;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Util;
+using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {
@@ -296,19 +296,19 @@ namespace FirebaseAdmin.Auth.Tests
 
     internal class FileSystemPublicKeySource : IPublicKeySource
     {
-        private IReadOnlyList<PublicKey> _rsa;
+        private IReadOnlyList<PublicKey> rsa;
 
         public FileSystemPublicKeySource(string file)
         {
             var x509cert = new X509Certificate2(File.ReadAllBytes(file));
             var rsa = (RSA)x509cert.PublicKey.Key;
-            _rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
+            this.rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
         }
 
         public Task<IReadOnlyList<PublicKey>> GetPublicKeysAsync(
             CancellationToken cancellationToken)
         {
-            return Task.FromResult(_rsa);
+            return Task.FromResult(this.rsa);
         }
     }
 }

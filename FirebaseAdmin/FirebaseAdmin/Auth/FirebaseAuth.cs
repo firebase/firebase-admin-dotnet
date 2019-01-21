@@ -25,19 +25,19 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class FirebaseAuth : IFirebaseService
     {
-        private readonly FirebaseApp _app;
-        private readonly Lazy<FirebaseTokenFactory> _tokenFactory;
-        private readonly Lazy<FirebaseTokenVerifier> _idTokenVerifier;
-        private readonly object _lock = new object();
-        private bool _deleted;
+        private readonly FirebaseApp app;
+        private readonly Lazy<FirebaseTokenFactory> tokenFactory;
+        private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
+        private readonly object authLock = new object();
+        private bool deleted;
 
         private FirebaseAuth(FirebaseApp app)
         {
-            _app = app;
-            _tokenFactory = new Lazy<FirebaseTokenFactory>(() =>
-                FirebaseTokenFactory.Create(_app), true);
-            _idTokenVerifier = new Lazy<FirebaseTokenVerifier>(() =>
-                FirebaseTokenVerifier.CreateIDTokenVerifier(_app), true);
+            this.app = app;
+            this.tokenFactory = new Lazy<FirebaseTokenFactory>(
+                () => FirebaseTokenFactory.Create(this.app), true);
+            this.idTokenVerifier = new Lazy<FirebaseTokenVerifier>(
+                () => FirebaseTokenVerifier.CreateIDTokenVerifier(this.app), true);
         }
 
         /// <summary>
@@ -207,13 +207,13 @@ namespace FirebaseAdmin.Auth
             CancellationToken cancellationToken)
         {
             FirebaseTokenFactory tokenFactory;
-            lock (_lock)
+            lock (this.authLock)
             {
-                if (_deleted)
+                if (this.deleted)
                 {
                     throw new InvalidOperationException("Cannot invoke after deleting the app.");
                 }
-                tokenFactory = _tokenFactory.Value;
+                tokenFactory = this.tokenFactory.Value;
             }
             return await tokenFactory.CreateCustomTokenAsync(
                 uid, developerClaims, cancellationToken).ConfigureAwait(false);
@@ -261,25 +261,25 @@ namespace FirebaseAdmin.Auth
         public async Task<FirebaseToken> VerifyIdTokenAsync(
             string idToken, CancellationToken cancellationToken)
         {
-            lock (_lock)
+            lock (this.authLock)
             {
-                if (_deleted)
+                if (this.deleted)
                 {
                     throw new InvalidOperationException("Cannot invoke after deleting the app.");
                 }
             }
-            return await _idTokenVerifier.Value.VerifyTokenAsync(idToken, cancellationToken)
+            return await this.idTokenVerifier.Value.VerifyTokenAsync(idToken, cancellationToken)
                 .ConfigureAwait(false);
         }
 
         void IFirebaseService.Delete()
         {
-            lock (_lock)
+            lock (this.authLock)
             {
-                _deleted = true;
-                if (_tokenFactory.IsValueCreated)
+                this.deleted = true;
+                if (this.tokenFactory.IsValueCreated)
                 {
-                    _tokenFactory.Value.Dispose();
+                    this.tokenFactory.Value.Dispose();
                 }
             }
         }

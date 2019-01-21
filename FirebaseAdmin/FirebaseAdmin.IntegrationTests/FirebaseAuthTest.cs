@@ -17,11 +17,11 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
+using Xunit;
 
 namespace FirebaseAdmin.IntegrationTests
 {
@@ -74,11 +74,12 @@ namespace FirebaseAdmin.IntegrationTests
             var googleCred = FirebaseApp.DefaultInstance.Options.Credential;
             var serviceAcct = (ServiceAccountCredential)googleCred.UnderlyingCredential;
             var token = await ((ITokenAccess)googleCred).GetAccessTokenForRequestAsync();
-            var app = FirebaseApp.Create(new AppOptions()
-            {
-                Credential = GoogleCredential.FromAccessToken(token),
-                ServiceAccountId = serviceAcct.Id,
-            }, "IAMSignApp");
+            var app = FirebaseApp.Create(
+                new AppOptions()
+                {
+                    Credential = GoogleCredential.FromAccessToken(token),
+                    ServiceAccountId = serviceAcct.Id,
+                }, "IAMSignApp");
             try
             {
                 var customToken = await FirebaseAuth.GetAuth(app).CreateCustomTokenAsync(

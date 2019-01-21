@@ -20,10 +20,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
+using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace FirebaseAdmin.Auth.Tests
@@ -141,6 +141,11 @@ namespace FirebaseAdmin.Auth.Tests
                     idToken, canceller.Token));
         }
 
+        public void Dispose()
+        {
+            FirebaseApp.DeleteAll();
+        }
+
         private static void VerifyCustomToken(string token, string uid, Dictionary<string, object> claims)
         {
             string[] segments = token.Split(".");
@@ -171,11 +176,6 @@ namespace FirebaseAdmin.Auth.Tests
             var signature = JwtUtils.Base64DecodeToBytes(segments[2]);
             var verified = rsa.VerifyData(tokenData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Assert.True(verified);
-        }
-
-        public void Dispose()
-        {
-            FirebaseApp.DeleteAll();
         }
     }
 }

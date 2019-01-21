@@ -15,13 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 using Google.Apis.Auth;
-using Google.Apis.Http;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using Google.Apis.Util;
 
 [assembly: InternalsVisibleToAttribute("FirebaseAdmin.Tests,PublicKey=" +
@@ -62,13 +62,13 @@ namespace FirebaseAdmin.Auth
             "nonce",
             "sub");
 
-        private readonly ISigner _signer;
-        private readonly IClock _clock;
+        private readonly ISigner signer;
+        private readonly IClock clock;
 
         public FirebaseTokenFactory(ISigner signer, IClock clock)
         {
-            _signer = signer.ThrowIfNull(nameof(signer));
-            _clock = clock.ThrowIfNull(nameof(clock));
+            this.signer = signer.ThrowIfNull(nameof(signer));
+            this.clock = clock.ThrowIfNull(nameof(clock));
         }
 
         public static FirebaseTokenFactory Create(FirebaseApp app)
@@ -127,8 +127,8 @@ namespace FirebaseAdmin.Auth
                 Type = "JWT",
             };
 
-            var issued = (int)(_clock.UtcNow - UnixEpoch).TotalSeconds;
-            var keyId = await _signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
+            var issued = (int)(this.clock.UtcNow - UnixEpoch).TotalSeconds;
+            var keyId = await this.signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
             var payload = new CustomTokenPayload()
             {
                 Uid = uid,
@@ -143,12 +143,12 @@ namespace FirebaseAdmin.Auth
                 payload.Claims = developerClaims;
             }
             return await JwtUtils.CreateSignedJwtAsync(
-                header, payload, _signer, cancellationToken).ConfigureAwait(false);
+                header, payload, this.signer, cancellationToken).ConfigureAwait(false);
         }
 
         public void Dispose()
         {
-            _signer.Dispose();
+            signer.Dispose();
         }
     }
 

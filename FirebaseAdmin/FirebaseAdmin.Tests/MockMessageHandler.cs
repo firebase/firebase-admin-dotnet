@@ -90,17 +90,17 @@ namespace FirebaseAdmin.Tests
     /// </summary>
     internal abstract class CountableMessageHandler : HttpMessageHandler
     {
-        private int _calls;
+        private int calls;
 
         public int Calls
         {
-            get { return _calls; }
+            get { return this.calls; }
         }
 
         protected sealed override Task<HttpResponseMessage> SendAsync(
           HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            Interlocked.Increment(ref _calls);
+            Interlocked.Increment(ref this.calls);
             return SendAsyncCore(request, cancellationToken);
         }
 

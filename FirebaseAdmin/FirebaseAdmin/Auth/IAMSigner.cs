@@ -40,13 +40,13 @@ namespace FirebaseAdmin.Auth
         private const string MetadataServerUrl =
             "http://metadata/computeMetadata/v1/instance/service-accounts/default/email";
 
-        private readonly ConfigurableHttpClient _httpClient;
-        private readonly Lazy<Task<string>> _keyId;
+        private readonly ConfigurableHttpClient httpClient;
+        private readonly Lazy<Task<string>> keyId;
 
         public IAMSigner(HttpClientFactory clientFactory, GoogleCredential credential)
         {
-            _httpClient = clientFactory.CreateAuthorizedHttpClient(credential);
-            _keyId = new Lazy<Task<string>>(
+            this.httpClient = clientFactory.CreateAuthorizedHttpClient(credential);
+            this.keyId = new Lazy<Task<string>>(
                 async () => await DiscoverServiceAccountIdAsync(clientFactory)
                     .ConfigureAwait(false), true);
         }
@@ -62,7 +62,7 @@ namespace FirebaseAdmin.Auth
             };
             try
             {
-                var response = await _httpClient.PostJsonAsync(url, request, cancellationToken)
+                var response = await httpClient.PostJsonAsync(url, request, cancellationToken)
                     .ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 ThrowIfError(response, json);
@@ -72,6 +72,39 @@ namespace FirebaseAdmin.Auth
             catch (HttpRequestException e)
             {
                 throw new FirebaseException("Error while calling the IAM service.", e);
+            }
+        }
+
+        public virtual async Task<string> GetKeyIdAsync(
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            try
+            {
+                return await keyId.Value.ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                throw new FirebaseException(
+                    "Failed to determine service account ID. Make sure to initialize the SDK "
+                        + "with service account credentials or specify a service account "
+                        + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
+                        + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
+                        + "more details on creating custom tokens.", e);
+            }
+        }
+
+        public void Dispose()
+        {
+            httpClient.Dispose();
+        }
+
+        private static async Task<string> DiscoverServiceAccountIdAsync(
+            HttpClientFactory clientFactory)
+        {
+            using (var client = clientFactory.CreateDefaultHttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
+                return await client.GetStringAsync(MetadataServerUrl).ConfigureAwait(false);
             }
         }
 
@@ -98,39 +131,6 @@ namespace FirebaseAdmin.Auth
                     + $"{Environment.NewLine}{content}";
             }
             throw new FirebaseException(error);
-        }
-
-        public virtual async Task<string> GetKeyIdAsync(
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            try
-            {
-                return await _keyId.Value.ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                throw new FirebaseException(
-                    "Failed to determine service account ID. Make sure to initialize the SDK "
-                        + "with service account credentials or specify a service account "
-                        + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
-                        + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
-                        + "more details on creating custom tokens.", e);
-            }
-        }
-
-        private static async Task<string> DiscoverServiceAccountIdAsync(
-            HttpClientFactory clientFactory)
-        {
-            using (var client = clientFactory.CreateDefaultHttpClient())
-            {
-                client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
-                return await client.GetStringAsync(MetadataServerUrl).ConfigureAwait(false);
-            }
-        }
-
-        public void Dispose()
-        {
-            _httpClient.Dispose();
         }
     }
 
@@ -177,19 +177,19 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal sealed class FixedAccountIAMSigner : IAMSigner
     {
-        private readonly string _keyId;
+        private readonly string keyId;
 
         public FixedAccountIAMSigner(
             HttpClientFactory clientFactory, GoogleCredential credential, string keyId)
             : base(clientFactory, credential)
         {
-            _keyId = keyId.ThrowIfNullOrEmpty(nameof(keyId));
+            this.keyId = keyId.ThrowIfNullOrEmpty(nameof(keyId));
         }
 
         public override Task<string> GetKeyIdAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.FromResult(_keyId);
+            return Task.FromResult(this.keyId);
         }
     }
 }

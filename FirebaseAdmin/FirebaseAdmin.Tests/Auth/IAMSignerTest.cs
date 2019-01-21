@@ -19,11 +19,11 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Xunit;
-using FirebaseAdmin.Tests;
 
 namespace FirebaseAdmin.Auth.Tests
 {

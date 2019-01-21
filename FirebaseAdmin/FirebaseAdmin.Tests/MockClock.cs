@@ -19,8 +19,8 @@ namespace FirebaseAdmin.Tests
 {
     public class MockClock : IClock
     {
-        private object _lock = new object();
-        private DateTime _utcNow;
+        private object mutex = new object();
+        private DateTime utcNow;
 
         public MockClock()
         {
@@ -37,17 +37,17 @@ namespace FirebaseAdmin.Tests
         {
             get
             {
-                lock (_lock)
+                lock (this.mutex)
                 {
-                    return _utcNow;
+                    return this.utcNow;
                 }
             }
 
             set
             {
-                lock (_lock)
+                lock (this.mutex)
                 {
-                    _utcNow = value;
+                    this.utcNow = value;
                 }
             }
         }
