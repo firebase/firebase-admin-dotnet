@@ -14,21 +14,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using FirebaseAdmin.Messaging;
 using Google.Apis.Json;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging.Tests
 {
     public class MessageTest
     {
-        [Fact]
-        public void MessageWithoutTarget()
-        {
-            Assert.Throws<ArgumentException>(() => new Message().CopyAndValidate());
-        }
-
         [Fact]
         public void EmptyMessage()
         {
@@ -40,6 +35,115 @@ namespace FirebaseAdmin.Messaging.Tests
 
             message = new Message(){Condition = "test-condition"};
             AssertJsonEquals(new JObject(){{"condition", "test-condition"}}, message);
+        }
+
+        [Fact]
+        public void PrefixedTopicName()
+        {
+            var message = new Message(){Topic = "/topics/test-topic"};
+            AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
+        }
+
+        [Fact]
+        public void DataMessage()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Data = new Dictionary<string, string>()
+                {
+                    { "k1", "v1" },
+                    { "k2", "v2" },
+                },
+            };
+            AssertJsonEquals(new JObject()
+                {
+                    {"topic", "test-topic"},
+                    {"data", new JObject(){{"k1", "v1"}, {"k2", "v2"}}},
+                }, message);
+        }
+
+        [Fact]
+        public void Notification()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Notification = new Notification()
+                {
+                    Title = "title",
+                    Body = "body",
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "notification", new JObject()
+                    {
+                        {"title", "title"},
+                        {"body", "body"},
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void MessageDeserialization()
+        {
+            var original = new Message()
+            {
+                Topic = "test-topic",
+                Data = new Dictionary<string, string>(){{ "key", "value" }},
+                Notification = new Notification()
+                {
+                    Title = "title",
+                    Body = "body",
+                },
+                Android = new AndroidConfig()
+                {
+                    RestrictedPackageName = "test-pkg-name",
+                },
+                Webpush = new WebpushConfig()
+                {
+                    Data = new Dictionary<string, string>(){{ "key", "value" }},
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
+            Assert.Equal(original.Topic, copy.Topic);
+            Assert.Equal(original.Data, copy.Data);
+            Assert.Equal(original.Notification.Title, copy.Notification.Title);
+            Assert.Equal(original.Notification.Body, copy.Notification.Body);
+            Assert.Equal(
+                original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
+            Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
+        }
+
+        [Fact]
+        public void MessageCopy()
+        {
+            var original = new Message()
+            {
+                Topic = "test-topic",
+                Data = new Dictionary<string, string>(),
+                Notification = new Notification(),
+                Android = new AndroidConfig(),
+                Webpush = new WebpushConfig(),
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.Data, copy.Data);
+            Assert.NotSame(original.Notification, copy.Notification);
+            Assert.NotSame(original.Android, copy.Android);
+            Assert.NotSame(original.Webpush, copy.Webpush);
+        }
+
+        [Fact]
+        public void MessageWithoutTarget()
+        {
+            Assert.Throws<ArgumentException>(() => new Message().CopyAndValidate());
         }
 
         [Fact]
@@ -76,37 +180,6 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
-        public void MessageDeserialization()
-        {
-            var original = new Message()
-            {
-                Topic = "test-topic",
-            };
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
-            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
-            Assert.Equal(original.Topic, copy.Topic);
-        }
-
-        [Fact]
-        public void DataMessage()
-        {
-            var message = new Message()
-            {
-                Topic = "test-topic",
-                Data = new Dictionary<string, string>()
-                {
-                    { "k1", "v1" },
-                    { "k2", "v2" },
-                },
-            };
-            AssertJsonEquals(new JObject()
-                {
-                    {"topic", "test-topic"},
-                    {"data", new JObject(){{"k1", "v1"}, {"k2", "v2"}}},
-                }, message);
-        }
-
-        [Fact]
         public void InvalidTopicNames()
         {
             var topics = new List<string>()
@@ -118,39 +191,6 @@ namespace FirebaseAdmin.Messaging.Tests
                 var message = new Message(){Topic = topic};
                 Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
             }
-        }
-
-        [Fact]
-        public void PrefixedTopicName()
-        {
-            var message = new Message(){Topic = "/topics/test-topic"};
-            AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
-        }
-
-        [Fact]
-        public void Notification()
-        {
-            var message = new Message()
-            {
-                Topic = "test-topic",
-                Notification = new Notification()
-                {
-                    Title = "title",
-                    Body = "body",
-                },
-            };
-            var expected = new JObject()
-            {
-                {"topic", "test-topic"},
-                {
-                    "notification", new JObject()
-                    {
-                        {"title", "title"},
-                        {"body", "body"},
-                    }
-                },
-            };
-            AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -227,20 +267,12 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
-                Android = new AndroidConfig()
-                {
-                    RestrictedPackageName = "test-pkg-name",
-                },
+                Android = new AndroidConfig(),
             };
             var expected = new JObject()
             {
                 {"topic", "test-topic"},
-                {
-                    "android", new JObject()
-                    {
-                        { "restricted_package_name", "test-pkg-name" },
-                    }
-                },
+                {"android", new JObject()},
             };
             AssertJsonEquals(expected, message);
         }
@@ -270,6 +302,99 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void AndroidConfigDeserialization()
+        {
+            var original = new AndroidConfig()
+            {
+                CollapseKey = "collapse-key",
+                RestrictedPackageName = "test-pkg-name",
+                TimeToLive = TimeSpan.FromSeconds(10.5),
+                Priority = Priority.High,
+                Data = new Dictionary<string, string>()
+                {
+                    { "key", "value" },
+                },
+                Notification = new AndroidNotification()
+                {
+                    Title = "title",
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfig>(json);
+            Assert.Equal(original.CollapseKey, copy.CollapseKey);
+            Assert.Equal(original.RestrictedPackageName, copy.RestrictedPackageName);
+            Assert.Equal(original.Priority, copy.Priority);
+            Assert.Equal(original.TimeToLive, copy.TimeToLive);
+            Assert.Equal(original.Data, copy.Data);
+            Assert.Equal(original.Notification.Title, copy.Notification.Title);
+        }
+
+        [Fact]
+        public void AndroidConfigCopy()
+        {
+            var original = new AndroidConfig()
+            {
+                Data = new Dictionary<string, string>(),
+                Notification = new AndroidNotification(),
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.Data, copy.Data);
+            Assert.NotSame(original.Notification, copy.Notification);
+        }
+
+        [Fact]
+        public void AndroidNotificationDeserialization()
+        {
+            var original = new AndroidNotification()
+            {
+                Title = "title",
+                Body = "body",
+                Icon = "icon",
+                Color = "#112233",
+                Sound = "sound",
+                Tag = "tag",
+                ClickAction = "click-action",
+                TitleLocKey = "title-loc-key",
+                TitleLocArgs = new List<string>(){ "arg1", "arg2" },
+                BodyLocKey = "body-loc-key",
+                BodyLocArgs = new List<string>(){ "arg3", "arg4" },
+                ChannelId = "channel-id",
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidNotification>(json);
+            Assert.Equal(original.Title, copy.Title);
+            Assert.Equal(original.Body, copy.Body);
+            Assert.Equal(original.Icon, copy.Icon);
+            Assert.Equal(original.Color, copy.Color);
+            Assert.Equal(original.Sound, copy.Sound);
+            Assert.Equal(original.Tag, copy.Tag);
+            Assert.Equal(original.ClickAction, copy.ClickAction);
+            Assert.Equal(original.TitleLocKey, copy.TitleLocKey);
+            Assert.Equal(original.TitleLocArgs, copy.TitleLocArgs);
+            Assert.Equal(original.BodyLocKey, copy.BodyLocKey);
+            Assert.Equal(original.BodyLocArgs, copy.BodyLocArgs);
+            Assert.Equal(original.ChannelId, copy.ChannelId);
+        }
+
+        [Fact]
+        public void AndroidNotificationCopy()
+        {
+            var original = new AndroidNotification()
+            {
+                TitleLocKey = "title-loc-key",
+                TitleLocArgs = new List<string>(){ "arg1", "arg2" },
+                BodyLocKey = "body-loc-key",
+                BodyLocArgs = new List<string>(){ "arg3", "arg4" },
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.TitleLocArgs, copy.TitleLocArgs);
+            Assert.NotSame(original.BodyLocArgs, copy.BodyLocArgs);
+        }
+
+
+        [Fact]
         public void AndroidConfigInvalidTTL()
         {
             var message = new Message()
@@ -280,31 +405,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     TimeToLive = TimeSpan.FromHours(-1),
                 },
             };
-            var expected = new JObject()
-            {
-                {"topic", "test-topic"},
-                {
-                    "android", new JObject()
-                    {
-                        { "ttl", "3600s" },
-                    }
-                },
-            };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
-        }
-
-        [Fact]
-        public void AndroidConfigDeserialization()
-        {
-            var original = new AndroidConfig()
-            {
-                TimeToLive = TimeSpan.FromSeconds(10.5),
-                Priority = Priority.High,
-            };
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
-            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfig>(json);
-            Assert.Equal(original.Priority, copy.Priority);
-            Assert.Equal(original.TimeToLive, copy.TimeToLive);
         }
 
         [Fact]
@@ -352,6 +453,346 @@ namespace FirebaseAdmin.Messaging.Tests
                     Notification = new AndroidNotification()
                     {
                         BodyLocArgs = new List<string>(){"arg"},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void WebpushConfig()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Headers = new Dictionary<string, string>()
+                    {
+                        {"header1", "header-value1"},
+                        {"header2", "header-value2"},
+                    },
+                    Data = new Dictionary<string, string>()
+                    {
+                        {"key1", "value1"},
+                        {"key2", "value2"},
+                    },
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                        Badge = "badge",
+                        Data = new Dictionary<string, object>()
+                        {
+                            {"some", "data"},
+                        },
+                        Direction = Direction.LeftToRight,
+                        Image = "image",
+                        Language = "language",
+                        Tag = "tag",
+                        Silent = true,
+                        RequireInteraction = true,
+                        Renotify = true,
+                        TimestampMillis = 100,
+                        Vibrate = new int[]{10, 5, 10},
+                        Actions = new List<Action>()
+                        {
+                            new Action()
+                            {
+                                ActionName = "Accept",
+                                Title = "Ok",
+                                Icon = "ok-button",
+                            },
+                            new Action()
+                            {
+                                ActionName = "Reject",
+                                Title = "Cancel",
+                                Icon = "cancel-button",
+                            },
+                        },
+                        CustomData = new Dictionary<string, object>()
+                        {
+                            {"custom-key1", "custom-data"},
+                            {"custom-key2", true},
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "webpush", new JObject()
+                    {
+                        {
+                            "headers", new JObject()
+                            {
+                                {"header1", "header-value1"},
+                                {"header2", "header-value2"},
+                            }
+                        },
+                        {
+                            "data", new JObject()
+                            {
+                                {"key1", "value1"},
+                                {"key2", "value2"},
+                            }
+                        },
+                        {
+                            "notification", new JObject()
+                            {
+                                {"title", "title"},
+                                {"body", "body"},
+                                {"icon", "icon"},
+                                {"badge", "badge"},
+                                {
+                                    "data", new JObject()
+                                    {
+                                        {"some", "data"},
+                                    }
+                                },
+                                {"dir", "ltr"},
+                                {"image", "image"},
+                                {"lang", "language"},
+                                {"renotify", true},
+                                {"requireInteraction", true},
+                                {"silent", true},
+                                {"tag", "tag"},
+                                {"timestamp", 100},
+                                {"vibrate", new JArray(){10, 5, 10}},
+                                {
+                                    "actions", new JArray()
+                                    {
+                                        new JObject()
+                                        {
+                                            {"action", "Accept"},
+                                            {"title", "Ok"},
+                                            {"icon", "ok-button"},
+                                        },
+                                        new JObject()
+                                        {
+                                            {"action", "Reject"},
+                                            {"title", "Cancel"},
+                                            {"icon", "cancel-button"},
+                                        },
+                                    }
+                                },
+                                {"custom-key1", "custom-data"},
+                                {"custom-key2", true},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void WebpushConfigMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig(),
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {"webpush", new JObject()},
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void WebpushConfigMinimalNotification()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "webpush", new JObject()
+                    {
+                        {
+                            "notification", new JObject()
+                            {
+                                {"title", "title"},
+                                {"body", "body"},
+                                {"icon", "icon"},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void WebpushConfigDeserialization()
+        {
+            var original = new WebpushConfig()
+            {
+                Headers = new Dictionary<string, string>()
+                {
+                    {"header1", "header-value1"},
+                    {"header2", "header-value2"},
+                },
+                Data = new Dictionary<string, string>()
+                {
+                    {"key1", "value1"},
+                    {"key2", "value2"},
+                },
+                Notification = new WebpushNotification()
+                {
+                    Title = "title",
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<WebpushConfig>(json);
+            Assert.Equal(original.Headers, copy.Headers);
+            Assert.Equal(original.Data, copy.Data);
+            Assert.Equal(original.Notification.Title, copy.Notification.Title);
+        }
+
+        [Fact]
+        public void WebpushConfigCopy()
+        {
+            var original = new WebpushConfig()
+            {
+                Headers = new Dictionary<string, string>(),
+                Data = new Dictionary<string, string>(),
+                Notification = new WebpushNotification(),
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.Headers, copy.Headers);
+            Assert.NotSame(original.Data, copy.Data);
+            Assert.NotSame(original.Notification, copy.Notification);
+        }
+
+        [Fact]
+        public void WebpushNotificationDeserialization()
+        {
+            var original = new WebpushNotification()
+            {
+                Title = "title",
+                Body = "body",
+                Icon = "icon",
+                Badge = "badge",
+                Data = new Dictionary<string, object>()
+                {
+                    {"some", "data"},
+                },
+                Direction = Direction.LeftToRight,
+                Image = "image",
+                Language = "language",
+                Tag = "tag",
+                Silent = true,
+                RequireInteraction = true,
+                Renotify = true,
+                TimestampMillis = 100,
+                Vibrate = new int[]{10, 5, 10},
+                Actions = new List<Action>()
+                {
+                    new Action()
+                    {
+                        ActionName = "Accept",
+                        Title = "Ok",
+                        Icon = "ok-button",
+                    },
+                    new Action()
+                    {
+                        ActionName = "Reject",
+                        Title = "Cancel",
+                        Icon = "cancel-button",
+                    },
+                },
+                CustomData = new Dictionary<string, object>()
+                {
+                    {"custom-key1", "custom-data"},
+                    {"custom-key2", true},
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<WebpushNotification>(json);
+            Assert.Equal(original.Title, copy.Title);
+            Assert.Equal(original.Body, copy.Body);
+            Assert.Equal(original.Icon, copy.Icon);
+            Assert.Equal(original.Badge, copy.Badge);
+            Assert.Equal(new JObject(){{"some", "data"}}, copy.Data);
+            Assert.Equal(original.Direction, copy.Direction);
+            Assert.Equal(original.Image, copy.Image);
+            Assert.Equal(original.Language, copy.Language);
+            Assert.Equal(original.Tag, copy.Tag);
+            Assert.Equal(original.Silent, copy.Silent);
+            Assert.Equal(original.RequireInteraction, copy.RequireInteraction);
+            Assert.Equal(original.Renotify, copy.Renotify);
+            Assert.Equal(original.TimestampMillis, copy.TimestampMillis);
+            Assert.Equal(original.Vibrate, copy.Vibrate);
+            var originalActions = original.Actions.ToList();
+            var copyActions = original.Actions.ToList();
+            Assert.Equal(originalActions.Count, copyActions.Count);
+            for (int i = 0; i < originalActions.Count; i++)
+            {
+                Assert.Equal(originalActions[i].ActionName, copyActions[i].ActionName);
+                Assert.Equal(originalActions[i].Title, copyActions[i].Title);
+                Assert.Equal(originalActions[i].Icon, copyActions[i].Icon);
+            }
+            Assert.Equal(original.CustomData, copy.CustomData);
+        }
+
+        [Fact]
+        public void WebpushNotificationCopy()
+        {
+            var original = new WebpushNotification()
+            {
+                Actions = new List<Action>()
+                {
+                    new Action()
+                    {
+                        ActionName = "Accept",
+                        Title = "Ok",
+                        Icon = "ok-button",
+                    },
+                },
+                CustomData = new Dictionary<string, object>()
+                {
+                    {"custom-key1", "custom-data"},
+                },
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.Actions, copy.Actions);
+            Assert.NotSame(original.Actions.First(), copy.Actions.First());
+            Assert.NotSame(original.CustomData, copy.CustomData);
+            Assert.Equal(original.CustomData, copy.CustomData);
+        }
+
+        [Fact]
+        public void WebpushNotificationDuplicateKeys()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        CustomData = new Dictionary<string, object>(){{"title", "other"}},
                     },
                 },
             };

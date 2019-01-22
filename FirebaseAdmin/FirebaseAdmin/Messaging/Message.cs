@@ -47,7 +47,7 @@ namespace FirebaseAdmin.Messaging
         /// prefix if present. This is what's ultimately sent to the FCM service.
         /// </summary>
         [JsonProperty("topic")]
-        internal string UnprefixedTopic
+        private string UnprefixedTopic
         {
             get
             {
@@ -90,6 +90,12 @@ namespace FirebaseAdmin.Messaging
         public AndroidConfig Android { get; set; }
 
         /// <summary>
+        /// The Webpush-specific information to be included in the message.
+        /// </summary>
+        [JsonProperty("webpush")]
+        public WebpushConfig Webpush { get; set; }
+
+        /// <summary>
         /// Copies this message, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service. Each property is copied
         /// before validation to guard against the original being modified in the user code
@@ -124,6 +130,7 @@ namespace FirebaseAdmin.Messaging
             // Copy and validate the child properties
             copy.Notification = this.Notification?.CopyAndValidate();
             copy.Android = this.Android?.CopyAndValidate();
+            copy.Webpush = this.Webpush?.CopyAndValidate();
             return copy;
         }
     }

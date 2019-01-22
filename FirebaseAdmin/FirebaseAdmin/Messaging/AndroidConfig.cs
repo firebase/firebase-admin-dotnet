@@ -42,7 +42,7 @@ namespace FirebaseAdmin.Messaging
         /// service.
         /// </summary>
         [JsonProperty("priority")]
-        internal string PriorityString
+        private string PriorityString
         {
             get
             {
@@ -86,7 +86,7 @@ namespace FirebaseAdmin.Messaging
         /// by the number of seconds, with nanoseconds expressed as fractional seconds.
         /// </summary>
         [JsonProperty("ttl")]
-        internal string TtlString
+        private string TtlString
         {
             get
             {
