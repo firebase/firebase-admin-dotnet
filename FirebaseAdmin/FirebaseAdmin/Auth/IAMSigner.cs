@@ -54,7 +54,7 @@ namespace FirebaseAdmin.Auth
         public async Task<byte[]> SignDataAsync(
             byte[] data, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var keyId = await GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
+            var keyId = await this.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
             var url = string.Format(SignBlobUrl, keyId);
             var request = new SignBlobRequest
             {
@@ -63,10 +63,10 @@ namespace FirebaseAdmin.Auth
 
             try
             {
-                var response = await httpClient.PostJsonAsync(url, request, cancellationToken)
+                var response = await this.httpClient.PostJsonAsync(url, request, cancellationToken)
                     .ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                ThrowIfError(response, json);
+                this.ThrowIfError(response, json);
                 var parsed = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobResponse>(json);
                 return Convert.FromBase64String(parsed.Signature);
             }
@@ -81,7 +81,7 @@ namespace FirebaseAdmin.Auth
         {
             try
             {
-                return await keyId.Value.ConfigureAwait(false);
+                return await this.keyId.Value.ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -96,7 +96,7 @@ namespace FirebaseAdmin.Auth
 
         public void Dispose()
         {
-            httpClient.Dispose();
+            this.httpClient.Dispose();
         }
 
         private static async Task<string> DiscoverServiceAccountIdAsync(

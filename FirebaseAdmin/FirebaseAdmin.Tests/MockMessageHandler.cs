@@ -34,7 +34,7 @@ namespace FirebaseAdmin.Tests
     {
         public MockMessageHandler()
         {
-            StatusCode = HttpStatusCode.OK;
+            this.StatusCode = HttpStatusCode.OK;
         }
 
         public delegate void SetHeaders(HttpResponseHeaders header);
@@ -52,32 +52,32 @@ namespace FirebaseAdmin.Tests
         {
             if (request.Content != null)
             {
-                Request = await request.Content.ReadAsStringAsync();
+                this.Request = await request.Content.ReadAsStringAsync();
             }
             else
             {
-                Request = null;
+                this.Request = null;
             }
 
             var resp = new HttpResponseMessage();
             string json;
-            if (Response is byte[])
+            if (this.Response is byte[])
             {
-                json = Encoding.UTF8.GetString(Response as byte[]);
+                json = Encoding.UTF8.GetString(this.Response as byte[]);
             }
-            else if (Response is string)
+            else if (this.Response is string)
             {
-                json = Response as string;
+                json = this.Response as string;
             }
             else
             {
-                json = NewtonsoftJsonSerializer.Instance.Serialize(Response);
+                json = NewtonsoftJsonSerializer.Instance.Serialize(this.Response);
             }
 
-            resp.StatusCode = StatusCode;
-            if (ApplyHeaders != null)
+            resp.StatusCode = this.StatusCode;
+            if (this.ApplyHeaders != null)
             {
-                ApplyHeaders(resp.Headers);
+                this.ApplyHeaders(resp.Headers);
             }
 
             resp.Content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -104,7 +104,7 @@ namespace FirebaseAdmin.Tests
           HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Interlocked.Increment(ref this.calls);
-            return SendAsyncCore(request, cancellationToken);
+            return this.SendAsyncCore(request, cancellationToken);
         }
 
         protected abstract Task<HttpResponseMessage> SendAsyncCore(

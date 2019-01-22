@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth
 {
@@ -29,23 +30,18 @@ namespace FirebaseAdmin.Auth
 
         public ServiceAccountSigner(ServiceAccountCredential credential)
         {
-            if (credential == null)
-            {
-                throw new ArgumentNullException("Credential must not be null.");
-            }
-
-            this.credential = credential;
+            this.credential = credential.ThrowIfNull(nameof(credential));
         }
 
         public Task<string> GetKeyIdAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.FromResult(credential.Id);
+            return Task.FromResult(this.credential.Id);
         }
 
         public Task<byte[]> SignDataAsync(byte[] data, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var signature = credential.CreateSignature(data);
+            var signature = this.credential.CreateSignature(data);
             return Task.FromResult(Convert.FromBase64String(signature));
         }
 

@@ -66,26 +66,26 @@ namespace FirebaseAdmin.Auth
         public async Task<IReadOnlyList<PublicKey>> GetPublicKeysAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (cachedKeys == null || clock.UtcNow >= expirationTime)
+            if (this.cachedKeys == null || this.clock.UtcNow >= this.expirationTime)
             {
-                await cacheLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                await this.cacheLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 try
                 {
-                    var now = clock.UtcNow;
-                    if (cachedKeys == null || now >= expirationTime)
+                    var now = this.clock.UtcNow;
+                    if (this.cachedKeys == null || now >= this.expirationTime)
                     {
-                        using (var httpClient = clientFactory.CreateDefaultHttpClient())
+                        using (var httpClient = this.clientFactory.CreateDefaultHttpClient())
                         {
-                            var response = await httpClient.GetAsync(certUrl, cancellationToken)
+                            var response = await httpClient.GetAsync(this.certUrl, cancellationToken)
                                 .ConfigureAwait(false);
                             response.EnsureSuccessStatusCode();
-                            cachedKeys = ParseKeys(await response.Content.ReadAsStringAsync()
+                            this.cachedKeys = this.ParseKeys(await response.Content.ReadAsStringAsync()
                                 .ConfigureAwait(false));
                             var cacheControl = response.Headers.CacheControl;
                             if (cacheControl?.MaxAge != null)
                             {
-                                expirationTime = now.Add(cacheControl.MaxAge.Value)
+                                this.expirationTime = now.Add(cacheControl.MaxAge.Value)
                                     .Subtract(ClockSkew);
                             }
                         }
@@ -97,11 +97,11 @@ namespace FirebaseAdmin.Auth
                 }
                 finally
                 {
-                    cacheLock.Release();
+                    this.cacheLock.Release();
                 }
             }
 
-            return cachedKeys;
+            return this.cachedKeys;
         }
 
         private IReadOnlyList<PublicKey> ParseKeys(string json)

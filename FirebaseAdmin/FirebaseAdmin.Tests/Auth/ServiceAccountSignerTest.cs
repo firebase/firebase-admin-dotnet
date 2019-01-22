@@ -36,7 +36,7 @@ namespace FirebaseAdmin.Auth.Tests
                 "client@test-project.iam.gserviceaccount.com", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             byte[] signature = signer.SignDataAsync(data).Result;
-            Assert.True(Verify(data, signature));
+            Assert.True(this.Verify(data, signature));
         }
 
         [Fact]

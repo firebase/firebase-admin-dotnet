@@ -38,9 +38,6 @@ namespace FirebaseAdmin.Auth
         private const string FirebaseAudience = "https://identitytoolkit.googleapis.com/"
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
-        // See http://oid-info.com/get/2.16.840.1.101.3.4.2.1
-        private const string Sha256Oid = "2.16.840.1.101.3.4.2.1";
-
         private static readonly IReadOnlyList<string> StandardClaims =
             ImmutableList.Create<string>("iss", "aud", "exp", "iat", "sub", "uid");
 
@@ -54,7 +51,7 @@ namespace FirebaseAdmin.Auth
 
         internal FirebaseTokenVerifier(FirebaseTokenVerifierArgs args)
         {
-            ProjectId = args.ProjectId.ThrowIfNullOrEmpty(nameof(args.ProjectId));
+            this.ProjectId = args.ProjectId.ThrowIfNullOrEmpty(nameof(args.ProjectId));
             this.shortName = args.ShortName.ThrowIfNullOrEmpty(nameof(args.ShortName));
             this.operation = args.Operation.ThrowIfNullOrEmpty(nameof(args.Operation));
             this.url = args.Url.ThrowIfNullOrEmpty(nameof(args.Url));
@@ -118,7 +115,7 @@ namespace FirebaseAdmin.Auth
                 + "project as the credential used to initialize this SDK.";
             var verifyTokenMessage = $"See {this.url} for details on how to retrieve a value "
                 + $"{this.shortName}.";
-            var issuer = this.issuer + ProjectId;
+            var issuer = this.issuer + this.ProjectId;
             string error = null;
             if (string.IsNullOrEmpty(header.KeyId))
             {
@@ -142,9 +139,9 @@ namespace FirebaseAdmin.Auth
                 error = $"Firebase {this.shortName} has incorrect algorithm. Expected RS256 but got "
                     + $"{header.Algorithm}. {verifyTokenMessage}";
             }
-            else if (ProjectId != payload.Audience)
+            else if (this.ProjectId != payload.Audience)
             {
-                error = $"{this.shortName} has incorrect audience (aud) claim. Expected {ProjectId} "
+                error = $"{this.shortName} has incorrect audience (aud) claim. Expected {this.ProjectId} "
                     + $"but got {payload.Audience}. {projectIdMessage} {verifyTokenMessage}";
             }
             else if (payload.Issuer != issuer)
@@ -174,7 +171,7 @@ namespace FirebaseAdmin.Auth
                 throw new FirebaseException(error);
             }
 
-            await VerifySignatureAsync(segments, header.KeyId, cancellationToken)
+            await this.VerifySignatureAsync(segments, header.KeyId, cancellationToken)
                 .ConfigureAwait(false);
             var allClaims = JwtUtils.Decode<Dictionary<string, object>>(segments[1]);
 

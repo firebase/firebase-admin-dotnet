@@ -32,9 +32,9 @@ namespace FirebaseAdmin
 
         internal AppOptions(AppOptions options)
         {
-            Credential = options.Credential;
-            ProjectId = options.ProjectId;
-            ServiceAccountId = options.ServiceAccountId;
+            this.Credential = options.Credential;
+            this.ProjectId = options.ProjectId;
+            this.ServiceAccountId = options.ServiceAccountId;
         }
 
         /// <summary>

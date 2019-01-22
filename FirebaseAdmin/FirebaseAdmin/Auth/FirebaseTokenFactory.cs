@@ -152,7 +152,7 @@ namespace FirebaseAdmin.Auth
 
         public void Dispose()
         {
-            signer.Dispose();
+            this.signer.Dispose();
         }
 
         internal class CustomTokenPayload : JsonWebToken.Payload

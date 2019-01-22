@@ -25,13 +25,13 @@ namespace FirebaseAdmin.Auth
     {
         internal FirebaseToken(FirebaseTokenArgs args)
         {
-            Issuer = args.Issuer;
-            Subject = args.Subject;
-            Audience = args.Audience;
-            ExpirationTimeSeconds = args.ExpirationTimeSeconds;
-            IssuedAtTimeSeconds = args.IssuedAtTimeSeconds;
-            Uid = args.Subject;
-            Claims = args.Claims;
+            this.Issuer = args.Issuer;
+            this.Subject = args.Subject;
+            this.Audience = args.Audience;
+            this.ExpirationTimeSeconds = args.ExpirationTimeSeconds;
+            this.IssuedAtTimeSeconds = args.IssuedAtTimeSeconds;
+            this.Uid = args.Subject;
+            this.Claims = args.Claims;
         }
 
         /// <summary>

@@ -29,8 +29,8 @@ namespace FirebaseAdmin.Auth
     {
         public PublicKey(string keyId, RSAKey rsa)
         {
-            Id = keyId;
-            RSA = rsa;
+            this.Id = keyId;
+            this.RSA = rsa;
         }
 
         /// <summary>

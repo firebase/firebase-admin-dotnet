@@ -24,13 +24,13 @@ namespace FirebaseAdmin.Tests
 
         public MockClock()
         {
-            Now = DateTime.Now;
+            this.Now = DateTime.Now;
         }
 
         public DateTime Now
         {
-            get { return UtcNow.ToLocalTime(); }
-            set { UtcNow = value.ToUniversalTime(); }
+            get { return this.UtcNow.ToLocalTime(); }
+            set { this.UtcNow = value.ToUniversalTime(); }
         }
 
         public DateTime UtcNow

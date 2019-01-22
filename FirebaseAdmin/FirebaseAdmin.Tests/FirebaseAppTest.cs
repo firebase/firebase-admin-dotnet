@@ -222,7 +222,7 @@ namespace FirebaseAdmin.Tests
 
         public void Delete()
         {
-            Deleted = true;
+            this.Deleted = true;
         }
     }
 

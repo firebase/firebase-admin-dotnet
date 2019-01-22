@@ -78,7 +78,7 @@ namespace FirebaseAdmin
                 this.options.Credential = this.options.Credential.CreateScoped(DefaultScopes);
             }
 
-            Name = name;
+            this.Name = name;
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace FirebaseAdmin
             // Clean up global state
             lock (Apps)
             {
-                Apps.Remove(Name);
+                Apps.Remove(this.Name);
             }
         }
 
@@ -292,12 +292,12 @@ namespace FirebaseAdmin
         /// <returns>A project ID string or null.</returns>
         internal string GetProjectId()
         {
-            if (!string.IsNullOrEmpty(Options.ProjectId))
+            if (!string.IsNullOrEmpty(this.Options.ProjectId))
             {
-                return Options.ProjectId;
+                return this.Options.ProjectId;
             }
 
-            var projectId = Options.Credential.ToServiceAccountCredential()?.ProjectId;
+            var projectId = this.Options.Credential.ToServiceAccountCredential()?.ProjectId;
             if (!string.IsNullOrEmpty(projectId))
             {
                 return projectId;
