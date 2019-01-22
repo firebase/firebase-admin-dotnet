@@ -81,6 +81,7 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException(
                     "Must initialize FirebaseApp with a project ID to verify ID tokens.");
             }
+
             var keySource = new HttpPublicKeySource(
                 IdTokenCertUrl, SystemClock.Default, new HttpClientFactory());
             var args = new FirebaseTokenVerifierArgs()
@@ -93,6 +94,7 @@ namespace FirebaseAdmin.Auth
                 Clock = SystemClock.Default,
                 PublicKeySource = keySource,
             };
+
             return new FirebaseTokenVerifier(args);
         }
 
@@ -103,6 +105,7 @@ namespace FirebaseAdmin.Auth
             {
                 throw new ArgumentException($"{this.shortName} must not be null or empty.");
             }
+
             string[] segments = token.Split('.');
             if (segments.Length != 3)
             {
@@ -179,6 +182,7 @@ namespace FirebaseAdmin.Auth
             {
                 allClaims.Remove(claim);
             }
+
             payload.Claims = allClaims.ToImmutableDictionary();
             return new FirebaseToken(payload);
         }
@@ -204,6 +208,7 @@ namespace FirebaseAdmin.Auth
                 hash = hashAlg.ComputeHash(
                     Encoding.ASCII.GetBytes($"{segments[0]}.{segments[1]}"));
             }
+
             var signature = JwtUtils.Base64DecodeToBytes(segments[2]);
             var keys = await this.keySource.GetPublicKeysAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -223,22 +228,5 @@ namespace FirebaseAdmin.Auth
                 throw new FirebaseException($"Failed to verify {this.shortName} signature.");
             }
         }
-    }
-
-    internal sealed class FirebaseTokenVerifierArgs
-    {
-        public string ProjectId { get; set; }
-
-        public string ShortName { get; set; }
-
-        public string Operation { get; set; }
-
-        public string Url { get; set; }
-
-        public string Issuer { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IPublicKeySource PublicKeySource { get; set; }
     }
 }

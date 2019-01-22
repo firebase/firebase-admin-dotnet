@@ -71,25 +71,4 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         public IReadOnlyDictionary<string, object> Claims { get; private set; }
     }
-
-    internal sealed class FirebaseTokenArgs
-    {
-        [JsonProperty("iss")]
-        public string Issuer { get; set; }
-
-        [JsonProperty("sub")]
-        public string Subject { get; set; }
-
-        [JsonProperty("aud")]
-        public string Audience { get; set; }
-
-        [JsonProperty("exp")]
-        public long ExpirationTimeSeconds { get; set; }
-
-        [JsonProperty("iat")]
-        public long IssuedAtTimeSeconds { get; set; }
-
-        [JsonIgnore]
-        public IReadOnlyDictionary<string, object> Claims { get; set; }
-    }
 }

@@ -46,14 +46,14 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("discovered-service-account", await signer.GetKeyIdAsync());
             Assert.Equal(1, handler.Calls);
 
-            handler.Response = new SignBlobResponse()
+            handler.Response = new IAMSigner.SignBlobResponse()
             {
                 Signature = Convert.ToBase64String(bytes),
             };
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             byte[] signature = await signer.SignDataAsync(data);
             Assert.Equal(bytes, signature);
-            var req = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobRequest>(
+            var req = NewtonsoftJsonSerializer.Instance.Deserialize<IAMSigner.SignBlobRequest>(
                 handler.Request);
             Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
             Assert.Equal(2, handler.Calls);
@@ -86,7 +86,7 @@ namespace FirebaseAdmin.Auth.Tests
             var bytes = Encoding.UTF8.GetBytes("signature");
             var handler = new MockMessageHandler()
                 {
-                    Response = new SignBlobResponse()
+                    Response = new IAMSigner.SignBlobResponse()
                         {
                                 Signature = Convert.ToBase64String(bytes),
                         },
@@ -98,7 +98,7 @@ namespace FirebaseAdmin.Auth.Tests
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             byte[] signature = await signer.SignDataAsync(data);
             Assert.Equal(bytes, signature);
-            var req = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobRequest>(
+            var req = NewtonsoftJsonSerializer.Instance.Deserialize<IAMSigner.SignBlobRequest>(
                 handler.Request);
             Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
             Assert.Equal(1, handler.Calls);

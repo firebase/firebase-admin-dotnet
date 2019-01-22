@@ -112,6 +112,7 @@ namespace FirebaseAdmin.Auth
             {
                 throw new InvalidDataException("No public keys present in the response.");
             }
+
             var builder = ImmutableList.CreateBuilder<PublicKey>();
             foreach (var entry in rawKeys)
             {
@@ -126,6 +127,7 @@ namespace FirebaseAdmin.Auth
 #endif
                 builder.Add(new PublicKey(entry.Key, rsa));
             }
+
             return builder.ToImmutableList();
         }
     }

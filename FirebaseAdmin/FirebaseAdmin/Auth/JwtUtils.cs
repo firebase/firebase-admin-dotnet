@@ -53,6 +53,7 @@ namespace FirebaseAdmin.Auth
                 case 2: input += "=="; break;
                 case 3: input += "="; break;
             }
+
             return Convert.FromBase64String(input);
         }
 

@@ -151,7 +151,7 @@ namespace FirebaseAdmin.Auth.Tests
             string[] segments = token.Split(".");
             Assert.Equal(3, segments.Length);
 
-            var payload = JwtUtils.Decode<CustomTokenPayload>(segments[1]);
+            var payload = JwtUtils.Decode<FirebaseTokenFactory.CustomTokenPayload>(segments[1]);
             Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Issuer);
             Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Subject);
             Assert.Equal(uid, payload.Uid);

@@ -93,6 +93,7 @@ namespace FirebaseAdmin.Auth
                 signer = new FixedAccountIAMSigner(
                     new HttpClientFactory(), app.Options.Credential, app.Options.ServiceAccountId);
             }
+
             return new FirebaseTokenFactory(signer, SystemClock.Default);
         }
 
@@ -109,6 +110,7 @@ namespace FirebaseAdmin.Auth
             {
                 throw new ArgumentException("uid must not be longer than 128 characters");
             }
+
             if (developerClaims != null)
             {
                 foreach (var entry in developerClaims)
@@ -138,10 +140,12 @@ namespace FirebaseAdmin.Auth
                 IssuedAtTimeSeconds = issued,
                 ExpirationTimeSeconds = issued + TokenDurationSeconds,
             };
+
             if (developerClaims != null && developerClaims.Count > 0)
             {
                 payload.Claims = developerClaims;
             }
+
             return await JwtUtils.CreateSignedJwtAsync(
                 header, payload, this.signer, cancellationToken).ConfigureAwait(false);
         }
@@ -150,14 +154,14 @@ namespace FirebaseAdmin.Auth
         {
             signer.Dispose();
         }
-    }
 
-    internal class CustomTokenPayload : JsonWebToken.Payload
-    {
-        [Newtonsoft.Json.JsonPropertyAttribute("uid")]
-        public string Uid { get; set; }
+        internal class CustomTokenPayload : JsonWebToken.Payload
+        {
+            [Newtonsoft.Json.JsonPropertyAttribute("uid")]
+            public string Uid { get; set; }
 
-        [Newtonsoft.Json.JsonPropertyAttribute("claims")]
-        public IDictionary<string, object> Claims { get; set; }
+            [Newtonsoft.Json.JsonPropertyAttribute("claims")]
+            public IDictionary<string, object> Claims { get; set; }
+        }
     }
 }

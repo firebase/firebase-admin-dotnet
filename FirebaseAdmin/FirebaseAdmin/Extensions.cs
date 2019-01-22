@@ -41,6 +41,7 @@ namespace FirebaseAdmin
                 return ((GoogleCredential)credential.UnderlyingCredential)
                     .ToServiceAccountCredential();
             }
+
             return credential.UnderlyingCredential as ServiceAccountCredential;
         }
 

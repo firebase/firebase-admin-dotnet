@@ -53,6 +53,7 @@ namespace FirebaseAdmin.Auth
                 {
                     return null;
                 }
+
                 return GetAuth(app);
             }
         }
@@ -70,6 +71,7 @@ namespace FirebaseAdmin.Auth
             {
                 throw new ArgumentNullException("App argument must not be null.");
             }
+
             return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
             {
                 return new FirebaseAuth(app);
@@ -213,8 +215,10 @@ namespace FirebaseAdmin.Auth
                 {
                     throw new InvalidOperationException("Cannot invoke after deleting the app.");
                 }
+
                 tokenFactory = this.tokenFactory.Value;
             }
+
             return await tokenFactory.CreateCustomTokenAsync(
                 uid, developerClaims, cancellationToken).ConfigureAwait(false);
         }
@@ -268,6 +272,7 @@ namespace FirebaseAdmin.Auth
                     throw new InvalidOperationException("Cannot invoke after deleting the app.");
                 }
             }
+
             return await this.idTokenVerifier.Value.VerifyTokenAsync(idToken, cancellationToken)
                 .ConfigureAwait(false);
         }

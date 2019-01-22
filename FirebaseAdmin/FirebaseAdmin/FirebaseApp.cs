@@ -68,14 +68,16 @@ namespace FirebaseAdmin
         private FirebaseApp(AppOptions options, string name)
         {
             this.options = new AppOptions(options);
-            if (options.Credential == null)
+            if (this.options.Credential == null)
             {
                 throw new ArgumentNullException("Credential must be set");
             }
-            if (options.Credential.IsCreateScopedRequired)
+
+            if (this.options.Credential.IsCreateScopedRequired)
             {
-                options.Credential = options.Credential.CreateScoped(DefaultScopes);
+                this.options.Credential = this.options.Credential.CreateScoped(DefaultScopes);
             }
+
             Name = name;
         }
 
@@ -120,6 +122,7 @@ namespace FirebaseAdmin
             {
                 throw new ArgumentException("App name to lookup must not be null or empty");
             }
+
             lock (Apps)
             {
                 FirebaseApp app;
@@ -128,6 +131,7 @@ namespace FirebaseAdmin
                     return app;
                 }
             }
+
             return null;
         }
 
@@ -182,6 +186,7 @@ namespace FirebaseAdmin
             {
                 throw new ArgumentException("App name must not be null or empty");
             }
+
             options = options ?? GetOptionsFromEnvironment();
             lock (Apps)
             {
@@ -196,6 +201,7 @@ namespace FirebaseAdmin
                         throw new ArgumentException($"FirebaseApp named {name} already exists.");
                     }
                 }
+
                 var app = new FirebaseApp(options, name);
                 Apps.Add(name, app);
                 return app;
@@ -224,8 +230,10 @@ namespace FirebaseAdmin
                         Logger.Error(e, "Error while cleaning up service {0}", entry.Key);
                     }
                 }
+
                 this.services.Clear();
             }
+
             // Clean up global state
             lock (Apps)
             {
@@ -245,6 +253,7 @@ namespace FirebaseAdmin
                 {
                     entry.Value.Delete();
                 }
+
                 if (Apps.Count > 0)
                 {
                     throw new InvalidOperationException("Failed to delete all apps");
@@ -261,12 +270,14 @@ namespace FirebaseAdmin
                 {
                     throw new InvalidOperationException("Cannot use an app after it has been deleted");
                 }
+
                 IFirebaseService service;
                 if (!this.services.TryGetValue(id, out service))
                 {
                     service = initializer();
                     this.services.Add(id, service);
                 }
+
                 return (T)service;
             }
         }
@@ -285,11 +296,13 @@ namespace FirebaseAdmin
             {
                 return Options.ProjectId;
             }
+
             var projectId = Options.Credential.ToServiceAccountCredential()?.ProjectId;
             if (!string.IsNullOrEmpty(projectId))
             {
                 return projectId;
             }
+
             foreach (var variableName in new[] { "GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT" })
             {
                 projectId = Environment.GetEnvironmentVariable(variableName);
@@ -298,6 +311,7 @@ namespace FirebaseAdmin
                     return projectId;
                 }
             }
+
             return null;
         }
 

@@ -6,9 +6,9 @@
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
     <Rule Id="SA1101" Action="None" />
     <Rule Id="SA1200" Action="None" />
+    <Rule Id="SA1402" Action="None" /> <!-- Multiple types in same file -->
+    <Rule Id="SA1502" Action="None" /> <!-- Single-lined elements -->
 
-    <Rule Id="SA1402" Action="None" />
-    <Rule Id="SA1502" Action="None" />
     <Rule Id="SA1513" Action="None" />
     <Rule Id="SA1515" Action="None" />
     <Rule Id="CS1591" Action="None" />

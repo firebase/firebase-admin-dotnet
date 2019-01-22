@@ -102,7 +102,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("RS256", header.Algorithm);
 
             // verify payload
-            var payload = JwtUtils.Decode<CustomTokenPayload>(segments[1]);
+            var payload = JwtUtils.Decode<FirebaseTokenFactory.CustomTokenPayload>(segments[1]);
             Assert.Equal(MockSigner.KeyIdString, payload.Issuer);
             Assert.Equal(MockSigner.KeyIdString, payload.Subject);
             Assert.Equal(uid, payload.Uid);

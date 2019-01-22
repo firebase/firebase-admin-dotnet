@@ -33,6 +33,7 @@ namespace FirebaseAdmin.Auth
             {
                 throw new ArgumentNullException("Credential must not be null.");
             }
+
             this.credential = credential;
         }
 
