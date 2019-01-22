@@ -177,6 +177,7 @@ namespace FirebaseAdmin.Auth
             await VerifySignatureAsync(segments, header.KeyId, cancellationToken)
                 .ConfigureAwait(false);
             var allClaims = JwtUtils.Decode<Dictionary<string, object>>(segments[1]);
+
             // Remove standard claims, so that only custom claims would remain.
             foreach (var claim in StandardClaims)
             {

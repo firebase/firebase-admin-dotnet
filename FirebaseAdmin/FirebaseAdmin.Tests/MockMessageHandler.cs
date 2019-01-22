@@ -58,6 +58,7 @@ namespace FirebaseAdmin.Tests
             {
                 Request = null;
             }
+
             var resp = new HttpResponseMessage();
             string json;
             if (Response is byte[])
@@ -72,11 +73,13 @@ namespace FirebaseAdmin.Tests
             {
                 json = NewtonsoftJsonSerializer.Instance.Serialize(Response);
             }
+
             resp.StatusCode = StatusCode;
             if (ApplyHeaders != null)
             {
                 ApplyHeaders(resp.Headers);
             }
+
             resp.Content = new StringContent(json, Encoding.UTF8, "application/json");
             var tcs = new TaskCompletionSource<HttpResponseMessage>();
             tcs.SetResult(resp);

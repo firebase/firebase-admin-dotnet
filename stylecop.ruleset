@@ -7,13 +7,7 @@
     <Rule Id="SA1101" Action="None" /> <!-- Prefix local calls with this -->
     <Rule Id="SA1200" Action="None" /> <!-- Using clauses inside namespaces -->
     <Rule Id="SA1502" Action="None" /> <!-- Single-lined elements -->
-
-    <Rule Id="SA1515" Action="None" />
-    <Rule Id="SA1600" Action="None" />
-    <Rule Id="SA1611" Action="None" />
-    <Rule Id="SA1615" Action="None" />
-    <Rule Id="SA1618" Action="None" />
-    <Rule Id="SA1623" Action="None" />
-    <Rule Id="SA1633" Action="None" />
+    <Rule Id="SA1600" Action="None" /> <!-- Element should be documented -->
+    <Rule Id="SA1633" Action="None" /> <!-- Allow custom file header -->
   </Rules>
 </RuleSet>

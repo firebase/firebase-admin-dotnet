@@ -96,6 +96,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             string[] segments = token.Split(".");
             Assert.Equal(3, segments.Length);
+
             // verify header
             var header = JwtUtils.Decode<GoogleJsonWebSignature.Header>(segments[0]);
             Assert.Equal("JWT", header.Type);

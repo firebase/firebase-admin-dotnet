@@ -33,6 +33,9 @@ namespace FirebaseAdmin
         /// <see cref="GoogleCredential"/>. Returns null if the <c>GoogleCredential</c> is not
         /// based on a service account.
         /// </summary>
+        /// <returns>A service account credential if available, or null.</returns>
+        /// <param name="credential">The Google credential from which to extract service account
+        /// credentials.</param>
         public static ServiceAccountCredential ToServiceAccountCredential(
             this GoogleCredential credential)
         {
@@ -49,6 +52,9 @@ namespace FirebaseAdmin
         /// Creates a default (unauthenticated) <see cref="ConfigurableHttpClient"/> from the
         /// factory.
         /// </summary>
+        /// <returns>An HTTP client that can be used to make unauthenticated requests.</returns>
+        /// <param name="clientFactory">The <see cref="HttpClientFactory"/> used to create
+        /// the HTTP client.</param>
         public static ConfigurableHttpClient CreateDefaultHttpClient(
             this HttpClientFactory clientFactory)
         {
@@ -59,6 +65,11 @@ namespace FirebaseAdmin
         /// Creates an authenticated <see cref="ConfigurableHttpClient"/> from the
         /// factory.
         /// </summary>
+        /// <returns>An HTTP client that can be used to OAuth2 authorized requests.</returns>
+        /// <param name="clientFactory">The <see cref="HttpClientFactory"/> used to create
+        /// the HTTP client.</param>
+        /// <param name="credential">The Google credential that will be used to authenticate
+        /// outgoing HTTP requests.</param>
         public static ConfigurableHttpClient CreateAuthorizedHttpClient(
             this HttpClientFactory clientFactory, GoogleCredential credential)
         {
@@ -70,6 +81,14 @@ namespace FirebaseAdmin
         /// <summary>
         /// Makes a JSON POST request using the given parameters.
         /// </summary>
+        /// <returns>An <see cref="HttpRequestMessage"/> representing the response to the
+        /// POST request.</returns>
+        /// <typeparam name="T">Type of the object that will be serialized into JSON.</typeparam>
+        /// <param name="client">The <see cref="HttpClient"/> used to make the request.</param>
+        /// <param name="requestUri">URI for the outgoing request.</param>
+        /// <param name="body">The object that will be serialized as the JSON body.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
         public static async Task<HttpResponseMessage> PostJsonAsync<T>(
             this HttpClient client, string requestUri, T body, CancellationToken cancellationToken)
         {
@@ -82,6 +101,8 @@ namespace FirebaseAdmin
         /// <summary>
         /// Returns a Unix-styled timestamp (seconds from epoch) from the <see cref="IClock"/>.
         /// </summary>
+        /// <returns>Number of seconds since epoch.</returns>
+        /// <param name="clock">The <see cref="IClock"/> used to generate the timestamp.</param>
         public static long UnixTimestamp(this IClock clock)
         {
             var timeSinceEpoch = clock.UtcNow.Subtract(new DateTime(1970, 1, 1));

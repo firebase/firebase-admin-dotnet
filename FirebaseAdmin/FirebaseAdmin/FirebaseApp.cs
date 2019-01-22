@@ -82,7 +82,7 @@ namespace FirebaseAdmin
         }
 
         /// <summary>
-        /// The default app instance. This property is <c>null</c> if the default app instance
+        /// Gets the default app instance. This property is <c>null</c> if the default app instance
         /// doesn't yet exist.
         /// </summary>
         public static FirebaseApp DefaultInstance
@@ -94,7 +94,7 @@ namespace FirebaseAdmin
         }
 
         /// <summary>
-        /// A copy of the <see cref="AppOptions"/> this app was created with.
+        /// Gets a copy of the <see cref="AppOptions"/> this app was created with.
         /// </summary>
         public AppOptions Options
         {
@@ -105,7 +105,7 @@ namespace FirebaseAdmin
         }
 
         /// <summary>
-        /// Name of this app.
+        /// Gets the name of this app.
         /// </summary>
         public string Name { get; }
 

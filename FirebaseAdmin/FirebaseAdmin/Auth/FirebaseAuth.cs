@@ -41,7 +41,7 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// The auth instance associated with the default Firebase app. This property is
+        /// Gets the auth instance associated with the default Firebase app. This property is
         /// <c>null</c> if the default app doesn't yet exist.
         /// </summary>
         public static FirebaseAuth DefaultInstance

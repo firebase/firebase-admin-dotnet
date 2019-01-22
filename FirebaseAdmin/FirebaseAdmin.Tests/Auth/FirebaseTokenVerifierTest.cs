@@ -64,6 +64,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal("test-project", decoded.Audience);
             Assert.Equal("testuser", decoded.Subject);
+
             // The default test token created by CreateTestTokenAsync has an issue time 10 minutes
             // ago, and an expiry time 50 minutes in the future.
             Assert.Equal(Clock.UnixTimestamp() - (60 * 10), decoded.IssuedAtTimeSeconds);
@@ -283,6 +284,7 @@ namespace FirebaseAdmin.Auth.Tests
                     payload[entry.Key] = entry.Value;
                 }
             }
+
             return await JwtUtils.CreateSignedJwtAsync(header, payload, Signer);
         }
 
