@@ -20,6 +20,9 @@ namespace FirebaseAdmin
     /// </summary>
     internal interface IFirebaseService
     {
+        /// <summary>
+        /// Cleans up any state associated with this service making it unsuitable for further use.
+        /// </summary>
         void Delete();
     }
 }

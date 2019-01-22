@@ -7,11 +7,14 @@
     <Rule Id="SA1200" Action="None" /> <!-- Using clauses inside namespaces -->
     <Rule Id="SA1402" Action="None" /> <!-- Multiple types in same file -->
     <Rule Id="SA1502" Action="None" /> <!-- Single-lined elements -->
+    <Rule Id="SA1512" Action="None" /> <!-- Whitespace after single-line comment -->
+    <Rule Id="SA1515" Action="None" /> <!-- Whitespace before single-line comment -->
     <Rule Id="CS1591" Action="None" /> <!-- Missing documentation for public type -->
     <Rule Id="SA1600" Action="None" /> <!-- Element should be documented -->
     <Rule Id="SA1611" Action="None" /> <!-- Requires parameter documentation -->
     <Rule Id="SA1615" Action="None" /> <!-- Requires returns documentation -->
     <Rule Id="SA1618" Action="None" /> <!-- Requires type parameter documentation -->
     <Rule Id="SA1633" Action="None" /> <!-- Allow custom file header -->
+    <Rule Id="SA0001" Action="None" /> <!-- Disable XML comment analysis -->
   </Rules>
 </RuleSet>

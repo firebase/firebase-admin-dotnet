@@ -277,6 +277,9 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Deletes this <see cref="FirebaseAuth"/> service instance.
+        /// </summary>
         void IFirebaseService.Delete()
         {
             lock (this.authLock)

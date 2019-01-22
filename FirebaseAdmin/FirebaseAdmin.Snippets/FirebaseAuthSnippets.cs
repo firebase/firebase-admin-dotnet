@@ -19,9 +19,9 @@ using FirebaseAdmin.Auth;
 
 namespace FirebaseAdmin.Snippets
 {
-    class FirebaseAuthSnippets
+    internal class FirebaseAuthSnippets
     {
-        static async Task CreateCustomTokenAsync()
+        internal static async Task CreateCustomTokenAsync()
         {
             // [START custom_token]
             var uid = "some-uid";
@@ -32,7 +32,7 @@ namespace FirebaseAdmin.Snippets
             Console.WriteLine("Created custom token: {0}", customToken);
         }
 
-        static async Task CreateCustomTokenWithClaimsAsync()
+        internal static async Task CreateCustomTokenWithClaimsAsync()
         {
             // [START custom_token_with_claims]
             var uid = "some-uid";
@@ -48,7 +48,7 @@ namespace FirebaseAdmin.Snippets
             Console.WriteLine("Created custom token: {0}", customToken);
         }
 
-        static async Task VeridyIdTokenAsync(string idToken)
+        internal static async Task VeridyIdTokenAsync(string idToken)
         {
             // [START verify_id_token]
             FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance
