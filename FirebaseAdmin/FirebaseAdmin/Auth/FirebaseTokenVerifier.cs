@@ -38,6 +38,9 @@ namespace FirebaseAdmin.Auth
         private const string FirebaseAudience = "https://identitytoolkit.googleapis.com/"
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
+        // See http://oid-info.com/get/2.16.840.1.101.3.4.2.1
+        private const string Sha256Oid = "2.16.840.1.101.3.4.2.1";
+
         private static readonly IReadOnlyList<string> StandardClaims =
             ImmutableList.Create<string>("iss", "aud", "exp", "iat", "sub", "uid");
 
