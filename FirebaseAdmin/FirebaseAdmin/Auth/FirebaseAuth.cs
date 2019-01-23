@@ -29,15 +29,18 @@ namespace FirebaseAdmin.Auth
         private bool _deleted;
         private readonly Lazy<FirebaseTokenFactory> _tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> _idTokenVerifier;
+        private readonly Lazy<FirebaseUserManager> _userManager;
         private readonly Object _lock = new Object();
 
         private FirebaseAuth(FirebaseApp app)
         {
             _app = app;
-            _tokenFactory = new Lazy<FirebaseTokenFactory>(() => 
+            _tokenFactory = new Lazy<FirebaseTokenFactory>(() =>
                 FirebaseTokenFactory.Create(_app), true);
-            _idTokenVerifier = new Lazy<FirebaseTokenVerifier>(() => 
+            _idTokenVerifier = new Lazy<FirebaseTokenVerifier>(() =>
                 FirebaseTokenVerifier.CreateIDTokenVerifier(_app), true);
+            _userManager = new Lazy<FirebaseUserManager>(() =>
+                FirebaseUserManager.Create(_app));
         }
 
         /// <summary>
@@ -236,6 +239,38 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Sets the specified custom claims on an existing user account. A null claims value 
+        /// removes any claims currently set on the user account. The claims should serialize into
+        /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
+        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000 
+        /// characters.</exception>
+        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null 
+        /// or longer than 128 characters.
+        /// </param>
+        /// <param name="claims">The claims to be stored on the user account, and made
+        /// available to Firebase security rules. These must be serializable to JSON, and after
+        /// serialization it should not be larger than 1000 characters.</param>
+        public async Task SetCustomUserClaimsAsync(string uid, IReadOnlyDictionary<string, object> claims)
+        {
+            lock (_lock)
+            {
+                if (_deleted)
+                {
+                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
+                }
+            }
+
+            var user = new UserRecord(uid)
+            {
+                CustomClaims = claims
+            };
+
+            await _userManager.Value.UpdateUserAsync(user);
+        }
+
         void IFirebaseService.Delete()
         {
             lock (_lock)
@@ -278,7 +313,7 @@ namespace FirebaseAdmin.Auth
             {
                 throw new ArgumentNullException("App argument must not be null.");
             }
-            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () => 
+            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
             {
                 return new FirebaseAuth(app);
             });
