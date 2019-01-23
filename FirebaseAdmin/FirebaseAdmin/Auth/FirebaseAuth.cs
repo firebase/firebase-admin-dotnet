@@ -28,6 +28,7 @@ namespace FirebaseAdmin.Auth
         private readonly FirebaseApp app;
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
+        private readonly Lazy<FirebaseUserManager> userManager;
         private readonly object authLock = new object();
         private bool deleted;
 
@@ -38,6 +39,8 @@ namespace FirebaseAdmin.Auth
                 () => FirebaseTokenFactory.Create(this.app), true);
             this.idTokenVerifier = new Lazy<FirebaseTokenVerifier>(
                 () => FirebaseTokenVerifier.CreateIDTokenVerifier(this.app), true);
+            this.userManager = new Lazy<FirebaseUserManager>(() =>
+                FirebaseUserManager.Create(this.app));
         }
 
         /// <summary>
@@ -278,6 +281,39 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Sets the specified custom claims on an existing user account. A null claims value
+        /// removes any claims currently set on the user account. The claims should serialize into
+        /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
+        /// </summary>
+        /// <returns>A task that completes when the claims have been set.</returns>
+        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
+        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
+        /// characters.</exception>
+        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
+        /// or longer than 128 characters.
+        /// </param>
+        /// <param name="claims">The claims to be stored on the user account, and made
+        /// available to Firebase security rules. These must be serializable to JSON, and after
+        /// serialization it should not be larger than 1000 characters.</param>
+        public async Task SetCustomUserClaimsAsync(string uid, IReadOnlyDictionary<string, object> claims)
+        {
+            lock (this.authLock)
+            {
+                if (this.deleted)
+                {
+                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
+                }
+            }
+
+            var user = new UserRecord(uid)
+            {
+                CustomClaims = claims,
+            };
+
+            await this.userManager.Value.UpdateUserAsync(user);
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
@@ -288,6 +324,11 @@ namespace FirebaseAdmin.Auth
                 if (this.tokenFactory.IsValueCreated)
                 {
                     this.tokenFactory.Value.Dispose();
+                }
+
+                if (this.userManager.IsValueCreated)
+                {
+                    this.userManager.Value.Dispose();
                 }
             }
         }

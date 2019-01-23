@@ -94,6 +94,34 @@ namespace FirebaseAdmin.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task SetCustomUserClaims()
+        {
+            var customClaims = new Dictionary<string, object>()
+            {
+                { "admin", true },
+            };
+
+            await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("testuser", customClaims);
+        }
+
+        [Fact]
+        public async Task SetCustomUserClaimsWithEmptyClaims()
+        {
+            var customClaims = new Dictionary<string, object>();
+
+            await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("testuser", customClaims);
+        }
+
+        [Fact]
+        public async Task SetCustomUserClaimsWithWrongUid()
+        {
+            var customClaims = new Dictionary<string, object>();
+
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("mock-uid", customClaims));
+        }
+
         private static async Task<string> SignInWithCustomTokenAsync(string customToken)
         {
             var rb = new Google.Apis.Requests.RequestBuilder()

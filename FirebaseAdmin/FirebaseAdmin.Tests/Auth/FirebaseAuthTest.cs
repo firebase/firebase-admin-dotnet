@@ -141,6 +141,18 @@ namespace FirebaseAdmin.Auth.Tests
                     idToken, canceller.Token));
         }
 
+        [Fact]
+        public async Task SetCustomUserClaimsNoProjectId()
+        {
+            FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+            var customClaims = new Dictionary<string, object>()
+            {
+                { "admin", true },
+            };
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
+        }
+
         public void Dispose()
         {
             FirebaseApp.DeleteAll();
