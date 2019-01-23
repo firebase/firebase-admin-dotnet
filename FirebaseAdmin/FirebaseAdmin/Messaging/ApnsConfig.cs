@@ -102,14 +102,21 @@ namespace FirebaseAdmin.Messaging
         }
     }
 
+    /// <summary>
+    /// The APNs payload object as expected by the FCM backend service.
+    /// </summary>
     internal sealed class ApnsPayload
     {
         [JsonProperty("aps")]
-        public Aps Aps { get; set; }
+        internal Aps Aps { get; set; }
 
         [JsonExtensionData]
-        public IDictionary<string, object> CustomData { get; set; }
+        internal IDictionary<string, object> CustomData { get; set; }
 
+        /// <summary>
+        /// Copies this APNs payload, and validates the content of it to ensure that it can be
+        /// serialized into the JSON format expected by the FCM service.
+        /// </summary>
         internal ApnsPayload CopyAndValidate()
         {
             var copy = new ApnsPayload()

@@ -105,6 +105,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     RestrictedPackageName = "test-pkg-name",
                 },
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        AlertString = "test-alert",
+                    },
+                },
                 Webpush = new WebpushConfig()
                 {
                     Data = new Dictionary<string, string>(){{ "key", "value" }},
@@ -118,6 +125,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Notification.Body, copy.Notification.Body);
             Assert.Equal(
                 original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
+            Assert.Equal(original.Apns.Aps.AlertString, copy.Apns.Aps.AlertString);
             Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
         }
 
@@ -130,6 +138,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Data = new Dictionary<string, string>(),
                 Notification = new Notification(),
                 Android = new AndroidConfig(),
+                Apns = new ApnsConfig(),
                 Webpush = new WebpushConfig(),
             };
             var copy = original.CopyAndValidate();
@@ -137,6 +146,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotSame(original.Data, copy.Data);
             Assert.NotSame(original.Notification, copy.Notification);
             Assert.NotSame(original.Android, copy.Android);
+            Assert.NotSame(original.Apns, copy.Apns);
             Assert.NotSame(original.Webpush, copy.Webpush);
         }
 
@@ -1076,6 +1086,22 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void ApnsCriticalSoundDeserialization()
+        {
+            var original = new CriticalSound()
+            {
+                Name = "default",
+                Volume = 0.5,
+                Critical = true,
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<CriticalSound>(json);
+            Assert.Equal(original.Name, copy.Name);
+            Assert.Equal(original.Volume.Value, copy.Volume.Value);
+            Assert.Equal(original.Critical, copy.Critical);
+        }
+
+        [Fact]
         public void ApnsApsAlert()
         {
             var message = new Message()
@@ -1209,6 +1235,25 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Title, copy.Title);
             Assert.Equal(original.TitleLocArgs, copy.TitleLocArgs);
             Assert.Equal(original.TitleLocKey, copy.TitleLocKey);
+        }
+
+        [Fact]
+        public void ApsAlertCopy()
+        {
+            var original = new ApsAlert()
+            {
+                LocArgs = new List<string>(){"arg1", "arg2"},
+                LocKey = "loc-key",
+                SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                SubtitleLocKey = "subtitle-key",
+                TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                TitleLocKey = "title-key",
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.LocArgs, copy.LocArgs);
+            Assert.NotSame(original.SubtitleLocArgs, copy.SubtitleLocArgs);
+            Assert.NotSame(original.TitleLocArgs, copy.TitleLocArgs);
         }
 
         [Fact]
