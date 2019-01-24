@@ -105,6 +105,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     RestrictedPackageName = "test-pkg-name",
                 },
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        AlertString = "test-alert",
+                    },
+                },
                 Webpush = new WebpushConfig()
                 {
                     Data = new Dictionary<string, string>(){{ "key", "value" }},
@@ -118,6 +125,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Notification.Body, copy.Notification.Body);
             Assert.Equal(
                 original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
+            Assert.Equal(original.Apns.Aps.AlertString, copy.Apns.Aps.AlertString);
             Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
         }
 
@@ -130,6 +138,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Data = new Dictionary<string, string>(),
                 Notification = new Notification(),
                 Android = new AndroidConfig(),
+                Apns = new ApnsConfig(),
                 Webpush = new WebpushConfig(),
             };
             var copy = original.CopyAndValidate();
@@ -137,6 +146,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotSame(original.Data, copy.Data);
             Assert.NotSame(original.Notification, copy.Notification);
             Assert.NotSame(original.Android, copy.Android);
+            Assert.NotSame(original.Apns, copy.Apns);
             Assert.NotSame(original.Webpush, copy.Webpush);
         }
 
@@ -793,6 +803,754 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         Title = "title",
                         CustomData = new Dictionary<string, object>(){{"title", "other"}},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsConfig()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Headers = new Dictionary<string, string>()
+                    {
+                        {"k1", "v1"},
+                        {"k2", "v2"},
+                    },
+                    Aps = new Aps()
+                    {
+                        AlertString = "alert-text",
+                        Badge = 0,
+                        Category =  "test-category",
+                        ContentAvailable = true,
+                        MutableContent = true,
+                        Sound = "sound-file",
+                        ThreadId = "test-thread",
+                        CustomData = new Dictionary<string, object>()
+                        {
+                            {"custom-key1", "custom-data"},
+                            {"custom-key2", true},
+                        },
+                    },
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {"custom-key3", "custom-data"},
+                        {"custom-key4", true},
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "headers", new JObject()
+                            {
+                                {"k1", "v1"},
+                                {"k2", "v2"},
+                            }
+                        },
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {"alert", "alert-text"},
+                                        {"badge", 0},
+                                        {"category", "test-category"},
+                                        {"content-available", 1},
+                                        {"mutable-content", 1},
+                                        {"sound", "sound-file"},
+                                        {"thread-id", "test-thread"},
+                                        {"custom-key1", "custom-data"},
+                                        {"custom-key2", true},
+                                    }
+                                },
+                                {"custom-key3", "custom-data"},
+                                {"custom-key4", true},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsConfigMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps(),
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {"aps", new JObject()},
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsConfigDeserialization()
+        {
+            var original = new ApnsConfig()
+            {
+                Headers = new Dictionary<string, string>()
+                {
+                    {"k1", "v1"},
+                    {"k2", "v2"},
+                },
+                Aps = new Aps()
+                {
+                    AlertString = "alert-text",
+                },
+                CustomData = new Dictionary<string, object>()
+                {
+                    {"custom-key3", "custom-data"},
+                    {"custom-key4", true},
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<ApnsConfig>(json);
+            Assert.Equal(original.Headers, copy.Headers);
+            Assert.Equal(original.CustomData, copy.CustomData);
+            Assert.Equal(original.Aps.AlertString, copy.Aps.AlertString);
+        }
+
+        [Fact]
+        public void ApnsConfigCopy()
+        {
+            var original = new ApnsConfig()
+            {
+                Headers = new Dictionary<string, string>(),
+                Aps = new Aps(),
+                CustomData = new Dictionary<string, object>(),
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.Headers, copy.Headers);
+            Assert.NotSame(original.Aps, copy.Aps);
+            Assert.NotSame(original.CustomData, copy.CustomData);
+        }
+
+        [Fact]
+        public void ApnsConfigCustomApsDeserialization()
+        {
+            var original = new ApnsConfig()
+            {
+                Headers = new Dictionary<string, string>()
+                {
+                    {"k1", "v1"},
+                    {"k2", "v2"},
+                },
+                CustomData = new Dictionary<string, object>()
+                {
+                    {
+                        "aps", new Dictionary<string, object>()
+                        {
+                            {"alert", "alert-text"},
+                            {"custom-key1", "custom-data"},
+                            {"custom-key2", true},
+                        }
+                    },
+                    {"custom-key3", "custom-data"},
+                    {"custom-key4", true},
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<ApnsConfig>(json);
+            Assert.Equal(original.Headers, copy.Headers);
+            original.CustomData.Remove("aps");
+            Assert.Equal(original.CustomData, copy.CustomData);
+            Assert.Equal("alert-text", copy.Aps.AlertString);
+            var customApsData = new Dictionary<string, object>()
+            {
+                {"custom-key1", "custom-data"},
+                {"custom-key2", true},
+            };
+            Assert.Equal(customApsData, copy.Aps.CustomData);
+        }
+
+        [Fact]
+        public void ApnsCriticalSound()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "default",
+                            Critical = true,
+                            Volume = 0.5,
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "sound", new JObject()
+                                            {
+                                                {"name", "default"},
+                                                {"critical", 1},
+                                                {"volume", 0.5},
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsCriticalSoundMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound(){Name = "default"},
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "sound", new JObject()
+                                            {
+                                                {"name", "default"},
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsCriticalSoundDeserialization()
+        {
+            var original = new CriticalSound()
+            {
+                Name = "default",
+                Volume = 0.5,
+                Critical = true,
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<CriticalSound>(json);
+            Assert.Equal(original.Name, copy.Name);
+            Assert.Equal(original.Volume.Value, copy.Volume.Value);
+            Assert.Equal(original.Critical, copy.Critical);
+        }
+
+        [Fact]
+        public void ApnsApsAlert()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            ActionLocKey = "action-key",
+                            Body = "test-body",
+                            LaunchImage = "test-image",
+                            LocArgs = new List<string>(){"arg1", "arg2"},
+                            LocKey = "loc-key",
+                            Subtitle = "test-subtitle",
+                            SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                            SubtitleLocKey = "subtitle-key",
+                            Title = "test-title",
+                            TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                            TitleLocKey = "title-key",
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "alert", new JObject()
+                                            {
+                                                {"action-loc-key", "action-key"},
+                                                {"body", "test-body"},
+                                                {"launch-image", "test-image"},
+                                                {"loc-args", new JArray(){"arg1", "arg2"}},
+                                                {"loc-key", "loc-key"},
+                                                {"subtitle", "test-subtitle"},
+                                                {"subtitle-loc-args", new JArray(){"arg3", "arg4"}},
+                                                {"subtitle-loc-key", "subtitle-key"},
+                                                {"title", "test-title"},
+                                                {"title-loc-args", new JArray(){"arg5", "arg6"}},
+                                                {"title-loc-key", "title-key"},
+                                            }
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsApsAlertMinimal()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert(),
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {
+                                            "alert", new JObject(){}
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApsAlertDeserialization()
+        {
+            var original = new ApsAlert()
+            {
+                ActionLocKey = "action-key",
+                Body = "test-body",
+                LaunchImage = "test-image",
+                LocArgs = new List<string>(){"arg1", "arg2"},
+                LocKey = "loc-key",
+                Subtitle = "test-subtitle",
+                SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                SubtitleLocKey = "subtitle-key",
+                Title = "test-title",
+                TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                TitleLocKey = "title-key",
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<ApsAlert>(json);
+            Assert.Equal(original.ActionLocKey, copy.ActionLocKey);
+            Assert.Equal(original.Body, copy.Body);
+            Assert.Equal(original.LaunchImage, copy.LaunchImage);
+            Assert.Equal(original.LocArgs, copy.LocArgs);
+            Assert.Equal(original.LocKey, copy.LocKey);
+            Assert.Equal(original.Subtitle, copy.Subtitle);
+            Assert.Equal(original.SubtitleLocArgs, copy.SubtitleLocArgs);
+            Assert.Equal(original.SubtitleLocKey, copy.SubtitleLocKey);
+            Assert.Equal(original.Title, copy.Title);
+            Assert.Equal(original.TitleLocArgs, copy.TitleLocArgs);
+            Assert.Equal(original.TitleLocKey, copy.TitleLocKey);
+        }
+
+        [Fact]
+        public void ApsAlertCopy()
+        {
+            var original = new ApsAlert()
+            {
+                LocArgs = new List<string>(){"arg1", "arg2"},
+                LocKey = "loc-key",
+                SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                SubtitleLocKey = "subtitle-key",
+                TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                TitleLocKey = "title-key",
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.LocArgs, copy.LocArgs);
+            Assert.NotSame(original.SubtitleLocArgs, copy.SubtitleLocArgs);
+            Assert.NotSame(original.TitleLocArgs, copy.TitleLocArgs);
+        }
+
+        [Fact]
+        public void ApnsApsAlertInvalidTitleLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            TitleLocArgs = new List<string>(){"arg1", "arg2"},
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsApsAlertInvalidSubtitleLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            SubtitleLocArgs = new List<string>(){"arg1", "arg2"},
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsApsAlertInvalidLocArgs()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Alert = new ApsAlert()
+                        {
+                            LocArgs = new List<string>(){"arg1", "arg2"},
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsCustomApsWithStandardProperties()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {
+                            "aps", new Dictionary<string, object>()
+                            {
+                                {"alert", "alert-text"},
+                                {"badge", 42},
+                            }
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {"alert", "alert-text"},
+                                        {"badge", 42},
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsCustomApsWithCustomProperties()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {
+                            "aps", new Dictionary<string, object>()
+                            {
+                                {"custom-key1", "custom-data"},
+                                {"custom-key2", true},
+                            }
+                        },
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                {"topic", "test-topic"},
+                {
+                    "apns", new JObject()
+                    {
+                        {
+                            "payload", new JObject()
+                            {
+                                {
+                                    "aps", new JObject()
+                                    {
+                                        {"custom-key1", "custom-data"},
+                                        {"custom-key2", true},
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            };
+            AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void ApnsNoAps()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {"test", "custom-data"},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsDuplicateAps()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        AlertString = "alert-text",
+                    },
+                    CustomData = new Dictionary<string, object>()
+                    {
+                        {"aps", "custom-data"},
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApsDuplicateKeys()
+        {
+            var aps = new Aps()
+            {
+                AlertString = "alert-text",
+                CustomData = new Dictionary<string, object>()
+                {
+                    {"alert", "other-alert-text"},
+                },
+            };
+            Assert.Throws<ArgumentException>(() => aps.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsDuplicateApsAlerts()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        AlertString = "alert-text",
+                        Alert = new ApsAlert()
+                        {
+                            Body = "other-alert-text",
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsDuplicateApsSounds()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        Sound = "default",
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "other=sound",
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsInvalidCriticalSoundNoName()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound(),
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsInvalidCriticalSoundVolumeTooLow()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "default",
+                            Volume = -0.1,
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void ApnsInvalidCriticalSoundVolumeTooHigh()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        CriticalSound = new CriticalSound()
+                        {
+                            Name = "default",
+                            Volume = 1.1,
+                        },
                     },
                 },
             };
