@@ -241,7 +241,7 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Sets the specified custom claims on an existing user account. A null claims value
-        /// removes any claims currently set on the user account. The claims should serialize into
+        /// removes any claims currently set on the user account. The claims must serialize into
         /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
         /// </summary>
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
