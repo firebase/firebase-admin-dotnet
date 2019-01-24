@@ -240,19 +240,19 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Sets the specified custom claims on an existing user account. A null claims value 
+        /// Sets the specified custom claims on an existing user account. A null claims value
         /// removes any claims currently set on the user account. The claims should serialize into
         /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
         /// </summary>
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
-        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000 
+        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
         /// characters.</exception>
-        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null 
+        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
         /// or longer than 128 characters.
         /// </param>
         /// <param name="claims">The claims to be stored on the user account, and made
-        /// available to Firebase security rules. These must be serializable to JSON, and after
-        /// serialization it should not be larger than 1000 characters.</param>
+        /// available to Firebase security rules. These must be serializable to JSON, and the
+        /// serialized claims should not be larger than 1000 characters.</param>
         public async Task SetCustomUserClaimsAsync(string uid, IReadOnlyDictionary<string, object> claims)
         {
             lock (_lock)
