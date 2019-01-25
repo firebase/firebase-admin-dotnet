@@ -88,28 +88,36 @@ namespace FirebaseAdmin.Auth
         private async Task<TResult> PostAndDeserializeAsync<TResult>(
             string path, object body, CancellationToken cancellationToken)
         {
+            var json = await this.PostAsync(path, body, cancellationToken).ConfigureAwait(false);
             try
             {
-                var json = await this.PostAsync(path, body, cancellationToken)
-                    .ConfigureAwait(false);
                 return NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(json);
-            }
-            catch (FirebaseException)
-            {
-                throw;
             }
             catch (Exception e)
             {
-                throw new FirebaseException("Error while calling Firebase Auth service", e);
+                throw new FirebaseException("Error while parsing Auth service response", e);
             }
         }
 
         private async Task<string> PostAsync(
             string path, object body, CancellationToken cancellationToken)
         {
-            var requestUri = $"{this.baseUrl}/{path}";
-            var response = await this.httpClient
-                .PostJsonAsync(requestUri, body, cancellationToken)
+            try
+            {
+                var url = $"{this.baseUrl}/{path}";
+                return await this.SendRequestAsync(url, body, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (HttpRequestException e)
+            {
+                throw new FirebaseException("Error while calling Firebase Auth service", e);
+            }
+        }
+
+        private async Task<string> SendRequestAsync(
+            string url, object body, CancellationToken cancellationToken)
+        {
+            var response = await this.httpClient.PostJsonAsync(url, body, cancellationToken)
                 .ConfigureAwait(false);
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)

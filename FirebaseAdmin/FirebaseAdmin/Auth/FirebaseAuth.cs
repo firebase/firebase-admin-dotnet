@@ -321,15 +321,8 @@ namespace FirebaseAdmin.Auth
             lock (this.authLock)
             {
                 this.deleted = true;
-                if (this.tokenFactory.IsValueCreated)
-                {
-                    this.tokenFactory.Value.Dispose();
-                }
-
-                if (this.userManager.IsValueCreated)
-                {
-                    this.userManager.Value.Dispose();
-                }
+                this.tokenFactory.DisposeIfCreated();
+                this.userManager.DisposeIfCreated();
             }
         }
 

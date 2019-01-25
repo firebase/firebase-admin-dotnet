@@ -14,6 +14,7 @@
 
 using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -93,7 +94,7 @@ namespace FirebaseAdmin
             this HttpClient client, string requestUri, T body, CancellationToken cancellationToken)
         {
             var payload = NewtonsoftJsonSerializer.Instance.Serialize(body);
-            var content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
             return await client.PostAsync(requestUri, content, cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -107,6 +108,20 @@ namespace FirebaseAdmin
         {
             var timeSinceEpoch = clock.UtcNow.Subtract(new DateTime(1970, 1, 1));
             return (long)timeSinceEpoch.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Disposes a lazy-initialized object if the object has already been created.
+        /// </summary>
+        /// <param name="lazy">The lazy initializer containing a disposable object.</param>
+        /// <typeparam name="T">Type of the object that needs to be disposed.</typeparam>
+        public static void DisposeIfCreated<T>(this Lazy<T> lazy)
+        where T : IDisposable
+        {
+            if (lazy.IsValueCreated)
+            {
+                lazy.Value.Dispose();
+            }
         }
     }
 }
