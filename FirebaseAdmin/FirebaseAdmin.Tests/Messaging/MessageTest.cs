@@ -15,10 +15,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using Xunit;
 using Google.Apis.Json;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Xunit;
 
 namespace FirebaseAdmin.Messaging.Tests
 {
@@ -28,20 +28,20 @@ namespace FirebaseAdmin.Messaging.Tests
         public void EmptyMessage()
         {
             var message = new Message() { Token = "test-token" };
-            AssertJsonEquals(new JObject() { { "token", "test-token" } }, message);
+            this.AssertJsonEquals(new JObject() { { "token", "test-token" } }, message);
 
             message = new Message() { Topic = "test-topic" };
-            AssertJsonEquals(new JObject() { { "topic", "test-topic" } }, message);
+            this.AssertJsonEquals(new JObject() { { "topic", "test-topic" } }, message);
 
             message = new Message() { Condition = "test-condition" };
-            AssertJsonEquals(new JObject() { { "condition", "test-condition" } }, message);
+            this.AssertJsonEquals(new JObject() { { "condition", "test-condition" } }, message);
         }
 
         [Fact]
         public void PrefixedTopicName()
         {
             var message = new Message() { Topic = "/topics/test-topic" };
-            AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
+            this.AssertJsonEquals(new JObject() { { "topic", "test-topic" } }, message);
         }
 
         [Fact]
@@ -56,10 +56,11 @@ namespace FirebaseAdmin.Messaging.Tests
                     { "k2", "v2" },
                 },
             };
-            AssertJsonEquals(new JObject()
+            this.AssertJsonEquals(
+                new JObject()
                 {
-                    {"topic", "test-topic"},
-                    {"data", new JObject(){{"k1", "v1"}, {"k2", "v2"}}},
+                    { "topic", "test-topic" },
+                    { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
                 }, message);
         }
 
@@ -77,16 +78,16 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "notification", new JObject()
                     {
-                        {"title", "title"},
-                        {"body", "body"},
+                        { "title", "title" },
+                        { "body", "body" },
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -95,7 +96,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var original = new Message()
             {
                 Topic = "test-topic",
-                Data = new Dictionary<string, string>(){{ "key", "value" }},
+                Data = new Dictionary<string, string>() { { "key", "value" } },
                 Notification = new Notification()
                 {
                     Title = "title",
@@ -114,7 +115,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
                 Webpush = new WebpushConfig()
                 {
-                    Data = new Dictionary<string, string>(){{ "key", "value" }},
+                    Data = new Dictionary<string, string>() { { "key", "value" } },
                 },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
@@ -198,7 +199,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             foreach (var topic in topics)
             {
-                var message = new Message(){Topic = topic};
+                var message = new Message() { Topic = topic };
                 Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
             }
         }
@@ -230,16 +231,16 @@ namespace FirebaseAdmin.Messaging.Tests
                         Tag = "tag",
                         ClickAction = "click-action",
                         TitleLocKey = "title-loc-key",
-                        TitleLocArgs = new List<string>(){ "arg1", "arg2" },
+                        TitleLocArgs = new List<string>() { "arg1", "arg2" },
                         BodyLocKey = "body-loc-key",
-                        BodyLocArgs = new List<string>(){ "arg3", "arg4" },
+                        BodyLocArgs = new List<string>() { "arg3", "arg4" },
                         ChannelId = "channel-id",
                     },
                 },
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "android", new JObject()
                     {
@@ -247,7 +248,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "priority", "high" },
                         { "ttl", "0.010000000s" },
                         { "restricted_package_name", "test-pkg-name" },
-                        { "data", new JObject(){{"k1", "v1"}, {"k2", "v2"}} },
+                        { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
                         {
                             "notification", new JObject()
                             {
@@ -259,16 +260,16 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "tag", "tag" },
                                 { "click_action", "click-action" },
                                 { "title_loc_key", "title-loc-key" },
-                                { "title_loc_args", new JArray(){"arg1", "arg2"} },
+                                { "title_loc_args", new JArray() { "arg1", "arg2" } },
                                 { "body_loc_key", "body-loc-key" },
-                                { "body_loc_args", new JArray(){"arg3", "arg4"} },
+                                { "body_loc_args", new JArray() { "arg3", "arg4" } },
                                 { "channel_id", "channel-id" },
                             }
                         },
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -281,10 +282,10 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
-                {"android", new JObject()},
+                { "topic", "test-topic" },
+                { "android", new JObject() },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -300,7 +301,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "android", new JObject()
                     {
@@ -308,7 +309,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -366,9 +367,9 @@ namespace FirebaseAdmin.Messaging.Tests
                 Tag = "tag",
                 ClickAction = "click-action",
                 TitleLocKey = "title-loc-key",
-                TitleLocArgs = new List<string>(){ "arg1", "arg2" },
+                TitleLocArgs = new List<string>() { "arg1", "arg2" },
                 BodyLocKey = "body-loc-key",
-                BodyLocArgs = new List<string>(){ "arg3", "arg4" },
+                BodyLocArgs = new List<string>() { "arg3", "arg4" },
                 ChannelId = "channel-id",
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
@@ -393,16 +394,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var original = new AndroidNotification()
             {
                 TitleLocKey = "title-loc-key",
-                TitleLocArgs = new List<string>(){ "arg1", "arg2" },
+                TitleLocArgs = new List<string>() { "arg1", "arg2" },
                 BodyLocKey = "body-loc-key",
-                BodyLocArgs = new List<string>(){ "arg3", "arg4" },
+                BodyLocArgs = new List<string>() { "arg3", "arg4" },
             };
             var copy = original.CopyAndValidate();
             Assert.NotSame(original, copy);
             Assert.NotSame(original.TitleLocArgs, copy.TitleLocArgs);
             Assert.NotSame(original.BodyLocArgs, copy.BodyLocArgs);
         }
-
 
         [Fact]
         public void AndroidConfigInvalidTTL()
@@ -428,7 +428,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Notification = new AndroidNotification()
                     {
-                        Color = "not-a-color"
+                        Color = "not-a-color",
                     },
                 },
             };
@@ -445,7 +445,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Notification = new AndroidNotification()
                     {
-                        TitleLocArgs = new List<string>(){"arg"},
+                        TitleLocArgs = new List<string>() { "arg" },
                     },
                 },
             };
@@ -462,7 +462,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Notification = new AndroidNotification()
                     {
-                        BodyLocArgs = new List<string>(){"arg"},
+                        BodyLocArgs = new List<string>() { "arg" },
                     },
                 },
             };
@@ -479,13 +479,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Headers = new Dictionary<string, string>()
                     {
-                        {"header1", "header-value1"},
-                        {"header2", "header-value2"},
+                        { "header1", "header-value1" },
+                        { "header2", "header-value2" },
                     },
                     Data = new Dictionary<string, string>()
                     {
-                        {"key1", "value1"},
-                        {"key2", "value2"},
+                        { "key1", "value1" },
+                        { "key2", "value2" },
                     },
                     Notification = new WebpushNotification()
                     {
@@ -495,7 +495,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         Badge = "badge",
                         Data = new Dictionary<string, object>()
                         {
-                            {"some", "data"},
+                            { "some", "data" },
                         },
                         Direction = Direction.LeftToRight,
                         Image = "image",
@@ -505,7 +505,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         RequireInteraction = true,
                         Renotify = true,
                         TimestampMillis = 100,
-                        Vibrate = new int[]{10, 5, 10},
+                        Vibrate = new int[] { 10, 5, 10 },
                         Actions = new List<Action>()
                         {
                             new Action()
@@ -523,79 +523,79 @@ namespace FirebaseAdmin.Messaging.Tests
                         },
                         CustomData = new Dictionary<string, object>()
                         {
-                            {"custom-key1", "custom-data"},
-                            {"custom-key2", true},
+                            { "custom-key1", "custom-data" },
+                            { "custom-key2", true },
                         },
                     },
                 },
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "webpush", new JObject()
                     {
                         {
                             "headers", new JObject()
                             {
-                                {"header1", "header-value1"},
-                                {"header2", "header-value2"},
+                                { "header1", "header-value1" },
+                                { "header2", "header-value2" },
                             }
                         },
                         {
                             "data", new JObject()
                             {
-                                {"key1", "value1"},
-                                {"key2", "value2"},
+                                { "key1", "value1" },
+                                { "key2", "value2" },
                             }
                         },
                         {
                             "notification", new JObject()
                             {
-                                {"title", "title"},
-                                {"body", "body"},
-                                {"icon", "icon"},
-                                {"badge", "badge"},
+                                { "title", "title" },
+                                { "body", "body" },
+                                { "icon", "icon" },
+                                { "badge", "badge" },
                                 {
                                     "data", new JObject()
                                     {
-                                        {"some", "data"},
+                                        { "some", "data" },
                                     }
                                 },
-                                {"dir", "ltr"},
-                                {"image", "image"},
-                                {"lang", "language"},
-                                {"renotify", true},
-                                {"requireInteraction", true},
-                                {"silent", true},
-                                {"tag", "tag"},
-                                {"timestamp", 100},
-                                {"vibrate", new JArray(){10, 5, 10}},
+                                { "dir", "ltr" },
+                                { "image", "image" },
+                                { "lang", "language" },
+                                { "renotify", true },
+                                { "requireInteraction", true },
+                                { "silent", true },
+                                { "tag", "tag" },
+                                { "timestamp", 100 },
+                                { "vibrate", new JArray() { 10, 5, 10 } },
                                 {
                                     "actions", new JArray()
                                     {
                                         new JObject()
                                         {
-                                            {"action", "Accept"},
-                                            {"title", "Ok"},
-                                            {"icon", "ok-button"},
+                                            { "action", "Accept" },
+                                            { "title", "Ok" },
+                                            { "icon", "ok-button" },
                                         },
                                         new JObject()
                                         {
-                                            {"action", "Reject"},
-                                            {"title", "Cancel"},
-                                            {"icon", "cancel-button"},
+                                            { "action", "Reject" },
+                                            { "title", "Cancel" },
+                                            { "icon", "cancel-button" },
                                         },
                                     }
                                 },
-                                {"custom-key1", "custom-data"},
-                                {"custom-key2", true},
+                                { "custom-key1", "custom-data" },
+                                { "custom-key2", true },
                             }
                         },
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -608,10 +608,10 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
-                {"webpush", new JObject()},
+                { "topic", "test-topic" },
+                { "webpush", new JObject() },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -632,22 +632,22 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "webpush", new JObject()
                     {
                         {
                             "notification", new JObject()
                             {
-                                {"title", "title"},
-                                {"body", "body"},
-                                {"icon", "icon"},
+                                { "title", "title" },
+                                { "body", "body" },
+                                { "icon", "icon" },
                             }
                         },
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -657,13 +657,13 @@ namespace FirebaseAdmin.Messaging.Tests
             {
                 Headers = new Dictionary<string, string>()
                 {
-                    {"header1", "header-value1"},
-                    {"header2", "header-value2"},
+                    { "header1", "header-value1" },
+                    { "header2", "header-value2" },
                 },
                 Data = new Dictionary<string, string>()
                 {
-                    {"key1", "value1"},
-                    {"key2", "value2"},
+                    { "key1", "value1" },
+                    { "key2", "value2" },
                 },
                 Notification = new WebpushNotification()
                 {
@@ -704,7 +704,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Badge = "badge",
                 Data = new Dictionary<string, object>()
                 {
-                    {"some", "data"},
+                    { "some", "data" },
                 },
                 Direction = Direction.LeftToRight,
                 Image = "image",
@@ -714,7 +714,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 RequireInteraction = true,
                 Renotify = true,
                 TimestampMillis = 100,
-                Vibrate = new int[]{10, 5, 10},
+                Vibrate = new int[] { 10, 5, 10 },
                 Actions = new List<Action>()
                 {
                     new Action()
@@ -732,8 +732,8 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
                 CustomData = new Dictionary<string, object>()
                 {
-                    {"custom-key1", "custom-data"},
-                    {"custom-key2", true},
+                    { "custom-key1", "custom-data" },
+                    { "custom-key2", true },
                 },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
@@ -742,7 +742,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Body, copy.Body);
             Assert.Equal(original.Icon, copy.Icon);
             Assert.Equal(original.Badge, copy.Badge);
-            Assert.Equal(new JObject(){{"some", "data"}}, copy.Data);
+            Assert.Equal(new JObject() { { "some", "data" } }, copy.Data);
             Assert.Equal(original.Direction, copy.Direction);
             Assert.Equal(original.Image, copy.Image);
             Assert.Equal(original.Language, copy.Language);
@@ -761,6 +761,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Assert.Equal(originalActions[i].Title, copyActions[i].Title);
                 Assert.Equal(originalActions[i].Icon, copyActions[i].Icon);
             }
+
             Assert.Equal(original.CustomData, copy.CustomData);
         }
 
@@ -780,7 +781,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
                 CustomData = new Dictionary<string, object>()
                 {
-                    {"custom-key1", "custom-data"},
+                    { "custom-key1", "custom-data" },
                 },
             };
             var copy = original.CopyAndValidate();
@@ -802,7 +803,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     Notification = new WebpushNotification()
                     {
                         Title = "title",
-                        CustomData = new Dictionary<string, object>(){{"title", "other"}},
+                        CustomData = new Dictionary<string, object>() { { "title", "other" } },
                     },
                 },
             };
@@ -819,42 +820,42 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Headers = new Dictionary<string, string>()
                     {
-                        {"k1", "v1"},
-                        {"k2", "v2"},
+                        { "k1", "v1" },
+                        { "k2", "v2" },
                     },
                     Aps = new Aps()
                     {
                         AlertString = "alert-text",
                         Badge = 0,
-                        Category =  "test-category",
+                        Category = "test-category",
                         ContentAvailable = true,
                         MutableContent = true,
                         Sound = "sound-file",
                         ThreadId = "test-thread",
                         CustomData = new Dictionary<string, object>()
                         {
-                            {"custom-key1", "custom-data"},
-                            {"custom-key2", true},
+                            { "custom-key1", "custom-data" },
+                            { "custom-key2", true },
                         },
                     },
                     CustomData = new Dictionary<string, object>()
                     {
-                        {"custom-key3", "custom-data"},
-                        {"custom-key4", true},
+                        { "custom-key3", "custom-data" },
+                        { "custom-key4", true },
                     },
                 },
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
                         {
                             "headers", new JObject()
                             {
-                                {"k1", "v1"},
-                                {"k2", "v2"},
+                                { "k1", "v1" },
+                                { "k2", "v2" },
                             }
                         },
                         {
@@ -863,25 +864,25 @@ namespace FirebaseAdmin.Messaging.Tests
                                 {
                                     "aps", new JObject()
                                     {
-                                        {"alert", "alert-text"},
-                                        {"badge", 0},
-                                        {"category", "test-category"},
-                                        {"content-available", 1},
-                                        {"mutable-content", 1},
-                                        {"sound", "sound-file"},
-                                        {"thread-id", "test-thread"},
-                                        {"custom-key1", "custom-data"},
-                                        {"custom-key2", true},
+                                        { "alert", "alert-text" },
+                                        { "badge", 0 },
+                                        { "category", "test-category" },
+                                        { "content-available", 1 },
+                                        { "mutable-content", 1 },
+                                        { "sound", "sound-file" },
+                                        { "thread-id", "test-thread" },
+                                        { "custom-key1", "custom-data" },
+                                        { "custom-key2", true },
                                     }
                                 },
-                                {"custom-key3", "custom-data"},
-                                {"custom-key4", true},
+                                { "custom-key3", "custom-data" },
+                                { "custom-key4", true },
                             }
                         },
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -897,20 +898,20 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
                         {
                             "payload", new JObject()
                             {
-                                {"aps", new JObject()},
+                                { "aps", new JObject() },
                             }
                         },
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -920,8 +921,8 @@ namespace FirebaseAdmin.Messaging.Tests
             {
                 Headers = new Dictionary<string, string>()
                 {
-                    {"k1", "v1"},
-                    {"k2", "v2"},
+                    { "k1", "v1" },
+                    { "k2", "v2" },
                 },
                 Aps = new Aps()
                 {
@@ -929,8 +930,8 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
                 CustomData = new Dictionary<string, object>()
                 {
-                    {"custom-key3", "custom-data"},
-                    {"custom-key4", true},
+                    { "custom-key3", "custom-data" },
+                    { "custom-key4", true },
                 },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
@@ -963,21 +964,21 @@ namespace FirebaseAdmin.Messaging.Tests
             {
                 Headers = new Dictionary<string, string>()
                 {
-                    {"k1", "v1"},
-                    {"k2", "v2"},
+                    { "k1", "v1" },
+                    { "k2", "v2" },
                 },
                 CustomData = new Dictionary<string, object>()
                 {
                     {
                         "aps", new Dictionary<string, object>()
                         {
-                            {"alert", "alert-text"},
-                            {"custom-key1", "custom-data"},
-                            {"custom-key2", true},
+                            { "alert", "alert-text" },
+                            { "custom-key1", "custom-data" },
+                            { "custom-key2", true },
                         }
                     },
-                    {"custom-key3", "custom-data"},
-                    {"custom-key4", true},
+                    { "custom-key3", "custom-data" },
+                    { "custom-key4", true },
                 },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
@@ -988,8 +989,8 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal("alert-text", copy.Aps.AlertString);
             var customApsData = new Dictionary<string, object>()
             {
-                {"custom-key1", "custom-data"},
-                {"custom-key2", true},
+                { "custom-key1", "custom-data" },
+                { "custom-key2", true },
             };
             Assert.Equal(customApsData, copy.Aps.CustomData);
         }
@@ -1015,7 +1016,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
@@ -1028,9 +1029,9 @@ namespace FirebaseAdmin.Messaging.Tests
                                         {
                                             "sound", new JObject()
                                             {
-                                                {"name", "default"},
-                                                {"critical", 1},
-                                                {"volume", 0.5},
+                                                { "name", "default" },
+                                                { "critical", 1 },
+                                                { "volume", 0.5 },
                                             }
                                         },
                                     }
@@ -1040,7 +1041,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -1053,13 +1054,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Aps = new Aps()
                     {
-                        CriticalSound = new CriticalSound(){Name = "default"},
+                        CriticalSound = new CriticalSound() { Name = "default" },
                     },
                 },
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
@@ -1072,7 +1073,7 @@ namespace FirebaseAdmin.Messaging.Tests
                                         {
                                             "sound", new JObject()
                                             {
-                                                {"name", "default"},
+                                                { "name", "default" },
                                             }
                                         },
                                     }
@@ -1082,7 +1083,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -1116,13 +1117,13 @@ namespace FirebaseAdmin.Messaging.Tests
                             ActionLocKey = "action-key",
                             Body = "test-body",
                             LaunchImage = "test-image",
-                            LocArgs = new List<string>(){"arg1", "arg2"},
+                            LocArgs = new List<string>() { "arg1", "arg2" },
                             LocKey = "loc-key",
                             Subtitle = "test-subtitle",
-                            SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                            SubtitleLocArgs = new List<string>() { "arg3", "arg4" },
                             SubtitleLocKey = "subtitle-key",
                             Title = "test-title",
-                            TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                            TitleLocArgs = new List<string>() { "arg5", "arg6" },
                             TitleLocKey = "title-key",
                         },
                     },
@@ -1130,7 +1131,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
@@ -1143,17 +1144,17 @@ namespace FirebaseAdmin.Messaging.Tests
                                         {
                                             "alert", new JObject()
                                             {
-                                                {"action-loc-key", "action-key"},
-                                                {"body", "test-body"},
-                                                {"launch-image", "test-image"},
-                                                {"loc-args", new JArray(){"arg1", "arg2"}},
-                                                {"loc-key", "loc-key"},
-                                                {"subtitle", "test-subtitle"},
-                                                {"subtitle-loc-args", new JArray(){"arg3", "arg4"}},
-                                                {"subtitle-loc-key", "subtitle-key"},
-                                                {"title", "test-title"},
-                                                {"title-loc-args", new JArray(){"arg5", "arg6"}},
-                                                {"title-loc-key", "title-key"},
+                                                { "action-loc-key", "action-key" },
+                                                { "body", "test-body" },
+                                                { "launch-image", "test-image" },
+                                                { "loc-args", new JArray() { "arg1", "arg2" } },
+                                                { "loc-key", "loc-key" },
+                                                { "subtitle", "test-subtitle" },
+                                                { "subtitle-loc-args", new JArray() { "arg3", "arg4" } },
+                                                { "subtitle-loc-key", "subtitle-key" },
+                                                { "title", "test-title" },
+                                                { "title-loc-args", new JArray() { "arg5", "arg6" } },
+                                                { "title-loc-key", "title-key" },
                                             }
                                         },
                                     }
@@ -1163,7 +1164,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -1182,7 +1183,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
@@ -1193,7 +1194,7 @@ namespace FirebaseAdmin.Messaging.Tests
                                     "aps", new JObject()
                                     {
                                         {
-                                            "alert", new JObject(){}
+                                            "alert", new JObject()
                                         },
                                     }
                                 },
@@ -1202,7 +1203,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -1213,13 +1214,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 ActionLocKey = "action-key",
                 Body = "test-body",
                 LaunchImage = "test-image",
-                LocArgs = new List<string>(){"arg1", "arg2"},
+                LocArgs = new List<string>() { "arg1", "arg2" },
                 LocKey = "loc-key",
                 Subtitle = "test-subtitle",
-                SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                SubtitleLocArgs = new List<string>() { "arg3", "arg4" },
                 SubtitleLocKey = "subtitle-key",
                 Title = "test-title",
-                TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                TitleLocArgs = new List<string>() { "arg5", "arg6" },
                 TitleLocKey = "title-key",
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
@@ -1242,11 +1243,11 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var original = new ApsAlert()
             {
-                LocArgs = new List<string>(){"arg1", "arg2"},
+                LocArgs = new List<string>() { "arg1", "arg2" },
                 LocKey = "loc-key",
-                SubtitleLocArgs  = new List<string>(){"arg3", "arg4"},
+                SubtitleLocArgs = new List<string>() { "arg3", "arg4" },
                 SubtitleLocKey = "subtitle-key",
-                TitleLocArgs = new List<string>(){"arg5", "arg6"},
+                TitleLocArgs = new List<string>() { "arg5", "arg6" },
                 TitleLocKey = "title-key",
             };
             var copy = original.CopyAndValidate();
@@ -1268,7 +1269,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         Alert = new ApsAlert()
                         {
-                            TitleLocArgs = new List<string>(){"arg1", "arg2"},
+                            TitleLocArgs = new List<string>() { "arg1", "arg2" },
                         },
                     },
                 },
@@ -1288,7 +1289,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         Alert = new ApsAlert()
                         {
-                            SubtitleLocArgs = new List<string>(){"arg1", "arg2"},
+                            SubtitleLocArgs = new List<string>() { "arg1", "arg2" },
                         },
                     },
                 },
@@ -1308,7 +1309,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         Alert = new ApsAlert()
                         {
-                            LocArgs = new List<string>(){"arg1", "arg2"},
+                            LocArgs = new List<string>() { "arg1", "arg2" },
                         },
                     },
                 },
@@ -1329,8 +1330,8 @@ namespace FirebaseAdmin.Messaging.Tests
                         {
                             "aps", new Dictionary<string, object>()
                             {
-                                {"alert", "alert-text"},
-                                {"badge", 42},
+                                { "alert", "alert-text" },
+                                { "badge", 42 },
                             }
                         },
                     },
@@ -1338,7 +1339,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
@@ -1348,8 +1349,8 @@ namespace FirebaseAdmin.Messaging.Tests
                                 {
                                     "aps", new JObject()
                                     {
-                                        {"alert", "alert-text"},
-                                        {"badge", 42},
+                                        { "alert", "alert-text" },
+                                        { "badge", 42 },
                                     }
                                 },
                             }
@@ -1357,7 +1358,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -1373,8 +1374,8 @@ namespace FirebaseAdmin.Messaging.Tests
                         {
                             "aps", new Dictionary<string, object>()
                             {
-                                {"custom-key1", "custom-data"},
-                                {"custom-key2", true},
+                                { "custom-key1", "custom-data" },
+                                { "custom-key2", true },
                             }
                         },
                     },
@@ -1382,7 +1383,7 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                {"topic", "test-topic"},
+                { "topic", "test-topic" },
                 {
                     "apns", new JObject()
                     {
@@ -1392,8 +1393,8 @@ namespace FirebaseAdmin.Messaging.Tests
                                 {
                                     "aps", new JObject()
                                     {
-                                        {"custom-key1", "custom-data"},
-                                        {"custom-key2", true},
+                                        { "custom-key1", "custom-data" },
+                                        { "custom-key2", true },
                                     }
                                 },
                             }
@@ -1401,7 +1402,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     }
                 },
             };
-            AssertJsonEquals(expected, message);
+            this.AssertJsonEquals(expected, message);
         }
 
         [Fact]
@@ -1414,7 +1415,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     CustomData = new Dictionary<string, object>()
                     {
-                        {"test", "custom-data"},
+                        { "test", "custom-data" },
                     },
                 },
             };
@@ -1435,7 +1436,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     },
                     CustomData = new Dictionary<string, object>()
                     {
-                        {"aps", "custom-data"},
+                        { "aps", "custom-data" },
                     },
                 },
             };
@@ -1450,7 +1451,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 AlertString = "alert-text",
                 CustomData = new Dictionary<string, object>()
                 {
-                    {"alert", "other-alert-text"},
+                    { "alert", "other-alert-text" },
                 },
             };
             Assert.Throws<ArgumentException>(() => aps.CopyAndValidate());

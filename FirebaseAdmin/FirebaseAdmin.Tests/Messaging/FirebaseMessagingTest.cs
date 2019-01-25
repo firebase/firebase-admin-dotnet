@@ -15,16 +15,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Json;
 using FirebaseAdmin.Tests;
+using Google.Apis.Auth.OAuth2;
+using Xunit;
 
 namespace FirebaseAdmin.Messaging.Tests
 {
-    public class FirebaseMessagingTest: IDisposable
+    public class FirebaseMessagingTest : IDisposable
     {
-        private static readonly GoogleCredential mockCredential =
+        private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromFile("./resources/service_account.json");
 
         [Fact]
@@ -36,7 +35,7 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void GetDefaultMessaging()
         {
-            var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             FirebaseMessaging messaging = FirebaseMessaging.DefaultInstance;
             Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.DefaultInstance);
@@ -47,7 +46,7 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void GetMessaging()
         {
-            var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential}, "MyApp");
+            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential }, "MyApp");
             FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
             Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
@@ -58,28 +57,28 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public async Task UseAfterDelete()
         {
-            var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             FirebaseMessaging messaging = FirebaseMessaging.DefaultInstance;
             app.Delete();
             await Assert.ThrowsAsync<ObjectDisposedException>(
-                async () => await messaging.SendAsync(new Message(){Topic = "test-topic"}));
+                async () => await messaging.SendAsync(new Message() { Topic = "test-topic" }));
         }
 
         [Fact]
         public async Task SendMessageCancel()
         {
             var cred = GoogleCredential.FromFile("./resources/service_account.json");
-            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            FirebaseApp.Create(new AppOptions() { Credential = cred });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
             await Assert.ThrowsAsync<OperationCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
-                    new Message(){Topic = "test-topic"}, canceller.Token));
+                    new Message() { Topic = "test-topic" }, canceller.Token));
         }
 
         public void Dispose()
         {
             FirebaseApp.DeleteAll();
         }
-    }   
+    }
 }

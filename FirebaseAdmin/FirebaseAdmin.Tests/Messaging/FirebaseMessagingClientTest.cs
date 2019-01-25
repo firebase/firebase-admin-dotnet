@@ -16,17 +16,17 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Xunit;
+using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
-using FirebaseAdmin.Tests;
+using Newtonsoft.Json;
+using Xunit;
 
 namespace FirebaseAdmin.Messaging.Tests
 {
     public class FirebaseMessagingClientTest
     {
-        private static readonly GoogleCredential mockCredential =
+        private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
         [Fact]
@@ -34,9 +34,9 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var clientFactory = new HttpClientFactory();
             Assert.Throws<FirebaseException>(
-                () => new FirebaseMessagingClient(clientFactory, mockCredential, null));
+                () => new FirebaseMessagingClient(clientFactory, MockCredential, null));
             Assert.Throws<FirebaseException>(
-                () => new FirebaseMessagingClient(clientFactory, mockCredential, ""));
+                () => new FirebaseMessagingClient(clientFactory, MockCredential, string.Empty));
         }
 
         [Fact]
@@ -52,7 +52,7 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var clientFactory = new HttpClientFactory();
             Assert.Throws<ArgumentNullException>(
-                () => new FirebaseMessagingClient(null, mockCredential, "test-project"));
+                () => new FirebaseMessagingClient(null, MockCredential, "test-project"));
         }
 
         [Fact]
@@ -66,10 +66,10 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, mockCredential, "test-project");
+            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
             var message = new Message()
             {
-                Topic = "test-topic"
+                Topic = "test-topic",
             };
             var response = await client.SendAsync(message);
             Assert.Equal("test-response", response);
@@ -98,10 +98,10 @@ namespace FirebaseAdmin.Messaging.Tests
                 Response = "not json",
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, mockCredential, "test-project");
+            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
             var message = new Message()
             {
-                Topic = "test-topic"
+                Topic = "test-topic",
             };
             var ex = await Assert.ThrowsAsync<FirebaseException>(
                 async () => await client.SendAsync(message));
