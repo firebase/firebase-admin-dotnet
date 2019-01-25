@@ -69,6 +69,8 @@ namespace FirebaseAdmin.Auth.Tests
                 async () => await auth.CreateCustomTokenAsync("user"));
             await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await auth.VerifyIdTokenAsync("user"));
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await auth.SetCustomUserClaimsAsync("user", null));
         }
 
         [Fact]

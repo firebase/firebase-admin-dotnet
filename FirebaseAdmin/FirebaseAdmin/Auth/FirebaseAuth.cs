@@ -39,8 +39,8 @@ namespace FirebaseAdmin.Auth
                 () => FirebaseTokenFactory.Create(this.app), true);
             this.idTokenVerifier = new Lazy<FirebaseTokenVerifier>(
                 () => FirebaseTokenVerifier.CreateIDTokenVerifier(this.app), true);
-            this.userManager = new Lazy<FirebaseUserManager>(() =>
-                FirebaseUserManager.Create(this.app));
+            this.userManager = new Lazy<FirebaseUserManager>(
+                () => FirebaseUserManager.Create(this.app), true);
         }
 
         /// <summary>
@@ -211,17 +211,7 @@ namespace FirebaseAdmin.Auth
             IDictionary<string, object> developerClaims,
             CancellationToken cancellationToken)
         {
-            FirebaseTokenFactory tokenFactory;
-            lock (this.authLock)
-            {
-                if (this.deleted)
-                {
-                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
-                }
-
-                tokenFactory = this.tokenFactory.Value;
-            }
-
+            var tokenFactory = this.IfNotDeleted(() => this.tokenFactory.Value);
             return await tokenFactory.CreateCustomTokenAsync(
                 uid, developerClaims, cancellationToken).ConfigureAwait(false);
         }
@@ -268,15 +258,8 @@ namespace FirebaseAdmin.Auth
         public async Task<FirebaseToken> VerifyIdTokenAsync(
             string idToken, CancellationToken cancellationToken)
         {
-            lock (this.authLock)
-            {
-                if (this.deleted)
-                {
-                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
-                }
-            }
-
-            return await this.idTokenVerifier.Value.VerifyTokenAsync(idToken, cancellationToken)
+            var idTokenVerifier = this.IfNotDeleted(() => this.idTokenVerifier.Value);
+            return await idTokenVerifier.VerifyTokenAsync(idToken, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -295,22 +278,39 @@ namespace FirebaseAdmin.Auth
         /// <param name="claims">The claims to be stored on the user account, and made
         /// available to Firebase security rules. These must be serializable to JSON, and after
         /// serialization it should not be larger than 1000 characters.</param>
-        public async Task SetCustomUserClaimsAsync(string uid, IReadOnlyDictionary<string, object> claims)
+        public async Task SetCustomUserClaimsAsync(
+            string uid, IReadOnlyDictionary<string, object> claims)
         {
-            lock (this.authLock)
-            {
-                if (this.deleted)
-                {
-                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
-                }
-            }
+            await this.SetCustomUserClaimsAsync(uid, claims, default(CancellationToken));
+        }
 
+        /// <summary>
+        /// Sets the specified custom claims on an existing user account. A null claims value
+        /// removes any claims currently set on the user account. The claims should serialize into
+        /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
+        /// </summary>
+        /// <returns>A task that completes when the claims have been set.</returns>
+        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
+        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
+        /// characters.</exception>
+        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
+        /// or longer than 128 characters.
+        /// </param>
+        /// <param name="claims">The claims to be stored on the user account, and made
+        /// available to Firebase security rules. These must be serializable to JSON, and after
+        /// serialization it should not be larger than 1000 characters.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task SetCustomUserClaimsAsync(
+            string uid, IReadOnlyDictionary<string, object> claims, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
             var user = new UserRecord(uid)
             {
                 CustomClaims = claims,
             };
 
-            await this.userManager.Value.UpdateUserAsync(user);
+            await userManager.UpdateUserAsync(user, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -330,6 +330,19 @@ namespace FirebaseAdmin.Auth
                 {
                     this.userManager.Value.Dispose();
                 }
+            }
+        }
+
+        private TResult IfNotDeleted<TResult>(Func<TResult> func)
+        {
+            lock (this.authLock)
+            {
+                if (this.deleted)
+                {
+                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
+                }
+
+                return func();
             }
         }
     }

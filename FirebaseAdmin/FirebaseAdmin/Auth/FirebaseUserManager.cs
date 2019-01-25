@@ -14,9 +14,11 @@
 
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
+using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth
@@ -64,22 +66,17 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
         /// <param name="user">The user which we want to update.</param>
-        public async Task UpdateUserAsync(UserRecord user)
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task UpdateUserAsync(
+            UserRecord user, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var updatePath = "/accounts:update";
-            var resopnse = await this.PostAsync(updatePath, user);
-
-            try
+            const string updatePath = "accounts:update";
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                updatePath, user, cancellationToken).ConfigureAwait(false);
+            if (response["localId"]?.Value<string>() != user.Uid)
             {
-                var userResponse = resopnse.ToObject<UserRecord>();
-                if (userResponse.Uid != user.Uid)
-                {
-                    throw new FirebaseException($"Failed to update user: {user.Uid}");
-                }
-            }
-            catch (Exception e)
-            {
-                throw new FirebaseException("Error while calling Firebase Auth service", e);
+                throw new FirebaseException($"Failed to update user: {user.Uid}");
             }
         }
 
@@ -88,31 +85,42 @@ namespace FirebaseAdmin.Auth
             this.httpClient.Dispose();
         }
 
-        private async Task<JObject> PostAsync(string path, UserRecord user)
+        private async Task<TResult> PostAndDeserializeAsync<TResult>(
+            string path, object body, CancellationToken cancellationToken)
         {
-            var requestUri = $"{this.baseUrl}{path}";
-            HttpResponseMessage response = null;
             try
             {
-                response = await this.httpClient.PostJsonAsync(requestUri, user, default);
-                var json = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return JObject.Parse(json);
-                }
-                else
-                {
-                    var error = "Response status code does not indicate success: "
-                            + $"{(int)response.StatusCode} ({response.StatusCode})"
-                            + $"{Environment.NewLine}{json}";
-                    throw new FirebaseException(error);
-                }
+                var json = await this.PostAsync(path, body, cancellationToken)
+                    .ConfigureAwait(false);
+                return NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(json);
             }
-            catch (HttpRequestException e)
+            catch (FirebaseException)
+            {
+                throw;
+            }
+            catch (Exception e)
             {
                 throw new FirebaseException("Error while calling Firebase Auth service", e);
             }
+        }
+
+        private async Task<string> PostAsync(
+            string path, object body, CancellationToken cancellationToken)
+        {
+            var requestUri = $"{this.baseUrl}/{path}";
+            var response = await this.httpClient
+                .PostJsonAsync(requestUri, body, cancellationToken)
+                .ConfigureAwait(false);
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = "Response status code does not indicate success: "
+                        + $"{(int)response.StatusCode} ({response.StatusCode})"
+                        + $"{Environment.NewLine}{json}";
+                throw new FirebaseException(error);
+            }
+
+            return json;
         }
     }
 }
