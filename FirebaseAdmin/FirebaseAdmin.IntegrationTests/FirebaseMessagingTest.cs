@@ -15,8 +15,8 @@
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin.Messaging;
+using Xunit;
 
 namespace FirebaseAdmin.IntegrationTests
 {
