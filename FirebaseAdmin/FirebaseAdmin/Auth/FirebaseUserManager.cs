@@ -74,7 +74,7 @@ namespace FirebaseAdmin.Auth
             const string updatePath = "accounts:update";
             var response = await this.PostAndDeserializeAsync<JObject>(
                 updatePath, user, cancellationToken).ConfigureAwait(false);
-            if (response["localId"]?.Value<string>() != user.Uid)
+            if (user.Uid != (string)response["localId"])
             {
                 throw new FirebaseException($"Failed to update user: {user.Uid}");
             }
