@@ -27,20 +27,20 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void EmptyMessage()
         {
-            var message = new Message(){Token = "test-token"};
-            AssertJsonEquals(new JObject(){{"token", "test-token"}}, message);
+            var message = new Message() { Token = "test-token" };
+            AssertJsonEquals(new JObject() { { "token", "test-token" } }, message);
 
-            message = new Message(){Topic = "test-topic"};
-            AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
+            message = new Message() { Topic = "test-topic" };
+            AssertJsonEquals(new JObject() { { "topic", "test-topic" } }, message);
 
-            message = new Message(){Condition = "test-condition"};
-            AssertJsonEquals(new JObject(){{"condition", "test-condition"}}, message);
+            message = new Message() { Condition = "test-condition" };
+            AssertJsonEquals(new JObject() { { "condition", "test-condition" } }, message);
         }
 
         [Fact]
         public void PrefixedTopicName()
         {
-            var message = new Message(){Topic = "/topics/test-topic"};
+            var message = new Message() { Topic = "/topics/test-topic" };
             AssertJsonEquals(new JObject(){{"topic", "test-topic"}}, message);
         }
 

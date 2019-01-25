@@ -15,9 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using Google.Apis.Json;
 using Google.Apis.Util;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -30,76 +30,79 @@ namespace FirebaseAdmin.Messaging
     public sealed class Message
     {
         /// <summary>
-        /// The registration token of the device to which the message should be sent.
+        /// Gets or sets the registration token of the device to which the message should be sent.
         /// </summary>
         [JsonProperty("token")]
         public string Token { get; set; }
 
         /// <summary>
-        /// The name of the FCM topic to which the message should be sent. Topic names may
-        /// contain the <c>/topics/</c> prefix.
+        /// Gets or sets the name of the FCM topic to which the message should be sent. Topic names
+        /// may contain the <c>/topics/</c> prefix.
         /// </summary>
         [JsonIgnore]
         public string Topic { get; set; }
 
         /// <summary>
-        /// Formatted representation of the <see cref="Topic"/>. Removes the <code>/topics/</code>
-        /// prefix if present. This is what's ultimately sent to the FCM service.
+        /// Gets or sets the FCM condition to which the message should be sent. Must be a valid
+        /// condition string such as <c>"'foo' in topics"</c>.
+        /// </summary>
+        [JsonProperty("condition")]
+        public string Condition { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of key-value pairs that will be added to the message as data
+        /// fields. Keys and the values must not be null.
+        /// </summary>
+        [JsonProperty("data")]
+        public IReadOnlyDictionary<string, string> Data { get; set; }
+
+        /// <summary>
+        /// Gets or sets the notification information to be included in the message.
+        /// </summary>
+        [JsonProperty("notification")]
+        public Notification Notification { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Android-specific information to be included in the message.
+        /// </summary>
+        [JsonProperty("android")]
+        public AndroidConfig Android { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Webpush-specific information to be included in the message.
+        /// </summary>
+        [JsonProperty("webpush")]
+        public WebpushConfig Webpush { get; set; }
+
+        /// <summary>
+        /// Gets or sets the APNs-specific information to be included in the message.
+        /// </summary>
+        [JsonProperty("apns")]
+        public ApnsConfig Apns { get; set; }
+
+        /// <summary>
+        /// Gets or sets the formatted representation of the <see cref="Topic"/>. Removes the
+        /// <c>/topics/</c> prefix if present. This is what's ultimately sent to the FCM
+        /// service.
         /// </summary>
         [JsonProperty("topic")]
         private string UnprefixedTopic
         {
             get
             {
-                if (Topic != null && Topic.StartsWith("/topics/"))
+                if (this.Topic != null && this.Topic.StartsWith("/topics/"))
                 {
-                    return Topic.Substring("/topics/".Length);
+                    return this.Topic.Substring("/topics/".Length);
                 }
-                return Topic;
+
+                return this.Topic;
             }
+
             set
             {
-                Topic = value;
+                this.Topic = value;
             }
         }
-
-        /// <summary>
-        /// The FCM condition to which the message should be sent. Must be a valid condition
-        /// string such as <c>"'foo' in topics"</c>.
-        /// </summary>
-        [JsonProperty("condition")]
-        public string Condition { get; set; }
-
-        /// <summary>
-        /// A collection of key-value pairs that will be added to the message as data fields. Keys
-        /// and the values must not be null.
-        /// </summary>
-        [JsonProperty("data")]
-        public IReadOnlyDictionary<string, string> Data { get; set; }
-
-        /// <summary>
-        /// The notification information to be included in the message.
-        /// </summary>
-        [JsonProperty("notification")]
-        public Notification Notification { get; set; }
-
-        /// <summary>
-        /// The Android-specific information to be included in the message.
-        /// </summary>
-        [JsonProperty("android")]
-        public AndroidConfig Android { get; set; }
-
-        /// <summary>
-        /// The Webpush-specific information to be included in the message.
-        /// </summary>
-        [JsonProperty("webpush")]
-        public WebpushConfig Webpush { get; set; }
-
-        /// <summary>
-        /// The APNs-specific information to be included in the message.
-        /// </summary>
-        [JsonProperty("apns")]
-        public ApnsConfig Apns { get; set; }
 
         /// <summary>
         /// Copies this message, and validates the content of it to ensure that it can be
@@ -127,6 +130,7 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException(
                     "Exactly one of Token, Topic or Condition is required.");
             }
+
             var topic = copy.UnprefixedTopic;
             if (topic != null && !Regex.IsMatch(topic, "^[a-zA-Z0-9-_.~%]+$"))
             {

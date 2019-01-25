@@ -24,46 +24,49 @@ namespace FirebaseAdmin.Messaging
     public sealed class CriticalSound
     {
         /// <summary>
-        /// Sets the critical alert flag on the sound configuration.
+        /// Gets or sets a value indicating whether to set the critical alert flag on the sound
+        /// configuration.
         /// </summary>
         [JsonIgnore]
         public bool Critical { get; set; }
 
         /// <summary>
-        /// Integer representation of the <see cref="Critical"/> property, which is how
-        /// APNs expects it.
+        /// Gets or sets the name of the sound to be played. This should be a sound file in your
+        /// app's main bundle or in the <c>Library/Sounds</c> folder of your app's container
+        /// directory. Specify the string <c>default</c> to play the system sound.
+        /// </summary>
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the volume for the critical alert's sound. Must be a value between 0.0
+        /// (silent) and 1.0 (full volume).
+        /// </summary>
+        [JsonProperty("volume")]
+        public double? Volume { get; set; }
+
+        /// <summary>
+        /// Gets or sets the integer representation of the <see cref="Critical"/> property, which
+        /// is how APNs expects it.
         /// </summary>
         [JsonProperty("critical")]
         private int? CriticalInt
         {
             get
             {
-                if (Critical)
+                if (this.Critical)
                 {
                     return 1;
                 }
+
                 return null;
             }
+
             set
             {
-                Critical = (value == 1);
+                this.Critical = value == 1;
             }
         }
-
-        /// <summary>
-        /// The name of a sound file in your app's main bundle or in the
-        /// <code>Library/Sounds</code> folder of your app's container directory. Specify the
-        /// string <code>default</code> to play the system sound.
-        /// </summary>
-        [JsonProperty("name")]
-        public string Name { get; set; }
-
-        /// <summary>
-        /// The volume for the critical alert's sound. Must be a value between 0.0 (silent) and
-        /// 1.0 (full volume).
-        /// </summary>
-        [JsonProperty("volume")]
-        public double? Volume { get; set; }
 
         /// <summary>
         /// Copies this critical sound configuration, and validates the content of it to ensure
@@ -81,10 +84,12 @@ namespace FirebaseAdmin.Messaging
             {
                 throw new ArgumentException("Name must be specified for CriticalSound");
             }
+
             if (copy.Volume < 0 || copy.Volume > 1)
             {
                 throw new ArgumentException("Volume of CriticalSound must be in the interval [0, 1]");
             }
+
             return copy;
         }
     }

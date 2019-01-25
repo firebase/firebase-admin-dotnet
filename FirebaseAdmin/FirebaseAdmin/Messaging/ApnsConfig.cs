@@ -27,63 +27,68 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class ApnsConfig
     {
-        private ApnsPayload _payload = new ApnsPayload();
+        private ApnsPayload payload = new ApnsPayload();
 
         /// <summary>
-        /// A collection of APNs headers.
+        /// Gets or sets the APNs headers.
         /// </summary>
         [JsonProperty("headers")]
         public IReadOnlyDictionary<string, string> Headers { get; set; }
 
         /// <summary>
-        /// The <code>aps</code> dictionary to be included in the APNs payload.
+        /// Gets or sets the <c>aps</c> dictionary to be included in the APNs payload.
         /// </summary>
         [JsonIgnore]
         public Aps Aps
         {
             get
             {
-                return Payload.Aps;
+                return this.Payload.Aps;
             }
+
             set
             {
-                Payload.Aps = value;
+                this.Payload.Aps = value;
             }
         }
 
         /// <summary>
-        /// APNs payload as accepted by the FCM backend servers.
-        /// </summary>
-        [JsonProperty("payload")]
-        private ApnsPayload Payload
-        {
-            get
-            {
-                if (_payload.Aps != null && _payload.CustomData?.ContainsKey("aps") == true)
-                {
-                    throw new ArgumentException("Multiple specifications for ApnsConfig key: aps");
-                }
-                return _payload;
-            }
-            set
-            {
-                _payload = value;
-            }
-        }
-
-        /// <summary>
-        /// A collection of arbitrary key-value data to be included in the APNs payload.
+        /// Gets or sets a collection of arbitrary key-value data that will be included in the APNs
+        /// payload.
         /// </summary>
         [JsonIgnore]
         public IDictionary<string, object> CustomData
         {
             get
             {
-                return Payload.CustomData;
+                return this.Payload.CustomData;
             }
+
             set
             {
-                Payload.CustomData = value;
+                this.Payload.CustomData = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the APNs payload as accepted by the FCM backend servers.
+        /// </summary>
+        [JsonProperty("payload")]
+        private ApnsPayload Payload
+        {
+            get
+            {
+                if (this.payload.Aps != null && this.payload.CustomData?.ContainsKey("aps") == true)
+                {
+                    throw new ArgumentException("Multiple specifications for ApnsConfig key: aps");
+                }
+
+                return this.payload;
+            }
+
+            set
+            {
+                this.payload = value;
             }
         }
 
@@ -100,36 +105,37 @@ namespace FirebaseAdmin.Messaging
             };
             return copy;
         }
-    }
-
-    /// <summary>
-    /// The APNs payload object as expected by the FCM backend service.
-    /// </summary>
-    internal sealed class ApnsPayload
-    {
-        [JsonProperty("aps")]
-        internal Aps Aps { get; set; }
-
-        [JsonExtensionData]
-        internal IDictionary<string, object> CustomData { get; set; }
 
         /// <summary>
-        /// Copies this APNs payload, and validates the content of it to ensure that it can be
-        /// serialized into the JSON format expected by the FCM service.
+        /// The APNs payload object as expected by the FCM backend service.
         /// </summary>
-        internal ApnsPayload CopyAndValidate()
+        private class ApnsPayload
         {
-            var copy = new ApnsPayload()
+            [JsonProperty("aps")]
+            internal Aps Aps { get; set; }
+
+            [JsonExtensionData]
+            internal IDictionary<string, object> CustomData { get; set; }
+
+            /// <summary>
+            /// Copies this APNs payload, and validates the content of it to ensure that it can be
+            /// serialized into the JSON format expected by the FCM service.
+            /// </summary>
+            internal ApnsPayload CopyAndValidate()
             {
-                CustomData = this.CustomData?.ToDictionary(e => e.Key, e => e.Value),
-            };
-            var aps = this.Aps;
-            if (aps == null && copy.CustomData?.ContainsKey("aps") == false)
-            {
-                throw new ArgumentException("Aps dictionary is required in ApnsConfig");
+                var copy = new ApnsPayload()
+                {
+                    CustomData = this.CustomData?.ToDictionary(e => e.Key, e => e.Value),
+                };
+                var aps = this.Aps;
+                if (aps == null && copy.CustomData?.ContainsKey("aps") == false)
+                {
+                    throw new ArgumentException("Aps dictionary is required in ApnsConfig");
+                }
+
+                copy.Aps = aps?.CopyAndValidate();
+                return copy;
             }
-            copy.Aps = aps?.CopyAndValidate();
-            return copy;
         }
     }
 }

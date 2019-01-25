@@ -12,38 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
-
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Represents the notification parameters that can be included in a <see cref="Message"/>.
+    /// Different directions a notification can be displayed in.
     /// </summary>
-    public sealed class Notification
+    public enum Direction
     {
         /// <summary>
-        /// Gets or sets the title of the notification.
+        /// Direction automatically determined.
         /// </summary>
-        [JsonProperty("title")]
-        public string Title { get; set; }
+        Auto,
 
         /// <summary>
-        /// Gets or sets the body of the notification.
+        /// Left to right.
         /// </summary>
-        [JsonProperty("body")]
-        public string Body { get; set; }
+        LeftToRight,
 
         /// <summary>
-        /// Copies this notification. There is nothing to be validated in this class, but we use
-        /// the same method name as in other classes in this namespace.
+        /// Right to left.
         /// </summary>
-        internal Notification CopyAndValidate()
-        {
-            return new Notification()
-            {
-                Title = this.Title,
-                Body = this.Body,
-            };
-        }
+        RightToLeft,
     }
 }

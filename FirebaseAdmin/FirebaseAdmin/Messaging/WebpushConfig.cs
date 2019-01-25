@@ -24,21 +24,22 @@ namespace FirebaseAdmin.Messaging
     public sealed class WebpushConfig
     {
         /// <summary>
-        /// Webpush HTTP headers. Refer <see href="https://tools.ietf.org/html/rfc8030#section-5">
+        /// Gets or sets the Webpush HTTP headers. Refer
+        /// <see href="https://tools.ietf.org/html/rfc8030#section-5">
         /// Webpush specification</see> for supported headers.
         /// </summary>
         [JsonProperty("headers")]
         public IReadOnlyDictionary<string, string> Headers { get; set; }
 
         /// <summary>
-        /// Webpush data fields. When set, overrides any data fields set via
+        /// Gets or sets the Webpush data fields. When set, overrides any data fields set via
         /// <see cref="Message.Data"/>.
         /// </summary>
         [JsonProperty("data")]
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
         /// <summary>
-        /// The Webpush notification to be included in the message.
+        /// Gets or sets the Webpush notification that will be included in the message.
         /// </summary>
         [JsonProperty("notification")]
         public WebpushNotification Notification { get; set; }

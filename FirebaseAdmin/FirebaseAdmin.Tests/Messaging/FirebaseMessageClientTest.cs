@@ -60,7 +60,7 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new SendResponse()
+                Response = new FirebaseMessagingClient.SendResponse()
                 {
                     Name = "test-response",
                 },
@@ -73,7 +73,8 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var response = await client.SendAsync(message);
             Assert.Equal("test-response", response);
-            var req = JsonConvert.DeserializeObject<SendRequest>(handler.Request);
+            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
+                handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
@@ -81,7 +82,8 @@ namespace FirebaseAdmin.Messaging.Tests
             // Send in dryRun mode.
             response = await client.SendAsync(message, dryRun: true);
             Assert.Equal("test-response", response);
-            req = JsonConvert.DeserializeObject<SendRequest>(handler.Request);
+            req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
+                handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.True(req.ValidateOnly);
             Assert.Equal(2, handler.Calls);
@@ -104,7 +106,8 @@ namespace FirebaseAdmin.Messaging.Tests
             var ex = await Assert.ThrowsAsync<FirebaseException>(
                 async () => await client.SendAsync(message));
             Assert.Contains("not json", ex.Message);
-            var req = JsonConvert.DeserializeObject<SendRequest>(handler.Request);
+            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
+                handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);

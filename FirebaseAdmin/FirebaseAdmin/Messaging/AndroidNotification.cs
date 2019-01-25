@@ -26,88 +26,88 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class AndroidNotification
     {
-
         /// <summary>
-        /// The title of the Android notification. When provided, overrides the title set
-        /// via <see cref="Notification.Title"/>.
+        /// Gets or sets the title of the Android notification. When provided, overrides the title
+        /// set via <see cref="Notification.Title"/>.
         /// </summary>
         [JsonProperty("title")]
         public string Title { get; set; }
 
         /// <summary>
-        /// The title of the Android notification. When provided, overrides the title set
-        /// via <see cref="Notification.Body"/>.
+        /// Gets or sets the title of the Android notification. When provided, overrides the title
+        /// set via <see cref="Notification.Body"/>.
         /// </summary>
         [JsonProperty("body")]
         public string Body { get; set; }
 
         /// <summary>
-        /// The icon of the Android notification.
+        /// Gets or sets the icon of the Android notification.
         /// </summary>
         [JsonProperty("icon")]
         public string Icon { get; set; }
 
         /// <summary>
-        /// The notification icon color. Must be of the form <code>#RRGGBB</code>.
+        /// Gets or sets the notification icon color. Must be of the form <c>#RRGGBB</c>.
         /// </summary>
         [JsonProperty("color")]
         public string Color { get; set; }
 
         /// <summary>
-        /// The sound to be played when the device receives the notification.
+        /// Gets or sets the sound to be played when the device receives the notification.
         /// </summary>
         [JsonProperty("sound")]
         public string Sound { get; set; }
 
         /// <summary>
-        /// The notification tag. This is an identifier used to replace existing notifications in
-        /// the notification drawer. If not specified, each request creates a new notification.
+        /// Gets or sets the notification tag. This is an identifier used to replace existing
+        /// notifications in the notification drawer. If not specified, each request creates a new
+        /// notification.
         /// </summary>
         [JsonProperty("tag")]
         public string Tag { get; set; }
 
         /// <summary>
-        /// The action associated with a user click on the notification. If specified, an activity
-        /// with a matching Intent Filter is launched when a user clicks on the notification.
+        /// Gets or sets the action associated with a user click on the notification. If specified,
+        /// an activity with a matching Intent Filter is launched when a user clicks on the
+        /// notification.
         /// </summary>
         [JsonProperty("click_action")]
         public string ClickAction { get; set; }
 
         /// <summary>
-        /// Sets the key of the title string in the app's string resources to use to localize the
-        /// title text.
-        /// <see cref="Message"/>.
+        /// Gets or sets the key of the title string in the app's string resources to use to
+        /// localize the title text.
         /// </summary>
         [JsonProperty("title_loc_key")]
         public string TitleLocKey { get; set; }
 
         /// <summary>
-        /// The collection of resource key strings that will be used in place of the format
-        /// specifiers in <see cref="TitleLocKey"/>.
+        /// Gets or sets the collection of resource key strings that will be used in place of the
+        /// format specifiers in <see cref="TitleLocKey"/>.
         /// </summary>
         [JsonProperty("title_loc_args")]
         public IEnumerable<string> TitleLocArgs { get; set; }
 
         /// <summary>
-        /// Sets the key of the body string in the app's string resources to use to localize the
-        /// body text.
-        /// <see cref="Message"/>.
+        /// Gets or sets the key of the body string in the app's string resources to use to
+        /// localize the body text.
         /// </summary>
         [JsonProperty("body_loc_key")]
         public string BodyLocKey { get; set; }
 
         /// <summary>
-        /// The collection of resource key strings that will be used in place of the format
-        /// specifiers in <see cref="BodyLocKey"/>.
+        /// Gets or sets the collection of resource key strings that will be used in place of the
+        /// format specifiers in <see cref="BodyLocKey"/>.
         /// </summary>
         [JsonProperty("body_loc_args")]
         public IEnumerable<string> BodyLocArgs { get; set; }
 
         /// <summary>
-        /// Sets the Android notification channel ID (new in Android O). The app must create a
-        /// channel with this channel ID before any notification with this channel ID is received.
-        /// If you don't send this channel ID in the request, or if the channel ID provided has
-        /// not yet been created by the app, FCM uses the channel ID specified in the app manifest.
+        /// Gets or sets the Android notification channel ID (new in Android O). The app must
+        /// create a channel with this channel ID before any notification with this channel ID is
+        /// received. If you don't send this channel ID in the request, or if the channel ID
+        /// provided has not yet been created by the app, FCM uses the channel ID specified in the
+        /// app manifest.
         /// </summary>
         [JsonProperty("channel_id")]
         public string ChannelId { get; set; }
@@ -137,14 +137,17 @@ namespace FirebaseAdmin.Messaging
             {
                 throw new ArgumentException("Color must be in the form #RRGGBB.");
             }
+
             if (copy.TitleLocArgs?.Any() == true && string.IsNullOrEmpty(copy.TitleLocKey))
             {
                 throw new ArgumentException("TitleLocKey is required when specifying TitleLocArgs.");
             }
+
             if (copy.BodyLocArgs?.Any() == true && string.IsNullOrEmpty(copy.BodyLocKey))
             {
                 throw new ArgumentException("BodyLocKey is required when specifying BodyLocArgs.");
             }
+
             return copy;
         }
     }

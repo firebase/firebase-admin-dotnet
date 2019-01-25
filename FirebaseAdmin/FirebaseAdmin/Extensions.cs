@@ -121,6 +121,7 @@ namespace FirebaseAdmin
             {
                 copy[entry.Key] = entry.Value;
             }
+
             return copy;
         }
     }

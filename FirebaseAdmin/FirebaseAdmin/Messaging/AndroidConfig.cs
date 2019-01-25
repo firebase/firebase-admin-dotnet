@@ -24,29 +24,58 @@ namespace FirebaseAdmin.Messaging
     public sealed class AndroidConfig
     {
         /// <summary>
-        /// A collapse key for the message. Collapse key serves as an identifier for a group of
-        /// messages that can be collapsed, so that only the last message gets sent when delivery can be
-        /// resumed. A maximum of 4 different collapse keys may be active at any given time.
+        /// Gets or sets a collapse key for the message. Collapse key serves as an identifier for a
+        /// group of messages that can be collapsed, so that only the last message gets sent when
+        /// delivery can be resumed. A maximum of 4 different collapse keys may be active at any
+        /// given time.
         /// </summary>
         [JsonProperty("collapse_key")]
         public string CollapseKey { get; set; }
 
         /// <summary>
-        /// The priority of the message.
+        /// Gets or sets the priority of the message.
         /// </summary>
         [JsonIgnore]
         public Priority? Priority { get; set; }
 
         /// <summary>
-        /// String representation of the <see cref="Priority"/> as accepted by the FCM backend
-        /// service.
+        /// Gets or sets the time-to-live duration of the message.
+        /// </summary>
+        [JsonIgnore]
+        public TimeSpan? TimeToLive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the package name of the application where the registration tokens must
+        /// match in order to receive the message.
+        /// </summary>
+        [JsonProperty("restricted_package_name")]
+        public string RestrictedPackageName { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of key-value pairs that will be added to the message as data
+        /// fields. Keys and the values must not be null. When set, overrides any data fields set
+        /// on the top-level
+        /// <see cref="Message"/>.
+        /// </summary>
+        [JsonProperty("data")]
+        public IReadOnlyDictionary<string, string> Data { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Android notification to be included in the message.
+        /// </summary>
+        [JsonProperty("notification")]
+        public AndroidNotification Notification { get; set; }
+
+        /// <summary>
+        /// Gets or sets the string representation of <see cref="Priority"/> as accepted by the FCM
+        /// backend service.
         /// </summary>
         [JsonProperty("priority")]
         private string PriorityString
         {
             get
             {
-                switch (Priority)
+                switch (this.Priority)
                 {
                     case Messaging.Priority.High:
                         return "high";
@@ -56,15 +85,16 @@ namespace FirebaseAdmin.Messaging
                         return null;
                 }
             }
+
             set
             {
                 switch (value)
                 {
                     case "high":
-                        Priority = Messaging.Priority.High;
+                        this.Priority = Messaging.Priority.High;
                         return;
                     case "normal":
-                        Priority = Messaging.Priority.High;
+                        this.Priority = Messaging.Priority.High;
                         return;
                     default:
                         throw new FirebaseException(
@@ -75,68 +105,45 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// The time-to-live duration of the message.
-        /// </summary>
-        [JsonIgnore]
-        public TimeSpan? TimeToLive { get; set; }
-
-        /// <summary>
-        /// String representation of <see cref="TimeToLive"/> as accepted by the FCM backend
-        /// service. The string ends in the suffix "s" (indicating seconds) and is preceded
-        /// by the number of seconds, with nanoseconds expressed as fractional seconds.
+        /// Gets or sets the string representation of <see cref="TimeToLive"/> as accepted by the
+        /// FCM backend service. The string ends in the suffix "s" (indicating seconds) and is
+        /// preceded by the number of seconds, with nanoseconds expressed as fractional seconds.
         /// </summary>
         [JsonProperty("ttl")]
         private string TtlString
         {
             get
             {
-                if (TimeToLive == null)
+                if (this.TimeToLive == null)
                 {
                     return null;
                 }
-                var totalSeconds = TimeToLive.Value.TotalSeconds;
-                var seconds = (long) Math.Floor(totalSeconds);
-                var subsecondNanos = (long) ((totalSeconds - seconds) * 1e9);
+
+                var totalSeconds = this.TimeToLive.Value.TotalSeconds;
+                var seconds = (long)Math.Floor(totalSeconds);
+                var subsecondNanos = (long)((totalSeconds - seconds) * 1e9);
                 if (subsecondNanos > 0)
                 {
-                    return String.Format("{0}.{1:D9}s", seconds, subsecondNanos);
+                    return string.Format("{0}.{1:D9}s", seconds, subsecondNanos);
                 }
-                return String.Format("{0}s", seconds);
+
+                return string.Format("{0}s", seconds);
             }
+
             set
             {
                 var segments = value.TrimEnd('s').Split('.');
-                var seconds = Int64.Parse(segments[0]);
+                var seconds = long.Parse(segments[0]);
                 var ttl = TimeSpan.FromSeconds(seconds);
                 if (segments.Length == 2)
                 {
-                    var subsecondNanos = Int64.Parse(segments[1].TrimStart('0'));
+                    var subsecondNanos = long.Parse(segments[1].TrimStart('0'));
                     ttl = ttl.Add(TimeSpan.FromMilliseconds(subsecondNanos / 1e6));
                 }
-                TimeToLive = ttl;
+
+                this.TimeToLive = ttl;
             }
         }
-
-        /// <summary>
-        /// The package name of the application where the registration tokens must match in order
-        /// to receive the message.
-        /// </summary>
-        [JsonProperty("restricted_package_name")]
-        public string RestrictedPackageName { get; set; }
-
-        /// <summary>
-        /// A collection of key-value pairs that will be added to the message as data fields. Keys
-        /// and the values must not be null. When set, overrides any data fields set on the top-level
-        /// <see cref="Message"/>.
-        /// </summary>
-        [JsonProperty("data")]
-        public IReadOnlyDictionary<string, string> Data { get; set; }
-
-        /// <summary>
-        /// The Android notification to be included in the message.
-        /// </summary>
-        [JsonProperty("notification")]
-        public AndroidNotification Notification { get; set; }
 
         /// <summary>
         /// Copies this Android config, and validates the content of it to ensure that it can be
@@ -163,21 +170,5 @@ namespace FirebaseAdmin.Messaging
             copy.Notification = this.Notification?.CopyAndValidate();
             return copy;
         }
-    }
-
-    /// <summary>
-    /// Priority levels that can be set on an <see cref="AndroidConfig"/>.
-    /// </summary>
-    public enum Priority
-    {
-        /// <summary>
-        /// High priority message.
-        /// </summary>
-        High,
-
-        /// <summary>
-        /// Normal priority message.
-        /// </summary>
-        Normal,
     }
 }

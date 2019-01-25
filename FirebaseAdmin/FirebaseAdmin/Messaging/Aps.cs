@@ -29,20 +29,82 @@ namespace FirebaseAdmin.Messaging
         private static readonly NewtonsoftJsonSerializer Serializer = NewtonsoftJsonSerializer.Instance;
 
         /// <summary>
-        /// An advanced alert configuration to be included in the message. It is an error to set
-        /// both <see cref="Alert"/> and <see cref="AlertString"/> properties together.
+        /// Gets or sets an advanced alert configuration to be included in the message. It is an
+        /// error to set both <see cref="Alert"/> and <see cref="AlertString"/> properties
+        /// together.
         /// </summary>
         [JsonIgnore]
         public ApsAlert Alert { get; set; }
 
         /// <summary>
-        /// The alert text to be included in the message. To specify a more advanced alert
-        /// configuration, use the <see cref="Alert"/> property instead. It is an error to set
-        /// both <see cref="Alert"/> and <see cref="AlertString"/> properties together.
+        /// Gets or sets the alert text to be included in the message. To specify a more advanced
+        /// alert configuration, use the <see cref="Alert"/> property instead. It is an error to
+        /// set both <see cref="Alert"/> and <see cref="AlertString"/> properties together.
         /// </summary>
         [JsonIgnore]
         public string AlertString { get; set; }
 
+        /// <summary>
+        /// Gets or sets the badge to be displayed with the message. Set to 0 to remove the badge.
+        /// When not specified, the badge will remain unchanged.
+        /// </summary>
+        [JsonProperty("badge")]
+        public int? Badge { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of a sound file in your app's main bundle or in the
+        /// <c>Library/Sounds</c> folder of your app's container directory. Specify the
+        /// string <c>default</c> to play the system sound. It is an error to set both
+        /// <see cref="Sound"/> and <see cref="CriticalSound"/> properties together.
+        /// </summary>
+        [JsonIgnore]
+        public string Sound { get; set; }
+
+        /// <summary>
+        /// Gets or sets the critical alert sound to be played with the message. It is an error to
+        /// set both <see cref="Sound"/> and <see cref="CriticalSound"/> properties together.
+        /// </summary>
+        [JsonIgnore]
+        public CriticalSound CriticalSound { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to configure a background update notification.
+        /// </summary>
+        [JsonIgnore]
+        public bool ContentAvailable { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include the <c>mutable-content</c> property
+        /// in the message. When set, this property allows clients to modify the notification via
+        /// app extensions.
+        /// </summary>
+        [JsonIgnore]
+        public bool MutableContent { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type of the notification.
+        /// </summary>
+        [JsonProperty("category")]
+        public string Category { get; set; }
+
+        /// <summary>
+        /// Gets or sets the app-specific identifier for grouping notifications.
+        /// </summary>
+        [JsonProperty("thread-id")]
+        public string ThreadId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of arbitrary key-value data to be included in the <c>aps</c>
+        /// dictionary. This is exposed as an <see cref="IDictionary{TKey, TValue}"/> to support
+        /// correct deserialization of custom properties.
+        /// </summary>
+        [JsonExtensionData]
+        public IDictionary<string, object> CustomData { get; set; }
+
+        /// <summary>
+        /// Gets or sets the alert configuration of the <c>aps</c> dictionary. Read from either
+        /// <see cref="Alert"/> or <see cref="AlertString"/> property.
+        /// </summary>
         [JsonProperty("alert")]
         private object AlertObject
         {
@@ -58,8 +120,10 @@ namespace FirebaseAdmin.Messaging
                     throw new ArgumentException(
                         "Multiple specifications for alert (Alert and AlertString");
                 }
+
                 return alert;
             }
+
             set
             {
                 if (value == null)
@@ -68,43 +132,24 @@ namespace FirebaseAdmin.Messaging
                 }
                 else if (value.GetType() == typeof(string))
                 {
-                    AlertString = (string) value;
+                    this.AlertString = (string)value;
                 }
                 else if (value.GetType() == typeof(ApsAlert))
                 {
-                    Alert = (ApsAlert) value;
+                    this.Alert = (ApsAlert)value;
                 }
                 else
                 {
                     var json = Serializer.Serialize(value);
-                    Alert = Serializer.Deserialize<ApsAlert>(json);
+                    this.Alert = Serializer.Deserialize<ApsAlert>(json);
                 }
             }
         }
 
         /// <summary>
-        /// The badge to be displayed with the message. Set to 0 to remove the badge. When not
-        /// specified, the badge will remain unchanged.
+        /// Gets or sets the sound configuration of the <c>aps</c> dictionary. Read from either
+        /// <see cref="Sound"/> or <see cref="CriticalSound"/> property.
         /// </summary>
-        [JsonProperty("badge")]
-        public int? Badge { get; set; }
-
-        /// <summary>
-        /// The name of a sound file in your app's main bundle or in the
-        /// <code>Library/Sounds</code> folder of your app's container directory. Specify the
-        /// string <code>default</code> to play the system sound. It is an error to set both
-        /// <see cref="Sound"/> and <see cref="CriticalSound"/> properties together.
-        /// </summary>
-        [JsonIgnore]
-        public string Sound { get; set; }
-
-        /// <summary>
-        /// The critical alert sound to be played with the message. It is an error to set both
-        /// <see cref="Sound"/> and <see cref="CriticalSound"/> properties together.
-        /// </summary>
-        [JsonIgnore]
-        public CriticalSound CriticalSound { get; set; }
-
         [JsonProperty("sound")]
         private object SoundObject
         {
@@ -120,8 +165,10 @@ namespace FirebaseAdmin.Messaging
                     throw new ArgumentException(
                         "Multiple specifications for sound (CriticalSound and Sound");
                 }
+
                 return sound;
             }
+
             set
             {
                 if (value == null)
@@ -130,86 +177,55 @@ namespace FirebaseAdmin.Messaging
                 }
                 else if (value.GetType() == typeof(string))
                 {
-                    Sound = (string) value;
+                    this.Sound = (string)value;
                 }
                 else if (value.GetType() == typeof(CriticalSound))
                 {
-                    CriticalSound = (CriticalSound) value;
+                    this.CriticalSound = (CriticalSound)value;
                 }
                 else
                 {
                     var json = Serializer.Serialize(value);
-                    CriticalSound = Serializer.Deserialize<CriticalSound>(json);
+                    this.CriticalSound = Serializer.Deserialize<CriticalSound>(json);
                 }
             }
         }
 
         /// <summary>
-        /// Specifies whether to configure a background update notification.
-        /// </summary>
-        [JsonIgnore]
-        public bool ContentAvailable { get; set; }
-
-        /// <summary>
-        /// Integer representation of the <see cref="ContentAvailable"/> property, which is how
-        /// APNs expects it.
+        /// Gets or sets the integer representation of the <see cref="ContentAvailable"/> property,
+        /// which is how APNs expects it.
         /// </summary>
         [JsonProperty("content-available")]
         private int? ContentAvailableInt
         {
             get
             {
-                return ContentAvailable ? 1 : (int?) null;
+                return this.ContentAvailable ? 1 : (int?)null;
             }
+
             set
             {
-                ContentAvailable = (value == 1);
+                this.ContentAvailable = value == 1;
             }
         }
 
         /// <summary>
-        /// Specifies whether to set the <code>mutable-content</code> property on the message. When
-        /// set, this property allows clients to modify the notification via app extensions.
-        /// </summary>
-        [JsonIgnore]
-        public bool MutableContent { get; set; }
-
-        /// <summary>
-        /// Integer representation of the <see cref="MutableContent"/> property, which is how
-        /// APNs expects it.
+        /// Gets or sets the integer representation of the <see cref="MutableContent"/> property,
+        /// which is how APNs expects it.
         /// </summary>
         [JsonProperty("mutable-content")]
         private int? MutableContentInt
         {
             get
             {
-                return MutableContent ? 1 : (int?) null;
+                return this.MutableContent ? 1 : (int?)null;
             }
+
             set
             {
-                MutableContent = (value == 1);
+                this.MutableContent = value == 1;
             }
         }
-
-        /// <summary>
-        /// The type of the notification.
-        /// </summary>
-        [JsonProperty("category")]
-        public string Category { get; set; }
-
-        /// <summary>
-        /// An app-specific identifier for grouping notifications.
-        /// </summary>
-        [JsonProperty("thread-id")]
-        public string ThreadId { get; set; }
-
-        /// <summary>
-        /// A collection of arbitrary key-value data to be included in the <code>aps</code>
-        /// dictionary. This is exposed as an <see cref="IDictionary{TKey, TValue}"/> to support
-        /// correct deserialization of custom properties.
-        /// </summary>
-        [JsonExtensionData]
-        public IDictionary<string, object> CustomData { get; set; }
 
         /// <summary>
         /// Copies this Aps dictionary, and validates the content of it to ensure that it can be
@@ -242,6 +258,7 @@ namespace FirebaseAdmin.Messaging
                     throw new ArgumentException(
                         $"Multiple specifications for Aps keys: {string.Join(",", duplicates)}");
                 }
+
                 copy.CustomData = customData;
             }
 

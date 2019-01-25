@@ -17,33 +17,38 @@ using Newtonsoft.Json;
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Represents the notification parameters that can be included in a <see cref="Message"/>.
+    /// Represents an action available to users when the notification is presented.
     /// </summary>
-    public sealed class Notification
+    public sealed class Action
     {
         /// <summary>
-        /// Gets or sets the title of the notification.
+        /// Initializes a new instance of the <see cref="Action"/> class.
+        /// </summary>
+        public Action() { }
+
+        internal Action(Action action)
+        {
+            this.ActionName = action.ActionName;
+            this.Title = action.Title;
+            this.Icon = action.Icon;
+        }
+
+        /// <summary>
+        /// Gets or sets the name of the Action.
+        /// </summary>
+        [JsonProperty("action")]
+        public string ActionName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the title text.
         /// </summary>
         [JsonProperty("title")]
         public string Title { get; set; }
 
         /// <summary>
-        /// Gets or sets the body of the notification.
+        /// Gets or sets the icon URL.
         /// </summary>
-        [JsonProperty("body")]
-        public string Body { get; set; }
-
-        /// <summary>
-        /// Copies this notification. There is nothing to be validated in this class, but we use
-        /// the same method name as in other classes in this namespace.
-        /// </summary>
-        internal Notification CopyAndValidate()
-        {
-            return new Notification()
-            {
-                Title = this.Title,
-                Body = this.Body,
-            };
-        }
+        [JsonProperty("icon")]
+        public string Icon { get; set; }
     }
 }
