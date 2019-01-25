@@ -38,24 +38,23 @@ namespace FirebaseAdmin.Auth
 
         internal FirebaseUserManager(FirebaseUserManagerArgs args)
         {
+            if (string.IsNullOrEmpty(args.ProjectId))
+            {
+                throw new ArgumentException(
+                    "Must initialize FirebaseApp with a project ID to manage users.");
+            }
+
             this.httpClient = args.ClientFactory.CreateAuthorizedHttpClient(args.Credential);
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
         }
 
         public static FirebaseUserManager Create(FirebaseApp app)
         {
-            var projectId = app.GetProjectId();
-            if (string.IsNullOrEmpty(projectId))
-            {
-                throw new ArgumentException(
-                    "Must initialize FirebaseApp with a project ID to manage users.");
-            }
-
             var args = new FirebaseUserManagerArgs
             {
                 ClientFactory = new HttpClientFactory(),
                 Credential = app.Options.Credential,
-                ProjectId = projectId,
+                ProjectId = app.GetProjectId(),
             };
 
             return new FirebaseUserManager(args);
@@ -89,6 +88,11 @@ namespace FirebaseAdmin.Auth
             string path, object body, CancellationToken cancellationToken)
         {
             var json = await this.PostAsync(path, body, cancellationToken).ConfigureAwait(false);
+            return this.SafeDeserialize<TResult>(json);
+        }
+
+        private TResult SafeDeserialize<TResult>(string json)
+        {
             try
             {
                 return NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(json);
@@ -102,33 +106,37 @@ namespace FirebaseAdmin.Auth
         private async Task<string> PostAsync(
             string path, object body, CancellationToken cancellationToken)
         {
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri($"{this.baseUrl}/{path}"),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
+            };
+            return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task<string> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
             try
             {
-                var url = $"{this.baseUrl}/{path}";
-                return await this.SendRequestAsync(url, body, cancellationToken)
+                var response = await this.httpClient.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
+                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = "Response status code does not indicate success: "
+                            + $"{(int)response.StatusCode} ({response.StatusCode})"
+                            + $"{Environment.NewLine}{json}";
+                    throw new FirebaseException(error);
+                }
+
+                return json;
             }
             catch (HttpRequestException e)
             {
                 throw new FirebaseException("Error while calling Firebase Auth service", e);
             }
-        }
-
-        private async Task<string> SendRequestAsync(
-            string url, object body, CancellationToken cancellationToken)
-        {
-            var response = await this.httpClient.PostJsonAsync(url, body, cancellationToken)
-                .ConfigureAwait(false);
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = "Response status code does not indicate success: "
-                        + $"{(int)response.StatusCode} ({response.StatusCode})"
-                        + $"{Environment.NewLine}{json}";
-                throw new FirebaseException(error);
-            }
-
-            return json;
         }
     }
 }

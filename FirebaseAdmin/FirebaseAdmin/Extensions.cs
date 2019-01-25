@@ -93,10 +93,24 @@ namespace FirebaseAdmin
         public static async Task<HttpResponseMessage> PostJsonAsync<T>(
             this HttpClient client, string requestUri, T body, CancellationToken cancellationToken)
         {
-            var payload = NewtonsoftJsonSerializer.Instance.Serialize(body);
-            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body);
             return await client.PostAsync(requestUri, content, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Serializes the <paramref name="body"/> into JSON, and wraps the result in an instance
+        /// of <see cref="HttpContent"/>, which can be included in an outgoing HTTP request.
+        /// </summary>
+        /// <returns>An instance of <see cref="HttpContent"/> containing the JSON representation
+        /// of <paramref name="body"/>.</returns>
+        /// <param name="serializer">The JSON serializer to serialize the given object.</param>
+        /// <param name="body">The object that will be serialized into JSON.</param>
+        public static HttpContent CreateJsonHttpContent(
+            this NewtonsoftJsonSerializer serializer, object body)
+        {
+            var payload = serializer.Serialize(body);
+            return new StringContent(payload, Encoding.UTF8, "application/json");
         }
 
         /// <summary>
