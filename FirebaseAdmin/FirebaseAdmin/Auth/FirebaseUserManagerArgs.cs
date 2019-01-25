@@ -1,4 +1,4 @@
-// Copyright 2018, Google Inc. All rights reserved.
+// Copyright 2019, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace FirebaseAdmin
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
+
+namespace FirebaseAdmin.Auth
 {
-    /// <summary>
-    /// A stateful service that can be associated with an <see cref="FirebaseApp"/>. This
-    /// interface enables tearing down the service when the parent app instance is deleted.
-    /// </summary>
-    internal interface IFirebaseService
+    internal sealed class FirebaseUserManagerArgs
     {
-        /// <summary>
-        /// Cleans up any state associated with this service making it unsuitable for further use.
-        /// </summary>
-        void Delete();
+        public HttpClientFactory ClientFactory { get; set; }
+
+        public GoogleCredential Credential { get; set; }
+
+        public string ProjectId { get; set; }
     }
 }

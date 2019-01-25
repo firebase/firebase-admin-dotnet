@@ -36,16 +36,17 @@ namespace FirebaseAdmin.Auth
     {
         private const string SignBlobUrl =
             "https://iam.googleapis.com/v1/projects/-/serviceAccounts/{0}:signBlob";
-        private const string MetadataServerUrl = 
+
+        private const string MetadataServerUrl =
             "http://metadata/computeMetadata/v1/instance/service-accounts/default/email";
 
-        private readonly ConfigurableHttpClient _httpClient;
-        private readonly Lazy<Task<string>> _keyId;
+        private readonly ConfigurableHttpClient httpClient;
+        private readonly Lazy<Task<string>> keyId;
 
         public IAMSigner(HttpClientFactory clientFactory, GoogleCredential credential)
         {
-            _httpClient = clientFactory.CreateAuthorizedHttpClient(credential);
-            _keyId = new Lazy<Task<string>>(
+            this.httpClient = clientFactory.CreateAuthorizedHttpClient(credential);
+            this.keyId = new Lazy<Task<string>>(
                 async () => await DiscoverServiceAccountIdAsync(clientFactory)
                     .ConfigureAwait(false), true);
         }
@@ -53,18 +54,19 @@ namespace FirebaseAdmin.Auth
         public async Task<byte[]> SignDataAsync(
             byte[] data, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var keyId = await GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
+            var keyId = await this.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
             var url = string.Format(SignBlobUrl, keyId);
             var request = new SignBlobRequest
             {
                 BytesToSign = Convert.ToBase64String(data),
             };
+
             try
             {
-                var response = await _httpClient.PostJsonAsync(url, request, cancellationToken)
+                var response = await this.httpClient.PostJsonAsync(url, request, cancellationToken)
                     .ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                ThrowIfError(response, json);
+                this.ThrowIfError(response, json);
                 var parsed = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobResponse>(json);
                 return Convert.FromBase64String(parsed.Signature);
             }
@@ -74,34 +76,12 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        private void ThrowIfError(HttpResponseMessage response, string content)
-        {
-            if (response.IsSuccessStatusCode)
-            {
-                return;
-            }
-            string error = null;
-            try
-            {
-                var result = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobError>(content);
-                error = result?.Error.Message;
-            }
-            catch (Exception) {} // Ignore any errors encountered while parsing the originl error.
-            if (string.IsNullOrEmpty(error))
-            {
-                error = "Response status code does not indicate success: "
-                    + $"{(int) response.StatusCode} ({response.StatusCode})"
-                    + $"{Environment.NewLine}{content}";
-            }
-            throw new FirebaseException(error);
-        }
-
         public virtual async Task<string> GetKeyIdAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
             try
             {
-                return await _keyId.Value.ConfigureAwait(false);
+                return await this.keyId.Value.ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -114,6 +94,11 @@ namespace FirebaseAdmin.Auth
             }
         }
 
+        public void Dispose()
+        {
+            this.httpClient.Dispose();
+        }
+
         private static async Task<string> DiscoverServiceAccountIdAsync(
             HttpClientFactory clientFactory)
         {
@@ -124,67 +109,68 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        public void Dispose()
+        private void ThrowIfError(HttpResponseMessage response, string content)
         {
-            _httpClient.Dispose();
-        }
-    }
+            if (response.IsSuccessStatusCode)
+            {
+                return;
+            }
 
-    /// <summary>
-    /// Represents the sign request sent to the remote IAM service.
-    /// </summary>
-    internal class SignBlobRequest
-    {
-        [Newtonsoft.Json.JsonProperty("bytesToSign")]
-        public string BytesToSign { get; set; }
-    }
+            string error = null;
+            try
+            {
+                var result = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobError>(content);
+                error = result?.Error.Message;
+            }
+            catch (Exception)
+            {
+                // Ignore any errors encountered while parsing the originl error.
+            }
 
-    /// <summary>
-    /// Represents the sign response sent by the remote IAM service.
-    /// </summary>
-    internal class SignBlobResponse
-    {
-        [Newtonsoft.Json.JsonProperty("signature")]
-        public string Signature { get; set; }
-    }
+            if (string.IsNullOrEmpty(error))
+            {
+                error = "Response status code does not indicate success: "
+                    + $"{(int)response.StatusCode} ({response.StatusCode})"
+                    + $"{Environment.NewLine}{content}";
+            }
 
-    /// <summary>
-    /// Represents an error response sent by the remote IAM service.
-    /// </summary>
-    internal class SignBlobError
-    {
-        [Newtonsoft.Json.JsonProperty("error")]
-        public SignBlobErrorDetail Error { get; set; }
-    }
-
-    /// <summary>
-    /// Represents the error details embedded in an IAM error response.
-    /// </summary>
-    internal class SignBlobErrorDetail
-    {
-        [Newtonsoft.Json.JsonProperty("message")]
-        public string Message { get; set; }
-    }
-
-    /// <summary>
-    /// An <see cref="ISigner"/> implementation that uses the IAM service to sign data. Unlike
-    /// <see cref="IAMSigner"/> this class does not attempt to auto discover a service account ID.
-    /// Insterad it must be initialized with a fixed service account ID string.
-    /// </summary>
-    internal sealed class FixedAccountIAMSigner : IAMSigner
-    {
-        private readonly string _keyId;
-
-        public FixedAccountIAMSigner(HttpClientFactory clientFactory, GoogleCredential credential, 
-            string keyId): base(clientFactory, credential)
-        {
-            _keyId = keyId.ThrowIfNullOrEmpty(nameof(keyId));
+            throw new FirebaseException(error);
         }
 
-        public override Task<string> GetKeyIdAsync(
-            CancellationToken cancellationToken = default(CancellationToken))
+        /// <summary>
+        /// Represents the sign request sent to the remote IAM service.
+        /// </summary>
+        internal class SignBlobRequest
         {
-            return Task.FromResult(_keyId);
+            [Newtonsoft.Json.JsonProperty("bytesToSign")]
+            public string BytesToSign { get; set; }
+        }
+
+        /// <summary>
+        /// Represents the sign response sent by the remote IAM service.
+        /// </summary>
+        internal class SignBlobResponse
+        {
+            [Newtonsoft.Json.JsonProperty("signature")]
+            public string Signature { get; set; }
+        }
+
+        /// <summary>
+        /// Represents an error response sent by the remote IAM service.
+        /// </summary>
+        private class SignBlobError
+        {
+            [Newtonsoft.Json.JsonProperty("error")]
+            public SignBlobErrorDetail Error { get; set; }
+        }
+
+        /// <summary>
+        /// Represents the error details embedded in an IAM error response.
+        /// </summary>
+        private class SignBlobErrorDetail
+        {
+            [Newtonsoft.Json.JsonProperty("message")]
+            public string Message { get; set; }
         }
     }
 }

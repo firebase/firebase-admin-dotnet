@@ -12,17 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace FirebaseAdmin
+using System.Collections.Generic;
+using Newtonsoft.Json;
+
+namespace FirebaseAdmin.Auth
 {
-    /// <summary>
-    /// A stateful service that can be associated with an <see cref="FirebaseApp"/>. This
-    /// interface enables tearing down the service when the parent app instance is deleted.
-    /// </summary>
-    internal interface IFirebaseService
+    internal sealed class FirebaseTokenArgs
     {
-        /// <summary>
-        /// Cleans up any state associated with this service making it unsuitable for further use.
-        /// </summary>
-        void Delete();
+        [JsonProperty("iss")]
+        public string Issuer { get; set; }
+
+        [JsonProperty("sub")]
+        public string Subject { get; set; }
+
+        [JsonProperty("aud")]
+        public string Audience { get; set; }
+
+        [JsonProperty("exp")]
+        public long ExpirationTimeSeconds { get; set; }
+
+        [JsonProperty("iat")]
+        public long IssuedAtTimeSeconds { get; set; }
+
+        [JsonIgnore]
+        public IReadOnlyDictionary<string, object> Claims { get; set; }
     }
 }

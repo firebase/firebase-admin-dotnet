@@ -23,73 +23,54 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class FirebaseToken
     {
+        internal FirebaseToken(FirebaseTokenArgs args)
+        {
+            this.Issuer = args.Issuer;
+            this.Subject = args.Subject;
+            this.Audience = args.Audience;
+            this.ExpirationTimeSeconds = args.ExpirationTimeSeconds;
+            this.IssuedAtTimeSeconds = args.IssuedAtTimeSeconds;
+            this.Uid = args.Subject;
+            this.Claims = args.Claims;
+        }
+
         /// <summary>
-        /// The issuer claim that identifies the principal that issued the JWT.
+        /// Gets the issuer claim that identifies the principal that issued the JWT.
         /// </summary>
         public string Issuer { get; private set; }
 
         /// <summary>
-        /// The subject claim identifying the principal that is the subject of the JWT.
+        /// Gets the subject claim identifying the principal that is the subject of the JWT.
         /// </summary>
         public string Subject { get; private set; }
 
         /// <summary>
-        /// The audience claim that identifies the audience that the JWT is intended for.
+        /// Gets the audience claim that identifies the audience that the JWT is intended for.
         /// </summary>
         public string Audience { get; private set; }
 
         /// <summary>
-        /// The expiration time claim that identifies the expiration time (in seconds)
+        /// Gets the expiration time claim that identifies the expiration time (in seconds)
         /// on or after which the token MUST NOT be accepted for processing.
         /// </summary>
         public long ExpirationTimeSeconds { get; private set; }
 
         /// <summary>
-        /// The issued at claim that identifies the time (in seconds) at which the JWT was issued.
+        /// Gets the issued at claim that identifies the time (in seconds) at which the JWT was
+        /// issued.
         /// </summary>
         public long IssuedAtTimeSeconds { get; private set; }
-        
+
         /// <summary>
-        /// User ID of the user to which this ID token belongs. This is same as <c>Subject</c>.
+        /// Gets the User ID of the user to which this ID token belongs. This is same as
+        /// <see cref="Subject"/>.
         /// </summary>
         public string Uid { get; private set; }
 
         /// <summary>
-        /// A read-only dictionary of all other claims present in the JWT. This can be used to
+        /// Gets Aall other claims present in the JWT as a readonly dictionary. This can be used to
         /// access custom claims of the token.
         /// </summary>
         public IReadOnlyDictionary<string, object> Claims { get; private set; }
-
-        internal FirebaseToken(FirebaseTokenArgs args)
-        {
-            Issuer = args.Issuer;
-            Subject = args.Subject;
-            Audience = args.Audience;
-            ExpirationTimeSeconds = args.ExpirationTimeSeconds;
-            IssuedAtTimeSeconds = args.IssuedAtTimeSeconds;
-            Uid = args.Subject;
-            Claims = args.Claims;            
-        }
-    }
-
-    internal sealed class FirebaseTokenArgs
-    {
-        [JsonProperty("iss")]
-        public string Issuer { get; set; }
-
-        [JsonProperty("sub")]
-        public string Subject { get; set; }
-
-        [JsonProperty("aud")]
-        public string Audience { get; set; }
-
-        [JsonProperty("exp")]
-        public long ExpirationTimeSeconds { get; set; }
-
-        [JsonProperty("iat")]
-        public long IssuedAtTimeSeconds { get; set; }
-
-        [JsonIgnore]
-        public IReadOnlyDictionary<string, object> Claims { get; set; }
     }
 }

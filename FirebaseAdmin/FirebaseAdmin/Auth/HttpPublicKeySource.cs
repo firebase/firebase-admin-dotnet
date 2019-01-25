@@ -21,8 +21,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Json;
 using Google.Apis.Http;
+using Google.Apis.Json;
 using Google.Apis.Util;
 
 #if NETSTANDARD1_5 || NETSTANDARD2_0
@@ -40,7 +40,7 @@ namespace FirebaseAdmin.Auth
     /// HTTP server. Retrieved keys are cached in memory according to the HTTP cache-control
     /// directive.
     /// </summary>
-    internal sealed class HttpPublicKeySource: IPublicKeySource
+    internal sealed class HttpPublicKeySource : IPublicKeySource
     {
         // Default clock skew used by most GCP libraries. This interval is subtracted from the
         // cache expiry time, before any expiration checks. This helps correct for minor
@@ -48,55 +48,60 @@ namespace FirebaseAdmin.Auth
         // pre-emptively refreshed instead of waiting until the last second.
         private static readonly TimeSpan ClockSkew = new TimeSpan(hours: 0, minutes: 5, seconds: 0);
 
-        private readonly string _certUrl;
-        private IReadOnlyList<PublicKey> _cachedKeys;
-        private DateTime _expirationTime;
-        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
-        private readonly IClock _clock;
-        private readonly HttpClientFactory _clientFactory;
+        private readonly SemaphoreSlim cacheLock = new SemaphoreSlim(1, 1);
+        private readonly string certUrl;
+        private readonly IClock clock;
+        private readonly HttpClientFactory clientFactory;
+        private DateTime expirationTime;
+        private IReadOnlyList<PublicKey> cachedKeys;
 
         public HttpPublicKeySource(string certUrl, IClock clock, HttpClientFactory clientFactory)
         {
-            _certUrl = certUrl.ThrowIfNullOrEmpty(nameof(certUrl));
-            _clock = clock.ThrowIfNull(nameof(clock));
-            _clientFactory = clientFactory.ThrowIfNull(nameof(clientFactory));
-            _expirationTime = clock.UtcNow;
+            this.certUrl = certUrl.ThrowIfNullOrEmpty(nameof(certUrl));
+            this.clock = clock.ThrowIfNull(nameof(clock));
+            this.clientFactory = clientFactory.ThrowIfNull(nameof(clientFactory));
+            this.expirationTime = clock.UtcNow;
         }
 
         public async Task<IReadOnlyList<PublicKey>> GetPublicKeysAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            await _lock.WaitAsync().ConfigureAwait(false);
-            var now = _clock.UtcNow;
-            try
+            if (this.cachedKeys == null || this.clock.UtcNow >= this.expirationTime)
             {
-                if (_cachedKeys == null || now >= _expirationTime)
+                await this.cacheLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                try
                 {
-                    using (var httpClient = _clientFactory.CreateDefaultHttpClient())
+                    var now = this.clock.UtcNow;
+                    if (this.cachedKeys == null || now >= this.expirationTime)
                     {
-                        var response = await httpClient.GetAsync(_certUrl, cancellationToken)
-                            .ConfigureAwait(false);
-                        response.EnsureSuccessStatusCode();
-                        _cachedKeys = ParseKeys(await response.Content.ReadAsStringAsync()
-                            .ConfigureAwait(false));
-                        var cacheControl = response.Headers.CacheControl;
-                        if (cacheControl != null && cacheControl.MaxAge.HasValue)
+                        using (var httpClient = this.clientFactory.CreateDefaultHttpClient())
                         {
-                            _expirationTime = now.Add(cacheControl.MaxAge.Value)
-                                .Subtract(ClockSkew);
+                            var response = await httpClient.GetAsync(this.certUrl, cancellationToken)
+                                .ConfigureAwait(false);
+                            response.EnsureSuccessStatusCode();
+                            this.cachedKeys = this.ParseKeys(await response.Content.ReadAsStringAsync()
+                                .ConfigureAwait(false));
+                            var cacheControl = response.Headers.CacheControl;
+                            if (cacheControl?.MaxAge != null)
+                            {
+                                this.expirationTime = now.Add(cacheControl.MaxAge.Value)
+                                    .Subtract(ClockSkew);
+                            }
                         }
                     }
                 }
+                catch (HttpRequestException e)
+                {
+                    throw new FirebaseException("Failed to retrieve latest public keys.", e);
+                }
+                finally
+                {
+                    this.cacheLock.Release();
+                }
             }
-            catch (HttpRequestException e)
-            {
-                throw new FirebaseException("Failed to retrieve latest public keys.", e);
-            }
-            finally
-            {
-                _lock.Release();
-            }
-            return _cachedKeys;
+
+            return this.cachedKeys;
         }
 
         private IReadOnlyList<PublicKey> ParseKeys(string json)
@@ -107,6 +112,7 @@ namespace FirebaseAdmin.Auth
             {
                 throw new InvalidDataException("No public keys present in the response.");
             }
+
             var builder = ImmutableList.CreateBuilder<PublicKey>();
             foreach (var entry in rawKeys)
             {
@@ -121,6 +127,7 @@ namespace FirebaseAdmin.Auth
 #endif
                 builder.Add(new PublicKey(entry.Key, rsa));
             }
+
             return builder.ToImmutableList();
         }
     }

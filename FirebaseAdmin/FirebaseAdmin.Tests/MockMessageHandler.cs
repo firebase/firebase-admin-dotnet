@@ -26,18 +26,64 @@ using Xunit;
 
 namespace FirebaseAdmin.Tests
 {
-    internal class MockHttpClientFactory : HttpClientFactory
+    /// <summary>
+    /// An <see cref="HttpMessageHandler"/> implementation that counts the number of requests
+    /// and facilitates mocking HTTP interactions locally.
+    /// </summary>
+    internal class MockMessageHandler : CountableMessageHandler
     {
-        private HttpMessageHandler Handler { get; set; }
-
-        public MockHttpClientFactory(HttpMessageHandler handler)
+        public MockMessageHandler()
         {
-            Handler = handler;
+            this.StatusCode = HttpStatusCode.OK;
         }
 
-        protected override HttpMessageHandler CreateHandler(CreateHttpClientArgs args)
+        public delegate void SetHeaders(HttpResponseHeaders header);
+
+        public string Request { get; private set; }
+
+        public HttpStatusCode StatusCode { get; set; }
+
+        public object Response { get; set; }
+
+        public SetHeaders ApplyHeaders { get; set; }
+
+        protected override async Task<HttpResponseMessage> SendAsyncCore(
+            HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return Handler;
+            if (request.Content != null)
+            {
+                this.Request = await request.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                this.Request = null;
+            }
+
+            var resp = new HttpResponseMessage();
+            string json;
+            if (this.Response is byte[])
+            {
+                json = Encoding.UTF8.GetString(this.Response as byte[]);
+            }
+            else if (this.Response is string)
+            {
+                json = this.Response as string;
+            }
+            else
+            {
+                json = NewtonsoftJsonSerializer.Instance.Serialize(this.Response);
+            }
+
+            resp.StatusCode = this.StatusCode;
+            if (this.ApplyHeaders != null)
+            {
+                this.ApplyHeaders(resp.Headers);
+            }
+
+            resp.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            var tcs = new TaskCompletionSource<HttpResponseMessage>();
+            tcs.SetResult(resp);
+            return await tcs.Task;
         }
     }
 
@@ -47,78 +93,36 @@ namespace FirebaseAdmin.Tests
     /// </summary>
     internal abstract class CountableMessageHandler : HttpMessageHandler
     {
-        private int _calls;
+        private int calls;
 
         public int Calls
         {
-            get { return _calls; }
+            get { return this.calls; }
         }
 
-        sealed protected override Task<HttpResponseMessage> SendAsync(
+        protected sealed override Task<HttpResponseMessage> SendAsync(
           HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            Interlocked.Increment(ref _calls);
-            return SendAsyncCore(request, cancellationToken);
+            Interlocked.Increment(ref this.calls);
+            return this.SendAsyncCore(request, cancellationToken);
         }
 
         protected abstract Task<HttpResponseMessage> SendAsyncCore(
             HttpRequestMessage request, CancellationToken cancellationToken);
     }
 
-    /// <summary>
-    /// An <see cref="HttpMessageHandler"/> implementation that counts the number of requests
-    /// and facilitates mocking HTTP interactions locally.
-    /// </summary>
-    internal class MockMessageHandler : CountableMessageHandler
+    internal class MockHttpClientFactory : HttpClientFactory
     {
-        public string Request { get; private set; }
-        
-        public HttpStatusCode StatusCode { get; set; }
-        public Object Response { get; set; }
+        private readonly HttpMessageHandler handler;
 
-        public delegate void SetHeaders(HttpResponseHeaders header);
-
-        public SetHeaders ApplyHeaders { get; set; }
-
-        public MockMessageHandler()
+        public MockHttpClientFactory(HttpMessageHandler handler)
         {
-            StatusCode = HttpStatusCode.OK;
+            this.handler = handler;
         }
 
-        protected override async Task<HttpResponseMessage> SendAsyncCore(
-            HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override HttpMessageHandler CreateHandler(CreateHttpClientArgs args)
         {
-            if (request.Content != null)
-            {
-                Request = await request.Content.ReadAsStringAsync();
-            }
-            else
-            {
-                Request = null;
-            }            
-            var resp = new HttpResponseMessage();
-            string json;
-            if (Response is byte[])
-            {
-                json = Encoding.UTF8.GetString(Response as byte[]);
-            }
-            else if (Response is string)
-            {
-                json = Response as string;
-            }
-            else
-            {
-                json = NewtonsoftJsonSerializer.Instance.Serialize(Response);
-            }               
-            resp.StatusCode = StatusCode;            
-            if (ApplyHeaders != null)
-            {
-                ApplyHeaders(resp.Headers);
-            }
-            resp.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            var tcs = new TaskCompletionSource<HttpResponseMessage>();
-            tcs.SetResult(resp);
-            return await tcs.Task;
+            return this.handler;
         }
     }
 }

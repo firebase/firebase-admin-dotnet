@@ -23,21 +23,62 @@ namespace FirebaseAdmin.Auth
     /// This is the entry point to all server-side Firebase Authentication operations. You can
     /// get an instance of this class via <c>FirebaseAuth.DefaultInstance</c>.
     /// </summary>
-    public sealed class FirebaseAuth: IFirebaseService
+    public sealed class FirebaseAuth : IFirebaseService
     {
-        private readonly FirebaseApp _app;
-        private bool _deleted;
-        private readonly Lazy<FirebaseTokenFactory> _tokenFactory;
-        private readonly Lazy<FirebaseTokenVerifier> _idTokenVerifier;
-        private readonly Object _lock = new Object();
+        private readonly FirebaseApp app;
+        private readonly Lazy<FirebaseTokenFactory> tokenFactory;
+        private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
+        private readonly Lazy<FirebaseUserManager> userManager;
+        private readonly object authLock = new object();
+        private bool deleted;
 
         private FirebaseAuth(FirebaseApp app)
         {
-            _app = app;
-            _tokenFactory = new Lazy<FirebaseTokenFactory>(() => 
-                FirebaseTokenFactory.Create(_app), true);
-            _idTokenVerifier = new Lazy<FirebaseTokenVerifier>(() => 
-                FirebaseTokenVerifier.CreateIDTokenVerifier(_app), true);
+            this.app = app;
+            this.tokenFactory = new Lazy<FirebaseTokenFactory>(
+                () => FirebaseTokenFactory.Create(this.app), true);
+            this.idTokenVerifier = new Lazy<FirebaseTokenVerifier>(
+                () => FirebaseTokenVerifier.CreateIDTokenVerifier(this.app), true);
+            this.userManager = new Lazy<FirebaseUserManager>(() =>
+                FirebaseUserManager.Create(this.app));
+        }
+
+        /// <summary>
+        /// Gets the auth instance associated with the default Firebase app. This property is
+        /// <c>null</c> if the default app doesn't yet exist.
+        /// </summary>
+        public static FirebaseAuth DefaultInstance
+        {
+            get
+            {
+                var app = FirebaseApp.DefaultInstance;
+                if (app == null)
+                {
+                    return null;
+                }
+
+                return GetAuth(app);
+            }
+        }
+
+        /// <summary>
+        /// Returns the auth instance for the specified app.
+        /// </summary>
+        /// <returns>The <see cref="FirebaseAuth"/> instance associated with the specified
+        /// app.</returns>
+        /// <exception cref="System.ArgumentNullException">If the app argument is null.</exception>
+        /// <param name="app">An app instance.</param>
+        public static FirebaseAuth GetAuth(FirebaseApp app)
+        {
+            if (app == null)
+            {
+                throw new ArgumentNullException("App argument must not be null.");
+            }
+
+            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
+            {
+                return new FirebaseAuth(app);
+            });
         }
 
         /// <summary>
@@ -73,7 +114,7 @@ namespace FirebaseAdmin.Auth
         /// 128 characters.</param>
         public async Task<string> CreateCustomTokenAsync(string uid)
         {
-            return await CreateCustomTokenAsync(uid, default(CancellationToken));
+            return await this.CreateCustomTokenAsync(uid, default(CancellationToken));
         }
 
         /// <summary>
@@ -112,7 +153,7 @@ namespace FirebaseAdmin.Auth
         public async Task<string> CreateCustomTokenAsync(
             string uid, CancellationToken cancellationToken)
         {
-            return await CreateCustomTokenAsync(uid, null, cancellationToken);
+            return await this.CreateCustomTokenAsync(uid, null, cancellationToken);
         }
 
         /// <summary>
@@ -139,7 +180,7 @@ namespace FirebaseAdmin.Auth
         public async Task<string> CreateCustomTokenAsync(
             string uid, IDictionary<string, object> developerClaims)
         {
-            return await CreateCustomTokenAsync(uid, developerClaims, default(CancellationToken));
+            return await this.CreateCustomTokenAsync(uid, developerClaims, default(CancellationToken));
         }
 
         /// <summary>
@@ -171,14 +212,16 @@ namespace FirebaseAdmin.Auth
             CancellationToken cancellationToken)
         {
             FirebaseTokenFactory tokenFactory;
-            lock (_lock)
+            lock (this.authLock)
             {
-                if (_deleted)
+                if (this.deleted)
                 {
                     throw new InvalidOperationException("Cannot invoke after deleting the app.");
                 }
-                tokenFactory = _tokenFactory.Value;
+
+                tokenFactory = this.tokenFactory.Value;
             }
+
             return await tokenFactory.CreateCustomTokenAsync(
                 uid, developerClaims, cancellationToken).ConfigureAwait(false);
         }
@@ -201,7 +244,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
         public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken)
         {
-            return await VerifyIdTokenAsync(idToken, default(CancellationToken));
+            return await this.VerifyIdTokenAsync(idToken, default(CancellationToken));
         }
 
         /// <summary>
@@ -225,63 +268,69 @@ namespace FirebaseAdmin.Auth
         public async Task<FirebaseToken> VerifyIdTokenAsync(
             string idToken, CancellationToken cancellationToken)
         {
-            lock (_lock)
+            lock (this.authLock)
             {
-                if (_deleted)
+                if (this.deleted)
                 {
                     throw new InvalidOperationException("Cannot invoke after deleting the app.");
                 }
             }
-            return await _idTokenVerifier.Value.VerifyTokenAsync(idToken, cancellationToken)
+
+            return await this.idTokenVerifier.Value.VerifyTokenAsync(idToken, cancellationToken)
                 .ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Sets the specified custom claims on an existing user account. A null claims value
+        /// removes any claims currently set on the user account. The claims should serialize into
+        /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
+        /// </summary>
+        /// <returns>A task that completes when the claims have been set.</returns>
+        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
+        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
+        /// characters.</exception>
+        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
+        /// or longer than 128 characters.
+        /// </param>
+        /// <param name="claims">The claims to be stored on the user account, and made
+        /// available to Firebase security rules. These must be serializable to JSON, and after
+        /// serialization it should not be larger than 1000 characters.</param>
+        public async Task SetCustomUserClaimsAsync(string uid, IReadOnlyDictionary<string, object> claims)
+        {
+            lock (this.authLock)
+            {
+                if (this.deleted)
+                {
+                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
+                }
+            }
+
+            var user = new UserRecord(uid)
+            {
+                CustomClaims = claims,
+            };
+
+            await this.userManager.Value.UpdateUserAsync(user);
+        }
+
+        /// <summary>
+        /// Deletes this <see cref="FirebaseAuth"/> service instance.
+        /// </summary>
         void IFirebaseService.Delete()
         {
-            lock (_lock)
+            lock (this.authLock)
             {
-                _deleted = true;
-                if (_tokenFactory.IsValueCreated)
+                this.deleted = true;
+                if (this.tokenFactory.IsValueCreated)
                 {
-                    _tokenFactory.Value.Dispose();
+                    this.tokenFactory.Value.Dispose();
+                }
+
+                if (this.userManager.IsValueCreated)
+                {
+                    this.userManager.Value.Dispose();
                 }
             }
-        }
-
-        /// <summary>
-        /// The auth instance associated with the default Firebase app. This property is
-        /// <c>null</c> if the default app doesn't yet exist.
-        /// </summary>
-        public static FirebaseAuth DefaultInstance
-        {
-            get
-            {
-                var app = FirebaseApp.DefaultInstance;
-                if (app == null)
-                {
-                    return null;
-                }
-                return GetAuth(app);
-            }
-        }
-
-        /// <summary>
-        /// Returns the auth instance for the specified app.
-        /// </summary>
-        /// <returns>The <see cref="FirebaseAuth"/> instance associated with the specified
-        /// app.</returns>
-        /// <exception cref="System.ArgumentNullException">If the app argument is null.</exception>
-        /// <param name="app">An app instance.</param>
-        public static FirebaseAuth GetAuth(FirebaseApp app)
-        {
-            if (app == null)
-            {
-                throw new ArgumentNullException("App argument must not be null.");
-            }
-            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () => 
-            {
-                return new FirebaseAuth(app);
-            });
         }
     }
 }

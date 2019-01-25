@@ -26,13 +26,15 @@ namespace FirebaseAdmin.IntegrationTests
         private const string ServiceAccountFile = "./resources/integration_cert.json";
         private const string ApiKeyFile = "./resources/integration_apikey.txt";
 
-        private static readonly Lazy<FirebaseApp> DefaultFirebaseApp = new Lazy<FirebaseApp>(() => {
-            var options = new AppOptions()
+        private static readonly Lazy<FirebaseApp> DefaultFirebaseApp = new Lazy<FirebaseApp>(
+            () =>
             {
-                Credential = GoogleCredential.FromFile(ServiceAccountFile),
-            };
-            return FirebaseApp.Create(options);
-        }, true);
+                var options = new AppOptions()
+                {
+                    Credential = GoogleCredential.FromFile(ServiceAccountFile),
+                };
+                return FirebaseApp.Create(options);
+            }, true);
 
         public static FirebaseApp EnsureDefaultApp()
         {

@@ -20,17 +20,17 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
+using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace FirebaseAdmin.Auth.Tests
 {
-    public class FirebaseAuthTest: IDisposable
+    public class FirebaseAuthTest : IDisposable
     {
-        private static readonly GoogleCredential mockCredential =
+        private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
         [Fact]
@@ -42,7 +42,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void GetDefaultAuth()
         {
-            var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             FirebaseAuth auth = FirebaseAuth.DefaultInstance;
             Assert.Same(auth, FirebaseAuth.DefaultInstance);
             app.Delete();
@@ -52,7 +52,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void GetAuth()
         {
-            var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential}, "MyApp");
+            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential }, "MyApp");
             FirebaseAuth auth = FirebaseAuth.GetAuth(app);
             Assert.Same(auth, FirebaseAuth.GetAuth(app));
             app.Delete();
@@ -62,7 +62,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task UseAfterDelete()
         {
-            var app = FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             FirebaseAuth auth = FirebaseAuth.DefaultInstance;
             app.Delete();
             await Assert.ThrowsAsync<InvalidOperationException>(
@@ -75,7 +75,7 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task CreateCustomToken()
         {
             var cred = GoogleCredential.FromFile("./resources/service_account.json");
-            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            FirebaseApp.Create(new AppOptions() { Credential = cred });
             var token = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1");
             VerifyCustomToken(token, "user1", null);
         }
@@ -84,12 +84,12 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task CreateCustomTokenWithClaims()
         {
             var cred = GoogleCredential.FromFile("./resources/service_account.json");
-            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            FirebaseApp.Create(new AppOptions() { Credential = cred });
             var developerClaims = new Dictionary<string, object>()
             {
-                {"admin", true},
-                {"package", "gold"},
-                {"magicNumber", 42L},
+                { "admin", true },
+                { "package", "gold" },
+                { "magicNumber", 42L },
             };
             var token = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
                 "user2", developerClaims);
@@ -100,7 +100,7 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task CreateCustomTokenCancel()
         {
             var cred = GoogleCredential.FromFile("./resources/service_account.json");
-            FirebaseApp.Create(new AppOptions(){Credential = cred});
+            FirebaseApp.Create(new AppOptions() { Credential = cred });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
             await Assert.ThrowsAsync<OperationCanceledException>(
@@ -111,7 +111,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task CreateCustomTokenInvalidCredential()
         {
-            FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             await Assert.ThrowsAsync<FirebaseException>(
                 async () => await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1"));
         }
@@ -119,7 +119,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task VerifyIdTokenNoProjectId()
         {
-            FirebaseApp.Create(new AppOptions(){Credential = mockCredential});
+            FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             var idToken = await FirebaseTokenVerifierTest.CreateTestTokenAsync();
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken));
@@ -130,23 +130,40 @@ namespace FirebaseAdmin.Auth.Tests
         {
             FirebaseApp.Create(new AppOptions()
             {
-                Credential = mockCredential,
+                Credential = MockCredential,
                 ProjectId = "test-project",
             });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
             var idToken = await FirebaseTokenVerifierTest.CreateTestTokenAsync();
-            await Assert.ThrowsAsync<OperationCanceledException>(
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
                 async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
                     idToken, canceller.Token));
         }
 
+        [Fact]
+        public async Task SetCustomUserClaimsNoProjectId()
+        {
+            FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+            var customClaims = new Dictionary<string, object>()
+            {
+                { "admin", true },
+            };
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
+        }
+
+        public void Dispose()
+        {
+            FirebaseApp.DeleteAll();
+        }
+
         private static void VerifyCustomToken(string token, string uid, Dictionary<string, object> claims)
         {
-            String[] segments = token.Split(".");
+            string[] segments = token.Split(".");
             Assert.Equal(3, segments.Length);
 
-            var payload = JwtUtils.Decode<CustomTokenPayload>(segments[1]);
+            var payload = JwtUtils.Decode<FirebaseTokenFactory.CustomTokenPayload>(segments[1]);
             Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Issuer);
             Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Subject);
             Assert.Equal(uid, payload.Uid);
@@ -166,16 +183,11 @@ namespace FirebaseAdmin.Auth.Tests
             }
 
             var x509cert = new X509Certificate2(File.ReadAllBytes("./resources/public_cert.pem"));
-            var rsa = (RSA) x509cert.PublicKey.Key;
+            var rsa = (RSA)x509cert.PublicKey.Key;
             var tokenData = Encoding.UTF8.GetBytes(segments[0] + "." + segments[1]);
             var signature = JwtUtils.Base64DecodeToBytes(segments[2]);
             var verified = rsa.VerifyData(tokenData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Assert.True(verified);
-        }
-
-        public void Dispose()
-        {
-            FirebaseApp.DeleteAll();
         }
     }
 }
