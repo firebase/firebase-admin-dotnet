@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -93,10 +94,24 @@ namespace FirebaseAdmin
         public static async Task<HttpResponseMessage> PostJsonAsync<T>(
             this HttpClient client, string requestUri, T body, CancellationToken cancellationToken)
         {
-            var payload = NewtonsoftJsonSerializer.Instance.Serialize(body);
-            var content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
+            var content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body);
             return await client.PostAsync(requestUri, content, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Serializes the <paramref name="body"/> into JSON, and wraps the result in an instance
+        /// of <see cref="HttpContent"/>, which can be included in an outgoing HTTP request.
+        /// </summary>
+        /// <returns>An instance of <see cref="HttpContent"/> containing the JSON representation
+        /// of <paramref name="body"/>.</returns>
+        /// <param name="serializer">The JSON serializer to serialize the given object.</param>
+        /// <param name="body">The object that will be serialized into JSON.</param>
+        public static HttpContent CreateJsonHttpContent(
+            this NewtonsoftJsonSerializer serializer, object body)
+        {
+            var payload = serializer.Serialize(body);
+            return new StringContent(payload, Encoding.UTF8, "application/json");
         }
 
         /// <summary>
@@ -108,6 +123,20 @@ namespace FirebaseAdmin
         {
             var timeSinceEpoch = clock.UtcNow.Subtract(new DateTime(1970, 1, 1));
             return (long)timeSinceEpoch.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Disposes a lazy-initialized object if the object has already been created.
+        /// </summary>
+        /// <param name="lazy">The lazy initializer containing a disposable object.</param>
+        /// <typeparam name="T">Type of the object that needs to be disposed.</typeparam>
+        public static void DisposeIfCreated<T>(this Lazy<T> lazy)
+        where T : IDisposable
+        {
+            if (lazy.IsValueCreated)
+            {
+                lazy.Value.Dispose();
+            }
         }
 
         /// <summary>

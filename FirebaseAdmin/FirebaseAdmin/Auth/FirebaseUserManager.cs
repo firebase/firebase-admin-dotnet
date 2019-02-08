@@ -14,9 +14,11 @@
 
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
+using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth
@@ -36,24 +38,23 @@ namespace FirebaseAdmin.Auth
 
         internal FirebaseUserManager(FirebaseUserManagerArgs args)
         {
+            if (string.IsNullOrEmpty(args.ProjectId))
+            {
+                throw new ArgumentException(
+                    "Must initialize FirebaseApp with a project ID to manage users.");
+            }
+
             this.httpClient = args.ClientFactory.CreateAuthorizedHttpClient(args.Credential);
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
         }
 
         public static FirebaseUserManager Create(FirebaseApp app)
         {
-            var projectId = app.GetProjectId();
-            if (string.IsNullOrEmpty(projectId))
-            {
-                throw new ArgumentException(
-                    "Must initialize FirebaseApp with a project ID to manage users.");
-            }
-
             var args = new FirebaseUserManagerArgs
             {
                 ClientFactory = new HttpClientFactory(),
                 Credential = app.Options.Credential,
-                ProjectId = projectId,
+                ProjectId = app.GetProjectId(),
             };
 
             return new FirebaseUserManager(args);
@@ -64,22 +65,17 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
         /// <param name="user">The user which we want to update.</param>
-        public async Task UpdateUserAsync(UserRecord user)
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task UpdateUserAsync(
+            UserRecord user, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var updatePath = "/accounts:update";
-            var resopnse = await this.PostAsync(updatePath, user);
-
-            try
+            const string updatePath = "accounts:update";
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                updatePath, user, cancellationToken).ConfigureAwait(false);
+            if (user.Uid != (string)response["localId"])
             {
-                var userResponse = resopnse.ToObject<UserRecord>();
-                if (userResponse.Uid != user.Uid)
-                {
-                    throw new FirebaseException($"Failed to update user: {user.Uid}");
-                }
-            }
-            catch (Exception e)
-            {
-                throw new FirebaseException("Error while calling Firebase Auth service", e);
+                throw new FirebaseException($"Failed to update user: {user.Uid}");
             }
         }
 
@@ -88,26 +84,54 @@ namespace FirebaseAdmin.Auth
             this.httpClient.Dispose();
         }
 
-        private async Task<JObject> PostAsync(string path, UserRecord user)
+        private async Task<TResult> PostAndDeserializeAsync<TResult>(
+            string path, object body, CancellationToken cancellationToken)
         {
-            var requestUri = $"{this.baseUrl}{path}";
-            HttpResponseMessage response = null;
+            var json = await this.PostAsync(path, body, cancellationToken).ConfigureAwait(false);
+            return this.SafeDeserialize<TResult>(json);
+        }
+
+        private TResult SafeDeserialize<TResult>(string json)
+        {
             try
             {
-                response = await this.httpClient.PostJsonAsync(requestUri, user, default);
-                var json = await response.Content.ReadAsStringAsync();
+                return NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(json);
+            }
+            catch (Exception e)
+            {
+                throw new FirebaseException("Error while parsing Auth service response", e);
+            }
+        }
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return JObject.Parse(json);
-                }
-                else
+        private async Task<string> PostAsync(
+            string path, object body, CancellationToken cancellationToken)
+        {
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri($"{this.baseUrl}/{path}"),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
+            };
+            return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task<string> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var response = await this.httpClient.SendAsync(request, cancellationToken)
+                    .ConfigureAwait(false);
+                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
                 {
                     var error = "Response status code does not indicate success: "
                             + $"{(int)response.StatusCode} ({response.StatusCode})"
                             + $"{Environment.NewLine}{json}";
                     throw new FirebaseException(error);
                 }
+
+                return json;
             }
             catch (HttpRequestException e)
             {
