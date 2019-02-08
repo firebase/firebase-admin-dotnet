@@ -26,35 +26,37 @@ namespace FirebaseAdmin
     public sealed class AppOptions
     {
         /// <summary>
-        /// <see cref="GoogleCredential"/> used to authorize an app. All service calls made by
-        /// the app will be authorized using this.
+        /// Initializes a new instance of the  <see cref="AppOptions"/> class.
+        /// </summary>
+        public AppOptions() { }
+
+        internal AppOptions(AppOptions options)
+        {
+            this.Credential = options.Credential;
+            this.ProjectId = options.ProjectId;
+            this.ServiceAccountId = options.ServiceAccountId;
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="GoogleCredential"/> used to authorize an app. All service
+        /// calls made by the app will be authorized using this.
         /// </summary>
         public GoogleCredential Credential { get; set; }
 
         /// <summary>
-        /// The Google Cloud Platform project ID that should be associated with an app.
+        /// Gets or sets the Google Cloud Platform project ID that should be associated with an
+        /// app.
         /// </summary>
         public string ProjectId { get; set; }
 
         /// <summary>
-        /// The unique ID of the service account that should be associated with an app.
+        /// Gets or sets the unique ID of the service account that should be associated with an
+        /// app.
         /// <para>This is used to <a href="https://firebase.google.com/docs/auth/admin/create-custom-tokens">
         /// create custom auth tokens</a> when service account credentials are not available. The
         /// service account ID can be found in the <c>client_email</c> field of the service account
         /// JSON.</para>
         /// </summary>
         public string ServiceAccountId { get; set; }
-
-        /// <summary>
-        /// Creates a new <see cref="AppOptions"/> instance.
-        /// </summary>
-        public AppOptions() {}
-
-        internal AppOptions(AppOptions options)
-        {
-            Credential = options.Credential;
-            ProjectId = options.ProjectId;
-            ServiceAccountId = options.ServiceAccountId;
-        }
     }
 }

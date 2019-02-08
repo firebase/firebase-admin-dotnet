@@ -14,13 +14,13 @@
 
 using System;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Xunit;
 
 namespace FirebaseAdmin.Tests
 {
-    public class FirebaseAppTest: IDisposable
+    public class FirebaseAppTest : IDisposable
     {
         private static readonly AppOptions TestOptions = new AppOptions()
         {
@@ -96,7 +96,7 @@ namespace FirebaseAdmin.Tests
             };
             var app = FirebaseApp.Create(options);
             Assert.Equal("[DEFAULT]", app.Name);
-            
+
             var copy = app.Options;
             Assert.NotSame(options, copy);
             Assert.Same(credential, copy.Credential);
@@ -114,7 +114,7 @@ namespace FirebaseAdmin.Tests
             };
             var app = FirebaseApp.Create(options);
             Assert.Equal("[DEFAULT]", app.Name);
-            
+
             var copy = app.Options;
             Assert.NotSame(options, copy);
             Assert.NotSame(credential, copy.Credential);
@@ -139,7 +139,7 @@ namespace FirebaseAdmin.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "");
+                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", string.Empty);
             }
         }
 
@@ -169,7 +169,7 @@ namespace FirebaseAdmin.Tests
         [Fact]
         public void GetProjectIdFromEnvironment()
         {
-            foreach (var name in new string[]{"GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT"})
+            foreach (var name in new string[] { "GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT" })
             {
                 Environment.SetEnvironmentVariable(name, "env-project");
                 try
@@ -180,7 +180,7 @@ namespace FirebaseAdmin.Tests
                 }
                 finally
                 {
-                    Environment.SetEnvironmentVariable(name, "");    
+                    Environment.SetEnvironmentVariable(name, string.Empty);
                 }
             }
         }
@@ -196,14 +196,15 @@ namespace FirebaseAdmin.Tests
             var service1 = app.GetOrInit("MockService", factory);
             var service2 = app.GetOrInit("MockService", factory);
             Assert.Same(service1, service2);
-            Assert.Throws<InvalidCastException>(() => {
+            Assert.Throws<InvalidCastException>(() =>
+            {
                 app.GetOrInit("MockService", () => { return new OtherMockService(); });
             });
-            
+
             Assert.False(service1.Deleted);
             app.Delete();
             Assert.True(service1.Deleted);
-            Assert.Throws<InvalidOperationException>(() => 
+            Assert.Throws<InvalidOperationException>(() =>
             {
                 app.GetOrInit("MockService", factory);
             });
@@ -211,22 +212,22 @@ namespace FirebaseAdmin.Tests
 
         public void Dispose()
         {
-            FirebaseApp.DeleteAll();        
+            FirebaseApp.DeleteAll();
         }
     }
 
-    internal class MockService: IFirebaseService
+    internal class MockService : IFirebaseService
     {
         public bool Deleted { get; private set; }
 
         public void Delete()
         {
-            Deleted = true;
+            this.Deleted = true;
         }
     }
 
-    internal class OtherMockService: IFirebaseService
+    internal class OtherMockService : IFirebaseService
     {
-        public void Delete() {}
+        public void Delete() { }
     }
 }

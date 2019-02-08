@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth
 {
@@ -23,31 +24,27 @@ namespace FirebaseAdmin.Auth
     /// An <see cref="ISigner"/> implementation that uses service account credentials to sign
     /// data. Uses the private key present in the credential to produce signatures.
     /// </summary>
-    internal sealed class ServiceAccountSigner: ISigner
+    internal sealed class ServiceAccountSigner : ISigner
     {
-        private readonly ServiceAccountCredential _credential;
+        private readonly ServiceAccountCredential credential;
 
         public ServiceAccountSigner(ServiceAccountCredential credential)
         {
-            if (credential == null)
-            {
-                throw new ArgumentNullException("Credential must not be null.");
-            }
-            _credential = credential;
+            this.credential = credential.ThrowIfNull(nameof(credential));
         }
 
         public Task<string> GetKeyIdAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.FromResult(_credential.Id);
+            return Task.FromResult(this.credential.Id);
         }
 
         public Task<byte[]> SignDataAsync(byte[] data, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var signature = _credential.CreateSignature(data);
+            var signature = this.credential.CreateSignature(data);
             return Task.FromResult(Convert.FromBase64String(signature));
         }
 
-        public void Dispose() {}
+        public void Dispose() { }
     }
 }

@@ -12,32 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Http;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
+using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// FirebaseUserManager provides methods for interacting with the 
+    /// FirebaseUserManager provides methods for interacting with the
     /// <a href="https://developers.google.com/identity/toolkit/web/reference/relyingparty">
-    /// Google Identity Toolkit</a> via its REST API. This class does not hold any mutable state, 
+    /// Google Identity Toolkit</a> via its REST API. This class does not hold any mutable state,
     /// and is thread safe.
     /// </summary>
     internal class FirebaseUserManager : IDisposable
     {
-        private const string ID_TOOLKIT_URL = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
+        private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
-        private readonly ConfigurableHttpClient _httpClient;
-        private readonly string _baseUrl;
+        private readonly ConfigurableHttpClient httpClient;
+        private readonly string baseUrl;
 
         internal FirebaseUserManager(FirebaseUserManagerArgs args)
         {
-            _httpClient = args.ClientFactory.CreateAuthorizedHttpClient(args.Credential);
-            _baseUrl = string.Format(ID_TOOLKIT_URL, args.ProjectId);
+            this.httpClient = args.ClientFactory.CreateAuthorizedHttpClient(args.Credential);
+            this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
+        }
+
+        public static FirebaseUserManager Create(FirebaseApp app)
+        {
+            var projectId = app.GetProjectId();
+            if (string.IsNullOrEmpty(projectId))
+            {
+                throw new ArgumentException(
+                    "Must initialize FirebaseApp with a project ID to manage users.");
+            }
+
+            var args = new FirebaseUserManagerArgs
+            {
+                ClientFactory = new HttpClientFactory(),
+                Credential = app.Options.Credential,
+                ProjectId = projectId,
+            };
+
+            return new FirebaseUserManager(args);
         }
 
         /// <summary>
@@ -48,7 +67,7 @@ namespace FirebaseAdmin.Auth
         public async Task UpdateUserAsync(UserRecord user)
         {
             var updatePath = "/accounts:update";
-            var resopnse = await PostAsync(updatePath, user);
+            var resopnse = await this.PostAsync(updatePath, user);
 
             try
             {
@@ -64,13 +83,18 @@ namespace FirebaseAdmin.Auth
             }
         }
 
+        public void Dispose()
+        {
+            this.httpClient.Dispose();
+        }
+
         private async Task<JObject> PostAsync(string path, UserRecord user)
         {
-            var requestUri = $"{_baseUrl}{path}";
+            var requestUri = $"{this.baseUrl}{path}";
             HttpResponseMessage response = null;
             try
             {
-                response = await _httpClient.PostJsonAsync(requestUri, user, default);
+                response = await this.httpClient.PostJsonAsync(requestUri, user, default);
                 var json = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -90,36 +114,5 @@ namespace FirebaseAdmin.Auth
                 throw new FirebaseException("Error while calling Firebase Auth service", e);
             }
         }
-
-        internal static FirebaseUserManager Create(FirebaseApp app)
-        {
-            var projectId = app.GetProjectId();
-            if (string.IsNullOrEmpty(projectId))
-            {
-                throw new ArgumentException(
-                    "Must initialize FirebaseApp with a project ID to manage users.");
-            }
-
-            var args = new FirebaseUserManagerArgs
-            {
-                ClientFactory = new HttpClientFactory(),
-                Credential = app.Options.Credential,
-                ProjectId = projectId,
-            };
-
-            return new FirebaseUserManager(args);
-        }
-
-        public void Dispose()
-        {
-            _httpClient.Dispose();
-        }
-    }
-
-    internal sealed class FirebaseUserManagerArgs
-    {
-        public HttpClientFactory ClientFactory { get; set; }
-        public GoogleCredential Credential { get; set; }
-        public string ProjectId { get; set; }
     }
 }

@@ -21,9 +21,9 @@ using Google.Apis.Auth.OAuth2;
 
 namespace FirebaseAdmin.Snippets
 {
-    class FirebaseAppSnippets
+    internal class FirebaseAppSnippets
     {
-        static void InitSdkWithServiceAccount()
+        internal static void InitSdkWithServiceAccount()
         {
             // [START initialize_sdk_with_service_account]
             FirebaseApp.Create(new AppOptions()
@@ -33,7 +33,7 @@ namespace FirebaseAdmin.Snippets
             // [END initialize_sdk_with_service_account]
         }
 
-        static void InitSdkWithApplicationDefault()
+        internal static void InitSdkWithApplicationDefault()
         {
             // [START initialize_sdk_with_application_default]
             FirebaseApp.Create(new AppOptions()
@@ -43,7 +43,7 @@ namespace FirebaseAdmin.Snippets
             // [END initialize_sdk_with_application_default]
         }
 
-        static void InitSdkWithRefreshToken()
+        internal static void InitSdkWithRefreshToken()
         {
             // [START initialize_sdk_with_refresh_token]
             FirebaseApp.Create(new AppOptions()
@@ -53,14 +53,14 @@ namespace FirebaseAdmin.Snippets
             // [END initialize_sdk_with_refresh_token]
         }
 
-        static void InitSdkWithDefaultConfig()
+        internal static void InitSdkWithDefaultConfig()
         {
             // [START initialize_sdk_with_default_config]
             FirebaseApp.Create();
             // [END initialize_sdk_with_default_config]
         }
 
-        static void InitDefaultApp()
+        internal static void InitDefaultApp()
         {
             // [START access_services_default]
             // Initialize the default app
@@ -78,7 +78,7 @@ namespace FirebaseAdmin.Snippets
             // [END access_services_default]
         }
 
-        static void InitCustomApp()
+        internal static void InitCustomApp()
         {
             var defaultOptions = new AppOptions()
             {
@@ -107,7 +107,7 @@ namespace FirebaseAdmin.Snippets
             // [END access_services_nondefault]
         }
 
-        static void InitWithServiceAccountId()
+        internal static void InitWithServiceAccountId()
         {
             // [START initialize_sdk_with_service_account_id]
             FirebaseApp.Create(new AppOptions()

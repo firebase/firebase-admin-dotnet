@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Google.Apis.Json;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Google.Apis.Json;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -26,49 +26,49 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal class UserRecord
     {
-        private string _uid;
-        private IReadOnlyDictionary<string, object> _customClaims;
+        private string uid;
+        private IReadOnlyDictionary<string, object> customClaims;
+
+        public UserRecord(string uid)
+        {
+            this.Uid = uid;
+        }
 
         /// <summary>
-        /// The user ID of this user.
+        /// Gets the user ID of this user.
         /// </summary>
         [JsonProperty("localId")]
         public string Uid
         {
-            get => _uid;
+            get => this.uid;
             private set
             {
                 CheckUid(value);
-                _uid = value;
+                this.uid = value;
             }
         }
 
         /// <summary>
-        /// Returns custom claims set on this user.
+        /// Gets or sets the custom claims set on this user.
         /// </summary>
         [JsonIgnore]
         public IReadOnlyDictionary<string, object> CustomClaims
         {
-            get => _customClaims;
+            get => this.customClaims;
             set
             {
                 CheckCustomClaims(value);
-                _customClaims = value;
+                this.customClaims = value;
             }
         }
 
         [JsonProperty("customAttributes")]
         internal string CustomClaimsString => SerializeClaims(CustomClaims);
 
-        public UserRecord(string uid)
-        {
-            Uid = uid;
-        }
-
         /// <summary>
         /// Checks if the given user ID is valid.
         /// </summary>
-        /// <param name="uid">The user ID. Must not be null or longer than 
+        /// <param name="uid">The user ID. Must not be null or longer than
         /// 128 characters.</param>
         public static void CheckUid(string uid)
         {
@@ -85,10 +85,10 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Checks if the given set of custom claims are valid.
         /// </summary>
-        /// <param name="customClaims">The custom claims. Claim names must 
+        /// <param name="customClaims">The custom claims. Claim names must
         /// not be null or empty and must not be reserved and the serialized
         /// claims have to be less than 1000 bytes.</param>
-        public static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
+        internal static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
         {
             if (customClaims == null)
             {
@@ -101,6 +101,7 @@ namespace FirebaseAdmin.Auth
                 {
                     throw new ArgumentException("Claim names must not be null or empty");
                 }
+
                 if (FirebaseTokenFactory.ReservedClaims.Contains(key))
                 {
                     throw new ArgumentException($"Claim {key} is reserved and cannot be set");

@@ -17,24 +17,24 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
+using Xunit;
 
 namespace FirebaseAdmin.IntegrationTests
 {
     public class FirebaseAuthTest
     {
-        private const string VerifyCustomTokenUrl = 
+        private const string VerifyCustomTokenUrl =
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyCustomToken";
 
         public FirebaseAuthTest()
         {
             IntegrationTestUtils.EnsureDefaultApp();
         }
-    
+
         [Fact]
         public async Task CreateCustomToken()
         {
@@ -50,9 +50,9 @@ namespace FirebaseAdmin.IntegrationTests
         {
             var developerClaims = new Dictionary<string, object>()
             {
-                {"admin", true},
-                {"package", "gold"},
-                {"magicNumber", 42L},
+                { "admin", true },
+                { "package", "gold" },
+                { "magicNumber", 42L },
             };
             var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
                 "testuser", developerClaims);
@@ -72,13 +72,14 @@ namespace FirebaseAdmin.IntegrationTests
         public async Task CreateCustomTokenWithoutServiceAccount()
         {
             var googleCred = FirebaseApp.DefaultInstance.Options.Credential;
-            var serviceAcct = (ServiceAccountCredential) googleCred.UnderlyingCredential;
-            var token = await ((ITokenAccess) googleCred).GetAccessTokenForRequestAsync();
-            var app = FirebaseApp.Create(new AppOptions()
-            {
-                Credential = GoogleCredential.FromAccessToken(token),
-                ServiceAccountId = serviceAcct.Id,
-            }, "IAMSignApp");
+            var serviceAcct = (ServiceAccountCredential)googleCred.UnderlyingCredential;
+            var token = await ((ITokenAccess)googleCred).GetAccessTokenForRequestAsync();
+            var app = FirebaseApp.Create(
+                new AppOptions()
+                {
+                    Credential = GoogleCredential.FromAccessToken(token),
+                    ServiceAccountId = serviceAcct.Id,
+                }, "IAMSignApp");
             try
             {
                 var customToken = await FirebaseAuth.GetAuth(app).CreateCustomTokenAsync(
@@ -98,7 +99,7 @@ namespace FirebaseAdmin.IntegrationTests
         {
             var customClaims = new Dictionary<string, object>()
             {
-                {"admin", true}
+                { "admin", true },
             };
 
             await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("testuser", customClaims);
@@ -126,12 +127,13 @@ namespace FirebaseAdmin.IntegrationTests
             var rb = new Google.Apis.Requests.RequestBuilder()
             {
                 Method = Google.Apis.Http.HttpConsts.Post,
-                BaseUri = new Uri(VerifyCustomTokenUrl),                    
+                BaseUri = new Uri(VerifyCustomTokenUrl),
             };
             rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
             var request = rb.CreateRequest();
             var jsonSerializer = Google.Apis.Json.NewtonsoftJsonSerializer.Instance;
-            var payload = jsonSerializer.Serialize(new SignInRequest{
+            var payload = jsonSerializer.Serialize(new SignInRequest
+            {
                 CustomToken = customToken,
                 ReturnSecureToken = true,
             });
@@ -159,6 +161,6 @@ namespace FirebaseAdmin.IntegrationTests
     internal class SignInResponse
     {
         [Newtonsoft.Json.JsonProperty("idToken")]
-        public String IdToken { get; set; }
+        public string IdToken { get; set; }
     }
 }

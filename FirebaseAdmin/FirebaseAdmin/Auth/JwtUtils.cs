@@ -25,12 +25,6 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal static class JwtUtils
     {
-        private static string Encode(object obj)
-        {
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(obj);
-            return UrlSafeBase64Encode(Encoding.UTF8.GetBytes(json));
-        }
-
         /// <summary>
         /// Decodes a single JWT segment, and deserializes it into a value of type
         /// <typeparamref name="T"/>.
@@ -44,19 +38,13 @@ namespace FirebaseAdmin.Auth
             return NewtonsoftJsonSerializer.Instance.Deserialize<T>(json);
         }
 
-        private static string UrlSafeBase64Encode(byte[] bytes)
-        {
-            var base64Value = Convert.ToBase64String(bytes);
-            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
-        }
-
-        public static string Base64Decode(string input)
+        internal static string Base64Decode(string input)
         {
             var raw = Base64DecodeToBytes(input);
             return Encoding.UTF8.GetString(raw);
         }
 
-        public static byte[] Base64DecodeToBytes(string input)
+        internal static byte[] Base64DecodeToBytes(string input)
         {
             // undo the url safe replacements
             input = input.Replace('-', '+').Replace('_', '/');
@@ -65,11 +53,14 @@ namespace FirebaseAdmin.Auth
                 case 2: input += "=="; break;
                 case 3: input += "="; break;
             }
+
             return Convert.FromBase64String(input);
         }
 
-        public static async Task<string> CreateSignedJwtAsync(
-            object header, object payload, ISigner signer,
+        internal static async Task<string> CreateSignedJwtAsync(
+            object header,
+            object payload,
+            ISigner signer,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             string encodedHeader = Encode(header);
@@ -84,6 +75,18 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
             assertion.Append('.').Append(UrlSafeBase64Encode(signature));
             return assertion.ToString();
+        }
+
+        private static string Encode(object obj)
+        {
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(obj);
+            return UrlSafeBase64Encode(Encoding.UTF8.GetBytes(json));
+        }
+
+        private static string UrlSafeBase64Encode(byte[] bytes)
+        {
+            var base64Value = Convert.ToBase64String(bytes);
+            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
     }
 }

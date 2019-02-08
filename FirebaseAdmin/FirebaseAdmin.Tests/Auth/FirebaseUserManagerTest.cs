@@ -14,25 +14,26 @@
 
 using System;
 using System.Collections.Generic;
-using Xunit;
-using Google.Apis.Auth.OAuth2;
-using FirebaseAdmin.Tests;
-using System.Threading.Tasks;
 using System.Net;
+using System.Threading.Tasks;
+using FirebaseAdmin.Tests;
+using Google.Apis.Auth.OAuth2;
+using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {
     public class FirebaseUserManagerTest
     {
-        private static readonly GoogleCredential mockCredential =
+        private const string MockProjectId = "project1";
+
+        private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
-        private const string mockProjectId = "project1";
 
         [Fact]
         public void InvalidUidForUserRecord()
         {
             Assert.Throws<ArgumentException>(() => new UserRecord(null));
-            Assert.Throws<ArgumentException>(() => new UserRecord(""));
+            Assert.Throws<ArgumentException>(() => new UserRecord(string.Empty));
             Assert.Throws<ArgumentException>(() => new UserRecord(new string('a', 129)));
         }
 
@@ -41,18 +42,20 @@ namespace FirebaseAdmin.Auth.Tests
         {
             foreach (var key in FirebaseTokenFactory.ReservedClaims)
             {
-                var customClaims = new Dictionary<string, object>(){
-                    {key, "value"},
+                var customClaims = new Dictionary<string, object>()
+                {
+                    { key, "value" },
                 };
-                Assert.Throws<ArgumentException>(() => new UserRecord("user1") { CustomClaims = customClaims});
+                Assert.Throws<ArgumentException>(() => new UserRecord("user1") { CustomClaims = customClaims });
             }
         }
 
         [Fact]
         public void EmptyClaims()
         {
-            var emptyClaims = new Dictionary<string, object>(){
-                    {"", "value"},
+            var emptyClaims = new Dictionary<string, object>()
+            {
+                    { string.Empty, "value" },
             };
             Assert.Throws<ArgumentException>(() => new UserRecord("user1") { CustomClaims = emptyClaims });
         }
@@ -73,18 +76,19 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new UserRecord("user1")
+                Response = new UserRecord("user1"),
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
                 new FirebaseUserManagerArgs
                 {
-                    Credential = mockCredential,
-                    ProjectId = mockProjectId,
-                    ClientFactory = factory
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
                 });
-            var customClaims = new Dictionary<string, object>(){
-                    {"admin", true},
+            var customClaims = new Dictionary<string, object>()
+            {
+                    { "admin", true },
             };
 
             await userManager.UpdateUserAsync(new UserRecord("user1") { CustomClaims = customClaims });
@@ -95,18 +99,19 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new object()
+                Response = new object(),
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
                 new FirebaseUserManagerArgs
                 {
-                    Credential = mockCredential,
-                    ProjectId = mockProjectId,
-                    ClientFactory = factory
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
                 });
-            var customClaims = new Dictionary<string, object>(){
-                    {"admin", true},
+            var customClaims = new Dictionary<string, object>()
+            {
+                    { "admin", true },
             };
 
             await Assert.ThrowsAsync<FirebaseException>(
@@ -118,18 +123,19 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new UserRecord("testuser")
+                Response = new UserRecord("testuser"),
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
                 new FirebaseUserManagerArgs
                 {
-                    Credential = mockCredential,
-                    ProjectId = mockProjectId,
-                    ClientFactory = factory
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
                 });
-            var customClaims = new Dictionary<string, object>(){
-                    {"admin", true},
+            var customClaims = new Dictionary<string, object>()
+            {
+                    { "admin", true },
             };
 
             await Assert.ThrowsAsync<FirebaseException>(
@@ -141,18 +147,19 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                StatusCode = HttpStatusCode.InternalServerError
+                StatusCode = HttpStatusCode.InternalServerError,
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
                 new FirebaseUserManagerArgs
                 {
-                    Credential = mockCredential,
-                    ProjectId = mockProjectId,
-                    ClientFactory = factory
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
                 });
-            var customClaims = new Dictionary<string, object>(){
-                    {"admin", true},
+            var customClaims = new Dictionary<string, object>()
+            {
+                { "admin", true },
             };
 
             await Assert.ThrowsAsync<FirebaseException>(
