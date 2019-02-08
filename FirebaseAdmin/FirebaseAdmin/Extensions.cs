@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -107,6 +108,21 @@ namespace FirebaseAdmin
         {
             var timeSinceEpoch = clock.UtcNow.Subtract(new DateTime(1970, 1, 1));
             return (long)timeSinceEpoch.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Creates a shallow copy of a collection of key-value pairs.
+        /// </summary>
+        public static IReadOnlyDictionary<TKey, TValue> Copy<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> source)
+        {
+            var copy = new Dictionary<TKey, TValue>();
+            foreach (var entry in source)
+            {
+                copy[entry.Key] = entry.Value;
+            }
+
+            return copy;
         }
     }
 }
