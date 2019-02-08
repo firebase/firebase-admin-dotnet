@@ -68,7 +68,7 @@ namespace FirebaseAdmin.Auth
         public string Uid { get; private set; }
 
         /// <summary>
-        /// Gets Aall other claims present in the JWT as a readonly dictionary. This can be used to
+        /// Gets all other claims present in the JWT as a readonly dictionary. This can be used to
         /// access custom claims of the token.
         /// </summary>
         public IReadOnlyDictionary<string, object> Claims { get; private set; }

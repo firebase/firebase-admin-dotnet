@@ -1,5 +1,12 @@
 # Unreleased
 
+-
+
+# v1.1.0
+
+- [added] Implemented the `SetCustomUserClaimsAsync()` API in the
+  `FirebaseAuth` class.
+
 # v1.0.0
 
 - [added] Initial release of the Admin .NET SDK. See
