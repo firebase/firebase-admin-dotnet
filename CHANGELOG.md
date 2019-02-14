@@ -2,6 +2,11 @@
 
 -
 
+# v1.2.0
+
+- [added] Implemented the `FirebaseMessaging` API for sending notifications
+  with FCM.
+
 # v1.1.0
 
 - [added] Implemented the `SetCustomUserClaimsAsync()` API in the
