@@ -219,7 +219,7 @@ namespace FirebaseAdmin.Auth
                     hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1)
 #elif NET45
                 key.Id == keyId &&
-                    ((RSACryptoServiceProvider) key.RSA).VerifyHash(hash, Sha256Oid, signature)
+                    ((RSACryptoServiceProvider)key.RSA).VerifyHash(hash, Sha256Oid, signature)
 #else
 #error Unsupported target
 #endif
