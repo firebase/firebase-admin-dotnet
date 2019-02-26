@@ -38,6 +38,8 @@ namespace FirebaseAdmin.Auth
         private const string FirebaseAudience = "https://identitytoolkit.googleapis.com/"
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
+        private const long ClockSkewSeconds = 5 * 60;
+
         // See http://oid-info.com/get/2.16.840.1.101.3.4.2.1
         private const string Sha256Oid = "2.16.840.1.101.3.4.2.1";
 
@@ -120,6 +122,8 @@ namespace FirebaseAdmin.Auth
                 + $"{this.shortName}.";
             var issuer = this.issuer + this.ProjectId;
             string error = null;
+            var currentTimeInSeconds = this.clock.UnixTimestamp();
+
             if (string.IsNullOrEmpty(header.KeyId))
             {
                 if (payload.Audience == FirebaseAudience)
@@ -152,13 +156,16 @@ namespace FirebaseAdmin.Auth
                 error = $"{this.shortName} has incorrect issuer (iss) claim. Expected {issuer} but "
                     + $"got {payload.Issuer}.  {projectIdMessage} {verifyTokenMessage}";
             }
-            else if (payload.IssuedAtTimeSeconds > this.clock.UnixTimestamp())
+            else if (payload.IssuedAtTimeSeconds - ClockSkewSeconds > currentTimeInSeconds)
             {
-                error = $"Firebase {this.shortName} issued at future timestamp";
+                error = $"Firebase {this.shortName} issued at future timestamp "
+                    + $"{payload.IssuedAtTimeSeconds}. Expected to be greater than "
+                    + $"{currentTimeInSeconds}.";
             }
-            else if (payload.ExpirationTimeSeconds < this.clock.UnixTimestamp())
+            else if (payload.ExpirationTimeSeconds + ClockSkewSeconds < currentTimeInSeconds)
             {
-                error = $"Firebase {this.shortName} expired at {payload.ExpirationTimeSeconds}";
+                error = $"Firebase {this.shortName} expired at {payload.ExpirationTimeSeconds}. "
+                    + $" Expected to be less than ${currentTimeInSeconds}.";
             }
             else if (string.IsNullOrEmpty(payload.Subject))
             {
