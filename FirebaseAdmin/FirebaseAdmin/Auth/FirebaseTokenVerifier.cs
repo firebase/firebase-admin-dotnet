@@ -159,13 +159,13 @@ namespace FirebaseAdmin.Auth
             else if (payload.IssuedAtTimeSeconds - ClockSkewSeconds > currentTimeInSeconds)
             {
                 error = $"Firebase {this.shortName} issued at future timestamp "
-                    + $"{payload.IssuedAtTimeSeconds}. Expected to be greater than "
+                    + $"{payload.IssuedAtTimeSeconds}. Expected to be less than "
                     + $"{currentTimeInSeconds}.";
             }
             else if (payload.ExpirationTimeSeconds + ClockSkewSeconds < currentTimeInSeconds)
             {
                 error = $"Firebase {this.shortName} expired at {payload.ExpirationTimeSeconds}. "
-                    + $" Expected to be less than ${currentTimeInSeconds}.";
+                    + $"Expected to be greater than {currentTimeInSeconds}.";
             }
             else if (string.IsNullOrEmpty(payload.Subject))
             {

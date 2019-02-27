@@ -132,13 +132,17 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task Expired()
         {
+            var expiryTime = Clock.UnixTimestamp() - (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
-                { "exp", Clock.UnixTimestamp() - (ClockSkewSeconds + 1) },
+                { "exp", expiryTime },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+            var expectedMessage = $"Firebase ID token expired at {expiryTime}. "
+                + $"Expected to be greater than {Clock.UnixTimestamp()}.";
+            Assert.Equal(expectedMessage, exception.Message);
         }
 
         [Fact]
@@ -160,13 +164,17 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task InvalidIssuedAt()
         {
+            var issuedAt = Clock.UnixTimestamp() + (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
-                { "iat", Clock.UnixTimestamp() + (ClockSkewSeconds + 1) },
+                { "iat", issuedAt },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+            var expectedMessage = $"Firebase ID token issued at future timestamp {issuedAt}. "
+                + $"Expected to be less than {Clock.UnixTimestamp()}.";
+            Assert.Equal(expectedMessage, exception.Message);
         }
 
         [Fact]
