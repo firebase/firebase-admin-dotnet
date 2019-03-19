@@ -72,6 +72,62 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task GetUserById()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new UserRecord("user1"),
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await userManager.GetUserById("user1");
+        }
+
+        [Fact]
+        public async Task GetUserByIdIncorrectUid()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new UserRecord("testuser"),
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.GetUserById("user1"));
+        }
+
+        [Fact]
+        public async Task GetUserByIdHttpError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.Unauthorized,
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.GetUserById("user1"));
+        }
+
+        [Fact]
         public async Task UpdateUser()
         {
             var handler = new MockMessageHandler()
@@ -164,6 +220,46 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<FirebaseException>(
                 async () => await userManager.UpdateUserAsync(new UserRecord("user1") { CustomClaims = customClaims }));
+        }
+
+        [Fact]
+        public async Task DeleteUser()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new Dictionary<string, string>()
+                {
+                    { "kind", "identitytoolkit#DeleteAccountResponse" },
+                },
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await userManager.DeleteUser("user1");
+        }
+
+        [Fact]
+        public async Task DeleteUserHttpError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.Unauthorized,
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await Assert.ThrowsAsync<FirebaseException>(
+               async () => await userManager.DeleteUser("user1"));
         }
     }
 }

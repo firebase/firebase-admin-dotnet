@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,6 +62,30 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Get a user by id.
+        /// </summary>
+        /// <param name="uid">The query user id.</param>
+        /// <param name="cancellationToken">For asynchronous operation.</param>
+        /// <returns>A record of user with the queried id if one exists.</returns>
+        public async Task<UserRecord> GetUserById(
+            string uid, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            const string getUserPath = "accounts:lookup";
+            var payload = new Dictionary<string, object>()
+            {
+                { "localId", uid },
+            };
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                getUserPath, payload, cancellationToken).ConfigureAwait(false);
+            if (response == null || uid != (string)response["localId"])
+            {
+                throw new FirebaseException($"Failed to get user: {uid}");
+            }
+
+            return new UserRecord((string)response["localId"]);
+        }
+
+        /// <summary>
         /// Update an existing user.
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
@@ -76,6 +101,27 @@ namespace FirebaseAdmin.Auth
             if (user.Uid != (string)response["localId"])
             {
                 throw new FirebaseException($"Failed to update user: {user.Uid}");
+            }
+        }
+
+        /// <summary>
+        /// Delete user with a given id.
+        /// </summary>
+        /// <param name="uid">The delete query user id.</param>
+        /// <param name="cancellationToken">For asynchronous operation.</param>
+        public async Task DeleteUser(
+            string uid, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            const string getUserPath = "accounts:delete";
+            var payload = new Dictionary<string, object>()
+            {
+                { "localId", uid },
+            };
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                getUserPath, payload, cancellationToken).ConfigureAwait(false);
+            if (response == null || (string)response["kind"] == null)
+            {
+                throw new FirebaseException($"Failed to delete user: {uid}");
             }
         }
 
