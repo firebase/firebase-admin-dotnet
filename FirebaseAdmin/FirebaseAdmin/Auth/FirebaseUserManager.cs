@@ -85,7 +85,7 @@ namespace FirebaseAdmin.Auth
             return new UserRecord((string)response["localId"]);
         }
 
-       /// <summary>
+        /// <summary>
         /// Update an existing user.
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
