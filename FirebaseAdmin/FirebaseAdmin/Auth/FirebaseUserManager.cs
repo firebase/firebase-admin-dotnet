@@ -62,14 +62,19 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Get a user by id.
+        /// Gets the user data corresponding to the given user ID.
         /// </summary>
-        /// <param name="uid">The query user id.</param>
+        /// <param name="uid">A user ID string.</param>
         /// <param name="cancellationToken">For asynchronous operation.</param>
         /// <returns>A record of user with the queried id if one exists.</returns>
         public async Task<UserRecord> GetUserById(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (string.IsNullOrEmpty(uid))
+            {
+                throw new ArgumentException("Failed to get user. User id cannot be null or empty");
+            }
+
             const string getUserPath = "accounts:lookup";
             var payload = new Dictionary<string, object>()
             {
@@ -112,6 +117,11 @@ namespace FirebaseAdmin.Auth
         public async Task DeleteUser(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (string.IsNullOrEmpty(uid))
+            {
+                throw new ArgumentException("Failed to delete user. User id cannot be null or empty");
+            }
+
             const string getUserPath = "accounts:delete";
             var payload = new Dictionary<string, object>()
             {
