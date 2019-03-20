@@ -2,3 +2,5 @@ bin/
 obj/
 .vscode/
 
+/FirebaseAdmin/.vs
+/FirebaseAdmin/FirebaseAdmin.IntegrationTests/FirebaseAdmin.IntegrationTests.csproj.user

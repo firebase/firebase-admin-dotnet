@@ -29,6 +29,7 @@ namespace FirebaseAdmin.Auth
         private bool _deleted;
         private readonly Lazy<FirebaseTokenFactory> _tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> _idTokenVerifier;
+        private readonly Lazy<UserRepository> _userRepository;
         private readonly Object _lock = new Object();
 
         private FirebaseAuth(FirebaseApp app)
@@ -38,6 +39,7 @@ namespace FirebaseAdmin.Auth
                 FirebaseTokenFactory.Create(_app), true);
             _idTokenVerifier = new Lazy<FirebaseTokenVerifier>(() => 
                 FirebaseTokenVerifier.CreateIDTokenVerifier(_app), true);
+            _userRepository = new Lazy<UserRepository>(() => UserRepository.Create(_app), true);
         }
 
         /// <summary>
@@ -282,6 +284,16 @@ namespace FirebaseAdmin.Auth
             {
                 return new FirebaseAuth(app);
             });
+        }
+
+        /// <summary>
+        /// Deletes an account identified by a uid.
+        /// </summary>
+        /// <param name="uid">The uid of the user to delete.</param>
+        /// <returns></returns>
+        public async Task DeleteUserAsync(string uid)
+        {
+            await _userRepository.Value.DeleteUserAsync(uid, default(CancellationToken));
         }
     }
 }
