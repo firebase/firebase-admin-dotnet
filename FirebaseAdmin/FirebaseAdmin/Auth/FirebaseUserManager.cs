@@ -65,14 +65,15 @@ namespace FirebaseAdmin.Auth
         /// Gets the user data corresponding to the given user ID.
         /// </summary>
         /// <param name="uid">A user ID string.</param>
-        /// <param name="cancellationToken">For asynchronous operation.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
         /// <returns>A record of user with the queried id if one exists.</returns>
         public async Task<UserRecord> GetUserById(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(uid))
             {
-                throw new ArgumentException("Failed to get user. User id cannot be null or empty");
+                throw new ArgumentException("User ID cannot be null or empty.");
             }
 
             const string getUserPath = "accounts:lookup";
@@ -110,16 +111,17 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Delete user with a given id.
+        /// Delete user data corresponding to the given user ID.
         /// </summary>
-        /// <param name="uid">The delete query user id.</param>
-        /// <param name="cancellationToken">For asynchronous operation.</param>
+        /// <param name="uid">A user ID string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
         public async Task DeleteUser(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(uid))
             {
-                throw new ArgumentException("Failed to delete user. User id cannot be null or empty");
+                throw new ArgumentException("User id cannot be null or empty.");
             }
 
             const string getUserPath = "accounts:delete";

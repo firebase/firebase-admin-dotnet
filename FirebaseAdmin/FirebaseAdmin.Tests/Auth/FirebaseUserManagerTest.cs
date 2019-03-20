@@ -86,7 +86,7 @@ namespace FirebaseAdmin.Auth.Tests
                     ProjectId = MockProjectId,
                     ClientFactory = factory,
                 });
-            UserRecord userRecord = await userManager.GetUserById("user1");
+            var userRecord = await userManager.GetUserById("user1");
             Assert.Equal("user1", userRecord.Uid);
         }
 
@@ -96,25 +96,6 @@ namespace FirebaseAdmin.Auth.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
-            };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
-            await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserById("user1"));
-        }
-
-        [Fact]
-        public async Task GetUserByIdInvalidToken()
-        {
-            var handler = new MockMessageHandler()
-            {
-                StatusCode = HttpStatusCode.Unauthorized,
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
@@ -250,25 +231,6 @@ namespace FirebaseAdmin.Auth.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
-            };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
-            await Assert.ThrowsAsync<FirebaseException>(
-               async () => await userManager.DeleteUser("user1"));
-        }
-
-        [Fact]
-        public async Task DeleteUserInvalidToken()
-        {
-            var handler = new MockMessageHandler()
-            {
-                StatusCode = HttpStatusCode.Unauthorized,
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
