@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 
 namespace FirebaseAdmin
 {
@@ -35,6 +36,7 @@ namespace FirebaseAdmin
             this.Credential = options.Credential;
             this.ProjectId = options.ProjectId;
             this.ServiceAccountId = options.ServiceAccountId;
+            this.ClientFactory = options.ClientFactory;
         }
 
         /// <summary>
@@ -58,5 +60,10 @@ namespace FirebaseAdmin
         /// JSON.</para>
         /// </summary>
         public string ServiceAccountId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the HttpClientFactory to use when making Firebase requirests.
+        /// </summary>
+        public HttpClientFactory ClientFactory { get; set; } = new HttpClientFactory();
     }
 }
