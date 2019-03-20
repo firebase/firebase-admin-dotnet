@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v1.2.1
+
 - [fixed] The `VerifyIdTokenAsync()` function now tolerates a clock skew of up
   to 5 minutes when comparing JWT timestamps.
 
