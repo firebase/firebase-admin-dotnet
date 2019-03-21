@@ -15,8 +15,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using Xunit;
 
 namespace FirebaseAdmin.Messaging.Tests
@@ -55,6 +55,17 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void GetMessagingWithClientFactory()
+        {
+            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential, HttpClientFactory = new HttpClientFactory() }, "MyApp");
+            FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
+            Assert.NotNull(messaging);
+            Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
+            app.Delete();
+            Assert.Throws<InvalidOperationException>(() => FirebaseMessaging.GetMessaging(app));
+        }
+
+        [Fact]
         public async Task UseAfterDelete()
         {
             var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
@@ -69,6 +80,18 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var cred = GoogleCredential.FromFile("./resources/service_account.json");
             FirebaseApp.Create(new AppOptions() { Credential = cred });
+            var canceller = new CancellationTokenSource();
+            canceller.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                async () => await FirebaseMessaging.DefaultInstance.SendAsync(
+                    new Message() { Topic = "test-topic" }, canceller.Token));
+        }
+
+        [Fact]
+        public async Task SendMessageCancelWithClientFactory()
+        {
+            var cred = GoogleCredential.FromFile("./resources/service_account.json");
+            FirebaseApp.Create(new AppOptions() { Credential = cred, HttpClientFactory = new HttpClientFactory() });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
             await Assert.ThrowsAsync<OperationCanceledException>(
