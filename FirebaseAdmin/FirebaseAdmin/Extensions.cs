@@ -153,5 +153,16 @@ namespace FirebaseAdmin
 
             return copy;
         }
+
+        /// <summary>
+        /// Creates a shallow copy of a list of values.
+        /// </summary>
+        public static IReadOnlyList<T> Copy<T>(
+            this IEnumerable<T> source)
+        {
+            var copy = new List<T>();
+            copy.AddRange(source);
+            return copy;
+        }
     }
 }
