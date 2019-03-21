@@ -26,6 +26,8 @@ namespace FirebaseAdmin
     /// </summary>
     public sealed class AppOptions
     {
+        private HttpClientFactory httpClientFactory;
+
         /// <summary>
         /// Initializes a new instance of the  <see cref="AppOptions"/> class.
         /// </summary>
@@ -36,7 +38,7 @@ namespace FirebaseAdmin
             this.Credential = options.Credential;
             this.ProjectId = options.ProjectId;
             this.ServiceAccountId = options.ServiceAccountId;
-            this.ClientFactory = options.ClientFactory;
+            this.HttpClientFactory = options.HttpClientFactory;
         }
 
         /// <summary>
@@ -62,8 +64,26 @@ namespace FirebaseAdmin
         public string ServiceAccountId { get; set; }
 
         /// <summary>
-        /// Gets or sets the HttpClientFactory to use when making Firebase requirests.
+        /// Gets or sets the HttpClientFactory to use when making Firebase requests.
         /// </summary>
-        public HttpClientFactory ClientFactory { get; set; } = new HttpClientFactory();
+        public HttpClientFactory HttpClientFactory
+        {
+            get
+            {
+                if (this.httpClientFactory != null)
+                {
+                    return this.httpClientFactory;
+                }
+                else
+                {
+                    return new HttpClientFactory();
+                }
+            }
+
+            set
+            {
+                this.httpClientFactory = value;
+            }
+        }
     }
 }
