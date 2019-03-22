@@ -26,12 +26,13 @@ namespace FirebaseAdmin
     /// </summary>
     public sealed class AppOptions
     {
-        private HttpClientFactory httpClientFactory;
-
         /// <summary>
         /// Initializes a new instance of the  <see cref="AppOptions"/> class.
         /// </summary>
-        public AppOptions() { }
+        public AppOptions()
+        {
+            this.HttpClientFactory = new HttpClientFactory();
+        }
 
         internal AppOptions(AppOptions options)
         {
@@ -66,24 +67,6 @@ namespace FirebaseAdmin
         /// <summary>
         /// Gets or sets the HttpClientFactory to use when making Firebase requests.
         /// </summary>
-        public HttpClientFactory HttpClientFactory
-        {
-            get
-            {
-                if (this.httpClientFactory != null)
-                {
-                    return this.httpClientFactory;
-                }
-                else
-                {
-                    return new HttpClientFactory();
-                }
-            }
-
-            set
-            {
-                this.httpClientFactory = value;
-            }
-        }
+        public HttpClientFactory HttpClientFactory { get; set; }
     }
 }
