@@ -143,9 +143,9 @@ namespace FirebaseAdmin.Messaging
             this.httpClient.Dispose();
         }
 
-        private static FirebaseMessagingException CreateExceptionFor(RequestError requestError)
+        private static FirebaseException CreateExceptionFor(RequestError requestError)
         {
-            return new FirebaseMessagingException(requestError.Code, requestError.ToString());
+            return new FirebaseException(requestError.ToString());
         }
 
         private async Task<BatchResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)

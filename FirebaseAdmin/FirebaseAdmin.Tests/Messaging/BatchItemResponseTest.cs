@@ -33,8 +33,7 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void FailureResponse()
         {
-            FirebaseMessagingException exception = new FirebaseMessagingException(
-                400,
+            var exception = new FirebaseException(
                 "error-message",
                 null);
             var response = BatchItemResponse.FromException(exception);
