@@ -83,12 +83,40 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException("At least one token is required.");
             }
 
+            if (copy.Tokens.Count > 100)
+            {
+                throw new ArgumentException("At most 100 tokens are allowed.");
+            }
+
             // Copy and validate the child properties
             copy.Notification = this.Notification?.CopyAndValidate();
             copy.Android = this.Android?.CopyAndValidate();
             copy.Webpush = this.Webpush?.CopyAndValidate();
             copy.Apns = this.Apns?.CopyAndValidate();
             return copy;
+        }
+
+        internal List<Message> GetMessageList()
+        {
+            var templateMessage = new Message
+            {
+                Android = this.Android?.CopyAndValidate(),
+                Apns = this.Apns?.CopyAndValidate(),
+                Data = this.Data?.Copy(),
+                Notification = this.Notification?.CopyAndValidate(),
+                Webpush = this.Webpush?.CopyAndValidate(),
+            };
+
+            var messages = new List<Message>(this.Tokens.Count);
+
+            foreach (var token in this.Tokens)
+            {
+                templateMessage.Token = token;
+                var message = templateMessage.CopyAndValidate();
+                messages.Add(message);
+            }
+
+            return messages;
         }
     }
 }

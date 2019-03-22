@@ -14,7 +14,6 @@
 
 using System;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
@@ -87,6 +86,65 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.True(req.ValidateOnly);
             Assert.Equal(2, handler.Calls);
+        }
+
+        [Fact]
+        public async Task SendAllAsync()
+        {
+            var rawResponse = @"
+--batch_test-boundary
+Content-Type: application/http
+Content-ID: response-
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Vary: Origin
+Vary: X-Origin
+Vary: Referer
+
+{
+  ""name"": ""projects/fir-adminintegrationtests/messages/8580920590356323124""
+}
+
+--batch_test-boundary
+Content-Type: application/http
+Content-ID: response-
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Vary: Origin
+Vary: X-Origin
+Vary: Referer
+
+{
+  ""name"": ""projects/fir-adminintegrationtests/messages/5903525881088369386""
+}
+
+--batch_test-boundary
+";
+            var handler = new MockMessageHandler()
+            {
+                Response = rawResponse,
+                ApplyContentHeaders = (headers) =>
+                {
+                    headers.Remove("Content-Type");
+                    headers.TryAddWithoutValidation("Content-Type", "multipart/mixed; boundary=batch_test-boundary");
+                },
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var message1 = new Message()
+            {
+                Token = "test-token1",
+            };
+            var message2 = new Message()
+            {
+                Token = "test-token2",
+            };
+            var response = await client.SendAllAsync(new[] { message1, message2 });
+            Assert.Equal(2, response.SuccessCount);
+            Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
+            Assert.Equal("projects/fir-adminintegrationtests/messages/5903525881088369386", response.Responses[1].MessageId);
         }
 
         [Fact]

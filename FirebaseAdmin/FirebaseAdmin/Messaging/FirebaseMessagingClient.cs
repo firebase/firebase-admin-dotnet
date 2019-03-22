@@ -13,11 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
+using Google.Apis.Requests;
+using Google.Apis.Services;
 using Google.Apis.Util;
 using Newtonsoft.Json;
 
@@ -29,7 +32,9 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     internal sealed class FirebaseMessagingClient : IDisposable
     {
-        private const string FcmUrl = "https://fcm.googleapis.com/v1/projects/{0}/messages:send";
+        private const string FcmBaseUrl = "https://fcm.googleapis.com";
+        private const string FcmSendUrl = "https://fcm.googleapis.com/v1/projects/{0}/messages:send";
+        private const string FcmBatchUrl = "https://fcm.googleapis.com/batch";
 
         private readonly ConfigurableHttpClient httpClient;
         private readonly string sendUrl;
@@ -48,7 +53,7 @@ namespace FirebaseAdmin.Messaging
 
             this.httpClient = clientFactory.ThrowIfNull(nameof(clientFactory))
                 .CreateAuthorizedHttpClient(credential);
-            this.sendUrl = string.Format(FcmUrl, projectId);
+            this.sendUrl = string.Format(FcmSendUrl, projectId);
         }
 
         /// <summary>
@@ -102,9 +107,85 @@ namespace FirebaseAdmin.Messaging
             }
         }
 
+        /// <summary>
+        /// Sends all messages in a single batch.
+        /// </summary>
+        /// <param name="messages">The messages to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the messages will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="BatchResponse"/>, giving details about
+        /// the batch operation.</returns>
+        public async Task<BatchResponse> SendAllAsync(
+            IEnumerable<Message> messages,
+            bool dryRun = false,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (messages == null)
+            {
+                throw new ArgumentNullException(nameof(messages));
+            }
+
+            try
+            {
+                return await this.SendBatchRequestAsync(messages, dryRun, cancellationToken);
+            }
+            catch (HttpRequestException e)
+            {
+                throw new FirebaseException("Error while calling the FCM service.", e);
+            }
+        }
+
         public void Dispose()
         {
             this.httpClient.Dispose();
+        }
+
+        private static FirebaseMessagingException CreateExceptionFor(RequestError requestError)
+        {
+            return new FirebaseMessagingException(requestError.Code, requestError.ToString());
+        }
+
+        private async Task<BatchResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
+        {
+            var responses = new List<BatchItemResponse>();
+
+            var batch = this.CreateBatchRequest(
+                messages,
+                dryRun,
+                (content, error, index, message) =>
+                {
+                    if (error != null)
+                    {
+                        responses.Add(BatchItemResponse.FromException(CreateExceptionFor(error)));
+                    }
+                    else if (content != null)
+                    {
+                        responses.Add(BatchItemResponse.FromMessageId(content.Name));
+                    }
+                    else
+                    {
+                        responses.Add(BatchItemResponse.FromException(new FirebaseException($"Something went wrong processing a batch item. The response status code was {message.StatusCode}.")));
+                    }
+                });
+
+            await batch.ExecuteAsync(cancellationToken);
+            return new BatchResponse(responses);
+        }
+
+        private BatchRequest CreateBatchRequest(IEnumerable<Message> messages, bool dryRun, BatchRequest.OnResponse<SendResponse> callback)
+        {
+            var clientService = new FCMClientService(this.httpClient);
+            var batch = new BatchRequest(clientService, FcmBatchUrl);
+
+            foreach (var message in messages)
+            {
+                batch.Queue(new FCMClientServiceRequest(clientService, this.sendUrl.Substring(FcmBaseUrl.Length), message, dryRun), callback);
+            }
+
+            return batch;
         }
 
         /// <summary>
@@ -128,6 +209,76 @@ namespace FirebaseAdmin.Messaging
         {
             [Newtonsoft.Json.JsonProperty("name")]
             public string Name { get; set; }
+        }
+
+        private sealed class FCMClientService : BaseClientService
+        {
+            public FCMClientService(ConfigurableHttpClient httpClient)
+                : base(new Initializer { HttpClientFactory = new CannedHttpClientFactory(httpClient) })
+            {
+            }
+
+            public override string Name => "FCM";
+
+            public override string BaseUri => "https://fcm.googleapis.com";
+
+            public override string BasePath => null;
+
+            public override IList<string> Features => null;
+        }
+
+        private sealed class CannedHttpClientFactory : IHttpClientFactory
+        {
+            private readonly ConfigurableHttpClient httpClient;
+
+            public CannedHttpClientFactory(ConfigurableHttpClient httpClient)
+            {
+                this.httpClient = httpClient;
+            }
+
+            public ConfigurableHttpClient CreateHttpClient(CreateHttpClientArgs args)
+            {
+                return this.httpClient;
+            }
+        }
+
+        private sealed class FCMClientServiceRequest : ClientServiceRequest<string>
+        {
+            private readonly string restPath;
+            private readonly Message message;
+            private readonly bool dryRun;
+
+            public FCMClientServiceRequest(IClientService clientService, string restPath, Message message, bool dryRun)
+                : base(clientService)
+            {
+                this.restPath = restPath;
+                this.message = message;
+                this.dryRun = dryRun;
+
+                this.InitParameters();
+            }
+
+            public override string HttpMethod => "POST";
+
+            public override string RestPath => this.restPath;
+
+            public override string MethodName => throw new NotImplementedException();
+
+            protected override object GetBody()
+            {
+                var sendRequest = new SendRequest
+                {
+                    Message = this.message,
+                    ValidateOnly = this.dryRun,
+                };
+
+                return sendRequest;
+            }
+
+            protected override void InitParameters()
+            {
+                base.InitParameters();
+            }
         }
     }
 }

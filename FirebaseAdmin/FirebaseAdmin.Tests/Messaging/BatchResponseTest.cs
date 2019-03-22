@@ -1,4 +1,18 @@
-﻿using System;
+﻿// Copyright 2018, Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FirebaseAdmin.Messaging;
@@ -11,7 +25,7 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void EmptyResponses()
         {
-            var responses = new List<SendResponse>();
+            var responses = new List<BatchItemResponse>();
 
             var batchResponse = new BatchResponse(responses);
 
@@ -23,13 +37,13 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void SomeResponse()
         {
-            var responses = new SendResponse[]
+            var responses = new BatchItemResponse[]
             {
-                SendResponse.FromMessageId("message1"),
-                SendResponse.FromMessageId("message2"),
-                SendResponse.FromException(
+                BatchItemResponse.FromMessageId("message1"),
+                BatchItemResponse.FromMessageId("message2"),
+                BatchItemResponse.FromException(
                     new FirebaseMessagingException(
-                        "error-code",
+                        400,
                         "error-message",
                         null)),
             };

@@ -27,7 +27,7 @@ namespace FirebaseAdmin.Messaging
         /// Initializes a new instance of the <see cref="BatchResponse"/> class.
         /// </summary>
         /// <param name="responses">The responses.</param>
-        public BatchResponse(IEnumerable<SendResponse> responses)
+        public BatchResponse(IEnumerable<BatchItemResponse> responses)
         {
             if (responses == null)
             {
@@ -52,7 +52,7 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Gets information about all responses for the batch.
         /// </summary>
-        public IReadOnlyList<SendResponse> Responses { get; }
+        public IReadOnlyList<BatchItemResponse> Responses { get; }
 
         /// <summary>
         /// Gets a count of how many of the responses in <see cref="Responses"/> were

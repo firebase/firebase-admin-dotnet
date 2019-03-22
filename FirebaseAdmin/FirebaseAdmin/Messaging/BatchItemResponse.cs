@@ -20,14 +20,14 @@ namespace FirebaseAdmin.Messaging
     /// The result of an individual send operation that was executed as part of a batch. See
     /// <see cref="BatchResponse"/> for more details.
     /// </summary>
-    public sealed class SendResponse
+    public sealed class BatchItemResponse
     {
-        private SendResponse(string messageId)
+        private BatchItemResponse(string messageId)
         {
             this.MessageId = messageId;
         }
 
-        private SendResponse(FirebaseMessagingException exception)
+        private BatchItemResponse(FirebaseException exception)
         {
             this.Exception = exception;
         }
@@ -40,7 +40,7 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Gets an exception if the send operation failed. Otherwise returns null.
         /// </summary>
-        public FirebaseMessagingException Exception { get; }
+        public FirebaseException Exception { get; }
 
         /// <summary>
         /// Gets a value indicating whether the send operation was successful or not. When this property
@@ -50,7 +50,7 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         public bool IsSuccessful => !string.IsNullOrEmpty(this.MessageId);
 
-        internal static SendResponse FromMessageId(string messageId)
+        internal static BatchItemResponse FromMessageId(string messageId)
         {
             if (messageId == null)
             {
@@ -62,17 +62,17 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException("Cannot be empty.", nameof(messageId));
             }
 
-            return new SendResponse(messageId);
+            return new BatchItemResponse(messageId);
         }
 
-        internal static SendResponse FromException(FirebaseMessagingException exception)
+        internal static BatchItemResponse FromException(FirebaseException exception)
         {
             if (exception == null)
             {
                 throw new ArgumentNullException(nameof(exception));
             }
 
-            return new SendResponse(exception);
+            return new BatchItemResponse(exception);
         }
     }
 }
