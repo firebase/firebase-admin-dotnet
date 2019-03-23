@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using Google.Apis.Json;
 using Newtonsoft.Json;
 
@@ -27,6 +28,11 @@ namespace FirebaseAdmin.Auth
     internal class UserRecord
     {
         private string uid;
+        private string email;
+        private string phoneNumber;
+        private string displayName;
+        private string photoUrl;
+        private long tokensValidAfterTimestamp;
         private IReadOnlyDictionary<string, object> customClaims;
 
         public UserRecord(string uid)
@@ -46,6 +52,97 @@ namespace FirebaseAdmin.Auth
                 CheckUid(value);
                 this.uid = value;
             }
+        }
+
+        /// <summary>
+        /// Gets the email of this user.
+        /// </summary>
+        [JsonProperty("email")]
+        public string Email
+        {
+            get => this.email;
+            private set
+            {
+                CheckEmail(value);
+                this.email = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the phone number of this user.
+        /// </summary>
+        [JsonProperty("phoneNumber")]
+        public string PhoneNumber
+        {
+            get => this.phoneNumber;
+            private set
+            {
+                CheckPhoneNumber(value);
+                this.phoneNumber = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the display name of this user.
+        /// </summary>
+        [JsonProperty("displayName")]
+        public string DisplayName
+        {
+            get => this.displayName;
+            private set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new ArgumentException("display name cannot be null or empty");
+                }
+
+                this.displayName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the photo url of this user.
+        /// </summary>
+        [JsonProperty("photoUrl")]
+        public string PhotoUrl
+        {
+            get => this.photoUrl;
+            private set
+            {
+                CheckPhotoUrl(value);
+                this.photoUrl = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the user's email has been verified.
+        /// </summary>
+        [JsonProperty("emailVerified")]
+        public bool IsEmailVerified { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether the user's account is disabled.
+        /// </summary>
+        [JsonProperty("disabled")]
+        public bool IsDisabled { get; private set; }
+
+        /// <summary>
+        /// Gets a new password hash for the user.
+        /// </summary>
+        public string PasswordHash { get; private set; }
+
+        /// <summary>
+        /// Gets a new password salt for the user.
+        /// </summary>
+        public string PasswordSalt { get; private set; }
+
+        /// <summary>
+        /// Gets the valid tokens since the epoch in milliseconds.
+        /// </summary>
+        [JsonProperty("validSince")]
+        public long TokensValidAfterTimestamp
+        {
+            get => this.tokensValidAfterTimestamp * 1000;
         }
 
         /// <summary>
@@ -79,6 +176,57 @@ namespace FirebaseAdmin.Auth
             else if (uid.Length > 128)
             {
                 throw new ArgumentException("uid must not be longer than 128 characters");
+            }
+        }
+
+        /// <summary>
+        /// Checks if the given user email is valid.
+        /// </summary>
+        /// <param name="email">The user email. Must not be null and
+        /// must have valid email address formatting.</param>
+        public static void CheckEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                throw new ArgumentException("email must not be null or empty");
+            }
+            else if (!Regex.IsMatch(email, "^[^@]+@[^@]+$", RegexOptions.IgnoreCase))
+            {
+                throw new ArgumentException("email address is invalid");
+            }
+        }
+
+        /// <summary>
+        /// Checks if the given user phone number is valid.
+        /// </summary>
+        /// <param name="phoneNumber">The user phone number. Must not be null and
+        /// must have valid E.164 formatting.</param>
+        public static void CheckPhoneNumber(string phoneNumber)
+        {
+            if (string.IsNullOrEmpty(phoneNumber))
+            {
+                throw new ArgumentException("phone number must not be null or empty");
+            }
+            else if (!phoneNumber.StartsWith("+"))
+            {
+                throw new ArgumentException("phone number is invalid. Must start with a '+' sign");
+            }
+        }
+
+        /// <summary>
+        /// Checks if the given user photo url is valid.
+        /// </summary>
+        /// <param name="photoUrl">The user phone number. Must not be null and
+        /// must have valid E.164 formatting.</param>
+        public static void CheckPhotoUrl(string photoUrl)
+        {
+            if (string.IsNullOrEmpty(photoUrl))
+            {
+                throw new ArgumentException("photo url must not be null or empty");
+            }
+            else if (!Uri.IsWellFormedUriString(photoUrl, UriKind.RelativeOrAbsolute))
+            {
+                throw new ArgumentException("photo url is malformed");
             }
         }
 
