@@ -13,45 +13,61 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Google.Apis.Util;
 
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Response from an operation that sends FCM messages to multiple recipients.
-    /// See <see cref="FirebaseMessaging.SendMulticastAsync(MulticastMessage)"/>.
+    /// The result of an individual send operation that was executed as part of a batch. See
+    /// <see cref="BatchResponse"/> for more details.
     /// </summary>
     public sealed class SendResponse
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SendResponse"/> class.
-        /// </summary>
-        /// <param name="responses">The responses.</param>
-        public SendResponse(IEnumerable<SendItemResponse> responses)
+        private SendResponse(string messageId)
         {
-            responses.ThrowIfNull(nameof(responses));
+            this.MessageId = messageId;
+        }
 
-            this.Responses = new List<SendItemResponse>(responses);
-            this.SuccessCount = responses.Where(response => response.IsSuccess).Count();
+        private SendResponse(FirebaseException exception)
+        {
+            this.Exception = exception;
         }
 
         /// <summary>
-        /// Gets information about all responses for the batch.
+        /// Gets a message ID string if the send operation was successful. Otherwise returns null.
         /// </summary>
-        public IReadOnlyList<SendItemResponse> Responses { get; }
+        public string MessageId { get; }
 
         /// <summary>
-        /// Gets a count of how many of the responses in <see cref="Responses"/> were
-        /// successful.
+        /// Gets an exception if the send operation failed. Otherwise returns null.
         /// </summary>
-        public int SuccessCount { get; }
+        public FirebaseException Exception { get; }
 
         /// <summary>
-        /// Gets a count of how many of the responses in <see cref="Responses"/> were
-        /// unsuccessful.
+        /// Gets a value indicating whether the send operation was successful or not. When this property
+        /// is <see langword="true"/>, <see cref="MessageId"/> is guaranteed to return a
+        /// non-<see langword="null"/> value. When this property is <see langword="false"/>,
+        /// <see cref="Exception"/> is guaranteed to return a non-<see langword="null"/> value.
         /// </summary>
-        public int FailureCount => this.Responses.Count - this.SuccessCount;
+        public bool IsSuccess => !string.IsNullOrEmpty(this.MessageId);
+
+        internal static SendResponse FromMessageId(string messageId)
+        {
+            if (string.IsNullOrEmpty(messageId))
+            {
+                throw new ArgumentException($"{nameof(messageId)} must be provided and not an empty string.", nameof(messageId));
+            }
+
+            return new SendResponse(messageId);
+        }
+
+        internal static SendResponse FromException(FirebaseException exception)
+        {
+            if (exception == null)
+            {
+                throw new ArgumentNullException(nameof(exception));
+            }
+
+            return new SendResponse(exception);
+        }
     }
 }

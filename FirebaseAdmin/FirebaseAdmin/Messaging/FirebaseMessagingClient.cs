@@ -121,15 +121,13 @@ namespace FirebaseAdmin.Messaging
         /// but it will not be delivered to any actual recipients.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        /// <returns>A task that completes with a <see cref="SendResponse"/>, giving details about
+        /// <returns>A task that completes with a <see cref="BatchResponse"/>, giving details about
         /// the batch operation.</returns>
-        public async Task<SendResponse> SendAllAsync(
+        public async Task<BatchResponse> SendAllAsync(
             IEnumerable<Message> messages,
             bool dryRun = false,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            messages.ThrowIfNull(nameof(messages));
-
             var copyOfMessages = messages.ThrowIfNull(nameof(messages))
                 .Select((message) => message.CopyAndValidate())
                 .ToList();
@@ -164,9 +162,9 @@ namespace FirebaseAdmin.Messaging
             return new FirebaseException(requestError.ToString());
         }
 
-        private async Task<SendResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
+        private async Task<BatchResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
         {
-            var responses = new List<SendItemResponse>();
+            var responses = new List<SendResponse>();
 
             var batch = this.CreateBatchRequest(
                 messages,
@@ -175,20 +173,20 @@ namespace FirebaseAdmin.Messaging
                 {
                     if (error != null)
                     {
-                        responses.Add(SendItemResponse.FromException(CreateExceptionFor(error)));
+                        responses.Add(SendResponse.FromException(CreateExceptionFor(error)));
                     }
                     else if (content != null)
                     {
-                        responses.Add(SendItemResponse.FromMessageId(content.Name));
+                        responses.Add(SendResponse.FromMessageId(content.Name));
                     }
                     else
                     {
-                        responses.Add(SendItemResponse.FromException(new FirebaseException($"Unexpected batch response. Response status code was {message.StatusCode}.")));
+                        responses.Add(SendResponse.FromException(new FirebaseException($"Unexpected batch response. Response status code was {message.StatusCode}.")));
                     }
                 });
 
             await batch.ExecuteAsync(cancellationToken);
-            return new SendResponse(responses);
+            return new BatchResponse(responses);
         }
 
         private BatchRequest CreateBatchRequest(IEnumerable<Message> messages, bool dryRun, BatchRequest.OnResponse<SingleMessageResponse> callback)
@@ -281,7 +279,7 @@ namespace FirebaseAdmin.Messaging
 
             protected override object GetBody()
             {
-                var sendRequest = new SendRequest
+                var sendRequest = new SendRequest()
                 {
                     Message = this.message,
                     ValidateOnly = this.dryRun,

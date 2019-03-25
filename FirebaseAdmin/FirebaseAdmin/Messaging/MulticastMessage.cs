@@ -61,9 +61,9 @@ namespace FirebaseAdmin.Messaging
         {
             var tokens = this.Tokens;
 
-            if (tokens == null)
+            if (tokens == null || tokens.Count > 100)
             {
-                throw new InvalidOperationException("Tokens cannot be null.");
+                throw new ArgumentException("Tokens must be non-null and contain at most 100 tokens.");
             }
 
             var tokensCopy = new List<string>(tokens);

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using FirebaseAdmin.Messaging;
 using Xunit;
 
@@ -40,7 +41,18 @@ namespace FirebaseAdmin.Tests.Messaging
         {
             var message = new MulticastMessage();
 
-            Assert.Throws<InvalidOperationException>(() => message.GetMessageList());
+            Assert.Throws<ArgumentException>(() => message.GetMessageList());
+        }
+
+        [Fact]
+        public void GetMessageListTooManyTokens()
+        {
+            var message = new MulticastMessage
+            {
+                Tokens = Enumerable.Range(0, 101).Select(x => x.ToString()).ToList(),
+            };
+
+            Assert.Throws<ArgumentException>(() => message.GetMessageList());
         }
     }
 }

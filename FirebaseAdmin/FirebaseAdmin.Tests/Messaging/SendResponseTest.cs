@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using FirebaseAdmin.Messaging;
 using Xunit;
 
@@ -23,42 +21,44 @@ namespace FirebaseAdmin.Tests.Messaging
     public class SendResponseTest
     {
         [Fact]
-        public void EmptyResponses()
+        public void SuccessfulResponse()
         {
-            var responses = new List<SendItemResponse>();
+            var response = SendResponse.FromMessageId("message-id");
 
-            var batchResponse = new SendResponse(responses);
-
-            Assert.Equal(0, batchResponse.SuccessCount);
-            Assert.Equal(0, batchResponse.FailureCount);
-            Assert.Equal(0, batchResponse.Responses.Count);
+            Assert.Equal("message-id", response.MessageId);
+            Assert.True(response.IsSuccess);
+            Assert.Null(response.Exception);
         }
 
         [Fact]
-        public void SomeResponse()
+        public void FailureResponse()
         {
-            var responses = new SendItemResponse[]
-            {
-                SendItemResponse.FromMessageId("message1"),
-                SendItemResponse.FromMessageId("message2"),
-                SendItemResponse.FromException(
-                    new FirebaseException(
-                        "error-message",
-                        null)),
-            };
+            var exception = new FirebaseException(
+                "error-message",
+                null);
+            var response = SendResponse.FromException(exception);
 
-            var batchResponse = new SendResponse(responses);
-
-            Assert.Equal(2, batchResponse.SuccessCount);
-            Assert.Equal(1, batchResponse.FailureCount);
-            Assert.Equal(3, batchResponse.Responses.Count);
-            Assert.True(responses.SequenceEqual(batchResponse.Responses));
+            Assert.Null(response.MessageId);
+            Assert.False(response.IsSuccess);
+            Assert.Same(exception, response.Exception);
         }
 
         [Fact]
-        public void ResponsesCannotBeNull()
+        public void MessageIdCannotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => new SendResponse(null));
+            Assert.Throws<ArgumentException>(() => SendResponse.FromMessageId(null));
+        }
+
+        [Fact]
+        public void MessageIdCannotBeEmpty()
+        {
+            Assert.Throws<ArgumentException>(() => SendResponse.FromMessageId(string.Empty));
+        }
+
+        [Fact]
+        public void ExceptionCannotBeNull()
+        {
+            Assert.Throws<ArgumentNullException>(() => SendResponse.FromException(null));
         }
     }
 }
