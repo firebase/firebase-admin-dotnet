@@ -20,14 +20,14 @@ using Xunit;
 
 namespace FirebaseAdmin.Tests.Messaging
 {
-    public class BatchResponseTest
+    public class SendResponseTest
     {
         [Fact]
         public void EmptyResponses()
         {
-            var responses = new List<BatchItemResponse>();
+            var responses = new List<SendItemResponse>();
 
-            var batchResponse = new BatchResponse(responses);
+            var batchResponse = new SendResponse(responses);
 
             Assert.Equal(0, batchResponse.SuccessCount);
             Assert.Equal(0, batchResponse.FailureCount);
@@ -37,17 +37,17 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void SomeResponse()
         {
-            var responses = new BatchItemResponse[]
+            var responses = new SendItemResponse[]
             {
-                BatchItemResponse.FromMessageId("message1"),
-                BatchItemResponse.FromMessageId("message2"),
-                BatchItemResponse.FromException(
+                SendItemResponse.FromMessageId("message1"),
+                SendItemResponse.FromMessageId("message2"),
+                SendItemResponse.FromException(
                     new FirebaseException(
                         "error-message",
                         null)),
             };
 
-            var batchResponse = new BatchResponse(responses);
+            var batchResponse = new SendResponse(responses);
 
             Assert.Equal(2, batchResponse.SuccessCount);
             Assert.Equal(1, batchResponse.FailureCount);
@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void ResponsesCannotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => new BatchResponse(null));
+            Assert.Throws<ArgumentNullException>(() => new SendResponse(null));
         }
     }
 }

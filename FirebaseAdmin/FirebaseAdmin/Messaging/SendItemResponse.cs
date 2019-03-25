@@ -18,16 +18,16 @@ namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// The result of an individual send operation that was executed as part of a batch. See
-    /// <see cref="BatchResponse"/> for more details.
+    /// <see cref="SendResponse"/> for more details.
     /// </summary>
-    public sealed class BatchItemResponse
+    public sealed class SendItemResponse
     {
-        private BatchItemResponse(string messageId)
+        private SendItemResponse(string messageId)
         {
             this.MessageId = messageId;
         }
 
-        private BatchItemResponse(FirebaseException exception)
+        private SendItemResponse(FirebaseException exception)
         {
             this.Exception = exception;
         }
@@ -48,31 +48,26 @@ namespace FirebaseAdmin.Messaging
         /// non-<see langword="null"/> value. When this property is <see langword="false"/>,
         /// <see cref="Exception"/> is guaranteed to return a non-<see langword="null"/> value.
         /// </summary>
-        public bool IsSuccessful => !string.IsNullOrEmpty(this.MessageId);
+        public bool IsSuccess => !string.IsNullOrEmpty(this.MessageId);
 
-        internal static BatchItemResponse FromMessageId(string messageId)
+        internal static SendItemResponse FromMessageId(string messageId)
         {
-            if (messageId == null)
+            if (string.IsNullOrEmpty(messageId))
             {
-                throw new ArgumentNullException(nameof(messageId));
+                throw new ArgumentException($"{nameof(messageId)} must be provided and not an empty string.", nameof(messageId));
             }
 
-            if (messageId == string.Empty)
-            {
-                throw new ArgumentException("Cannot be empty.", nameof(messageId));
-            }
-
-            return new BatchItemResponse(messageId);
+            return new SendItemResponse(messageId);
         }
 
-        internal static BatchItemResponse FromException(FirebaseException exception)
+        internal static SendItemResponse FromException(FirebaseException exception)
         {
             if (exception == null)
             {
                 throw new ArgumentNullException(nameof(exception));
             }
 
-            return new BatchItemResponse(exception);
+            return new SendItemResponse(exception);
         }
     }
 }

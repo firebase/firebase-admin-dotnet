@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,11 +34,13 @@ namespace FirebaseAdmin.Messaging
     internal sealed class FirebaseMessagingClient : IDisposable
     {
         private const string FcmBaseUrl = "https://fcm.googleapis.com";
-        private const string FcmSendUrl = "https://fcm.googleapis.com/v1/projects/{0}/messages:send";
-        private const string FcmBatchUrl = "https://fcm.googleapis.com/batch";
+        private const string FcmSendUrl = FcmBaseUrl + "/v1/projects/{0}/messages:send";
+        private const string FcmBatchUrl = FcmBaseUrl + "/batch";
 
         private readonly ConfigurableHttpClient httpClient;
         private readonly string sendUrl;
+        private readonly string restPath;
+        private readonly FCMClientService fcmClientService;
 
         public FirebaseMessagingClient(
             HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
@@ -54,6 +57,8 @@ namespace FirebaseAdmin.Messaging
             this.httpClient = clientFactory.ThrowIfNull(nameof(clientFactory))
                 .CreateAuthorizedHttpClient(credential);
             this.sendUrl = string.Format(FcmSendUrl, projectId);
+            this.restPath = this.sendUrl.Substring(FcmBaseUrl.Length);
+            this.fcmClientService = new FCMClientService(this.httpClient);
         }
 
         /// <summary>
@@ -98,7 +103,7 @@ namespace FirebaseAdmin.Messaging
                     throw new FirebaseException(error);
                 }
 
-                var parsed = JsonConvert.DeserializeObject<SendResponse>(json);
+                var parsed = JsonConvert.DeserializeObject<SingleMessageResponse>(json);
                 return parsed.Name;
             }
             catch (HttpRequestException e)
@@ -116,21 +121,32 @@ namespace FirebaseAdmin.Messaging
         /// but it will not be delivered to any actual recipients.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        /// <returns>A task that completes with a <see cref="BatchResponse"/>, giving details about
+        /// <returns>A task that completes with a <see cref="SendResponse"/>, giving details about
         /// the batch operation.</returns>
-        public async Task<BatchResponse> SendAllAsync(
+        public async Task<SendResponse> SendAllAsync(
             IEnumerable<Message> messages,
             bool dryRun = false,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (messages == null)
+            messages.ThrowIfNull(nameof(messages));
+
+            var copyOfMessages = messages.ThrowIfNull(nameof(messages))
+                .Select((message) => message.CopyAndValidate())
+                .ToList();
+
+            if (copyOfMessages.Count < 1)
             {
-                throw new ArgumentNullException(nameof(messages));
+                throw new ArgumentException("At least one message is required.");
+            }
+
+            if (copyOfMessages.Count > 100)
+            {
+                throw new ArgumentException("At most 100 messages are allowed.");
             }
 
             try
             {
-                return await this.SendBatchRequestAsync(messages, dryRun, cancellationToken);
+                return await this.SendBatchRequestAsync(copyOfMessages, dryRun, cancellationToken);
             }
             catch (HttpRequestException e)
             {
@@ -148,9 +164,9 @@ namespace FirebaseAdmin.Messaging
             return new FirebaseException(requestError.ToString());
         }
 
-        private async Task<BatchResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
+        private async Task<SendResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
         {
-            var responses = new List<BatchItemResponse>();
+            var responses = new List<SendItemResponse>();
 
             var batch = this.CreateBatchRequest(
                 messages,
@@ -159,30 +175,29 @@ namespace FirebaseAdmin.Messaging
                 {
                     if (error != null)
                     {
-                        responses.Add(BatchItemResponse.FromException(CreateExceptionFor(error)));
+                        responses.Add(SendItemResponse.FromException(CreateExceptionFor(error)));
                     }
                     else if (content != null)
                     {
-                        responses.Add(BatchItemResponse.FromMessageId(content.Name));
+                        responses.Add(SendItemResponse.FromMessageId(content.Name));
                     }
                     else
                     {
-                        responses.Add(BatchItemResponse.FromException(new FirebaseException($"Something went wrong processing a batch item. The response status code was {message.StatusCode}.")));
+                        responses.Add(SendItemResponse.FromException(new FirebaseException($"Unexpected batch response. Response status code was {message.StatusCode}.")));
                     }
                 });
 
             await batch.ExecuteAsync(cancellationToken);
-            return new BatchResponse(responses);
+            return new SendResponse(responses);
         }
 
-        private BatchRequest CreateBatchRequest(IEnumerable<Message> messages, bool dryRun, BatchRequest.OnResponse<SendResponse> callback)
+        private BatchRequest CreateBatchRequest(IEnumerable<Message> messages, bool dryRun, BatchRequest.OnResponse<SingleMessageResponse> callback)
         {
-            var clientService = new FCMClientService(this.httpClient);
-            var batch = new BatchRequest(clientService, FcmBatchUrl);
+            var batch = new BatchRequest(this.fcmClientService, FcmBatchUrl);
 
             foreach (var message in messages)
             {
-                batch.Queue(new FCMClientServiceRequest(clientService, this.sendUrl.Substring(FcmBaseUrl.Length), message, dryRun), callback);
+                batch.Queue(new FCMClientServiceRequest(this.fcmClientService, this.restPath, message, dryRun), callback);
             }
 
             return batch;
@@ -202,10 +217,10 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Represents the response messages sent by the FCM backend service. Primarily consists of the
-        /// message ID (Name) that indicates success handoff to FCM.
+        /// Represents the response messages sent by the FCM backend service when sending a single
+        /// message. Primarily consists of the message ID (Name) that indicates success handoff to FCM.
         /// </summary>
-        internal class SendResponse
+        internal class SingleMessageResponse
         {
             [Newtonsoft.Json.JsonProperty("name")]
             public string Name { get; set; }
@@ -220,7 +235,7 @@ namespace FirebaseAdmin.Messaging
 
             public override string Name => "FCM";
 
-            public override string BaseUri => "https://fcm.googleapis.com";
+            public override string BaseUri => FcmBaseUrl;
 
             public override string BasePath => null;
 
@@ -273,11 +288,6 @@ namespace FirebaseAdmin.Messaging
                 };
 
                 return sendRequest;
-            }
-
-            protected override void InitParameters()
-            {
-                base.InitParameters();
             }
         }
     }

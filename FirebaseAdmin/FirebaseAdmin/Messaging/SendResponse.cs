@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Google.Apis.Util;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -21,38 +23,24 @@ namespace FirebaseAdmin.Messaging
     /// Response from an operation that sends FCM messages to multiple recipients.
     /// See <see cref="FirebaseMessaging.SendMulticastAsync(MulticastMessage)"/>.
     /// </summary>
-    public sealed class BatchResponse
+    public sealed class SendResponse
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="BatchResponse"/> class.
+        /// Initializes a new instance of the <see cref="SendResponse"/> class.
         /// </summary>
         /// <param name="responses">The responses.</param>
-        public BatchResponse(IEnumerable<BatchItemResponse> responses)
+        public SendResponse(IEnumerable<SendItemResponse> responses)
         {
-            if (responses == null)
-            {
-                throw new ArgumentNullException(nameof(responses));
-            }
+            responses.ThrowIfNull(nameof(responses));
 
-            this.Responses = responses.Copy();
-
-            var successCount = 0;
-
-            foreach (var response in responses)
-            {
-                if (response.IsSuccessful)
-                {
-                    ++successCount;
-                }
-            }
-
-            this.SuccessCount = successCount;
+            this.Responses = new List<SendItemResponse>(responses);
+            this.SuccessCount = responses.Where(response => response.IsSuccess).Count();
         }
 
         /// <summary>
         /// Gets information about all responses for the batch.
         /// </summary>
-        public IReadOnlyList<BatchItemResponse> Responses { get; }
+        public IReadOnlyList<SendItemResponse> Responses { get; }
 
         /// <summary>
         /// Gets a count of how many of the responses in <see cref="Responses"/> were

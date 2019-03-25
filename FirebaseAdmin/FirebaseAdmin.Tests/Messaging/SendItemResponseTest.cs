@@ -18,15 +18,15 @@ using Xunit;
 
 namespace FirebaseAdmin.Tests.Messaging
 {
-    public class BatchItemResponseTest
+    public class SendItemResponseTest
     {
         [Fact]
         public void SuccessfulResponse()
         {
-            var response = BatchItemResponse.FromMessageId("message-id");
+            var response = SendItemResponse.FromMessageId("message-id");
 
             Assert.Equal("message-id", response.MessageId);
-            Assert.True(response.IsSuccessful);
+            Assert.True(response.IsSuccess);
             Assert.Null(response.Exception);
         }
 
@@ -36,29 +36,29 @@ namespace FirebaseAdmin.Tests.Messaging
             var exception = new FirebaseException(
                 "error-message",
                 null);
-            var response = BatchItemResponse.FromException(exception);
+            var response = SendItemResponse.FromException(exception);
 
             Assert.Null(response.MessageId);
-            Assert.False(response.IsSuccessful);
+            Assert.False(response.IsSuccess);
             Assert.Same(exception, response.Exception);
         }
 
         [Fact]
         public void MessageIdCannotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => BatchItemResponse.FromMessageId(null));
+            Assert.Throws<ArgumentException>(() => SendItemResponse.FromMessageId(null));
         }
 
         [Fact]
         public void MessageIdCannotBeEmpty()
         {
-            Assert.Throws<ArgumentException>(() => BatchItemResponse.FromMessageId(string.Empty));
+            Assert.Throws<ArgumentException>(() => SendItemResponse.FromMessageId(string.Empty));
         }
 
         [Fact]
         public void ExceptionCannotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => BatchItemResponse.FromException(null));
+            Assert.Throws<ArgumentNullException>(() => SendItemResponse.FromException(null));
         }
     }
 }

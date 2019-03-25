@@ -14,7 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Linq;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -29,75 +29,45 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Gets or sets the registration tokens for the devices to which the message should be distributed.
         /// </summary>
-        [JsonProperty("tokens")]
         public IReadOnlyList<string> Tokens { get; set; }
 
         /// <summary>
         /// Gets or sets a collection of key-value pairs that will be added to the message as data
         /// fields. Keys and the values must not be null.
         /// </summary>
-        [JsonProperty("data")]
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
         /// <summary>
         /// Gets or sets the notification information to be included in the message.
         /// </summary>
-        [JsonProperty("notification")]
         public Notification Notification { get; set; }
 
         /// <summary>
         /// Gets or sets the Android-specific information to be included in the message.
         /// </summary>
-        [JsonProperty("android")]
         public AndroidConfig Android { get; set; }
 
         /// <summary>
         /// Gets or sets the Webpush-specific information to be included in the message.
         /// </summary>
-        [JsonProperty("webpush")]
         public WebpushConfig Webpush { get; set; }
 
         /// <summary>
         /// Gets or sets the APNs-specific information to be included in the message.
         /// </summary>
-        [JsonProperty("apns")]
         public ApnsConfig Apns { get; set; }
-
-        /// <summary>
-        /// Copies this message, and validates the content of it to ensure that it can be
-        /// serialized into the JSON format expected by the FCM service. Each property is copied
-        /// before validation to guard against the original being modified in the user code
-        /// post-validation.
-        /// </summary>
-        internal MulticastMessage CopyAndValidate()
-        {
-            // Copy and validate the leaf-level properties
-            var copy = new MulticastMessage
-            {
-                Tokens = this.Tokens?.Copy(),
-                Data = this.Data?.Copy(),
-            };
-
-            if (copy.Tokens == null || copy.Tokens.Count < 1)
-            {
-                throw new ArgumentException("At least one token is required.");
-            }
-
-            if (copy.Tokens.Count > 100)
-            {
-                throw new ArgumentException("At most 100 tokens are allowed.");
-            }
-
-            // Copy and validate the child properties
-            copy.Notification = this.Notification?.CopyAndValidate();
-            copy.Android = this.Android?.CopyAndValidate();
-            copy.Webpush = this.Webpush?.CopyAndValidate();
-            copy.Apns = this.Apns?.CopyAndValidate();
-            return copy;
-        }
 
         internal List<Message> GetMessageList()
         {
+            var tokens = this.Tokens;
+
+            if (tokens == null)
+            {
+                throw new InvalidOperationException("Tokens cannot be null.");
+            }
+
+            var tokensCopy = new List<string>(tokens);
+
             var templateMessage = new Message
             {
                 Android = this.Android?.CopyAndValidate(),
@@ -107,12 +77,19 @@ namespace FirebaseAdmin.Messaging
                 Webpush = this.Webpush?.CopyAndValidate(),
             };
 
-            var messages = new List<Message>(this.Tokens.Count);
+            var messages = new List<Message>(tokensCopy.Count);
 
-            foreach (var token in this.Tokens)
+            foreach (var token in tokensCopy)
             {
-                templateMessage.Token = token;
-                var message = templateMessage.CopyAndValidate();
+                var message = new Message
+                {
+                    Android = templateMessage.Android,
+                    Apns = templateMessage.Apns,
+                    Data = templateMessage.Data,
+                    Notification = templateMessage.Notification,
+                    Webpush = templateMessage.Webpush,
+                    Token = token,
+                };
                 messages.Add(message);
             }
 
