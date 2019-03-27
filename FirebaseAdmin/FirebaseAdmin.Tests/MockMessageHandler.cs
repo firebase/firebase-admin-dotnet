@@ -43,6 +43,8 @@ namespace FirebaseAdmin.Tests
 
         public string Request { get; private set; }
 
+        public HttpRequestHeaders RequestHeaders { get; private set; }
+
         public HttpStatusCode StatusCode { get; set; }
 
         public object Response { get; set; }
@@ -62,6 +64,8 @@ namespace FirebaseAdmin.Tests
             {
                 this.Request = null;
             }
+
+            this.RequestHeaders = request.Headers;
 
             var resp = new HttpResponseMessage();
             string json;

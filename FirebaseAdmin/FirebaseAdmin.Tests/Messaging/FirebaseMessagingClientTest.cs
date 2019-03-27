@@ -71,22 +71,44 @@ namespace FirebaseAdmin.Messaging.Tests
             {
                 Topic = "test-topic",
             };
+
             var response = await client.SendAsync(message);
+
             Assert.Equal("test-response", response);
-            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
-                handler.Request);
+            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
+            var versionHeader = handler.RequestHeaders.GetValues("X-Firebase-Client").First();
+            Assert.Equal(FirebaseMessagingClient.ClientVersion, versionHeader);
+        }
 
-            // Send in dryRun mode.
-            response = await client.SendAsync(message, dryRun: true);
+        [Fact]
+        public async Task SendDryRunAsync()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new FirebaseMessagingClient.SingleMessageResponse()
+                {
+                    Name = "test-response",
+                },
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var message = new Message()
+            {
+                Topic = "test-topic",
+            };
+
+            var response = await client.SendAsync(message, dryRun: true);
+
             Assert.Equal("test-response", response);
-            req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
-                handler.Request);
+            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(handler.Request);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.True(req.ValidateOnly);
-            Assert.Equal(2, handler.Calls);
+            Assert.Equal(1, handler.Calls);
+            var versionHeader = handler.RequestHeaders.GetValues("X-Firebase-Client").First();
+            Assert.Equal(FirebaseMessagingClient.ClientVersion, versionHeader);
         }
 
         [Fact]
@@ -142,10 +164,15 @@ Vary: Referer
             {
                 Token = "test-token2",
             };
+
             var response = await client.SendAllAsync(new[] { message1, message2 });
+
             Assert.Equal(2, response.SuccessCount);
             Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
             Assert.Equal("projects/fir-adminintegrationtests/messages/5903525881088369386", response.Responses[1].MessageId);
+            Assert.Equal(1, handler.Calls);
+            var versionHeader = $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.Request, versionHeader));
         }
 
         [Fact]
@@ -212,11 +239,16 @@ Vary: Referer
             {
                 Token = "test-token2",
             };
+
             var response = await client.SendAllAsync(new[] { message1, message2 });
+
             Assert.Equal(1, response.SuccessCount);
             Assert.Equal(1, response.FailureCount);
             Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
             Assert.NotNull(response.Responses[1].Exception);
+            Assert.Equal(1, handler.Calls);
+            var versionHeader = $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.Request, versionHeader));
         }
 
         [Fact]
@@ -267,6 +299,11 @@ Vary: Referer
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
+        }
+
+        private int CountLinesWithPrefix(string body, string linePrefix)
+        {
+            return body.Split('\n').Count((line) => line.StartsWith(linePrefix));
         }
     }
 }

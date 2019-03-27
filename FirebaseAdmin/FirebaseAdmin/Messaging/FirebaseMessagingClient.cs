@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
+using Google.Apis.Json;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 using Google.Apis.Util;
@@ -61,6 +62,14 @@ namespace FirebaseAdmin.Messaging
             this.fcmClientService = new FCMClientService(this.httpClient);
         }
 
+        internal static string ClientVersion
+        {
+            get
+            {
+                return $"fire-admin-dotnet/{FirebaseApp.GetSdkVersion()}";
+            }
+        }
+
         /// <summary>
         /// Sends a message to the FCM service for delivery. The message gets validated both by
         /// the Admin SDK, and the remote FCM service. A successful return value indicates
@@ -92,8 +101,7 @@ namespace FirebaseAdmin.Messaging
             };
             try
             {
-                var response = await this.httpClient.PostJsonAsync(
-                    this.sendUrl, request, cancellationToken).ConfigureAwait(false);
+                var response = await this.PostAsync(request, cancellationToken).ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                 {
@@ -157,9 +165,26 @@ namespace FirebaseAdmin.Messaging
             this.httpClient.Dispose();
         }
 
+        private static void AddCommonHeaders(HttpRequestMessage request)
+        {
+            request.Headers.Add("X-Firebase-Client", ClientVersion);
+        }
+
         private static FirebaseException CreateExceptionFor(RequestError requestError)
         {
             return new FirebaseException(requestError.ToString());
+        }
+
+        private async Task<HttpResponseMessage> PostAsync(object body, CancellationToken cancellationToken)
+        {
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri(this.sendUrl),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
+            };
+            AddCommonHeaders(request);
+            return await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<BatchResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
@@ -185,7 +210,7 @@ namespace FirebaseAdmin.Messaging
                     }
                 });
 
-            await batch.ExecuteAsync(cancellationToken);
+            await batch.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             return new BatchResponse(responses);
         }
 
@@ -195,7 +220,12 @@ namespace FirebaseAdmin.Messaging
 
             foreach (var message in messages)
             {
-                batch.Queue(new FCMClientServiceRequest(this.fcmClientService, this.restPath, message, dryRun), callback);
+                var body = new SendRequest()
+                {
+                    Message = message,
+                    ValidateOnly = dryRun,
+                };
+                batch.Queue(new FCMClientServiceRequest(this.fcmClientService, this.restPath, body), callback);
             }
 
             return batch;
@@ -258,16 +288,17 @@ namespace FirebaseAdmin.Messaging
         private sealed class FCMClientServiceRequest : ClientServiceRequest<string>
         {
             private readonly string restPath;
-            private readonly Message message;
-            private readonly bool dryRun;
+            private readonly SendRequest body;
 
-            public FCMClientServiceRequest(IClientService clientService, string restPath, Message message, bool dryRun)
+            public FCMClientServiceRequest(FCMClientService clientService, string restPath, SendRequest body)
                 : base(clientService)
             {
                 this.restPath = restPath;
-                this.message = message;
-                this.dryRun = dryRun;
-
+                this.body = body;
+                this.ModifyRequest = (request) =>
+                {
+                    AddCommonHeaders(request);
+                };
                 this.InitParameters();
             }
 
@@ -279,13 +310,7 @@ namespace FirebaseAdmin.Messaging
 
             protected override object GetBody()
             {
-                var sendRequest = new SendRequest()
-                {
-                    Message = this.message,
-                    ValidateOnly = this.dryRun,
-                };
-
-                return sendRequest;
+                return this.body;
             }
         }
     }

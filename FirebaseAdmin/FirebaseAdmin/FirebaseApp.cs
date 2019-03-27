@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Google;
@@ -259,6 +260,11 @@ namespace FirebaseAdmin
                     throw new InvalidOperationException("Failed to delete all apps");
                 }
             }
+        }
+
+        internal static string GetSdkVersion()
+        {
+            return typeof(FirebaseApp).GetTypeInfo().Assembly.GetName().Version.ToString(3);
         }
 
         internal T GetOrInit<T>(string id, ServiceFactory<T> initializer)
