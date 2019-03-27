@@ -268,7 +268,8 @@ namespace FirebaseAdmin
         /// <returns>A version string in major.minor.patch format.</returns>
         internal static string GetSdkVersion()
         {
-            return typeof(FirebaseApp).GetTypeInfo().Assembly.GetName().Version.ToString(3);
+            const int majorMinorPatch = 3;
+            return typeof(FirebaseApp).GetTypeInfo().Assembly.GetName().Version.ToString(majorMinorPatch);
         }
 
         internal T GetOrInit<T>(string id, ServiceFactory<T> initializer)
