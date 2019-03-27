@@ -44,9 +44,9 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Gets a value indicating whether the send operation was successful or not. When this property
-        /// is <see langword="true"/>, <see cref="MessageId"/> is guaranteed to return a
-        /// non-<see langword="null"/> value. When this property is <see langword="false"/>,
-        /// <see cref="Exception"/> is guaranteed to return a non-<see langword="null"/> value.
+        /// is <c>true</c>, <see cref="MessageId"/> is guaranteed to return a
+        /// non-null value. When this property is <c>false</c>,
+        /// <see cref="Exception"/> is guaranteed to return a non-null value.
         /// </summary>
         public bool IsSuccess => !string.IsNullOrEmpty(this.MessageId);
 

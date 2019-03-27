@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FirebaseAdmin.Messaging;
 
@@ -115,6 +116,107 @@ namespace FirebaseAdmin.Snippets
             // Response is a message ID string.
             Console.WriteLine("Dry run successful: " + response);
             // [END send_dry_run]
+        }
+
+        internal static async Task SendAllAsync()
+        {
+            var registrationToken = "YOUR_REGISTRATION_TOKEN";
+            // [START send_all]
+            // Create a list containing up to 100 messages.
+            var messages = new List<Message>()
+            {
+                new Message()
+                {
+                    Notification = new Notification()
+                    {
+                        Title = "Price drop",
+                        Body = "5% off all electronics",
+                    },
+                    Token = registrationToken,
+                },
+                new Message()
+                {
+                    Notification = new Notification()
+                    {
+                        Title = "Price drop",
+                        Body = "2% off all books",
+                    },
+                    Topic = "readers-club",
+                },
+            };
+
+            var response = await FirebaseMessaging.DefaultInstance.SendAllAsync(messages);
+            // See the BatchResponse reference documentation
+            // for the contents of response.
+            Console.WriteLine($"{response.SuccessCount} messages were sent successfully");
+            // [END send_all]
+        }
+
+        internal static async Task SendMulticastAsync()
+        {
+            // [START send_multicast]
+            // Create a list containing up to 100 registration tokens.
+            // These registration tokens come from the client FCM SDKs.
+            var registrationTokens = new List<string>()
+            {
+                "YOUR_REGISTRATION_TOKEN_1",
+                // ...
+                "YOUR_REGISTRATION_TOKEN_n",
+            };
+            var message = new MulticastMessage()
+            {
+                Tokens = registrationTokens,
+                Data = new Dictionary<string, string>()
+                {
+                    { "score", "850" },
+                    { "time", "2:45" },
+                },
+            };
+
+            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+            // See the BatchResponse reference documentation
+            // for the contents of response.
+            Console.WriteLine($"{response.SuccessCount} messages were sent successfully");
+            // [END send_multicast]
+        }
+
+        internal static async Task SendMulticastAndHandleErrorsAsync()
+        {
+            // [START send_multicast_error]
+            // These registration tokens come from the client FCM SDKs.
+            var registrationTokens = new List<string>()
+            {
+                "YOUR_REGISTRATION_TOKEN_1",
+                // ...
+                "YOUR_REGISTRATION_TOKEN_n",
+            };
+            var message = new MulticastMessage()
+            {
+                Tokens = registrationTokens,
+                Data = new Dictionary<string, string>()
+                {
+                    { "score", "850" },
+                    { "time", "2:45" },
+                },
+            };
+
+            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+            if (response.FailureCount > 0)
+            {
+                var failedTokens = new List<string>();
+                for (var i = 0; i < response.Responses.Count; i++)
+                {
+                    if (!response.Responses[i].IsSuccess)
+                    {
+                        // The order of responses corresponds to the order of the registration tokens.
+                        failedTokens.Add(registrationTokens[i]);
+                    }
+                }
+
+                Console.WriteLine($"List of tokens that caused failures: {failedTokens}");
+            }
+
+            // [END send_multicast_error]
         }
 
         internal static Message CreateAndroidMessage()
