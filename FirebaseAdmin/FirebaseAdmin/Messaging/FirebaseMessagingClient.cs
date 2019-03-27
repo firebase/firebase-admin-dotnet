@@ -101,7 +101,7 @@ namespace FirebaseAdmin.Messaging
             };
             try
             {
-                var response = await this.PostAsync(request, cancellationToken).ConfigureAwait(false);
+                var response = await this.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                 {
@@ -175,7 +175,7 @@ namespace FirebaseAdmin.Messaging
             return new FirebaseException(requestError.ToString());
         }
 
-        private async Task<HttpResponseMessage> PostAsync(object body, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> SendRequestAsync(object body, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage()
             {
@@ -187,7 +187,10 @@ namespace FirebaseAdmin.Messaging
             return await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task<BatchResponse> SendBatchRequestAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
+        private async Task<BatchResponse> SendBatchRequestAsync(
+            IEnumerable<Message> messages,
+            bool dryRun,
+            CancellationToken cancellationToken)
         {
             var responses = new List<SendResponse>();
 
@@ -206,7 +209,8 @@ namespace FirebaseAdmin.Messaging
                     }
                     else
                     {
-                        responses.Add(SendResponse.FromException(new FirebaseException($"Unexpected batch response. Response status code was {message.StatusCode}.")));
+                        responses.Add(SendResponse.FromException(new FirebaseException(
+                            $"Unexpected batch response. Response status code was {message.StatusCode}.")));
                     }
                 });
 
@@ -214,7 +218,10 @@ namespace FirebaseAdmin.Messaging
             return new BatchResponse(responses);
         }
 
-        private BatchRequest CreateBatchRequest(IEnumerable<Message> messages, bool dryRun, BatchRequest.OnResponse<SingleMessageResponse> callback)
+        private BatchRequest CreateBatchRequest(
+            IEnumerable<Message> messages,
+            bool dryRun,
+            BatchRequest.OnResponse<SingleMessageResponse> callback)
         {
             var batch = new BatchRequest(this.fcmClientService, FcmBatchUrl);
 

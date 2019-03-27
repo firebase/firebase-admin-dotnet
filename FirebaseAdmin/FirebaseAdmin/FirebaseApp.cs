@@ -262,6 +262,10 @@ namespace FirebaseAdmin
             }
         }
 
+        /// <summary>
+        /// Returns the current version of the .NET assembly.
+        /// </summary>
+        /// <returns>A version string in major.minor.patch format.</returns>
         internal static string GetSdkVersion()
         {
             return typeof(FirebaseApp).GetTypeInfo().Assembly.GetName().Version.ToString(3);

@@ -214,7 +214,11 @@ namespace FirebaseAdmin.Tests
         public void GetSdkVersion()
         {
             var version = FirebaseApp.GetSdkVersion();
-            Assert.Equal(3, version.Split(".").Length);
+
+            var segments = version.Split(".");
+            Assert.Equal(3, segments.Length);
+            int result;
+            Assert.All(segments, (segment) => int.TryParse(segment, out result));
         }
 
         public void Dispose()
