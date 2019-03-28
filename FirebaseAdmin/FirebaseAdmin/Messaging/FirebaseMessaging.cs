@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Http;
@@ -165,6 +166,132 @@ namespace FirebaseAdmin.Messaging
         {
             return await this.messagingClient.SendAsync(
                 message, dryRun, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends all the messages in the given list via Firebase Cloud Messaging. Employs batching to
+        /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
+        /// method, this is a significantly more efficient way to send multiple messages.
+        /// </summary>
+        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages)
+        {
+            return await this.SendAllAsync(messages, false);
+        }
+
+        /// <summary>
+        /// Sends all the messages in the given list via Firebase Cloud Messaging. Employs batching to
+        /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
+        /// method, this is a significantly more efficient way to send multiple messages.
+        /// </summary>
+        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
+        {
+            return await this.SendAllAsync(messages, false, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sends all the messages in the given list via Firebase Cloud Messaging. Employs batching to
+        /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
+        /// method, this is a significantly more efficient way to send multiple messages.
+        /// </summary>
+        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun)
+        {
+            return await this.SendAllAsync(messages, dryRun, default);
+        }
+
+        /// <summary>
+        /// Sends all the messages in the given list via Firebase Cloud Messaging. Employs batching to
+        /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
+        /// method, this is a significantly more efficient way to send multiple messages.
+        /// </summary>
+        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
+        {
+            return await this.messagingClient.SendAllAsync(messages, dryRun, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// </summary>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message)
+        {
+            return await this.SendMulticastAsync(message, false);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// </summary>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, CancellationToken cancellationToken)
+        {
+            return await this.SendMulticastAsync(message, false, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
+        /// actually sent to the recipients. Instead, the FCM service performs all the necessary
+        /// validations, and emulates the send operation. This is a good way to check if a
+        /// certain message will be accepted by FCM for delivery.</para>
+        /// </summary>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, bool dryRun)
+        {
+            return await this.SendMulticastAsync(message, dryRun, default);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
+        /// actually sent to the recipients. Instead, the FCM service performs all the necessary
+        /// validations, and emulates the send operation. This is a good way to check if a
+        /// certain message will be accepted by FCM for delivery.</para>
+        /// </summary>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendMulticastAsync(
+            MulticastMessage message, bool dryRun, CancellationToken cancellationToken)
+        {
+            return await this.SendAllAsync(
+                message.GetMessageList(), dryRun, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

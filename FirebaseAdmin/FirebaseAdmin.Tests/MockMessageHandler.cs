@@ -39,13 +39,19 @@ namespace FirebaseAdmin.Tests
 
         public delegate void SetHeaders(HttpResponseHeaders header);
 
+        public delegate void SetContentHeaders(HttpContentHeaders header);
+
         public string Request { get; private set; }
+
+        public HttpRequestHeaders RequestHeaders { get; private set; }
 
         public HttpStatusCode StatusCode { get; set; }
 
         public object Response { get; set; }
 
         public SetHeaders ApplyHeaders { get; set; }
+
+        public SetContentHeaders ApplyContentHeaders { get; set; }
 
         protected override async Task<HttpResponseMessage> SendAsyncCore(
             HttpRequestMessage request, CancellationToken cancellationToken)
@@ -58,6 +64,8 @@ namespace FirebaseAdmin.Tests
             {
                 this.Request = null;
             }
+
+            this.RequestHeaders = request.Headers;
 
             var resp = new HttpResponseMessage();
             string json;
@@ -80,7 +88,15 @@ namespace FirebaseAdmin.Tests
                 this.ApplyHeaders(resp.Headers);
             }
 
-            resp.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            var responseContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+            if (this.ApplyContentHeaders != null)
+            {
+                this.ApplyContentHeaders(responseContent.Headers);
+            }
+
+            resp.Content = responseContent;
+
             var tcs = new TaskCompletionSource<HttpResponseMessage>();
             tcs.SetResult(resp);
             return await tcs.Task;

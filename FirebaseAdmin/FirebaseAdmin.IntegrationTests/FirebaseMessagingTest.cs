@@ -49,5 +49,76 @@ namespace FirebaseAdmin.IntegrationTests
             Assert.True(!string.IsNullOrEmpty(id));
             Assert.Matches(new Regex("^projects/.*/messages/.*$"), id);
         }
+
+        [Fact]
+        public async Task SendAll()
+        {
+            var message1 = new Message()
+            {
+                Topic = "foo-bar",
+                Notification = new Notification()
+                {
+                    Title = "Title",
+                    Body = "Body",
+                },
+                Android = new AndroidConfig()
+                {
+                    Priority = Priority.Normal,
+                    TimeToLive = TimeSpan.FromHours(1),
+                    RestrictedPackageName = "com.google.firebase.testing",
+                },
+            };
+            var message2 = new Message()
+            {
+                Topic = "fiz-buz",
+                Notification = new Notification()
+                {
+                    Title = "Title",
+                    Body = "Body",
+                },
+                Android = new AndroidConfig()
+                {
+                    Priority = Priority.Normal,
+                    TimeToLive = TimeSpan.FromHours(1),
+                    RestrictedPackageName = "com.google.firebase.testing",
+                },
+            };
+            var response = await FirebaseMessaging.DefaultInstance.SendAllAsync(new[] { message1, message2 }, dryRun: true);
+            Assert.NotNull(response);
+            Assert.Equal(2, response.SuccessCount);
+            Assert.True(!string.IsNullOrEmpty(response.Responses[0].MessageId));
+            Assert.Matches(new Regex("^projects/.*/messages/.*$"), response.Responses[0].MessageId);
+            Assert.True(!string.IsNullOrEmpty(response.Responses[1].MessageId));
+            Assert.Matches(new Regex("^projects/.*/messages/.*$"), response.Responses[1].MessageId);
+        }
+
+        [Fact]
+        public async Task SendMulticast()
+        {
+            var multicastMessage = new MulticastMessage
+            {
+                Notification = new Notification()
+                {
+                    Title = "Title",
+                    Body = "Body",
+                },
+                Android = new AndroidConfig()
+                {
+                    Priority = Priority.Normal,
+                    TimeToLive = TimeSpan.FromHours(1),
+                    RestrictedPackageName = "com.google.firebase.testing",
+                },
+                Tokens = new[]
+                {
+                    "token1",
+                    "token2",
+                },
+            };
+            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(multicastMessage, dryRun: true);
+            Assert.NotNull(response);
+            Assert.Equal(2, response.FailureCount);
+            Assert.NotNull(response.Responses[0].Exception);
+            Assert.NotNull(response.Responses[1].Exception);
+        }
     }
 }

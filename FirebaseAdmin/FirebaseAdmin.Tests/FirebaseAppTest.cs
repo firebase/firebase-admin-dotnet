@@ -210,6 +210,17 @@ namespace FirebaseAdmin.Tests
             });
         }
 
+        [Fact]
+        public void GetSdkVersion()
+        {
+            var version = FirebaseApp.GetSdkVersion();
+
+            var segments = version.Split(".");
+            Assert.Equal(3, segments.Length);
+            int result;
+            Assert.All(segments, (segment) => int.TryParse(segment, out result));
+        }
+
         public void Dispose()
         {
             FirebaseApp.DeleteAll();

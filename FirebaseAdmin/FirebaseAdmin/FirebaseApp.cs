@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Google;
@@ -259,6 +260,16 @@ namespace FirebaseAdmin
                     throw new InvalidOperationException("Failed to delete all apps");
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the current version of the .NET assembly.
+        /// </summary>
+        /// <returns>A version string in major.minor.patch format.</returns>
+        internal static string GetSdkVersion()
+        {
+            const int majorMinorPatch = 3;
+            return typeof(FirebaseApp).GetTypeInfo().Assembly.GetName().Version.ToString(majorMinorPatch);
         }
 
         internal T GetOrInit<T>(string id, ServiceFactory<T> initializer)
