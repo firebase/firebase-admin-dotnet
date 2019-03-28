@@ -72,6 +72,44 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task GetUserById()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new UserRecord("user1"),
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            var userRecord = await userManager.GetUserById("user1");
+            Assert.Equal("user1", userRecord.Uid);
+        }
+
+        [Fact]
+        public async Task GetUserByIdUserNotFound()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.NotFound,
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.GetUserById("user1"));
+        }
+
+        [Fact]
         public async Task UpdateUser()
         {
             var handler = new MockMessageHandler()
@@ -164,6 +202,46 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<FirebaseException>(
                 async () => await userManager.UpdateUserAsync(new UserRecord("user1") { CustomClaims = customClaims }));
+        }
+
+        [Fact]
+        public async Task DeleteUser()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new Dictionary<string, string>()
+                {
+                    { "kind", "identitytoolkit#DeleteAccountResponse" },
+                },
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await userManager.DeleteUser("user1");
+        }
+
+        [Fact]
+        public async Task DeleteUserNotFound()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.NotFound,
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            await Assert.ThrowsAsync<FirebaseException>(
+               async () => await userManager.DeleteUser("user1"));
         }
     }
 }
