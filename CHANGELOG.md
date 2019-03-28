@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v1.3.0
+
 - [added] Implemented the `SendAllAsync()` and `SendMulticastAsync()` APIs in
   the `FirebaseMessaging` class.
 
