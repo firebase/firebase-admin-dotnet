@@ -16,6 +16,7 @@ using System;
 using System.Threading.Tasks;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using Xunit;
 
 namespace FirebaseAdmin.Tests
@@ -93,6 +94,7 @@ namespace FirebaseAdmin.Tests
                 Credential = credential,
                 ProjectId = "test-project",
                 ServiceAccountId = "test@service.account",
+                HttpClientFactory = new MockHttpClientFactory(new MockMessageHandler()),
             };
             var app = FirebaseApp.Create(options);
             Assert.Equal("[DEFAULT]", app.Name);
@@ -102,6 +104,42 @@ namespace FirebaseAdmin.Tests
             Assert.Same(credential, copy.Credential);
             Assert.Equal("test-project", copy.ProjectId);
             Assert.Equal("test@service.account", copy.ServiceAccountId);
+            Assert.Same(typeof(MockHttpClientFactory), copy.HttpClientFactory.GetType());
+        }
+
+        [Fact]
+        public void CreateAppOptionsNoClientFactory()
+        {
+            var credential = GoogleCredential.FromAccessToken("token");
+            var options = new AppOptions()
+            {
+                Credential = credential,
+                ProjectId = "test-project",
+                ServiceAccountId = "test@service.account",
+            };
+            var app = FirebaseApp.Create(options);
+            Assert.Equal("[DEFAULT]", app.Name);
+
+            var copy = app.Options;
+            Assert.NotSame(options, copy);
+            Assert.Same(credential, copy.Credential);
+            Assert.Equal("test-project", copy.ProjectId);
+            Assert.Equal("test@service.account", copy.ServiceAccountId);
+            Assert.Same(typeof(HttpClientFactory), copy.HttpClientFactory.GetType());
+        }
+
+        [Fact]
+        public void NoHttpClientFactory()
+        {
+            var credential = GoogleCredential.FromAccessToken("token");
+            var options = new AppOptions()
+            {
+                Credential = credential,
+                ProjectId = "test-project",
+                ServiceAccountId = "test@service.account",
+                HttpClientFactory = null,
+            };
+            Assert.Throws<ArgumentNullException>(() => FirebaseApp.Create(options));
         }
 
         [Fact]
