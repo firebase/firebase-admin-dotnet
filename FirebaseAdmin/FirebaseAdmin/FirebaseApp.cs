@@ -79,11 +79,6 @@ namespace FirebaseAdmin
                 this.options.Credential = this.options.Credential.CreateScoped(DefaultScopes);
             }
 
-            if (this.options.HttpClientFactory == null)
-            {
-                throw new ArgumentNullException("HttpClientFactory must be set");
-            }
-
             this.Name = name;
         }
 

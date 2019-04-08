@@ -85,13 +85,13 @@ namespace FirebaseAdmin.Auth
             {
                 // If no service account ID is specified, attempt to discover one and invoke the
                 // IAM service with it.
-                signer = new IAMSigner(app.Options.HttpClientFactory, app.Options.Credential);
+                signer = new IAMSigner(new HttpClientFactory(), app.Options.Credential);
             }
             else
             {
                 // If a service account ID is specified, invoke the IAM service with it.
                 signer = new FixedAccountIAMSigner(
-                    app.Options.HttpClientFactory, app.Options.Credential, app.Options.ServiceAccountId);
+                    new HttpClientFactory(), app.Options.Credential, app.Options.ServiceAccountId);
             }
 
             return new FirebaseTokenFactory(signer, SystemClock.Default);

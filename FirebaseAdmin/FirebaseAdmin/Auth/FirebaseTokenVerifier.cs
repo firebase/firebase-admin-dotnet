@@ -85,7 +85,7 @@ namespace FirebaseAdmin.Auth
             }
 
             var keySource = new HttpPublicKeySource(
-                IdTokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
+                IdTokenCertUrl, SystemClock.Default, new HttpClientFactory());
             var args = new FirebaseTokenVerifierArgs()
             {
                 ProjectId = projectId,
