@@ -25,28 +25,28 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    internal class UserRecord
+    internal class UserRecord : IUserInfo
     {
         private string uid;
         private string email;
         private string phoneNumber;
         private string displayName;
         private string photoUrl;
+        private string providerId;
         private IReadOnlyDictionary<string, object> customClaims;
 
         public UserRecord(string uid)
         {
-            this.Uid = uid;
+            this.uid = uid;
         }
 
         /// <summary>
-        /// Gets the user ID of this user.
+        /// Gets or sets the user ID of this user.
         /// </summary>
-        [JsonProperty("localId")]
         public string Uid
         {
             get => this.uid;
-            private set
+            set
             {
                 CheckUid(value);
                 this.uid = value;
@@ -54,13 +54,21 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the email of this user.
+        /// Gets or sets the display name of this user.
         /// </summary>
-        [JsonProperty("email")]
+        public string DisplayName
+        {
+            get => this.displayName;
+            set { this.displayName = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the email address of this user.
+        /// </summary>
         public string Email
         {
             get => this.email;
-            private set
+            set
             {
                 CheckEmail(value);
                 this.email = value;
@@ -68,13 +76,12 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the phone number of this user.
+        /// Gets or sets the phone number of this user.
         /// </summary>
-        [JsonProperty("phoneNumber")]
         public string PhoneNumber
         {
             get => this.phoneNumber;
-            private set
+            set
             {
                 CheckPhoneNumber(value);
                 this.phoneNumber = value;
@@ -82,31 +89,12 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the display name of this user.
+        /// Gets or sets the photo URL of this user.
         /// </summary>
-        [JsonProperty("displayName")]
-        public string DisplayName
-        {
-            get => this.displayName;
-            private set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("display name cannot be null or empty");
-                }
-
-                this.displayName = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the photo url of this user.
-        /// </summary>
-        [JsonProperty("photoUrl")]
         public string PhotoUrl
         {
             get => this.photoUrl;
-            private set
+            set
             {
                 CheckPhotoUrl(value);
                 this.photoUrl = value;
@@ -114,26 +102,9 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets a value indicating whether the user's email has been verified.
+        /// Gets the ID of the identity provider for this user.
         /// </summary>
-        [JsonProperty("emailVerified")]
-        public bool IsEmailVerified { get; private set; }
-
-        /// <summary>
-        /// Gets a value indicating whether the user's account is disabled.
-        /// </summary>
-        [JsonProperty("disabled")]
-        public bool IsDisabled { get; private set; }
-
-        /// <summary>
-        /// Gets a new password hash for the user.
-        /// </summary>
-        public string PasswordHash { get; private set; }
-
-        /// <summary>
-        /// Gets a new password salt for the user.
-        /// </summary>
-        public string PasswordSalt { get; private set; }
+        public string ProviderId => this.providerId;
 
         /// <summary>
         /// Gets or sets the custom claims set on this user.
