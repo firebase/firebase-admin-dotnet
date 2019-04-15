@@ -70,7 +70,8 @@ namespace FirebaseAdmin.Messaging.Tests
             var app = FirebaseApp.Create(new AppOptions()
             {
                 Credential = GoogleCredential.FromAccessToken("test-token"),
-                HttpClientFactory = factory, ProjectId = "test-project",
+                HttpClientFactory = factory,
+                ProjectId = "test-project",
             });
             FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
             Assert.NotNull(messaging);
