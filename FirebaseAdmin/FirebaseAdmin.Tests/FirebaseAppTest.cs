@@ -104,7 +104,7 @@ namespace FirebaseAdmin.Tests
             Assert.Same(credential, copy.Credential);
             Assert.Equal("test-project", copy.ProjectId);
             Assert.Equal("test@service.account", copy.ServiceAccountId);
-            Assert.Same(typeof(MockHttpClientFactory), copy.HttpClientFactory.GetType());
+            Assert.Same(copy.HttpClientFactory, options.HttpClientFactory);
         }
 
         [Fact]
@@ -125,7 +125,7 @@ namespace FirebaseAdmin.Tests
             Assert.Same(credential, copy.Credential);
             Assert.Equal("test-project", copy.ProjectId);
             Assert.Equal("test@service.account", copy.ServiceAccountId);
-            Assert.Same(typeof(HttpClientFactory), copy.HttpClientFactory.GetType());
+            Assert.Same(copy.HttpClientFactory, options.HttpClientFactory);
         }
 
         [Fact]
