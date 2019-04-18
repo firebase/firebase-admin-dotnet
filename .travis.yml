@@ -1,9 +1,10 @@
 language: csharp
 solution: FirebaseAdmin/FirebaseAdmin.sln
+dist: xenial
 
 matrix:
   include:
-    - dotnet: 2.1.105
+    - dotnet: 2.1.502
       mono: none
       script:
        - dotnet build FirebaseAdmin/FirebaseAdmin

@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v1.4.0
+
 - [added] `AppOptions` now supports setting an `HttpClientFactory`, which
   is useful when deploying the SDK behind a proxy server.
 
