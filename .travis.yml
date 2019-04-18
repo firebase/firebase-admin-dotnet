@@ -1,5 +1,6 @@
 language: csharp
 solution: FirebaseAdmin/FirebaseAdmin.sln
+dist: xenial
 
 matrix:
   include:
