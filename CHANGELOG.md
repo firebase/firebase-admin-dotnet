@@ -2,6 +2,11 @@
 
 -
 
+# v1.4.0
+
+- [added] `AppOptions` now supports setting an `HttpClientFactory`, which
+  is useful when deploying the SDK behind a proxy server.
+
 # v1.3.0
 
 - [added] Implemented the `SendAllAsync()` and `SendMulticastAsync()` APIs in

@@ -60,14 +60,19 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new FirebaseMessagingClient.SendResponse()
+                Response = new FirebaseMessagingClient.SingleMessageResponse()
                 {
                     Name = "test-response",
                 },
             };
             var factory = new MockHttpClientFactory(handler);
 
-            var app = FirebaseApp.Create(new AppOptions() { Credential = GoogleCredential.FromAccessToken("test-token"), HttpClientFactory = factory, ProjectId = "test-project" });
+            var app = FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromAccessToken("test-token"),
+                HttpClientFactory = factory,
+                ProjectId = "test-project",
+            });
             FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
             Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
@@ -101,7 +106,11 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public async Task SendMessageCancelWithClientFactory()
         {
-            FirebaseApp.Create(new AppOptions() { Credential = MockCredential, HttpClientFactory = new HttpClientFactory() });
+            FirebaseApp.Create(new AppOptions()
+            {
+                Credential = MockCredential,
+                HttpClientFactory = new HttpClientFactory(),
+            });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
             await Assert.ThrowsAsync<OperationCanceledException>(
