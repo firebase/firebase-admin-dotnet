@@ -30,9 +30,7 @@ namespace FirebaseAdmin.Auth
         private string uid;
         private string email;
         private string phoneNumber;
-        private string displayName;
         private string photoUrl;
-        private string providerId;
         private IReadOnlyDictionary<string, object> customClaims;
 
         public UserRecord(string uid)
@@ -56,11 +54,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the display name of this user.
         /// </summary>
-        public string DisplayName
-        {
-            get => this.displayName;
-            set { this.displayName = value; }
-        }
+        public string DisplayName { get; set; }
 
         /// <summary>
         /// Gets or sets the email address of this user.
@@ -104,7 +98,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the ID of the identity provider for this user.
         /// </summary>
-        public string ProviderId => this.providerId;
+        public string ProviderId { get; }
 
         /// <summary>
         /// Gets or sets the custom claims set on this user.
