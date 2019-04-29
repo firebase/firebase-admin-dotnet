@@ -87,6 +87,7 @@ namespace FirebaseAdmin.Auth.Tests
                     ClientFactory = factory,
                 });
             var userRecord = await userManager.GetUserById("user1");
+            var m = userRecord.Uid;
             Assert.Equal("user1", userRecord.Uid);
         }
 

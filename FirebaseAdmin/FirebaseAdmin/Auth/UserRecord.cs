@@ -31,19 +31,23 @@ namespace FirebaseAdmin.Auth
         private string email;
         private string phoneNumber;
         private string photoUrl;
+        private bool isEmailVerified;
+        private bool isDisabled;
         private IReadOnlyDictionary<string, object> customClaims;
 
         public UserRecord(string uid)
         {
-            this.uid = uid;
+            this.Uid = uid;
         }
 
         /// <summary>
         /// Gets or sets the user ID of this user.
         /// </summary>
+        [JsonProperty("localId")]
         public string Uid
         {
             get => this.uid;
+
             set
             {
                 CheckUid(value);
@@ -54,11 +58,13 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the display name of this user.
         /// </summary>
+        [JsonProperty("displayName")]
         public string DisplayName { get; set; }
 
         /// <summary>
         /// Gets or sets the email address of this user.
         /// </summary>
+        [JsonProperty("email")]
         public string Email
         {
             get => this.email;
@@ -72,6 +78,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the phone number of this user.
         /// </summary>
+        [JsonProperty("phoneNumber")]
         public string PhoneNumber
         {
             get => this.phoneNumber;
@@ -85,6 +92,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the photo URL of this user.
         /// </summary>
+        [JsonProperty("photoUrl")]
         public string PhotoUrl
         {
             get => this.photoUrl;
@@ -98,7 +106,28 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the ID of the identity provider for this user.
         /// </summary>
+        [JsonProperty("providerId")]
         public string ProviderId { get; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the user's email has been verified.
+        /// </summary>
+        [JsonProperty("emailVerified")]
+        public bool IsEmailVerified
+        {
+            get => this.isEmailVerified;
+            set => this.isEmailVerified = value;
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the user's account is disabled.
+        /// </summary>
+        [JsonProperty("disabled")]
+        public bool IsDisabled
+        {
+            get => this.isDisabled;
+            set => this.isDisabled = value;
+        }
 
         /// <summary>
         /// Gets or sets the custom claims set on this user.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -21,6 +22,7 @@ namespace FirebaseAdmin.Auth
         /// returns the base64-encoded password hash of the user.If a different hashing algorithm was
         /// used to create this user, as is typical when migrating from another Auth system, returns
         /// an empty string.</p>
+        [JsonProperty("passwordHash")]
         public string PasswordHash
         {
             get => this.passwordHash;
@@ -34,6 +36,7 @@ namespace FirebaseAdmin.Auth
         /// returns the base64-encoded password hash of the user.If a different hashing algorithm was
         /// used to create this user, as is typical when migrating from another Auth system, returns
         /// an empty string.</p>
+        [JsonProperty("salt")]
         public string PasswordSalt
         {
             get => this.passwordSalt;
