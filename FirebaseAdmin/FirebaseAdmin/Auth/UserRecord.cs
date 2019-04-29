@@ -169,7 +169,7 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Checks if the given user photo url is valid.
+        /// Checks whether the given user photo url is valid.
         /// </summary>
         /// <param name="photoUrl">The user phone number. Must not be null and
         /// must have valid E.164 formatting.</param>
