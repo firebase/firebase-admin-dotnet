@@ -35,37 +35,37 @@ namespace FirebaseAdmin.Auth
         /// Returns the user's unique ID assigned by the identity provider.
         /// </summary>
         /// <returns>a user ID string.</returns>
-        string IUserInfo.GetUid() => this.uid;
+        public string GetUid() => this.uid;
 
         /// <summary>
         /// Returns the user's display name, if available.
         /// </summary>
         /// <returns>a display name string or null.</returns>
-        string IUserInfo.GetDisplayName() => this.displayName;
+        public string GetDisplayName() => this.displayName;
 
         /// <summary>
         /// Returns the user's email address, if available.
         /// </summary>
         /// <returns>an email address string or null.</returns>
-        string IUserInfo.GetEmail() => this.email;
+        public string GetEmail() => this.email;
 
         /// <summary>
         /// Gets the user's phone number.
         /// </summary>
         /// <returns>a phone number string or null.</returns>
-        string IUserInfo.GetPhoneNumber() => this.phoneNumber;
+        public string GetPhoneNumber() => this.phoneNumber;
 
         /// <summary>
         /// Returns the user's photo URL, if available.
         /// </summary>
         /// <returns>a URL string or null.</returns>
-        string IUserInfo.GetPhotoUrl() => this.photoUrl;
+        public string GetPhotoUrl() => this.photoUrl;
 
         /// <summary>
         /// Returns the ID of the identity provider. This can be a short domain name (e.g. google.com) or
         /// the identifier of an OpenID identity provider.
         /// </summary>
         /// <returns>an ID string that uniquely identifies the identity provider.</returns>
-        string IUserInfo.GetProviderId() => this.providerId;
+        public string GetProviderId() => this.providerId;
     }
 }
