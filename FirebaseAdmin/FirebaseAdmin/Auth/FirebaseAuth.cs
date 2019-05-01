@@ -264,6 +264,20 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containig information about the user who's
+        /// user ID was specified in <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">The user ID for the user who's data is to be retrieved..</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified user ID.</returns>
+        /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
+        public async Task<UserRecord> GetUser(string uid)
+        {
+            return await this.userManager.Value.GetUserById(uid);
+        }
+
+        /// <summary>
         /// Sets the specified custom claims on an existing user account. A null claims value
         /// removes any claims currently set on the user account. The claims must serialize into
         /// a valid JSON string. The serialized claims must not be larger than 1000 characters.

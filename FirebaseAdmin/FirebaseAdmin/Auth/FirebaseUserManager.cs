@@ -81,14 +81,15 @@ namespace FirebaseAdmin.Auth
             {
                 { "localId", uid },
             };
-            var response = await this.PostAndDeserializeAsync<JObject>(
+
+            var response = await this.PostAndDeserializeAsync<Internal.GetAccountInfoResponse>(
                 getUserPath, payload, cancellationToken).ConfigureAwait(false);
-            if (response == null || uid != (string)response["localId"])
+            if (response == null || response.Users == null || response.Users.Count == 0)
             {
                 throw new FirebaseException($"Failed to get user: {uid}");
             }
 
-            return new UserRecord((string)response["localId"]);
+            return new UserRecord(response.Users[0]);
         }
 
         /// <summary>
