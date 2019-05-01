@@ -49,7 +49,7 @@ namespace FirebaseAdmin.Auth
         {
             if (string.IsNullOrEmpty(uid))
             {
-                throw new ArgumentNullException(nameof(uid));
+                throw new ArgumentException("UserID must not be null or empty.");
             }
 
             this.uid = uid;
@@ -63,7 +63,7 @@ namespace FirebaseAdmin.Auth
         {
             if (user == null)
             {
-                throw new ArgumentNullException(nameof(user));
+                throw new ArgumentException("User object must not be null or empty.");
             }
             else if (string.IsNullOrEmpty(user.UserID))
             {

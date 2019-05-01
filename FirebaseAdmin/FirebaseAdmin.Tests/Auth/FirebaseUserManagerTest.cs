@@ -35,7 +35,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Throws<ArgumentException>(() => new UserRecord((string)null));
             Assert.Throws<ArgumentException>(() => new UserRecord((GetAccountInfoResponse.User)null));
             Assert.Throws<ArgumentException>(() => new UserRecord(string.Empty));
-            Assert.Throws<ArgumentException>(() => new UserRecord(new string('a', 129)));
+
+            // The constructor for UserRecord should not throw an exception when initialized with a valid string.
+            var userRecord = new UserRecord(new string('a', 129));
         }
 
         [Fact]
