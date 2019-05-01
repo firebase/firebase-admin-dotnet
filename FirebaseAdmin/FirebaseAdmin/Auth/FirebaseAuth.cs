@@ -272,9 +272,26 @@ namespace FirebaseAdmin.Auth
         /// a user with the specified user ID.</returns>
         /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
         /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
-        public async Task<UserRecord> GetUser(string uid)
+        public async Task<UserRecord> GetUserAsync(string uid)
         {
             return await this.userManager.Value.GetUserById(uid);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containig information about the user who's
+        /// user ID was specified in <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">The user ID for the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified user ID.</returns>
+        /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
+        public async Task<UserRecord> GetUserAsync(
+            string uid, CancellationToken cancellationToken)
+        {
+            return await this.userManager.Value.GetUserById(uid, cancellationToken);
         }
 
         /// <summary>

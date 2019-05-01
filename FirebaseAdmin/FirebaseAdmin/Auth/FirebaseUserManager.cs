@@ -82,7 +82,7 @@ namespace FirebaseAdmin.Auth
                 { "localId", uid },
             };
 
-            var response = await this.PostAndDeserializeAsync<Internal.GetAccountInfoResponse>(
+            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
                 getUserPath, payload, cancellationToken).ConfigureAwait(false);
             if (response == null || response.Users == null || response.Users.Count == 0)
             {

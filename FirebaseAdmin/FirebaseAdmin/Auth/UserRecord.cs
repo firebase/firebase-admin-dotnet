@@ -25,8 +25,10 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    public sealed class UserRecord
+    public sealed class UserRecord : IUserInfo
     {
+        private const string PROVIDERID = "firebase";
+
         private string uid;
         private string email;
         private string phoneNumber;
@@ -43,7 +45,7 @@ namespace FirebaseAdmin.Auth
         /// Initializes a new instance of the <see cref="UserRecord"/> class with the specified user ID.
         /// </summary>
         /// <param name="uid">The user's ID.</param>
-        public UserRecord(string uid)
+        internal UserRecord(string uid)
         {
             if (string.IsNullOrEmpty(uid))
             {
@@ -54,10 +56,10 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the <see cref="Internal.GetAccountInfoResponse.User"/> class.
+        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the <see cref="GetAccountInfoResponse.User"/> class.
         /// </summary>
-        /// <param name="user">The <see cref="Internal.GetAccountInfoResponse.User"/> instance to copy the user's data from.</param>
-        public UserRecord(Internal.GetAccountInfoResponse.User user)
+        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy the user's data from.</param>
+        internal UserRecord(GetAccountInfoResponse.User user)
         {
             if (user == null)
             {
@@ -93,7 +95,7 @@ namespace FirebaseAdmin.Auth
 
             this.tokensValidAfterTimestamp = user.ValidSince * 1000;
             this.userMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
-            this.customClaims = this.ParseCustomClaims(user.CustomClaims);
+            this.customClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
         }
 
         /// <summary>
@@ -110,29 +112,9 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the user's email address.
-        /// </summary>
-        public string Email => this.email;
-
-        /// <summary>
-        /// Gets the user's phone number.
-        /// </summary>
-        public string PhoneNumber => this.phoneNumber;
-
-        /// <summary>
         /// Gets a value indicating whether the user's email address is verified or not.
         /// </summary>
         public bool EmailVerified => this.emailVerified;
-
-        /// <summary>
-        /// Gets the user's display name.
-        /// </summary>
-        public string DisplayName => this.displayName;
-
-        /// <summary>
-        /// Gets the user's photo URL.
-        /// </summary>
-        public string PhotoUrl => this.photoUrl;
 
         /// <summary>
         /// Gets a value indicating whether the user account is disabled or not.
@@ -189,6 +171,43 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Returns the user's unique ID assigned by the identity provider.
+        /// </summary>
+        /// <returns>a user ID string.</returns>
+        string IUserInfo.GetUid() => this.uid;
+
+        /// <summary>
+        /// Returns the user's display name, if available.
+        /// </summary>
+        /// <returns>a display name string or null.</returns>
+        string IUserInfo.GetDisplayName() => this.displayName;
+
+        /// <summary>
+        /// Returns the user's email address, if available.
+        /// </summary>
+        /// <returns>an email address string or null.</returns>
+        string IUserInfo.GetEmail() => this.email;
+
+        /// <summary>
+        /// Gets the user's phone number.
+        /// </summary>
+        /// <returns>a phone number string or null.</returns>
+        string IUserInfo.GetPhoneNumber() => this.phoneNumber;
+
+        /// <summary>
+        /// Returns the user's photo URL, if available.
+        /// </summary>
+        /// <returns>a URL string or null.</returns>
+        string IUserInfo.GetPhotoUrl() => this.photoUrl;
+
+        /// <summary>
+        /// Returns the ID of the identity provider. This can be a short domain name (e.g. google.com) or
+        /// the identifier of an OpenID identity provider.
+        /// </summary>
+        /// <returns>an ID string that uniquely identifies the identity provider.</returns>
+        string IUserInfo.GetProviderId() => UserRecord.PROVIDERID;
+
+        /// <summary>
         /// Checks if the given set of custom claims are valid.
         /// </summary>
         /// <param name="customClaims">The custom claims. Claim names must
@@ -227,7 +246,7 @@ namespace FirebaseAdmin.Auth
             return NewtonsoftJsonSerializer.Instance.Serialize(claims);
         }
 
-        private ReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
+        private static ReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
         {
             if (string.IsNullOrEmpty(customClaims))
             {

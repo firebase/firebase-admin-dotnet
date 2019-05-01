@@ -8,7 +8,7 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata regarding how a user is known by a particular identity provider (IdP).
     /// Instances of this class are immutable and thread safe.
     /// </summary>
-    public sealed class ProviderUserInfo
+    public sealed class ProviderUserInfo : IUserInfo
     {
         private string uid;
         private string displayName;
@@ -21,7 +21,7 @@ namespace FirebaseAdmin.Auth
         /// Initializes a new instance of the <see cref="ProviderUserInfo"/> class with data provided by an authentication provider.
         /// </summary>
         /// <param name="provider">The deserialized JSON user data from the provider.</param>
-        public ProviderUserInfo(Internal.GetAccountInfoResponse.Provider provider)
+        internal ProviderUserInfo(GetAccountInfoResponse.Provider provider)
         {
             this.uid = provider.UserID;
             this.displayName = provider.DisplayName;
@@ -32,33 +32,40 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the user's ID.
+        /// Returns the user's unique ID assigned by the identity provider.
         /// </summary>
-        public string UserID { get => this.uid; }
+        /// <returns>a user ID string.</returns>
+        string IUserInfo.GetUid() => this.uid;
 
         /// <summary>
-        /// Gets the user's display name.
+        /// Returns the user's display name, if available.
         /// </summary>
-        public string DisplayName { get => this.displayName; }
+        /// <returns>a display name string or null.</returns>
+        string IUserInfo.GetDisplayName() => this.displayName;
 
         /// <summary>
-        /// Gets the user's email address.
+        /// Returns the user's email address, if available.
         /// </summary>
-        public string Email { get => this.email; }
+        /// <returns>an email address string or null.</returns>
+        string IUserInfo.GetEmail() => this.email;
 
         /// <summary>
         /// Gets the user's phone number.
         /// </summary>
-        public string PhoneNumber { get => this.phoneNumber; }
+        /// <returns>a phone number string or null.</returns>
+        string IUserInfo.GetPhoneNumber() => this.phoneNumber;
 
         /// <summary>
-        /// Gets the URL for the user's photo/avatar.
+        /// Returns the user's photo URL, if available.
         /// </summary>
-        public string PhotoUrl { get => this.photoUrl; }
+        /// <returns>a URL string or null.</returns>
+        string IUserInfo.GetPhotoUrl() => this.photoUrl;
 
         /// <summary>
-        /// Gets the user's ID specified by the provider.
+        /// Returns the ID of the identity provider. This can be a short domain name (e.g. google.com) or
+        /// the identifier of an OpenID identity provider.
         /// </summary>
-        public string ProviderId { get => this.providerId; }
+        /// <returns>an ID string that uniquely identifies the identity provider.</returns>
+        string IUserInfo.GetProviderId() => this.providerId;
     }
 }
