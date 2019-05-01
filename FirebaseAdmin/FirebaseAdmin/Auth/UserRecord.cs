@@ -112,6 +112,52 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets the user's display name, if available.
+        /// </summary>
+        /// <returns>a display name string or null.</returns>
+        public string DisplayName
+        {
+            get => this.displayName;
+        }
+
+        /// <summary>
+        /// Gets the user's email address, if available.
+        /// </summary>
+        /// <returns>an email address string or null.</returns>
+        public string Email
+        {
+            get => this.email;
+        }
+
+        /// <summary>
+        /// Gets the user's phone number.
+        /// </summary>
+        /// <returns>a phone number string or null.</returns>
+        public string PhoneNumber
+        {
+            get => this.phoneNumber;
+        }
+
+        /// <summary>
+        /// Gets the user's photo URL, if available.
+        /// </summary>
+        /// <returns>a URL string or null.</returns>
+        public string PhotoUrl
+        {
+            get => this.photoUrl;
+        }
+
+        /// <summary>
+        /// Gets the ID of the identity provider. This can be a short domain name (e.g. google.com) or
+        /// the identifier of an OpenID identity provider.
+        /// </summary>
+        /// <returns>an ID string that uniquely identifies the identity provider.</returns>
+        public string ProviderId
+        {
+            get => UserRecord.PROVIDERID;
+        }
+
+        /// <summary>
         /// Gets a value indicating whether the user's email address is verified or not.
         /// </summary>
         public bool EmailVerified => this.emailVerified;
@@ -124,7 +170,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets a list of provider data for this user.
         /// </summary>
-        public List<ProviderUserInfo> Providers => this.providers;
+        public IEnumerable<IUserInfo> Providers => this.providers;
 
         /// <summary>
         /// Gets a timestamp representing the date and time that this token will become active.
@@ -171,43 +217,6 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Returns the user's unique ID assigned by the identity provider.
-        /// </summary>
-        /// <returns>a user ID string.</returns>
-        public string GetUid() => this.uid;
-
-        /// <summary>
-        /// Returns the user's display name, if available.
-        /// </summary>
-        /// <returns>a display name string or null.</returns>
-        public string GetDisplayName() => this.displayName;
-
-        /// <summary>
-        /// Returns the user's email address, if available.
-        /// </summary>
-        /// <returns>an email address string or null.</returns>
-        public string GetEmail() => this.email;
-
-        /// <summary>
-        /// Gets the user's phone number.
-        /// </summary>
-        /// <returns>a phone number string or null.</returns>
-        public string GetPhoneNumber() => this.phoneNumber;
-
-        /// <summary>
-        /// Returns the user's photo URL, if available.
-        /// </summary>
-        /// <returns>a URL string or null.</returns>
-        public string GetPhotoUrl() => this.photoUrl;
-
-        /// <summary>
-        /// Returns the ID of the identity provider. This can be a short domain name (e.g. google.com) or
-        /// the identifier of an OpenID identity provider.
-        /// </summary>
-        /// <returns>an ID string that uniquely identifies the identity provider.</returns>
-        public string GetProviderId() => UserRecord.PROVIDERID;
-
-        /// <summary>
         /// Checks if the given set of custom claims are valid.
         /// </summary>
         /// <param name="customClaims">The custom claims. Claim names must
@@ -246,17 +255,15 @@ namespace FirebaseAdmin.Auth
             return NewtonsoftJsonSerializer.Instance.Serialize(claims);
         }
 
-        private static ReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
+        private static IReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
         {
             if (string.IsNullOrEmpty(customClaims))
             {
-                return new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+                return new Dictionary<string, object>();
             }
             else
             {
-                var parsed = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(customClaims);
-
-                return new ReadOnlyDictionary<string, object>(parsed);
+                return NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(customClaims);
             }
         }
     }

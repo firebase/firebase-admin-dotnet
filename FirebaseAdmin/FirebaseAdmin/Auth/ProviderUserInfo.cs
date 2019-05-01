@@ -32,40 +32,58 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Returns the user's unique ID assigned by the identity provider.
+        /// Gets the user's unique ID assigned by the identity provider.
         /// </summary>
         /// <returns>a user ID string.</returns>
-        public string GetUid() => this.uid;
+        public string Uid
+        {
+            get => this.uid;
+        }
 
         /// <summary>
-        /// Returns the user's display name, if available.
+        /// Gets the user's display name, if available.
         /// </summary>
         /// <returns>a display name string or null.</returns>
-        public string GetDisplayName() => this.displayName;
+        public string DisplayName
+        {
+            get => this.displayName;
+        }
 
         /// <summary>
-        /// Returns the user's email address, if available.
+        /// Gets the user's email address, if available.
         /// </summary>
         /// <returns>an email address string or null.</returns>
-        public string GetEmail() => this.email;
+        public string Email
+        {
+            get => this.email;
+        }
 
         /// <summary>
         /// Gets the user's phone number.
         /// </summary>
         /// <returns>a phone number string or null.</returns>
-        public string GetPhoneNumber() => this.phoneNumber;
+        public string PhoneNumber
+        {
+            get => this.phoneNumber;
+        }
 
         /// <summary>
-        /// Returns the user's photo URL, if available.
+        /// Gets the user's photo URL, if available.
         /// </summary>
         /// <returns>a URL string or null.</returns>
-        public string GetPhotoUrl() => this.photoUrl;
+        public string PhotoUrl
+        {
+            get => this.photoUrl;
+        }
 
         /// <summary>
-        /// Returns the ID of the identity provider. This can be a short domain name (e.g. google.com) or
+        /// Gets the ID of the identity provider. This can be a short domain name (e.g. google.com) or
         /// the identifier of an OpenID identity provider.
         /// </summary>
         /// <returns>an ID string that uniquely identifies the identity provider.</returns>
-        public string GetProviderId() => this.providerId;
+        public string ProviderId
+        {
+            get => this.providerId;
+        }
     }
 }
