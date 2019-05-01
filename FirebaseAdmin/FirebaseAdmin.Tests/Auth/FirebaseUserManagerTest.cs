@@ -123,7 +123,14 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new UserRecord("user1"),
+                Response = new GetAccountInfoResponse()
+                {
+                    Kind = "identitytoolkit#GetAccountInfoResponse",
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserID = "user1" },
+                    },
+                },
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
