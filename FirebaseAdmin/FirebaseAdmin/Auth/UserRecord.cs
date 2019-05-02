@@ -47,9 +47,9 @@ namespace FirebaseAdmin.Auth
         /// <param name="uid">The user's ID.</param>
         internal UserRecord(string uid)
         {
-            if (string.IsNullOrEmpty(uid))
+            if (string.IsNullOrEmpty(uid) || uid.Length > 128)
             {
-                throw new ArgumentException("UserID must not be null or empty.");
+                throw new ArgumentException("User ID must not be null or empty, and be 128 characters or shorter.");
             }
 
             this.uid = uid;
@@ -65,12 +65,12 @@ namespace FirebaseAdmin.Auth
             {
                 throw new ArgumentException("User object must not be null or empty.");
             }
-            else if (string.IsNullOrEmpty(user.UserID))
+            else if (string.IsNullOrEmpty(user.UserId))
             {
-                throw new ArgumentException("UserID must not be null or empty.");
+                throw new ArgumentException("User ID must not be null or empty.");
             }
 
-            this.uid = user.UserID;
+            this.uid = user.UserId;
             this.email = user.Email;
             this.phoneNumber = user.PhoneNumber;
             this.emailVerified = user.EmailVerified;

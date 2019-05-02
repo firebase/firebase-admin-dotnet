@@ -90,7 +90,7 @@ namespace FirebaseAdmin.Auth
             }
 
             var user = response.Users[0];
-            if (user == null || user.UserID != uid)
+            if (user == null || user.UserId != uid)
             {
                 throw new FirebaseException($"Failed to get user: {uid}");
             }
@@ -117,7 +117,7 @@ namespace FirebaseAdmin.Auth
             }
 
             var updatedUser = response.Users[0];
-            if (updatedUser == null || updatedUser.UserID != user.Uid)
+            if (updatedUser == null || updatedUser.UserId != user.Uid)
             {
                 throw new FirebaseException($"Failed to update user: {user.Uid}");
             }

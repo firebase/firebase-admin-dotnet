@@ -31,7 +31,7 @@ namespace FirebaseAdmin.Auth
             /// Gets or sets the user's ID.
             /// </summary>
             [JsonProperty(PropertyName = "localId")]
-            public string UserID { get; set; }
+            public string UserId { get; set; }
 
             /// <summary>
             /// Gets or sets the user's email address.
@@ -109,7 +109,7 @@ namespace FirebaseAdmin.Auth
             /// Gets or sets the user's ID.
             /// </summary>
             [JsonProperty(PropertyName = "uid")]
-            public string UserID { get; set; }
+            public string UserId { get; set; }
 
             /// <summary>
             /// Gets or sets the user's display name.

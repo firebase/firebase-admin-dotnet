@@ -35,9 +35,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Throws<ArgumentException>(() => new UserRecord((string)null));
             Assert.Throws<ArgumentException>(() => new UserRecord((GetAccountInfoResponse.User)null));
             Assert.Throws<ArgumentException>(() => new UserRecord(string.Empty));
-
-            // The constructor for UserRecord should not throw an exception when initialized with a valid string.
-            var userRecord = new UserRecord(new string('a', 129));
+            Assert.Throws<ArgumentException>(() => new UserRecord(new string('a', 129)));
         }
 
         [Fact]
@@ -84,7 +82,7 @@ namespace FirebaseAdmin.Auth.Tests
                     Kind = "identitytoolkit#GetAccountInfoResponse",
                     Users = new List<GetAccountInfoResponse.User>()
                     {
-                        new GetAccountInfoResponse.User() { UserID = "user1" },
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
                     },
                 },
             };
@@ -130,7 +128,7 @@ namespace FirebaseAdmin.Auth.Tests
                     Kind = "identitytoolkit#GetAccountInfoResponse",
                     Users = new List<GetAccountInfoResponse.User>()
                     {
-                        new GetAccountInfoResponse.User() { UserID = "user1" },
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
                     },
                 },
             };
