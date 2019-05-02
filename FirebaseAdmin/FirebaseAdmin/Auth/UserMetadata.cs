@@ -22,15 +22,15 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets or sets a timestamp representing the date and time that the account was created.
+        /// Gets a timestamp representing the date and time that the account was created.
         /// </summary>
         [JsonProperty("creationTimestamp")]
-        public long CreationTimestamp { get; set; }
+        public long CreationTimestamp { get; }
 
         /// <summary>
-        /// Gets or sets a timestamp representing the last time that the user has logged in.
+        /// Gets a timestamp representing the last time that the user has logged in.
         /// </summary>
         [JsonProperty("lastSignInTimestamp")]
-        public long LastSignInTimestamp { get; set; }
+        public long LastSignInTimestamp { get; }
     }
 }
