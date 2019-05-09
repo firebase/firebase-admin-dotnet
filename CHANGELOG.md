@@ -1,5 +1,7 @@
 # Unreleased
 
+- [added] Implemented the `GetUserById()` API in the `FirebaseUserManager` class.
+
 -
 
 # v1.4.0

@@ -81,14 +81,21 @@ namespace FirebaseAdmin.Auth
             {
                 { "localId", uid },
             };
-            var response = await this.PostAndDeserializeAsync<JObject>(
+
+            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
                 getUserPath, payload, cancellationToken).ConfigureAwait(false);
-            if (response == null || uid != (string)response["localId"])
+            if (response == null || response.Users == null || response.Users.Count == 0)
             {
                 throw new FirebaseException($"Failed to get user: {uid}");
             }
 
-            return new UserRecord((string)response["localId"]);
+            var user = response.Users[0];
+            if (user == null || user.UserId != uid)
+            {
+                throw new FirebaseException($"Failed to get user: {uid}");
+            }
+
+            return new UserRecord(user);
         }
 
         /// <summary>
@@ -102,9 +109,15 @@ namespace FirebaseAdmin.Auth
             UserRecord user, CancellationToken cancellationToken = default(CancellationToken))
         {
             const string updatePath = "accounts:update";
-            var response = await this.PostAndDeserializeAsync<JObject>(
+            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
                 updatePath, user, cancellationToken).ConfigureAwait(false);
-            if (user.Uid != (string)response["localId"])
+            if (response == null || response.Users == null || response.Users.Count == 0)
+            {
+                throw new FirebaseException($"Failed to get user: {user.Uid}");
+            }
+
+            var updatedUser = response.Users[0];
+            if (updatedUser == null || updatedUser.UserId != user.Uid)
             {
                 throw new FirebaseException($"Failed to update user: {user.Uid}");
             }

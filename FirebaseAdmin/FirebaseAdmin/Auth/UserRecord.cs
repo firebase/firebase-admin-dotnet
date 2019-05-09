@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 using Google.Apis.Json;
 using Newtonsoft.Json;
@@ -24,20 +25,82 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    internal class UserRecord
+    public sealed class UserRecord : IUserInfo
     {
+        private const string PROVIDERID = "firebase";
+
         private string uid;
+        private string email;
+        private string phoneNumber;
+        private bool emailVerified;
+        private string displayName;
+        private string photoUrl;
+        private bool disabled;
+        private List<ProviderUserInfo> providers;
+        private long tokensValidAfterTimestamp;
+        private UserMetadata userMetaData;
         private IReadOnlyDictionary<string, object> customClaims;
 
-        public UserRecord(string uid)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserRecord"/> class with the specified user ID.
+        /// </summary>
+        /// <param name="uid">The user's ID.</param>
+        internal UserRecord(string uid)
         {
-            this.Uid = uid;
+            if (string.IsNullOrEmpty(uid) || uid.Length > 128)
+            {
+                throw new ArgumentException("User ID must not be null or empty, and be 128 characters or shorter.");
+            }
+
+            this.uid = uid;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the <see cref="GetAccountInfoResponse.User"/> class.
+        /// </summary>
+        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy the user's data from.</param>
+        internal UserRecord(GetAccountInfoResponse.User user)
+        {
+            if (user == null)
+            {
+                throw new ArgumentException("User object must not be null or empty.");
+            }
+            else if (string.IsNullOrEmpty(user.UserId))
+            {
+                throw new ArgumentException("User ID must not be null or empty.");
+            }
+
+            this.uid = user.UserId;
+            this.email = user.Email;
+            this.phoneNumber = user.PhoneNumber;
+            this.emailVerified = user.EmailVerified;
+            this.displayName = user.DisplayName;
+            this.photoUrl = user.PhotoUrl;
+            this.disabled = user.Disabled;
+
+            if (user.Providers == null || user.Providers.Count == 0)
+            {
+                this.providers = new List<ProviderUserInfo>();
+            }
+            else
+            {
+                var count = user.Providers.Count;
+                this.providers = new List<ProviderUserInfo>(count);
+
+                for (int i = 0; i < count; i++)
+                {
+                    this.providers.Add(new ProviderUserInfo(user.Providers[i]));
+                }
+            }
+
+            this.tokensValidAfterTimestamp = user.ValidSince * 1000;
+            this.userMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
+            this.customClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
         }
 
         /// <summary>
         /// Gets the user ID of this user.
         /// </summary>
-        [JsonProperty("localId")]
         public string Uid
         {
             get => this.uid;
@@ -47,6 +110,77 @@ namespace FirebaseAdmin.Auth
                 this.uid = value;
             }
         }
+
+        /// <summary>
+        /// Gets the user's display name, if available.
+        /// </summary>
+        /// <returns>a display name string or null.</returns>
+        public string DisplayName
+        {
+            get => this.displayName;
+        }
+
+        /// <summary>
+        /// Gets the user's email address, if available.
+        /// </summary>
+        /// <returns>an email address string or null.</returns>
+        public string Email
+        {
+            get => this.email;
+        }
+
+        /// <summary>
+        /// Gets the user's phone number.
+        /// </summary>
+        /// <returns>a phone number string or null.</returns>
+        public string PhoneNumber
+        {
+            get => this.phoneNumber;
+        }
+
+        /// <summary>
+        /// Gets the user's photo URL, if available.
+        /// </summary>
+        /// <returns>a URL string or null.</returns>
+        public string PhotoUrl
+        {
+            get => this.photoUrl;
+        }
+
+        /// <summary>
+        /// Gets the ID of the identity provider. This can be a short domain name (e.g. google.com) or
+        /// the identifier of an OpenID identity provider.
+        /// </summary>
+        /// <returns>an ID string that uniquely identifies the identity provider.</returns>
+        public string ProviderId
+        {
+            get => UserRecord.PROVIDERID;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the user's email address is verified or not.
+        /// </summary>
+        public bool EmailVerified => this.emailVerified;
+
+        /// <summary>
+        /// Gets a value indicating whether the user account is disabled or not.
+        /// </summary>
+        public bool Disabled => this.disabled;
+
+        /// <summary>
+        /// Gets a list of provider data for this user.
+        /// </summary>
+        public IEnumerable<IUserInfo> Providers => this.providers;
+
+        /// <summary>
+        /// Gets a timestamp representing the date and time that this token will become active.
+        /// </summary>
+        public long TokensValidAfterTimestamp => this.tokensValidAfterTimestamp;
+
+        /// <summary>
+        /// Gets additional user metadata.
+        /// </summary>
+        public UserMetadata UserMetaData => this.userMetaData;
 
         /// <summary>
         /// Gets or sets the custom claims set on this user.
@@ -119,6 +253,18 @@ namespace FirebaseAdmin.Auth
         private static string SerializeClaims(IReadOnlyDictionary<string, object> claims)
         {
             return NewtonsoftJsonSerializer.Instance.Serialize(claims);
+        }
+
+        private static IReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
+        {
+            if (string.IsNullOrEmpty(customClaims))
+            {
+                return new Dictionary<string, object>();
+            }
+            else
+            {
+                return NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(customClaims);
+            }
         }
     }
 }

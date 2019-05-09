@@ -32,7 +32,8 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void InvalidUidForUserRecord()
         {
-            Assert.Throws<ArgumentException>(() => new UserRecord(null));
+            Assert.Throws<ArgumentException>(() => new UserRecord((string)null));
+            Assert.Throws<ArgumentException>(() => new UserRecord((GetAccountInfoResponse.User)null));
             Assert.Throws<ArgumentException>(() => new UserRecord(string.Empty));
             Assert.Throws<ArgumentException>(() => new UserRecord(new string('a', 129)));
         }
@@ -76,8 +77,16 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new UserRecord("user1"),
+                Response = new GetAccountInfoResponse()
+                {
+                    Kind = "identitytoolkit#GetAccountInfoResponse",
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
+                    },
+                },
             };
+
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
                 new FirebaseUserManagerArgs
@@ -114,7 +123,14 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new UserRecord("user1"),
+                Response = new GetAccountInfoResponse()
+                {
+                    Kind = "identitytoolkit#GetAccountInfoResponse",
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
+                    },
+                },
             };
             var factory = new MockHttpClientFactory(handler);
             var userManager = new FirebaseUserManager(
