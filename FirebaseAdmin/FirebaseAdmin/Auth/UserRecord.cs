@@ -14,10 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
 using Google.Apis.Json;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -33,27 +30,13 @@ namespace FirebaseAdmin.Auth
         private const string DefaultProviderId = "firebase";
 
         private readonly long validSinceTimestampInSeconds;
-        private string uid;
-        private IReadOnlyDictionary<string, object> customClaims;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserRecord"/> class with the specified user ID.
+        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the
+        /// <see cref="GetAccountInfoResponse.User"/> class.
         /// </summary>
-        /// <param name="uid">The user's ID.</param>
-        internal UserRecord(string uid)
-        {
-            if (string.IsNullOrEmpty(uid) || uid.Length > 128)
-            {
-                throw new ArgumentException("User ID must not be null or empty, and be 128 characters or shorter.");
-            }
-
-            this.uid = uid;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the <see cref="GetAccountInfoResponse.User"/> class.
-        /// </summary>
-        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy the user's data from.</param>
+        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy the user's data
+        /// from.</param>
         internal UserRecord(GetAccountInfoResponse.User user)
         {
             if (user == null)
@@ -65,7 +48,7 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException("User ID must not be null or empty.");
             }
 
-            this.uid = user.UserId;
+            this.Uid = user.UserId;
             this.Email = user.Email;
             this.PhoneNumber = user.PhoneNumber;
             this.EmailVerified = user.EmailVerified;
@@ -89,21 +72,13 @@ namespace FirebaseAdmin.Auth
 
             this.validSinceTimestampInSeconds = user.ValidSince;
             this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
-            this.customClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
+            this.CustomClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
         }
 
         /// <summary>
         /// Gets the user ID of this user.
         /// </summary>
-        public string Uid
-        {
-            get => this.uid;
-            private set
-            {
-                CheckUid(value);
-                this.uid = value;
-            }
-        }
+        public string Uid { get; }
 
         /// <summary>
         /// Gets the user's display name, if available. Otherwise null.
@@ -166,75 +141,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the custom claims set on this user, as a non-null dictionary. Possibly empty.
         /// </summary>
-        [JsonIgnore]
-        public IReadOnlyDictionary<string, object> CustomClaims
-        {
-            get => this.customClaims;
-            internal set
-            {
-                CheckCustomClaims(value);
-                this.customClaims = value;
-            }
-        }
-
-        [JsonProperty("customAttributes")]
-        internal string CustomClaimsString => SerializeClaims(CustomClaims);
-
-        /// <summary>
-        /// Checks if the given user ID is valid.
-        /// </summary>
-        /// <param name="uid">The user ID. Must not be null or longer than
-        /// 128 characters.</param>
-        private static void CheckUid(string uid)
-        {
-            if (string.IsNullOrEmpty(uid))
-            {
-                throw new ArgumentException("uid must not be null or empty");
-            }
-            else if (uid.Length > 128)
-            {
-                throw new ArgumentException("uid must not be longer than 128 characters");
-            }
-        }
-
-        /// <summary>
-        /// Checks if the given set of custom claims are valid.
-        /// </summary>
-        /// <param name="customClaims">The custom claims. Claim names must
-        /// not be null or empty and must not be reserved and the serialized
-        /// claims have to be less than 1000 bytes.</param>
-        private static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
-        {
-            if (customClaims == null)
-            {
-                return;
-            }
-
-            foreach (var key in customClaims.Keys)
-            {
-                if (string.IsNullOrEmpty(key))
-                {
-                    throw new ArgumentException("Claim names must not be null or empty");
-                }
-
-                if (FirebaseTokenFactory.ReservedClaims.Contains(key))
-                {
-                    throw new ArgumentException($"Claim {key} is reserved and cannot be set");
-                }
-            }
-
-            var customClaimsString = SerializeClaims(customClaims);
-            var byteCount = Encoding.Unicode.GetByteCount(customClaimsString);
-            if (byteCount > 1000)
-            {
-                throw new ArgumentException($"Claims have to be not greater than 1000 bytes when serialized");
-            }
-        }
-
-        private static string SerializeClaims(IReadOnlyDictionary<string, object> claims)
-        {
-            return NewtonsoftJsonSerializer.Instance.Serialize(claims);
-        }
+        public IReadOnlyDictionary<string, object> CustomClaims { get; }
 
         private static IReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
         {

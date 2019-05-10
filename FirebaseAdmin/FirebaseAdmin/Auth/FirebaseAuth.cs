@@ -366,8 +366,9 @@ namespace FirebaseAdmin.Auth
             string uid, IReadOnlyDictionary<string, object> claims, CancellationToken cancellationToken)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
-            var user = new UserRecord(uid)
+            var user = new UserArgs()
             {
+                Uid = uid,
                 CustomClaims = claims,
             };
 

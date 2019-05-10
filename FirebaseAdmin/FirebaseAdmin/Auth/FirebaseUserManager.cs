@@ -95,23 +95,18 @@ namespace FirebaseAdmin.Auth
         /// Update an existing user.
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
-        /// <param name="user">The user which we want to update.</param>
+        /// <param name="args">The user account data to be updated.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         public async Task UpdateUserAsync(
-            UserRecord user, CancellationToken cancellationToken = default(CancellationToken))
+            UserArgs args, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
-                "accounts:update", user, cancellationToken).ConfigureAwait(false);
-            if (response == null || response.Users == null || response.Users.Count == 0)
+            var payload = args.ToUpdateUserRequest();
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                "accounts:update", payload, cancellationToken).ConfigureAwait(false);
+            if (payload.Uid != (string)response["localId"])
             {
-                throw new FirebaseException($"Failed to get user: {user.Uid}");
-            }
-
-            var updatedUser = response.Users[0];
-            if (updatedUser == null || updatedUser.UserId != user.Uid)
-            {
-                throw new FirebaseException($"Failed to update user: {user.Uid}");
+                throw new FirebaseException($"Failed to get user: {payload.Uid}");
             }
         }
 
