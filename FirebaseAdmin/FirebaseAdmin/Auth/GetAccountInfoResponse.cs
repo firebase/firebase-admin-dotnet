@@ -108,7 +108,7 @@ namespace FirebaseAdmin.Auth
             /// <summary>
             /// Gets or sets the user's ID.
             /// </summary>
-            [JsonProperty(PropertyName = "uid")]
+            [JsonProperty(PropertyName = "rawId")]
             public string UserId { get; set; }
 
             /// <summary>

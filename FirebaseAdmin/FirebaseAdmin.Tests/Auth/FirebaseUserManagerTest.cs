@@ -33,28 +33,20 @@ namespace FirebaseAdmin.Auth.Tests
             GoogleCredential.FromAccessToken("test-token");
 
         [Fact]
-        public void UserRecordWithNullResponse()
-        {
-            Assert.Throws<ArgumentException>(() => new UserRecord(null));
-        }
-
-        [Fact]
         public async Task GetUserById()
         {
             var handler = new MockMessageHandler()
             {
-                Response = new GetAccountInfoResponse()
-                {
-                    Kind = "identitytoolkit#GetAccountInfoResponse",
-                    Users = new List<GetAccountInfoResponse.User>()
+                Response = @"{""users"": [
                     {
-                        new GetAccountInfoResponse.User() { UserId = "user1" },
-                    },
-                },
+                        ""localId"": ""user1""
+                    }
+                ]}",
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
             var userRecord = await userManager.GetUserById("user1");
+
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
             Assert.Null(userRecord.Email);
@@ -75,48 +67,40 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new GetAccountInfoResponse()
-                {
-                    Kind = "identitytoolkit#GetAccountInfoResponse",
-                    Users = new List<GetAccountInfoResponse.User>()
+                Response = @"{""users"": [
                     {
-                        new GetAccountInfoResponse.User()
-                        {
-                            UserId = "user1",
-                            DisplayName = "Test User",
-                            Email = "user@domain.com",
-                            PhoneNumber = "+11234567890",
-                            PhotoUrl = "https://domain.com/user.png",
-                            Disabled = true,
-                            EmailVerified = true,
-                            ValidSince = 3600,
-                            CreatedAt = 100,
-                            LastLoginAt = 150,
-                            CustomClaims = @"{""admin"": true, ""level"": 10}",
-                            Providers = new List<GetAccountInfoResponse.Provider>()
+                        ""localId"": ""user1"",
+                        ""displayName"": ""Test User"",
+                        ""email"": ""user@domain.com"",
+                        ""phoneNumber"": ""+11234567890"",
+                        ""photoUrl"": ""https://domain.com/user.png"",
+                        ""disabled"": true,
+                        ""emailVerified"": true,
+                        ""validSince"": 3600,
+                        ""customAttributes"": ""{\""admin\"": true, \""level\"": 10}"",
+                        ""providerUserInfo"": [
                             {
-                                new GetAccountInfoResponse.Provider()
-                                {
-                                    ProviderID = "google.com",
-                                    UserId = "googleuid",
-                                },
-                                new GetAccountInfoResponse.Provider()
-                                {
-                                    ProviderID = "other.com",
-                                    UserId = "otheruid",
-                                    DisplayName = "Other Name",
-                                    Email = "user@other.com",
-                                    PhotoUrl = "https://other.com/user.png",
-                                    PhoneNumber = "+10987654321",
-                                },
+                                ""rawId"": ""googleuid"",
+                                ""providerId"": ""google.com""
                             },
-                        },
-                    },
-                },
+                            {
+                                ""rawId"": ""otheruid"",
+                                ""providerId"": ""other.com"",
+                                ""displayName"": ""Other Name"",
+                                ""email"": ""user@other.com"",
+                                ""phoneNumber"": ""+10987654321"",
+                                ""photoUrl"": ""https://other.com/user.png""
+                            }
+                        ],
+                        ""createdAt"": 100,
+                        ""lastLoginAt"": 150,
+                    }
+                ]}",
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
             var userRecord = await userManager.GetUserById("user1");
+
             Assert.Equal("user1", userRecord.Uid);
             Assert.Equal("Test User", userRecord.DisplayName);
             Assert.Equal("user@domain.com", userRecord.Email);
@@ -372,7 +356,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new object(),
+                Response = "{}",
             };
             var userManager = this.CreateFirebaseUserManager(handler);
             var customClaims = new Dictionary<string, object>()
@@ -435,10 +419,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = new Dictionary<string, string>()
-                {
-                    { "kind", "identitytoolkit#DeleteAccountResponse" },
-                },
+                Response = @"{""kind"": ""identitytoolkit#DeleteAccountResponse""}",
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
