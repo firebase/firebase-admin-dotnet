@@ -14,10 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
@@ -32,6 +32,8 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal class FirebaseUserManager : IDisposable
     {
+        public const int MaxListUsersResults = 1000;
+
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
         private readonly ConfigurableHttpClient httpClient;
@@ -99,6 +101,31 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets a page of users starting from the specified <paramref name="pageToken"/>. Page size will be limited to <paramref name="maxResults"/> users.
+        /// </summary>
+        /// <param name="maxResults">Maximum number of users to include in the returned page. This may not exceed 1000.</param>
+        /// <param name="pageToken">A non-empty page token string, or null to retrieve the first page of users.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
+        /// <returns>A <see cref="DownloadAccountResponse"/> instance.</returns>
+        public async Task<DownloadAccountResponse> ListUsers(int maxResults, string pageToken, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            const string listUsersPath = "accounts:batchGet";
+            var payload = new Dictionary<string, object>()
+            {
+                { "maxResults", maxResults },
+                { "nextPageToken", pageToken },
+            };
+            var response = await this.GetAndDeserializeAsync<DownloadAccountResponse>(
+                listUsersPath, payload, cancellationToken).ConfigureAwait(false);
+            if (response == null)
+            {
+                throw new FirebaseException($"Failed to list users");
+            }
+
+            return response;
+        }
+
+        /// <summary>
         /// Update an existing user.
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
@@ -155,6 +182,13 @@ namespace FirebaseAdmin.Auth
             this.httpClient.Dispose();
         }
 
+        private async Task<TResult> GetAndDeserializeAsync<TResult>(
+            string path, Dictionary<string, object> parameters, CancellationToken cancellationToken)
+        {
+            var json = await this.GetAsync(path, parameters, cancellationToken).ConfigureAwait(false);
+            return this.SafeDeserialize<TResult>(json);
+        }
+
         private async Task<TResult> PostAndDeserializeAsync<TResult>(
             string path, object body, CancellationToken cancellationToken)
         {
@@ -172,6 +206,19 @@ namespace FirebaseAdmin.Auth
             {
                 throw new FirebaseException("Error while parsing Auth service response", e);
             }
+        }
+
+        private async Task<string> GetAsync(
+            string path, Dictionary<string, object> parameters, CancellationToken cancellationToken)
+        {
+            var queryParameters = string.Join("&", parameters.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"{this.baseUrl}/{path}?{queryParameters}"),
+            };
+            return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<string> PostAsync(

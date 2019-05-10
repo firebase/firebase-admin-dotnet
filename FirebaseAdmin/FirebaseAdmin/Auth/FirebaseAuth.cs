@@ -347,6 +347,18 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets a page of users starting from the specified pageToken. Page size will be limited to 1000 users.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
+        /// <returns>A <see cref="PaginatedList{UserRecord}"/> instance.</returns>
+        public async Task<PaginatedList<UserRecord>> ListUsersAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await PaginatedList<UserRecord>.CreateAndLoad(FirebaseUserManager.MaxListUsersResults, UserSource.DefaultUserSource(userManager, cancellationToken));
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
