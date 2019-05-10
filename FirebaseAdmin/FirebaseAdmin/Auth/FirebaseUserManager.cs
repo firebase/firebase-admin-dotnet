@@ -106,7 +106,7 @@ namespace FirebaseAdmin.Auth
                 "accounts:update", payload, cancellationToken).ConfigureAwait(false);
             if (payload.Uid != (string)response["localId"])
             {
-                throw new FirebaseException($"Failed to get user: {payload.Uid}");
+                throw new FirebaseException($"Failed to update user: {payload.Uid}");
             }
         }
 
