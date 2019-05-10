@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
@@ -47,6 +48,7 @@ namespace FirebaseAdmin.Auth.Tests
                 {
                     { key, "value" },
                 };
+
                 Assert.Throws<ArgumentException>(() => new UserRecord("user1") { CustomClaims = customClaims });
             }
         }
@@ -58,6 +60,7 @@ namespace FirebaseAdmin.Auth.Tests
             {
                     { string.Empty, "value" },
             };
+
             Assert.Throws<ArgumentException>(() => new UserRecord("user1") { CustomClaims = emptyClaims });
         }
 
@@ -86,15 +89,7 @@ namespace FirebaseAdmin.Auth.Tests
                     },
                 },
             };
-
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
 
             var userRecord = await userManager.GetUserById("user1");
             Assert.Equal("user1", userRecord.Uid);
@@ -108,8 +103,8 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.False(userRecord.Disabled);
             Assert.False(userRecord.EmailVerified);
             Assert.Equal(UserRecord.UnixEpoch, userRecord.TokensValidAfterTimestamp);
-            Assert.Equal(0, userRecord.UserMetaData.CreationTimestamp);
-            Assert.Equal(0, userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Equal(DateTime.MinValue, userRecord.UserMetaData.CreationTimestamp);
+            Assert.Equal(DateTime.MinValue, userRecord.UserMetaData.LastSignInTimestamp);
         }
 
         [Fact]
@@ -147,21 +142,16 @@ namespace FirebaseAdmin.Auth.Tests
                                     ProviderID = "other.com",
                                     UserId = "otheruid",
                                     DisplayName = "Other Name",
+                                    Email = "user@other.com",
+                                    PhotoUrl = "https://other.com/user.png",
+                                    PhoneNumber = "+10987654321",
                                 },
                             },
                         },
                     },
                 },
             };
-
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
 
             var userRecord = await userManager.GetUserById("user1");
             Assert.Equal("user1", userRecord.Uid);
@@ -191,15 +181,18 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("other.com", provider.ProviderId);
             Assert.Equal("otheruid", provider.Uid);
             Assert.Equal("Other Name", provider.DisplayName);
-            Assert.Null(provider.Email);
-            Assert.Null(provider.PhoneNumber);
-            Assert.Null(provider.PhotoUrl);
+            Assert.Equal("user@other.com", provider.Email);
+            Assert.Equal("+10987654321", provider.PhoneNumber);
+            Assert.Equal("https://other.com/user.png", provider.PhotoUrl);
 
             Assert.True(userRecord.Disabled);
             Assert.True(userRecord.EmailVerified);
+
             Assert.Equal(UserRecord.UnixEpoch.AddSeconds(3600), userRecord.TokensValidAfterTimestamp);
-            Assert.Equal(100, userRecord.UserMetaData.CreationTimestamp);
-            Assert.Equal(150, userRecord.UserMetaData.LastSignInTimestamp);
+            var metadata = userRecord.UserMetaData;
+            Assert.NotNull(metadata);
+            Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(100), metadata.CreationTimestamp);
+            Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(150), metadata.LastSignInTimestamp);
         }
 
         [Fact]
@@ -209,14 +202,8 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 StatusCode = HttpStatusCode.NotFound,
             };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
+
             await Assert.ThrowsAsync<FirebaseException>(
                 async () => await userManager.GetUserById("user1"));
         }
@@ -235,14 +222,7 @@ namespace FirebaseAdmin.Auth.Tests
                     },
                 },
             };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
             var customClaims = new Dictionary<string, object>()
             {
                     { "admin", true },
@@ -258,17 +238,10 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = new object(),
             };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
             var customClaims = new Dictionary<string, object>()
             {
-                    { "admin", true },
+                { "admin", true },
             };
 
             await Assert.ThrowsAsync<FirebaseException>(
@@ -282,17 +255,10 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = new UserRecord("testuser"),
             };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
             var customClaims = new Dictionary<string, object>()
             {
-                    { "admin", true },
+                { "admin", true },
             };
 
             await Assert.ThrowsAsync<FirebaseException>(
@@ -306,14 +272,7 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 StatusCode = HttpStatusCode.InternalServerError,
             };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
             var customClaims = new Dictionary<string, object>()
             {
                 { "admin", true },
@@ -333,15 +292,9 @@ namespace FirebaseAdmin.Auth.Tests
                     { "kind", "identitytoolkit#DeleteAccountResponse" },
                 },
             };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
-            await userManager.DeleteUser("user1");
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            await userManager.DeleteUserAsync("user1");
         }
 
         [Fact]
@@ -351,16 +304,21 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 StatusCode = HttpStatusCode.NotFound,
             };
-            var factory = new MockHttpClientFactory(handler);
-            var userManager = new FirebaseUserManager(
-                new FirebaseUserManagerArgs
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = factory,
-                });
+            var userManager = this.CreateFirebaseUserManager(handler);
+
             await Assert.ThrowsAsync<FirebaseException>(
-               async () => await userManager.DeleteUser("user1"));
+               async () => await userManager.DeleteUserAsync("user1"));
+        }
+
+        private FirebaseUserManager CreateFirebaseUserManager(HttpMessageHandler handler)
+        {
+            var args = new FirebaseUserManagerArgs
+            {
+                Credential = MockCredential,
+                ProjectId = MockProjectId,
+                ClientFactory = new MockHttpClientFactory(handler),
+            };
+            return new FirebaseUserManager(args);
         }
     }
 }

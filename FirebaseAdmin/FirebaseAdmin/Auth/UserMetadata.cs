@@ -10,6 +10,9 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class UserMetadata
     {
+        private readonly long creationTimestampMillis;
+        private readonly long lastSignInTimestampMillis;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="UserMetadata"/> class with the specified creation and last sign-in timestamps.
         /// </summary>
@@ -17,20 +20,36 @@ namespace FirebaseAdmin.Auth
         /// <param name="lastSignInTimestamp">A timestamp representing the date and time that the user account was last signed-on to.</param>
         internal UserMetadata(long creationTimestamp, long lastSignInTimestamp)
         {
-            this.CreationTimestamp = creationTimestamp;
-            this.LastSignInTimestamp = lastSignInTimestamp;
+            this.creationTimestampMillis = creationTimestamp;
+            this.lastSignInTimestampMillis = lastSignInTimestamp;
         }
 
         /// <summary>
         /// Gets a timestamp representing the date and time that the account was created.
+        /// If not available this property is <c>DateTime.MinValue</c>.
         /// </summary>
-        [JsonProperty("creationTimestamp")]
-        public long CreationTimestamp { get; }
+        public DateTime CreationTimestamp
+        {
+            get => this.ToDateTime(this.creationTimestampMillis);
+        }
 
         /// <summary>
-        /// Gets a timestamp representing the last time that the user has logged in.
+        /// Gets a timestamp representing the last time that the user has signed in. If the user
+        /// has never signed in this property is <c>DateTime.MinValue</c>.
         /// </summary>
-        [JsonProperty("lastSignInTimestamp")]
-        public long LastSignInTimestamp { get; }
+        public DateTime LastSignInTimestamp
+        {
+            get => this.ToDateTime(this.lastSignInTimestampMillis);
+        }
+
+        private DateTime ToDateTime(long millisFromEpoch)
+        {
+            if (millisFromEpoch == 0)
+            {
+                return DateTime.MinValue;
+            }
+
+            return UserRecord.UnixEpoch.AddMilliseconds(millisFromEpoch);
+        }
     }
 }

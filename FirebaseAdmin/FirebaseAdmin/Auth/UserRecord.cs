@@ -32,16 +32,8 @@ namespace FirebaseAdmin.Auth
 
         private const string DefaultProviderId = "firebase";
 
+        private readonly long validSinceTimestampInSeconds;
         private string uid;
-        private string email;
-        private string phoneNumber;
-        private bool emailVerified;
-        private string displayName;
-        private string photoUrl;
-        private bool disabled;
-        private IUserInfo[] providers;
-        private long validSinceTimestampInSeconds;
-        private UserMetadata userMetaData;
         private IReadOnlyDictionary<string, object> customClaims;
 
         /// <summary>
@@ -74,29 +66,29 @@ namespace FirebaseAdmin.Auth
             }
 
             this.uid = user.UserId;
-            this.email = user.Email;
-            this.phoneNumber = user.PhoneNumber;
-            this.emailVerified = user.EmailVerified;
-            this.displayName = user.DisplayName;
-            this.photoUrl = user.PhotoUrl;
-            this.disabled = user.Disabled;
+            this.Email = user.Email;
+            this.PhoneNumber = user.PhoneNumber;
+            this.EmailVerified = user.EmailVerified;
+            this.DisplayName = user.DisplayName;
+            this.PhotoUrl = user.PhotoUrl;
+            this.Disabled = user.Disabled;
 
             if (user.Providers == null || user.Providers.Count == 0)
             {
-                this.providers = new IUserInfo[0];
+                this.ProviderData = new IUserInfo[0];
             }
             else
             {
                 var count = user.Providers.Count;
-                this.providers = new IUserInfo[count];
+                this.ProviderData = new IUserInfo[count];
                 for (int i = 0; i < count; i++)
                 {
-                    this.providers[i] = new ProviderUserInfo(user.Providers[i]);
+                    this.ProviderData[i] = new ProviderUserInfo(user.Providers[i]);
                 }
             }
 
             this.validSinceTimestampInSeconds = user.ValidSince;
-            this.userMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
+            this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
             this.customClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
         }
 
@@ -116,61 +108,46 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the user's display name, if available. Otherwise null.
         /// </summary>
-        public string DisplayName
-        {
-            get => this.displayName;
-        }
+        public string DisplayName { get; }
 
         /// <summary>
         /// Gets the user's email address, if available. Otherwise null.
         /// </summary>
-        public string Email
-        {
-            get => this.email;
-        }
+        public string Email { get; }
 
         /// <summary>
         /// Gets the user's phone number, if available. Otherwise null.
         /// </summary>
-        public string PhoneNumber
-        {
-            get => this.phoneNumber;
-        }
+        public string PhoneNumber { get; }
 
         /// <summary>
         /// Gets the user's photo URL, if available. Otherwise null.
         /// </summary>
-        public string PhotoUrl
-        {
-            get => this.photoUrl;
-        }
+        public string PhotoUrl { get; }
 
         /// <summary>
-        /// Gets the ID of the identity provider. This has the constant value <c>firebase</c>.
+        /// Gets the ID of the identity provider. This returns the constant value <c>firebase</c>.
         /// </summary>
-        public string ProviderId
-        {
-            get => UserRecord.DefaultProviderId;
-        }
+        public string ProviderId => UserRecord.DefaultProviderId;
 
         /// <summary>
         /// Gets a value indicating whether the user's email address is verified or not.
         /// </summary>
-        public bool EmailVerified => this.emailVerified;
+        public bool EmailVerified { get; }
 
         /// <summary>
         /// Gets a value indicating whether the user account is disabled or not.
         /// </summary>
-        public bool Disabled => this.disabled;
+        public bool Disabled { get; }
 
         /// <summary>
         /// Gets a non-null array of provider data for this user. Possibly empty.
         /// </summary>
-        public IUserInfo[] ProviderData => this.providers;
+        public IUserInfo[] ProviderData { get; }
 
         /// <summary>
         /// Gets a timestamp that indicates the earliest point in time at which a valid ID token
-        /// could have been issued to this user. Tokens issued prior to this  timestamp are
+        /// could have been issued to this user. Tokens issued prior to this timestamp are
         /// considered invalid.
         /// </summary>
         public DateTime TokensValidAfterTimestamp
@@ -182,12 +159,12 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets additional user metadata.
+        /// Gets additional user metadata. This is guaranteed not to be null.
         /// </summary>
-        public UserMetadata UserMetaData => this.userMetaData;
+        public UserMetadata UserMetaData { get; }
 
         /// <summary>
-        /// Gets the custom claims set on this user.
+        /// Gets the custom claims set on this user, as a non-null dictionary. Possibly empty.
         /// </summary>
         [JsonIgnore]
         public IReadOnlyDictionary<string, object> CustomClaims

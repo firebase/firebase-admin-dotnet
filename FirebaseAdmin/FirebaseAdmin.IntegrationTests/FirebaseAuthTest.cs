@@ -122,6 +122,22 @@ namespace FirebaseAdmin.IntegrationTests
                 async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("mock-uid", customClaims));
         }
 
+        [Fact]
+        public async Task UserLifecycle()
+        {
+            var rand = new Random();
+            var uid = $"user{rand.Next()}";
+            var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(uid);
+            var idToken = await SignInWithCustomTokenAsync(customToken);
+
+            var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+            Assert.Equal(uid, user.Uid);
+
+            await FirebaseAuth.DefaultInstance.DeleteUserAsync(uid);
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await FirebaseAuth.DefaultInstance.GetUserAsync(uid));
+        }
+
         private static async Task<string> SignInWithCustomTokenAsync(string customToken)
         {
             var rb = new Google.Apis.Requests.RequestBuilder()
