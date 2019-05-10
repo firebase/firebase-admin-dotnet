@@ -95,8 +95,111 @@ namespace FirebaseAdmin.Auth.Tests
                     ProjectId = MockProjectId,
                     ClientFactory = factory,
                 });
+
             var userRecord = await userManager.GetUserById("user1");
             Assert.Equal("user1", userRecord.Uid);
+            Assert.Null(userRecord.DisplayName);
+            Assert.Null(userRecord.Email);
+            Assert.Null(userRecord.PhoneNumber);
+            Assert.Null(userRecord.PhotoUrl);
+            Assert.Equal("firebase", userRecord.ProviderId);
+            Assert.Empty(userRecord.CustomClaims);
+            Assert.Empty(userRecord.ProviderData);
+            Assert.False(userRecord.Disabled);
+            Assert.False(userRecord.EmailVerified);
+            Assert.Equal(UserRecord.UnixEpoch, userRecord.TokensValidAfterTimestamp);
+            Assert.Equal(0, userRecord.UserMetaData.CreationTimestamp);
+            Assert.Equal(0, userRecord.UserMetaData.LastSignInTimestamp);
+        }
+
+        [Fact]
+        public async Task GetUserByIdWithProperties()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new GetAccountInfoResponse()
+                {
+                    Kind = "identitytoolkit#GetAccountInfoResponse",
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User()
+                        {
+                            UserId = "user1",
+                            DisplayName = "Test User",
+                            Email = "user@domain.com",
+                            PhoneNumber = "+11234567890",
+                            PhotoUrl = "https://domain.com/user.png",
+                            Disabled = true,
+                            EmailVerified = true,
+                            ValidSince = 3600,
+                            CreatedAt = 100,
+                            LastLoginAt = 150,
+                            CustomClaims = @"{""admin"": true, ""level"": 10}",
+                            Providers = new List<GetAccountInfoResponse.Provider>()
+                            {
+                                new GetAccountInfoResponse.Provider()
+                                {
+                                    ProviderID = "google.com",
+                                    UserId = "googleuid",
+                                },
+                                new GetAccountInfoResponse.Provider()
+                                {
+                                    ProviderID = "other.com",
+                                    UserId = "otheruid",
+                                    DisplayName = "Other Name",
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+
+            var userRecord = await userManager.GetUserById("user1");
+            Assert.Equal("user1", userRecord.Uid);
+            Assert.Equal("Test User", userRecord.DisplayName);
+            Assert.Equal("user@domain.com", userRecord.Email);
+            Assert.Equal("+11234567890", userRecord.PhoneNumber);
+            Assert.Equal("https://domain.com/user.png", userRecord.PhotoUrl);
+            Assert.Equal("firebase", userRecord.ProviderId);
+
+            var claims = new Dictionary<string, object>()
+            {
+                { "admin", true },
+                { "level", 10L },
+            };
+            Assert.Equal(claims, userRecord.CustomClaims);
+
+            Assert.Equal(2, userRecord.ProviderData.Length);
+            var provider = userRecord.ProviderData[0];
+            Assert.Equal("google.com", provider.ProviderId);
+            Assert.Equal("googleuid", provider.Uid);
+            Assert.Null(provider.DisplayName);
+            Assert.Null(provider.Email);
+            Assert.Null(provider.PhoneNumber);
+            Assert.Null(provider.PhotoUrl);
+
+            provider = userRecord.ProviderData[1];
+            Assert.Equal("other.com", provider.ProviderId);
+            Assert.Equal("otheruid", provider.Uid);
+            Assert.Equal("Other Name", provider.DisplayName);
+            Assert.Null(provider.Email);
+            Assert.Null(provider.PhoneNumber);
+            Assert.Null(provider.PhotoUrl);
+
+            Assert.True(userRecord.Disabled);
+            Assert.True(userRecord.EmailVerified);
+            Assert.Equal(UserRecord.UnixEpoch.AddSeconds(3600), userRecord.TokensValidAfterTimestamp);
+            Assert.Equal(100, userRecord.UserMetaData.CreationTimestamp);
+            Assert.Equal(150, userRecord.UserMetaData.LastSignInTimestamp);
         }
 
         [Fact]

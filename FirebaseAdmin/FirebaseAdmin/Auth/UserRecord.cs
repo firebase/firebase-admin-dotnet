@@ -27,7 +27,10 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class UserRecord : IUserInfo
     {
-        private const string PROVIDERID = "firebase";
+        internal static readonly DateTime UnixEpoch = new DateTime(
+            1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        private const string DefaultProviderId = "firebase";
 
         private string uid;
         private string email;
@@ -36,8 +39,8 @@ namespace FirebaseAdmin.Auth
         private string displayName;
         private string photoUrl;
         private bool disabled;
-        private List<ProviderUserInfo> providers;
-        private long tokensValidAfterTimestamp;
+        private IUserInfo[] providers;
+        private long validSinceTimestampInSeconds;
         private UserMetadata userMetaData;
         private IReadOnlyDictionary<string, object> customClaims;
 
@@ -80,20 +83,19 @@ namespace FirebaseAdmin.Auth
 
             if (user.Providers == null || user.Providers.Count == 0)
             {
-                this.providers = new List<ProviderUserInfo>();
+                this.providers = new IUserInfo[0];
             }
             else
             {
                 var count = user.Providers.Count;
-                this.providers = new List<ProviderUserInfo>(count);
-
+                this.providers = new IUserInfo[count];
                 for (int i = 0; i < count; i++)
                 {
-                    this.providers.Add(new ProviderUserInfo(user.Providers[i]));
+                    this.providers[i] = new ProviderUserInfo(user.Providers[i]);
                 }
             }
 
-            this.tokensValidAfterTimestamp = user.ValidSince * 1000;
+            this.validSinceTimestampInSeconds = user.ValidSince;
             this.userMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
             this.customClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
         }
@@ -112,49 +114,43 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the user's display name, if available.
+        /// Gets the user's display name, if available. Otherwise null.
         /// </summary>
-        /// <returns>a display name string or null.</returns>
         public string DisplayName
         {
             get => this.displayName;
         }
 
         /// <summary>
-        /// Gets the user's email address, if available.
+        /// Gets the user's email address, if available. Otherwise null.
         /// </summary>
-        /// <returns>an email address string or null.</returns>
         public string Email
         {
             get => this.email;
         }
 
         /// <summary>
-        /// Gets the user's phone number.
+        /// Gets the user's phone number, if available. Otherwise null.
         /// </summary>
-        /// <returns>a phone number string or null.</returns>
         public string PhoneNumber
         {
             get => this.phoneNumber;
         }
 
         /// <summary>
-        /// Gets the user's photo URL, if available.
+        /// Gets the user's photo URL, if available. Otherwise null.
         /// </summary>
-        /// <returns>a URL string or null.</returns>
         public string PhotoUrl
         {
             get => this.photoUrl;
         }
 
         /// <summary>
-        /// Gets the ID of the identity provider. This can be a short domain name (e.g. google.com) or
-        /// the identifier of an OpenID identity provider.
+        /// Gets the ID of the identity provider. This has the constant value <c>firebase</c>.
         /// </summary>
-        /// <returns>an ID string that uniquely identifies the identity provider.</returns>
         public string ProviderId
         {
-            get => UserRecord.PROVIDERID;
+            get => UserRecord.DefaultProviderId;
         }
 
         /// <summary>
@@ -168,14 +164,22 @@ namespace FirebaseAdmin.Auth
         public bool Disabled => this.disabled;
 
         /// <summary>
-        /// Gets a list of provider data for this user.
+        /// Gets a non-null array of provider data for this user. Possibly empty.
         /// </summary>
-        public IEnumerable<IUserInfo> Providers => this.providers;
+        public IUserInfo[] ProviderData => this.providers;
 
         /// <summary>
-        /// Gets a timestamp representing the date and time that this token will become active.
+        /// Gets a timestamp that indicates the earliest point in time at which a valid ID token
+        /// could have been issued to this user. Tokens issued prior to this  timestamp are
+        /// considered invalid.
         /// </summary>
-        public long TokensValidAfterTimestamp => this.tokensValidAfterTimestamp;
+        public DateTime TokensValidAfterTimestamp
+        {
+            get
+            {
+                return UnixEpoch.AddSeconds(this.validSinceTimestampInSeconds);
+            }
+        }
 
         /// <summary>
         /// Gets additional user metadata.
@@ -183,13 +187,13 @@ namespace FirebaseAdmin.Auth
         public UserMetadata UserMetaData => this.userMetaData;
 
         /// <summary>
-        /// Gets or sets the custom claims set on this user.
+        /// Gets the custom claims set on this user.
         /// </summary>
         [JsonIgnore]
         public IReadOnlyDictionary<string, object> CustomClaims
         {
             get => this.customClaims;
-            set
+            internal set
             {
                 CheckCustomClaims(value);
                 this.customClaims = value;
@@ -204,7 +208,7 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <param name="uid">The user ID. Must not be null or longer than
         /// 128 characters.</param>
-        public static void CheckUid(string uid)
+        private static void CheckUid(string uid)
         {
             if (string.IsNullOrEmpty(uid))
             {
@@ -222,7 +226,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="customClaims">The custom claims. Claim names must
         /// not be null or empty and must not be reserved and the serialized
         /// claims have to be less than 1000 bytes.</param>
-        internal static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
+        private static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
         {
             if (customClaims == null)
             {
