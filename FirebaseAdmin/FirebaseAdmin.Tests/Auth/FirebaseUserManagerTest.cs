@@ -73,6 +73,40 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task GetUserList()
+        {
+            const string nextPageToken = "4711";
+            var handler = new MockMessageHandler()
+            {
+                Response = new DownloadAccountResponse()
+                {
+                    NextPageToken = nextPageToken,
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
+                        new GetAccountInfoResponse.User() { UserId = "user2" },
+                        new GetAccountInfoResponse.User() { UserId = "user3" },
+                    },
+                },
+            };
+
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+
+            var userRecords = await userManager.ListUsers(1000, string.Empty);
+            Assert.Equal("user1", userRecords.Users[0].UserId);
+            Assert.Equal("user2", userRecords.Users[1].UserId);
+            Assert.Equal("user3", userRecords.Users[2].UserId);
+            Assert.Equal(nextPageToken, userRecords.NextPageToken);
+        }
+
+        [Fact]
         public async Task GetUserById()
         {
             var handler = new MockMessageHandler()
