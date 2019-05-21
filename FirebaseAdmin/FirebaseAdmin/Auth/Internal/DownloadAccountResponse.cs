@@ -20,7 +20,7 @@ namespace FirebaseAdmin.Auth
     /// <summary>
     /// JSON data binding for downloadAccountResponse messages sent by Google identity toolkit service.
     /// </summary>
-    internal class DownloadAccountResponse
+    public class DownloadAccountResponse
     {
         /// <summary>
         /// Gets or sets the next page link.

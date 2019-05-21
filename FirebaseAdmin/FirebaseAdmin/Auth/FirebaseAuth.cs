@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Api.Gax;
 
 namespace FirebaseAdmin.Auth
 {
@@ -350,12 +351,12 @@ namespace FirebaseAdmin.Auth
         /// Gets a page of users starting from the specified pageToken. Page size will be limited to 1000 users.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
-        /// <returns>A <see cref="PaginatedList{UserRecord}"/> instance.</returns>
-        public async Task<PaginatedList<UserRecord>> ListUsersAsync(CancellationToken cancellationToken = default(CancellationToken))
+        /// <returns>A <see cref="UserList"/> instance.</returns>
+        public PagedEnumerable<DownloadAccountResponse, UserRecord> ListUsersAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return await PaginatedList<UserRecord>.CreateAndLoad(FirebaseUserManager.MaxListUsersResults, UserSource.DefaultUserSource(userManager, cancellationToken));
+            return new UserList(UserSource.DefaultUserSource(userManager, cancellationToken));
         }
 
         /// <summary>

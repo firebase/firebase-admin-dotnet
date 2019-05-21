@@ -21,15 +21,24 @@ namespace FirebaseAdmin.Auth
     /// <summary>
     /// Represents a source of generic data that can be queried to load a batch.
     /// </summary>
-    /// <typeparam name="T">The data-type to load.</typeparam>
-    public interface ISource<T>
+    /// <typeparam name="TResource">The resource type contained within the response.</typeparam>
+    /// <typeparam name="TResponse">The API response type. Each response contains a page of resources.</typeparam>
+    public interface ISource<TResource, TResponse>
     {
         /// <summary>
         /// Returns a list of requested data.
         /// </summary>
-        /// <param name="maxResults">the max-results.</param>
+        /// <param name="pageSize">The page size. Must be greater than 0.</param>
         /// <param name="pageToken">the next-page-token.</param>
         /// <returns>a list of the requested data.</returns>
-        Task<Tuple<string, IEnumerable<T>>> Fetch(int maxResults, string pageToken);
+        Task<Tuple<string, IEnumerable<TResource>>> Fetch(int pageSize, string pageToken);
+
+        /// <summary>
+        /// Returns the raw API response.
+        /// </summary>
+        /// <param name="pageSize">The page size. Must be greater than 0.</param>
+        /// <param name="pageToken">the next-page-token.</param>
+        /// <returns>the raw API response.</returns>
+        Task<TResponse> FetchRaw(int pageSize, string pageToken);
     }
 }

@@ -17,13 +17,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Api.Gax;
 
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// Represents a source of user data that can be queried to load a batch of users.
     /// </summary>
-    internal class UserSource : ISource<UserRecord>
+    internal class UserSource : ISource<UserRecord, DownloadAccountResponse>
     {
         private readonly CancellationToken cancellationToken;
 
@@ -41,9 +42,15 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <inheritdoc />
+        public async Task<DownloadAccountResponse> FetchRaw(int maxResults, string pageToken)
+        {
+            return await this.userManager.ListUsers(maxResults, pageToken, this.cancellationToken);
+        }
+
+        /// <inheritdoc />
         public async Task<Tuple<string, IEnumerable<UserRecord>>> Fetch(int maxResults, string pageToken)
         {
-            var response = await this.userManager.ListUsers(maxResults, pageToken, this.cancellationToken);
+            var response = await this.FetchRaw(maxResults, pageToken);
 
             if (string.IsNullOrEmpty(response.NextPageToken))
             {

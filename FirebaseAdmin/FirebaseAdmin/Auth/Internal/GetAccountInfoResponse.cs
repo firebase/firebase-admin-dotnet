@@ -6,7 +6,7 @@ namespace FirebaseAdmin.Auth
     /// <summary>
     /// JSON data binding for GetAccountInfoResponse messages sent by Google identity toolkit service.
     /// </summary>
-    internal sealed class GetAccountInfoResponse
+    public sealed class GetAccountInfoResponse
     {
         /// <summary>
         /// Gets or sets a string representing what kind of account is represented by this object.
@@ -23,7 +23,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// JSON data binding for user records.
         /// </summary>
-        internal sealed class User
+        public sealed class User
         {
             /// <summary>
             /// Gets or sets the user's ID.
@@ -101,7 +101,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// JSON data binding for provider data.
         /// </summary>
-        internal sealed class Provider
+        public sealed class Provider
         {
             /// <summary>
             /// Gets or sets the user's ID.
