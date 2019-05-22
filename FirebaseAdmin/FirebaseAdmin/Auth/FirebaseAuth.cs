@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Api.Gax;
+using Google.Api.Gax.Rest;
 
 namespace FirebaseAdmin.Auth
 {
@@ -348,15 +349,20 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets a page of users starting from the specified pageToken. Page size will be limited to 1000 users.
+        /// Gets an async enumerable to page users starting from the specified pageToken. If the pageToken is empty, it starts from the first page.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
-        /// <returns>A <see cref="UserList"/> instance.</returns>
-        public PagedEnumerable<DownloadAccountResponse, UserRecord> ListUsersAsync(CancellationToken cancellationToken = default(CancellationToken))
+        /// <param name="pageToken">The page token for the next remote call.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{DownloadAccountResponse, UserRecord}"/> instance.</returns>
+        public PagedAsyncEnumerable<DownloadAccountResponse, UserRecord> ListUsersAsync(string pageToken)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var requestOptions = new UserRecordServiceRequest.UserRecordServiceRequestOptions() { NextPageToken = pageToken };
 
-            return new UserList(UserSource.DefaultUserSource(userManager, cancellationToken));
+            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<UserRecordServiceRequest, DownloadAccountResponse, UserRecord>(
+                () => userManager.CreateUserRecordServiceRequest(requestOptions),
+                new UserRecordPageManager());
+
+            return restPagedAsyncEnumerable;
         }
 
         /// <summary>

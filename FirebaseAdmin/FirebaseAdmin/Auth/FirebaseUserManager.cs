@@ -100,6 +100,11 @@ namespace FirebaseAdmin.Auth
             return new UserRecord(user);
         }
 
+        public UserRecordServiceRequest CreateUserRecordServiceRequest(UserRecordServiceRequest.UserRecordServiceRequestOptions requestOptions)
+        {
+            return new UserRecordServiceRequest(this.baseUrl, this.httpClient, requestOptions);
+        }
+
         /// <summary>
         /// Gets a page of users starting from the specified <paramref name="pageToken"/>. Page size will be limited to <paramref name="maxResults"/> users.
         /// </summary>
