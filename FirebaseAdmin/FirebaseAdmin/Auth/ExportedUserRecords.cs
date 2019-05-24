@@ -1,4 +1,4 @@
-// Copyright 2018, Google Inc. All rights reserved.
+// Copyright 2019, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,25 +13,22 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// JSON data binding for downloadAccountResponse messages sent by Google identity toolkit service.
+    /// Contains a collection of Firebase user accounts.
     /// </summary>
-    internal class DownloadAccountResponse
+    public sealed class ExportedUserRecords
     {
         /// <summary>
         /// Gets or sets the next page link.
         /// </summary>
-        [JsonProperty("nextPageToken")]
         public string NextPageToken { get; set; }
 
         /// <summary>
         /// Gets or sets the users.
         /// </summary>
-        [JsonProperty("users")]
-        public List<GetAccountInfoResponse.User> Users { get; set; }
+        public List<ExportedUserRecord> Users { get; set; }
     }
 }

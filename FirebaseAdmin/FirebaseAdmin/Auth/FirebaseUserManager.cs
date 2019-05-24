@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -100,7 +99,7 @@ namespace FirebaseAdmin.Auth
             return new UserRecord(user);
         }
 
-        public UserRecordServiceRequest CreateUserRecordServiceRequest(UserRecordServiceRequest.UserRecordServiceRequestOptions requestOptions)
+        public UserRecordServiceRequest CreateUserRecordServiceRequest(ListUsersOptions requestOptions)
         {
             return new UserRecordServiceRequest(this.baseUrl, this.httpClient, requestOptions);
         }

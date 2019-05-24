@@ -1,3 +1,17 @@
+// Copyright 2019, Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,13 +26,13 @@ using Google.Apis.Services;
 
 namespace FirebaseAdmin.Auth
 {
-    internal class UserRecordServiceRequest : IClientServiceRequest<DownloadAccountResponse>
+    internal class UserRecordServiceRequest : IClientServiceRequest<ExportedUserRecords>
     {
         private readonly string baseUrl;
         private readonly HttpClient httpClient;
-        private readonly UserRecordServiceRequestOptions requestOptions;
+        private readonly ListUsersOptions requestOptions;
 
-        internal UserRecordServiceRequest(string baseUrl, HttpClient httpClient, UserRecordServiceRequestOptions requestOptions)
+        internal UserRecordServiceRequest(string baseUrl, HttpClient httpClient, ListUsersOptions requestOptions)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
@@ -26,8 +40,8 @@ namespace FirebaseAdmin.Auth
             this.RequestParameters = new Dictionary<string, IParameter>();
 
             // this is the default page-size if no other value is set.
-            this.SetPageSize(FirebaseUserManager.MaxListUsersResults);
-            this.SetPageToken(requestOptions.NextPageToken);
+            this.SetPageSize(requestOptions.PageSize ?? FirebaseUserManager.MaxListUsersResults);
+            this.SetPageToken(requestOptions.PageToken);
         }
 
         public string MethodName => "ListUsers";
@@ -48,7 +62,7 @@ namespace FirebaseAdmin.Auth
         public void SetPageToken(string pageToken)
         {
             this.AddOrUpdate("nextPageToken", pageToken);
-            this.requestOptions.NextPageToken = pageToken;
+            this.requestOptions.PageToken = pageToken;
         }
 
         public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
@@ -80,19 +94,27 @@ namespace FirebaseAdmin.Auth
             return this.ExecuteAsStreamAsync().Result;
         }
 
-        public Task<DownloadAccountResponse> ExecuteAsync()
+        public Task<ExportedUserRecords> ExecuteAsync()
         {
             return this.ExecuteAsync(default);
         }
 
-        public Task<DownloadAccountResponse> ExecuteAsync(CancellationToken cancellationToken)
+        public async Task<ExportedUserRecords> ExecuteAsync(CancellationToken cancellationToken)
         {
-            return this.SendAndDeserializeAsync<DownloadAccountResponse>(this.CreateRequest(), cancellationToken);
+            var downloadAccountResponse = await this.SendAndDeserializeAsync<DownloadAccountResponse>(this.CreateRequest(), cancellationToken);
+            return ConvertToExportedUserRecords(downloadAccountResponse);
         }
 
-        public DownloadAccountResponse Execute()
+        public ExportedUserRecords Execute()
         {
             return this.ExecuteAsync().Result;
+        }
+
+        private static ExportedUserRecords ConvertToExportedUserRecords(DownloadAccountResponse downloadAccountResponse)
+        {
+            var userRecords = new List<ExportedUserRecord>();
+            downloadAccountResponse.Users?.ForEach(u => userRecords.Add(ExportedUserRecord.CreateFrom(u)));
+            return new ExportedUserRecords { NextPageToken = downloadAccountResponse.NextPageToken, Users = userRecords };
         }
 
         private async Task<TResult> SendAndDeserializeAsync<TResult>(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -154,11 +176,6 @@ namespace FirebaseAdmin.Auth
             {
                 this.RequestParameters[paramName] = parameter;
             }
-        }
-
-        internal class UserRecordServiceRequestOptions
-        {
-            public string NextPageToken { get; set; }
         }
     }
 }

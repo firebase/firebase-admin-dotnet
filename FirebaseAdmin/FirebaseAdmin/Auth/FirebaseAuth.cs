@@ -351,14 +351,13 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets an async enumerable to page users starting from the specified pageToken. If the pageToken is empty, it starts from the first page.
         /// </summary>
-        /// <param name="pageToken">The page token for the next remote call.</param>
+        /// <param name="requestOptions">The options for the next remote call.</param>
         /// <returns>A <see cref="PagedAsyncEnumerable{DownloadAccountResponse, UserRecord}"/> instance.</returns>
-        public PagedAsyncEnumerable<DownloadAccountResponse, UserRecord> ListUsersAsync(string pageToken)
+        public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(ListUsersOptions requestOptions)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
-            var requestOptions = new UserRecordServiceRequest.UserRecordServiceRequestOptions() { NextPageToken = pageToken };
 
-            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<UserRecordServiceRequest, DownloadAccountResponse, UserRecord>(
+            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<UserRecordServiceRequest, ExportedUserRecords, ExportedUserRecord>(
                 () => userManager.CreateUserRecordServiceRequest(requestOptions),
                 new UserRecordPageManager());
 
