@@ -17,14 +17,14 @@ using Google.Api.Gax.Rest;
 
 namespace FirebaseAdmin.Auth
 {
-    internal class UserRecordPageManager : IPageManager<UserRecordServiceRequest, ExportedUserRecords, ExportedUserRecord>
+    internal class ListUsersPageManager : IPageManager<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>
     {
-        public void SetPageSize(UserRecordServiceRequest request, int pageSize)
+        public void SetPageSize(ListUsersRequest request, int pageSize)
         {
             request.SetPageSize(pageSize);
         }
 
-        public void SetPageToken(UserRecordServiceRequest request, string pageToken)
+        public void SetPageToken(ListUsersRequest request, string pageToken)
         {
             request.SetPageToken(pageToken);
         }

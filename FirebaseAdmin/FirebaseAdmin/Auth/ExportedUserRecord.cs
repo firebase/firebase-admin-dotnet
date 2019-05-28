@@ -15,81 +15,83 @@
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Contains metadata associated with a Firebase user account.
+    /// Contains metadata associated with a Firebase user account, along with password hash and salt.
+    /// Instances of this class are immutable and thread safe.
     /// </summary>
-    public sealed class ExportedUserRecord
+    public sealed class ExportedUserRecord : UserRecord
     {
-        /// <summary>
-        /// Gets or sets the user's ID.
-        /// </summary>
-        public string UserId { get; set; }
+        private readonly long createdAt;
+        private readonly long lastLoginAt;
+        private readonly long validSince;
+        private readonly string passwordHash;
+        private readonly string passwordSalt;
 
-        /// <summary>
-        /// Gets or sets the user's email address.
-        /// </summary>
-        public string Email { get; set; }
-
-        /// <summary>
-        /// Gets or sets the user's phone number.
-        /// </summary>
-        public string PhoneNumber { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the user's email address is verified or not.
-        /// </summary>
-        public bool EmailVerified { get; set; }
-
-        /// <summary>
-        /// Gets or sets the user's display name.
-        /// </summary>
-        public string DisplayName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the URL for the user's photo.
-        /// </summary>
-        public string PhotoUrl { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the user is disabled or not.
-        /// </summary>
-        public bool Disabled { get; set; }
-
-        /// <summary>
-        /// Gets or sets the timestamp representing the time that the user account was created.
-        /// </summary>
-        public long CreatedAt { get; set; }
-
-        /// <summary>
-        /// Gets or sets the timestamp representing the last time that the user has logged in.
-        /// </summary>
-        public long LastLoginAt { get; set; }
-
-        /// <summary>
-        /// Gets or sets the timestamp representing the time that the user account was first valid.
-        /// </summary>
-        public long ValidSince { get; set; }
-
-        /// <summary>
-        /// Gets or sets the user's custom claims.
-        /// </summary>
-        public string CustomClaims { get; set; }
-
-        internal static ExportedUserRecord CreateFrom(GetAccountInfoResponse.User userRecord)
+        internal ExportedUserRecord(string uid, long createdAt, long lastLoginAt, long validSince, string passwordHash, string passwordSalt)
+            : base(uid)
         {
-            return new ExportedUserRecord
-            {
-                UserId = userRecord.UserId,
-                Email = userRecord.Email,
-                PhoneNumber = userRecord.PhoneNumber,
-                EmailVerified = userRecord.EmailVerified,
-                DisplayName = userRecord.DisplayName,
-                PhotoUrl = userRecord.PhotoUrl,
-                Disabled = userRecord.Disabled,
-                CreatedAt = userRecord.CreatedAt,
-                LastLoginAt = userRecord.LastLoginAt,
-                ValidSince = userRecord.ValidSince,
-                CustomClaims = userRecord.CustomClaims,
-            };
+            this.createdAt = createdAt;
+            this.lastLoginAt = lastLoginAt;
+            this.validSince = validSince;
+            this.passwordHash = passwordHash;
+            this.passwordSalt = passwordSalt;
+        }
+
+        internal ExportedUserRecord(GetAccountInfoResponse.User user)
+            : base(user)
+        {
+            this.createdAt = user.CreatedAt;
+            this.lastLoginAt = user.LastLoginAt;
+            this.validSince = user.ValidSince;
+            this.passwordHash = user.PasswordHash;
+            this.passwordSalt = user.PasswordSalt;
+        }
+
+        /// <summary>
+        /// Gets the timestamp representing the time that the user account was created.
+        /// </summary>
+        public long CreatedAt
+        {
+            get => this.createdAt;
+        }
+
+        /// <summary>
+        /// Gets the timestamp representing the last time that the user has logged in.
+        /// </summary>
+        public long LastLoginAt
+        {
+            get => this.lastLoginAt;
+        }
+
+        /// <summary>
+        /// Gets the timestamp representing the time that the user account was first valid.
+        /// </summary>
+        public long ValidSince
+        {
+            get => this.validSince;
+        }
+
+        /// <summary>
+        /// Gets the user's password hash as a base64-encoded string.
+        /// If the Firebase Auth hashing algorithm (SCRYPT) was used to create the user account,
+        /// returns the base64-encoded password hash of the user.If a different hashing algorithm was
+        /// used to create this user, as is typical when migrating from another Auth system, returns
+        /// an empty string. Returns null if no password is set.
+        /// </summary>
+        public string PasswordHash
+        {
+            get => this.passwordHash;
+        }
+
+        /// <summary>
+        /// Gets the user's password salt as a base64-encoded string.
+        /// If the Firebase Auth hashing algorithm (SCRYPT) was used to create the user account,
+        /// returns the base64-encoded password salt of the user.If a different hashing algorithm was
+        /// used to create this user, as is typical when migrating from another Auth system, returns
+        /// an empty string. Returns null if no password is set.
+        /// </summary>
+        public string PasswordSalt
+        {
+            get => this.passwordSalt;
         }
     }
 }

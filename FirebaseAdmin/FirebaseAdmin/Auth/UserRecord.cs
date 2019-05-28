@@ -25,7 +25,7 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    public sealed class UserRecord : IUserInfo
+    public class UserRecord : IUserInfo
     {
         private const string PROVIDERID = "firebase";
 

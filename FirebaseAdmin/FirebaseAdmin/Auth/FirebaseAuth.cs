@@ -357,9 +357,9 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<UserRecordServiceRequest, ExportedUserRecords, ExportedUserRecord>(
+            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
                 () => userManager.CreateUserRecordServiceRequest(requestOptions),
-                new UserRecordPageManager());
+                new ListUsersPageManager());
 
             return restPagedAsyncEnumerable;
         }

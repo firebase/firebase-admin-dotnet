@@ -26,13 +26,13 @@ using Google.Apis.Services;
 
 namespace FirebaseAdmin.Auth
 {
-    internal class UserRecordServiceRequest : IClientServiceRequest<ExportedUserRecords>
+    internal class ListUsersRequest : IClientServiceRequest<ExportedUserRecords>
     {
         private readonly string baseUrl;
         private readonly HttpClient httpClient;
         private readonly ListUsersOptions requestOptions;
 
-        internal UserRecordServiceRequest(string baseUrl, HttpClient httpClient, ListUsersOptions requestOptions)
+        internal ListUsersRequest(string baseUrl, HttpClient httpClient, ListUsersOptions requestOptions)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
@@ -113,7 +113,7 @@ namespace FirebaseAdmin.Auth
         private static ExportedUserRecords ConvertToExportedUserRecords(DownloadAccountResponse downloadAccountResponse)
         {
             var userRecords = new List<ExportedUserRecord>();
-            downloadAccountResponse.Users?.ForEach(u => userRecords.Add(ExportedUserRecord.CreateFrom(u)));
+            downloadAccountResponse.Users?.ForEach(u => userRecords.Add(new ExportedUserRecord(u)));
             return new ExportedUserRecords { NextPageToken = downloadAccountResponse.NextPageToken, Users = userRecords };
         }
 

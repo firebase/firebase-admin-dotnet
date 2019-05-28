@@ -38,6 +38,18 @@ namespace FirebaseAdmin.Auth
             public string Email { get; set; }
 
             /// <summary>
+            /// Gets or sets the user's password hash.
+            /// </summary>
+            [JsonProperty(PropertyName = "passwordHash")]
+            public string PasswordHash { get; set; }
+
+            /// <summary>
+            /// Gets or sets the user's password salt.
+            /// </summary>
+            [JsonProperty(PropertyName = "salt")]
+            public string PasswordSalt { get; set; }
+
+            /// <summary>
             /// Gets or sets the user's phone number.
             /// </summary>
             [JsonProperty(PropertyName = "phoneNumber")]
