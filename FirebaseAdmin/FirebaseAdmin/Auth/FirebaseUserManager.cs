@@ -76,50 +76,37 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException("User ID cannot be null or empty.");
             }
 
-            const string getUserPath = "accounts:lookup";
             var payload = new Dictionary<string, object>()
             {
                 { "localId", uid },
             };
 
             var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
-                getUserPath, payload, cancellationToken).ConfigureAwait(false);
+                "accounts:lookup", payload, cancellationToken).ConfigureAwait(false);
             if (response == null || response.Users == null || response.Users.Count == 0)
             {
-                throw new FirebaseException($"Failed to get user: {uid}");
+                throw new FirebaseException($"Failed to get user by ID: {uid}");
             }
 
-            var user = response.Users[0];
-            if (user == null || user.UserId != uid)
-            {
-                throw new FirebaseException($"Failed to get user: {uid}");
-            }
-
-            return new UserRecord(user);
+            return new UserRecord(response.Users[0]);
         }
 
         /// <summary>
         /// Update an existing user.
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
-        /// <param name="user">The user which we want to update.</param>
+        /// <param name="args">The user account data to be updated.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         public async Task UpdateUserAsync(
-            UserRecord user, CancellationToken cancellationToken = default(CancellationToken))
+            UserArgs args, CancellationToken cancellationToken = default(CancellationToken))
         {
-            const string updatePath = "accounts:update";
-            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
-                updatePath, user, cancellationToken).ConfigureAwait(false);
-            if (response == null || response.Users == null || response.Users.Count == 0)
+            var payload = args.ToUpdateUserRequest();
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                "accounts:update", payload, cancellationToken).ConfigureAwait(false);
+            if (payload.Uid != (string)response["localId"])
             {
-                throw new FirebaseException($"Failed to get user: {user.Uid}");
-            }
-
-            var updatedUser = response.Users[0];
-            if (updatedUser == null || updatedUser.UserId != user.Uid)
-            {
-                throw new FirebaseException($"Failed to update user: {user.Uid}");
+                throw new FirebaseException($"Failed to update user: {payload.Uid}");
             }
         }
 
@@ -129,7 +116,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="uid">A user ID string.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        public async Task DeleteUser(
+        public async Task DeleteUserAsync(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(uid))
@@ -137,13 +124,12 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException("User id cannot be null or empty.");
             }
 
-            const string getUserPath = "accounts:delete";
             var payload = new Dictionary<string, object>()
             {
                 { "localId", uid },
             };
             var response = await this.PostAndDeserializeAsync<JObject>(
-                getUserPath, payload, cancellationToken).ConfigureAwait(false);
+                "accounts:delete", payload, cancellationToken).ConfigureAwait(false);
             if (response == null || (string)response["kind"] == null)
             {
                 throw new FirebaseException($"Failed to delete user: {uid}");

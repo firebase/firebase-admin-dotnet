@@ -297,6 +297,34 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Deletes the user identified by the specified <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <returns>A task that completes when the user account has been deleted.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while deleting the user.</exception>
+        public async Task DeleteUserAsync(string uid)
+        {
+            await this.DeleteUserAsync(uid, default(CancellationToken));
+        }
+
+        /// <summary>
+        /// Deletes the user identified by the specified <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes when the user account has been deleted.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while deleting the user.</exception>
+        public async Task DeleteUserAsync(string uid, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            await userManager.DeleteUserAsync(uid, cancellationToken);
+        }
+
+        /// <summary>
         /// Sets the specified custom claims on an existing user account. A null claims value
         /// removes any claims currently set on the user account. The claims must serialize into
         /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
@@ -338,8 +366,9 @@ namespace FirebaseAdmin.Auth
             string uid, IReadOnlyDictionary<string, object> claims, CancellationToken cancellationToken)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
-            var user = new UserRecord(uid)
+            var user = new UserArgs()
             {
+                Uid = uid,
                 CustomClaims = claims,
             };
 
