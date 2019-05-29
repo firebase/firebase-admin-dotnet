@@ -58,8 +58,8 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(UserRecord.UnixEpoch, userRecord.TokensValidAfterTimestamp);
             Assert.Empty(userRecord.CustomClaims);
             Assert.Empty(userRecord.ProviderData);
-            Assert.Equal(DateTime.MinValue, userRecord.UserMetaData.CreationTimestamp);
-            Assert.Equal(DateTime.MinValue, userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Null(userRecord.UserMetaData.CreationTimestamp);
+            Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
         }
 
         [Fact]

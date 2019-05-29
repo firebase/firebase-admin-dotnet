@@ -26,27 +26,27 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Gets a timestamp representing the date and time that the account was created.
-        /// If not available this property is <c>DateTime.MinValue</c>.
+        /// If not available this property is <c>null</c>.
         /// </summary>
-        public DateTime CreationTimestamp
+        public DateTime? CreationTimestamp
         {
             get => this.ToDateTime(this.creationTimestampMillis);
         }
 
         /// <summary>
         /// Gets a timestamp representing the last time that the user has signed in. If the user
-        /// has never signed in this property is <c>DateTime.MinValue</c>.
+        /// has never signed in this property is <c>null</c>.
         /// </summary>
-        public DateTime LastSignInTimestamp
+        public DateTime? LastSignInTimestamp
         {
             get => this.ToDateTime(this.lastSignInTimestampMillis);
         }
 
-        private DateTime ToDateTime(long millisFromEpoch)
+        private DateTime? ToDateTime(long millisFromEpoch)
         {
             if (millisFromEpoch == 0)
             {
-                return DateTime.MinValue;
+                return null;
             }
 
             return UserRecord.UnixEpoch.AddMilliseconds(millisFromEpoch);
