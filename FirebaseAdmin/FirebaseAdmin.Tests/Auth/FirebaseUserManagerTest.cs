@@ -119,6 +119,72 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task ListUsers()
+        {
+            var nextPageToken = Guid.NewGuid().ToString();
+            var handler = new MockMessageHandler()
+            {
+                Response = new DownloadAccountResponse()
+                {
+                    NextPageToken = nextPageToken,
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
+                        new GetAccountInfoResponse.User() { UserId = "user2" },
+                        new GetAccountInfoResponse.User() { UserId = "user3" },
+                    },
+                },
+            };
+
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+            var listUsersRequest = userManager.CreateListUserRequest(new ListUsersOptions());
+            var userRecords = await listUsersRequest.ExecuteAsync();
+            Assert.Equal(nextPageToken, userRecords.NextPageToken);
+            Assert.Equal(3, userRecords.Users.Count);
+            Assert.Equal("user1", userRecords.Users[0].Uid);
+            Assert.Equal("user2", userRecords.Users[1].Uid);
+            Assert.Equal("user3", userRecords.Users[2].Uid);
+        }
+
+        [Fact]
+        public void ListUsersRequestOptionsAreSet()
+        {
+            var handler = new MockMessageHandler()
+            {
+            };
+
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+
+            var listUsersRequest = userManager.CreateListUserRequest(new ListUsersOptions());
+
+            // by default they are set
+            Assert.True(listUsersRequest.RequestParameters.ContainsKey("maxResults"));
+            Assert.True(listUsersRequest.RequestParameters.ContainsKey("nextPageToken"));
+            Assert.Equal(FirebaseUserManager.MaxListUsersResults, int.Parse(listUsersRequest.RequestParameters["maxResults"].DefaultValue));
+            Assert.Null(listUsersRequest.RequestParameters["nextPageToken"].DefaultValue);
+
+            // change the values and check again
+            listUsersRequest.SetPageSize(10);
+            listUsersRequest.SetPageToken("theNewNextPageToken");
+            Assert.Equal(10, int.Parse(listUsersRequest.RequestParameters["maxResults"].DefaultValue));
+            Assert.Equal("theNewNextPageToken", listUsersRequest.RequestParameters["nextPageToken"].DefaultValue);
+        }
+
+        [Fact]
         public async Task UpdateUser()
         {
             var handler = new MockMessageHandler()
