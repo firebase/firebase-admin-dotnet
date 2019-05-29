@@ -78,7 +78,7 @@ namespace FirebaseAdmin.Snippets
         internal static async Task SetCustomUserClaimsAsync(string uid)
         {
             // [START set_custom_user_claims]
-            // Set admin privilege on the user corresponding to uid.
+            // Set admin privileges on the user corresponding to uid.
             var claims = new Dictionary<string, object>()
             {
                 { "admin", true },
