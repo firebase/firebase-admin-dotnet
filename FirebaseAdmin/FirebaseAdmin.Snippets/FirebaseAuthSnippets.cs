@@ -100,6 +100,7 @@ namespace FirebaseAdmin.Snippets
                     // Allow access to requested admin resource.
                 }
             }
+
             // [END verify_custom_claims]
 
             // [START read_custom_user_claims]
