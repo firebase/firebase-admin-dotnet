@@ -99,7 +99,7 @@ namespace FirebaseAdmin.Auth
             return new UserRecord(user);
         }
 
-        public ListUsersRequest CreateUserRecordServiceRequest(ListUsersOptions requestOptions)
+        public ListUsersRequest CreateListUserRequest(ListUsersOptions requestOptions)
         {
             return new ListUsersRequest(this.baseUrl, this.httpClient, requestOptions);
         }

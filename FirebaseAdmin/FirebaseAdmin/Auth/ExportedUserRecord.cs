@@ -20,54 +20,14 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class ExportedUserRecord : UserRecord
     {
-        private readonly long createdAt;
-        private readonly long lastLoginAt;
-        private readonly long validSince;
         private readonly string passwordHash;
         private readonly string passwordSalt;
-
-        internal ExportedUserRecord(string uid, long createdAt, long lastLoginAt, long validSince, string passwordHash, string passwordSalt)
-            : base(uid)
-        {
-            this.createdAt = createdAt;
-            this.lastLoginAt = lastLoginAt;
-            this.validSince = validSince;
-            this.passwordHash = passwordHash;
-            this.passwordSalt = passwordSalt;
-        }
 
         internal ExportedUserRecord(GetAccountInfoResponse.User user)
             : base(user)
         {
-            this.createdAt = user.CreatedAt;
-            this.lastLoginAt = user.LastLoginAt;
-            this.validSince = user.ValidSince;
             this.passwordHash = user.PasswordHash;
             this.passwordSalt = user.PasswordSalt;
-        }
-
-        /// <summary>
-        /// Gets the timestamp representing the time that the user account was created.
-        /// </summary>
-        public long CreatedAt
-        {
-            get => this.createdAt;
-        }
-
-        /// <summary>
-        /// Gets the timestamp representing the last time that the user has logged in.
-        /// </summary>
-        public long LastLoginAt
-        {
-            get => this.lastLoginAt;
-        }
-
-        /// <summary>
-        /// Gets the timestamp representing the time that the user account was first valid.
-        /// </summary>
-        public long ValidSince
-        {
-            get => this.validSince;
         }
 
         /// <summary>

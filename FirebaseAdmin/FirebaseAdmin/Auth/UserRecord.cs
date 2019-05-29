@@ -40,6 +40,9 @@ namespace FirebaseAdmin.Auth
         private long tokensValidAfterTimestamp;
         private UserMetadata userMetaData;
         private IReadOnlyDictionary<string, object> customClaims;
+        private long createdAt;
+        private long lastLoginAt;
+        private long validSince;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRecord"/> class with the specified user ID.
@@ -96,6 +99,10 @@ namespace FirebaseAdmin.Auth
             this.tokensValidAfterTimestamp = user.ValidSince * 1000;
             this.userMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
             this.customClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
+
+            this.createdAt = user.CreatedAt;
+            this.lastLoginAt = user.LastLoginAt;
+            this.validSince = user.ValidSince;
         }
 
         /// <summary>
@@ -176,6 +183,30 @@ namespace FirebaseAdmin.Auth
         /// Gets a timestamp representing the date and time that this token will become active.
         /// </summary>
         public long TokensValidAfterTimestamp => this.tokensValidAfterTimestamp;
+
+        /// <summary>
+        /// Gets the timestamp representing the time that the user account was created.
+        /// </summary>
+        public long CreatedAt
+        {
+            get => this.createdAt;
+        }
+
+        /// <summary>
+        /// Gets the timestamp representing the last time that the user has logged in.
+        /// </summary>
+        public long LastLoginAt
+        {
+            get => this.lastLoginAt;
+        }
+
+        /// <summary>
+        /// Gets the timestamp representing the time that the user account was first valid.
+        /// </summary>
+        public long ValidSince
+        {
+            get => this.validSince;
+        }
 
         /// <summary>
         /// Gets additional user metadata.
