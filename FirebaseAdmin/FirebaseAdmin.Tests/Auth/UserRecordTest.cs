@@ -64,8 +64,8 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Empty(user.CustomClaims);
             Assert.Empty(user.ProviderData);
             Assert.NotNull(user.UserMetaData);
-            Assert.Equal(DateTime.MinValue, user.UserMetaData.CreationTimestamp);
-            Assert.Equal(DateTime.MinValue, user.UserMetaData.LastSignInTimestamp);
+            Assert.Null(user.UserMetaData.CreationTimestamp);
+            Assert.Null(user.UserMetaData.LastSignInTimestamp);
         }
 
         [Fact]

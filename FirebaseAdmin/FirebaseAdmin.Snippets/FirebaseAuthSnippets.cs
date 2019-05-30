@@ -57,5 +57,57 @@ namespace FirebaseAdmin.Snippets
             // [END verify_id_token]
             Console.WriteLine("Decoded ID token from user: {0}", uid);
         }
+
+        internal static async Task GetUserAsync(string uid)
+        {
+            // [START get_user_by_id]
+            UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+            // See the UserRecord reference doc for the contents of userRecord.
+            Console.WriteLine("Successfully fetched user data: {0}", userRecord.Uid);
+            // [END get_user_by_id]
+        }
+
+        internal static async Task DeleteUserAsync(string uid)
+        {
+            // [START delete_user]
+            await FirebaseAuth.DefaultInstance.DeleteUserAsync(uid);
+            Console.WriteLine("Successfully deleted user.");
+            // [END delete_user]
+        }
+
+        internal static async Task SetCustomUserClaimsAsync(string uid)
+        {
+            // [START set_custom_user_claims]
+            // Set admin privileges on the user corresponding to uid.
+            var claims = new Dictionary<string, object>()
+            {
+                { "admin", true },
+            };
+            await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, claims);
+            // The new custom claims will propagate to the user's ID token the
+            // next time a new one is issued.
+            // [END set_custom_user_claims]
+
+            var idToken = "id_token";
+            // [START verify_custom_claims]
+            // Verify the ID token first.
+            FirebaseToken decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+            object isAdmin;
+            if (decoded.Claims.TryGetValue("admin", out isAdmin))
+            {
+                if ((bool)isAdmin)
+                {
+                    // Allow access to requested admin resource.
+                }
+            }
+
+            // [END verify_custom_claims]
+
+            // [START read_custom_user_claims]
+            // Lookup the user associated with the specified uid.
+            UserRecord user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+            Console.WriteLine(user.CustomClaims["admin"]);
+            // [END read_custom_user_claims]
+        }
     }
 }
