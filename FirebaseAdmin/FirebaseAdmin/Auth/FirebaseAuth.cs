@@ -264,7 +264,7 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets a <see cref="UserRecord"/> object containig information about the user who's
+        /// Gets a <see cref="UserRecord"/> object containing information about the user who's
         /// user ID was specified in <paramref name="uid"/>.
         /// </summary>
         /// <param name="uid">The user ID for the user who's data is to be retrieved.</param>
@@ -278,7 +278,7 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets a <see cref="UserRecord"/> object containig information about the user who's
+        /// Gets a <see cref="UserRecord"/> object containing information about the user who's
         /// user ID was specified in <paramref name="uid"/>.
         /// </summary>
         /// <param name="uid">The user ID for the user who's data is to be retrieved.</param>
