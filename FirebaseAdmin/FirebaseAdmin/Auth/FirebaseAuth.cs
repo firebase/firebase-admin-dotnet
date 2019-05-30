@@ -297,6 +297,72 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="email"/>.
+        /// </summary>
+        /// <param name="email">The email of the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified email.</returns>
+        /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified email.</exception>
+        public async Task<UserRecord> GetUserByEmailAsync(string email)
+        {
+            return await this.GetUserByEmailAsync(email, default(CancellationToken));
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="email"/>.
+        /// </summary>
+        /// <param name="email">The email of the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified email.</returns>
+        /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified email.</exception>
+        public async Task<UserRecord> GetUserByEmailAsync(
+            string email, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.GetUserByEmail(email, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="phoneNumber"/>.
+        /// </summary>
+        /// <param name="phoneNumber">The phone number of the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified phone number.</returns>
+        /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified phone number.</exception>
+        public async Task<UserRecord> GetUserByPhoneNumberAsync(string phoneNumber)
+        {
+            return await this.GetUserByPhoneNumberAsync(phoneNumber, default(CancellationToken));
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="phoneNumber"/>.
+        /// </summary>
+        /// <param name="phoneNumber">The phone number of the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified phone number.</returns>
+        /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified phone number.</exception>
+        public async Task<UserRecord> GetUserByPhoneNumberAsync(
+            string phoneNumber, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.GetUserByPhoneNumber(phoneNumber, cancellationToken);
+        }
+
+        /// <summary>
         /// Deletes the user identified by the specified <paramref name="uid"/>.
         /// </summary>
         /// <param name="uid">A user ID string.</param>
