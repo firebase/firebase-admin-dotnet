@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v1.5.0
+
 - [added] Implemented the `GetUserAsync()` API in the `FirebaseAuth` class.
 - [added] Implemented the `DeleteUserAsync()` API in the `FirebaseAuth` class.
 
