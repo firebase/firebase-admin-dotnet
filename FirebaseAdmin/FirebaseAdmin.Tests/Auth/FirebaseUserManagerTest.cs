@@ -295,6 +295,43 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task CreateUser()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""localId"": ""user1""}",
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var uid = await userManager.CreateUserAsync(new UserRecordArgs());
+
+            Assert.Equal("user1", uid);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Request);
+            Assert.Empty(request);
+        }
+
+        [Fact]
+        public async Task CreateUserWithArgs()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""localId"": ""user1""}",
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var uid = await userManager.CreateUserAsync(new UserRecordArgs()
+            {
+                Uid = "user1",
+                DisplayName = "Test User",
+            });
+
+            Assert.Equal("user1", uid);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Request);
+            Assert.Equal("user1", request["localId"]);
+            Assert.Equal("Test User", request["displayName"]);
+        }
+
+        [Fact]
         public async Task UpdateUser()
         {
             var handler = new MockMessageHandler()
