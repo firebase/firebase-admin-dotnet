@@ -309,7 +309,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { "package", "gold" },
             };
 
-            await userManager.UpdateUserAsync(new UserArgs()
+            await userManager.UpdateUserAsync(new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = customClaims,
@@ -336,7 +336,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { "testClaim", new string('a', 950) },
             };
 
-            await userManager.UpdateUserAsync(new UserArgs()
+            await userManager.UpdateUserAsync(new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = customClaims,
@@ -352,7 +352,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            await userManager.UpdateUserAsync(new UserArgs()
+            await userManager.UpdateUserAsync(new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = new Dictionary<string, object>(),
@@ -372,7 +372,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            await userManager.UpdateUserAsync(new UserArgs()
+            await userManager.UpdateUserAsync(new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = null,
@@ -399,7 +399,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { key, "value" },
                 };
 
-                var args = new UserArgs()
+                var args = new UserRecordArgs()
                 {
                     Uid = "user1",
                     CustomClaims = customClaims,
@@ -421,7 +421,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { "key", "value" },
             };
 
-            var args = new UserArgs()
+            var args = new UserRecordArgs()
             {
                 CustomClaims = customClaims,
             };
@@ -441,7 +441,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { "key", "value" },
             };
 
-            var args = new UserArgs()
+            var args = new UserRecordArgs()
             {
                 Uid = new string('a', 129),
                 CustomClaims = customClaims,
@@ -462,7 +462,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { string.Empty, "value" },
             };
 
-            var args = new UserArgs()
+            var args = new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = emptyClaims,
@@ -483,7 +483,7 @@ namespace FirebaseAdmin.Auth.Tests
                 { "testClaim", new string('a', 1001) },
             };
 
-            var args = new UserArgs()
+            var args = new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = largeClaims,
@@ -504,7 +504,7 @@ namespace FirebaseAdmin.Auth.Tests
                 { "admin", true },
             };
 
-            var args = new UserArgs()
+            var args = new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = customClaims,
@@ -525,7 +525,7 @@ namespace FirebaseAdmin.Auth.Tests
                 { "admin", true },
             };
 
-            var args = new UserArgs()
+            var args = new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = customClaims,
@@ -545,7 +545,7 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "admin", true },
             };
-            var args = new UserArgs()
+            var args = new UserRecordArgs()
             {
                 Uid = "user1",
                 CustomClaims = customClaims,

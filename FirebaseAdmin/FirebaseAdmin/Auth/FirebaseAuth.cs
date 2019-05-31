@@ -264,6 +264,41 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// </summary>
+        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the newly created user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        public async Task<UserRecord> CreateUserAsync(UserRecordArgs args)
+        {
+            return await this.CreateUserAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// </summary>
+        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the newly created user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        public async Task<UserRecord> CreateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var uid = await userManager.CreateUserAsync(args, cancellationToken)
+                .ConfigureAwait(false);
+            return await userManager.GetUserById(uid, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Gets a <see cref="UserRecord"/> object containing information about the user who's
         /// user ID was specified in <paramref name="uid"/>.
         /// </summary>
@@ -432,7 +467,7 @@ namespace FirebaseAdmin.Auth
             string uid, IReadOnlyDictionary<string, object> claims, CancellationToken cancellationToken)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
-            var user = new UserArgs()
+            var user = new UserRecordArgs()
             {
                 Uid = uid,
                 CustomClaims = claims,

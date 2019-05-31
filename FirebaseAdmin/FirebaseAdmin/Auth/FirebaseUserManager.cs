@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
+using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth
@@ -138,6 +139,29 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Create a new user account.
+        /// </summary>
+        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
+        /// <param name="args">The data to create the user account with.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>The unique uid assigned to the newly created user account.</returns>
+        internal async Task<string> CreateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var payload = args.ThrowIfNull(nameof(args)).ToCreateUserRequest();
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                "accounts", payload, cancellationToken).ConfigureAwait(false);
+            var uid = response["localId"];
+            if (uid == null)
+            {
+                throw new FirebaseException("Failed to create new user.");
+            }
+
+            return uid.Value<string>();
+        }
+
+        /// <summary>
         /// Update an existing user.
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
@@ -145,7 +169,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         internal async Task UpdateUserAsync(
-            UserArgs args, CancellationToken cancellationToken = default(CancellationToken))
+            UserRecordArgs args, CancellationToken cancellationToken = default(CancellationToken))
         {
             var payload = args.ToUpdateUserRequest();
             var response = await this.PostAndDeserializeAsync<JObject>(
