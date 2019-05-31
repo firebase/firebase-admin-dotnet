@@ -321,14 +321,53 @@ namespace FirebaseAdmin.Auth.Tests
 
             var uid = await userManager.CreateUserAsync(new UserRecordArgs()
             {
-                Uid = "user1",
+                Disabled = true,
                 DisplayName = "Test User",
+                Email = "user@example.com",
+                EmailVerified = true,
+                Password = "secret",
+                PhoneNumber = "+1234567890",
+                PhotoUrl = "https://example.com/user.png",
+                Uid = "user1",
             });
 
             Assert.Equal("user1", uid);
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Request);
-            Assert.Equal("user1", request["localId"]);
+            Assert.True((bool)request["disabled"]);
             Assert.Equal("Test User", request["displayName"]);
+            Assert.Equal("user@example.com", request["email"]);
+            Assert.True((bool)request["emailVerified"]);
+            Assert.Equal("secret", request["password"]);
+            Assert.Equal("+1234567890", request["phoneNumber"]);
+            Assert.Equal("https://example.com/user.png", request["photoUrl"]);
+        }
+
+        [Fact]
+        public async Task CreateUserWithExplicitDefaults()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""localId"": ""user1""}",
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var uid = await userManager.CreateUserAsync(new UserRecordArgs()
+            {
+                Disabled = false,
+                DisplayName = null,
+                Email = null,
+                EmailVerified = false,
+                Password = null,
+                PhoneNumber = null,
+                PhotoUrl = null,
+                Uid = null,
+            });
+
+            Assert.Equal("user1", uid);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Request);
+            Assert.Equal(2, request.Count);
+            Assert.False((bool)request["disabled"]);
+            Assert.False((bool)request["emailVerified"]);
         }
 
         [Fact]
