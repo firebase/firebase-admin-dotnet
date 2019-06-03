@@ -67,6 +67,24 @@ namespace FirebaseAdmin.Snippets
             // [END get_user_by_id]
         }
 
+        internal static async Task GetUserByEmailAsync(string email)
+        {
+            // [START get_user_by_email]
+            UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email);
+            // See the UserRecord reference doc for the contents of userRecord.
+            Console.WriteLine("Successfully fetched user data: {0}", userRecord.Uid);
+            // [END get_user_by_email]
+        }
+
+        internal static async Task GetUserByPhoneNumberAsync(string phoneNumber)
+        {
+            // [START get_user_by_phone]
+            UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByPhoneNumberAsync(phoneNumber);
+            // See the UserRecord reference doc for the contents of userRecord.
+            Console.WriteLine("Successfully fetched user data: {0}", userRecord.Uid);
+            // [END get_user_by_phone]
+        }
+
         internal static async Task DeleteUserAsync(string uid)
         {
             // [START delete_user]
