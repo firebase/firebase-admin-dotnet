@@ -86,7 +86,7 @@ namespace FirebaseAdmin.Auth
         private static string UrlSafeBase64Encode(byte[] bytes)
         {
             var base64Value = Convert.ToBase64String(bytes);
-            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+            return base64Value.TrimEnd(new[] { '=' }).Replace('+', '-').Replace('/', '_');
         }
     }
 }
