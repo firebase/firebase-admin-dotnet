@@ -1,6 +1,6 @@
 # Unreleased
 
--
+- [added] `WebpushFcmOptions` added to the `WebpushConfig` class.
 
 # v1.5.0
 
