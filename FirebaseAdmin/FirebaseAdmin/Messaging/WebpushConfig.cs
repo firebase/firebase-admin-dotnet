@@ -45,11 +45,10 @@ namespace FirebaseAdmin.Messaging
         public WebpushNotification Notification { get; set; }
 
         /// <summary>
-        /// Gets or sets the Webpush options that will be included in the message. 
-        /// <see href="https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#WebpushFcmOptions"></see>
+        /// Gets or sets the Webpush options that will be included in the message.
         /// </summary>
         [JsonProperty("fcm_options")]
-        public WebpushFcmOptions Options { get; set; } 
+        public WebpushFcmOptions Options { get; set; }
 
         /// <summary>
         /// Copies this Webpush config, and validates the content of it to ensure that it can be
