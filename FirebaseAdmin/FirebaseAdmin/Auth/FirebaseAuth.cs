@@ -295,7 +295,7 @@ namespace FirebaseAdmin.Auth
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
             var uid = await userManager.CreateUserAsync(args, cancellationToken)
                 .ConfigureAwait(false);
-            return await userManager.GetUserById(uid, cancellationToken).ConfigureAwait(false);
+            return await userManager.GetUserByIdAsync(uid, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -309,7 +309,8 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
         public async Task<UserRecord> GetUserAsync(string uid)
         {
-            return await this.GetUserAsync(uid, default(CancellationToken));
+            return await this.GetUserAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -328,7 +329,8 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return await userManager.GetUserByIdAsync(uid, cancellationToken);
+            return await userManager.GetUserByIdAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -342,7 +344,8 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="FirebaseException">If a user cannot be found with the specified email.</exception>
         public async Task<UserRecord> GetUserByEmailAsync(string email)
         {
-            return await this.GetUserByEmailAsync(email, default(CancellationToken));
+            return await this.GetUserByEmailAsync(email, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -361,7 +364,8 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return await userManager.GetUserByEmailAsync(email, cancellationToken);
+            return await userManager.GetUserByEmailAsync(email, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -375,7 +379,8 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="FirebaseException">If a user cannot be found with the specified phone number.</exception>
         public async Task<UserRecord> GetUserByPhoneNumberAsync(string phoneNumber)
         {
-            return await this.GetUserByPhoneNumberAsync(phoneNumber, default(CancellationToken));
+            return await this.GetUserByPhoneNumberAsync(phoneNumber, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -394,7 +399,8 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return await userManager.GetUserByPhoneNumberAsync(phoneNumber, cancellationToken);
+            return await userManager.GetUserByPhoneNumberAsync(phoneNumber, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -406,7 +412,8 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="FirebaseException">If an error occurs while deleting the user.</exception>
         public async Task DeleteUserAsync(string uid)
         {
-            await this.DeleteUserAsync(uid, default(CancellationToken));
+            await this.DeleteUserAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -422,7 +429,8 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            await userManager.DeleteUserAsync(uid, cancellationToken);
+            await userManager.DeleteUserAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -443,7 +451,8 @@ namespace FirebaseAdmin.Auth
         public async Task SetCustomUserClaimsAsync(
             string uid, IReadOnlyDictionary<string, object> claims)
         {
-            await this.SetCustomUserClaimsAsync(uid, claims, default(CancellationToken));
+            await this.SetCustomUserClaimsAsync(uid, claims, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>

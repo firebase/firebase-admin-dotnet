@@ -1,5 +1,6 @@
 # Unreleased
 
+- [added] Implemented the `CreateUserAsync()` and `UserRecordArgs` APIs.
 - [added] Implemented the `GetUserByEmailAsync()` and `GetUserByPhoneNumberAsync()`
   APIs in the `FirebaseAuth` class.
 
