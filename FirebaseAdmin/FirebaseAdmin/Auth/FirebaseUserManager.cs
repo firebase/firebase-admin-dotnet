@@ -74,7 +74,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A record of user with the queried id if one exists.</returns>
-        internal async Task<UserRecord> GetUserById(
+        internal async Task<UserRecord> GetUserByIdAsync(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(uid))
@@ -98,7 +98,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A record of user with the queried email if one exists.</returns>
-        internal async Task<UserRecord> GetUserByEmail(
+        internal async Task<UserRecord> GetUserByEmailAsync(
             string email, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(email))
@@ -121,7 +121,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A record of user with the queried phone number if one exists.</returns>
-        internal async Task<UserRecord> GetUserByPhoneNumber(
+        internal async Task<UserRecord> GetUserByPhoneNumberAsync(
             string phoneNumber, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(phoneNumber))
@@ -273,6 +273,13 @@ namespace FirebaseAdmin.Auth
             }
         }
 
+        /// <summary>
+        /// Represents a query that can be executed against the Firebase Auth service to retrieve user records.
+        /// A query mainly consists of a <see cref="UserQuery.Field"/> and a <see cref="UserQuery.Value"/> (e.g.
+        /// <c>Field = localId</c> and <c>Value = alice</c>). Additionally, a query may also specify a more
+        /// human-readable <see cref="UserQuery.Label"/> for the field, which will appear on any error messages
+        /// produced by the query.
+        /// </summary>
         private class UserQuery
         {
             internal string Field { get; set; }
