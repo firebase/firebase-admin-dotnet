@@ -1558,6 +1558,75 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
+        [Fact]
+        public void WebpushNotificationWithLinkUrl()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                    },
+                    Options = new WebpushFcmOptions()
+                    {
+                        Link = "https://www.firebase.io/",
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                { "topic", "test-topic" },
+                {
+                    "webpush", new JObject()
+                    {
+                        {
+                            "notification", new JObject()
+                            {
+                                { "title", "title" },
+                                { "body", "body" },
+                                { "icon", "icon" },
+                            }
+                        },
+                        {
+                            "fcm_options", new JObject()
+                            {
+                                { "link", "https://www.firebase.io/" },
+                            }
+                        },
+                    }
+                },
+            };
+            this.AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void WebpushNotificationWithInvalidLinkUrl()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                    },
+                    Options = new WebpushFcmOptions()
+                    {
+                        Link = "http://www.firebase.io/",
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
         private void AssertJsonEquals(JObject expected, Message actual)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(actual.CopyAndValidate());

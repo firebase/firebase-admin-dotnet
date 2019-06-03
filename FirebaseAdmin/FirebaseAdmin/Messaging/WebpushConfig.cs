@@ -61,6 +61,7 @@ namespace FirebaseAdmin.Messaging
                 Headers = this.Headers?.Copy(),
                 Data = this.Data?.Copy(),
                 Notification = this.Notification?.CopyAndValidate(),
+                Options = this.Options?.CopyAndValidate(),
             };
         }
     }

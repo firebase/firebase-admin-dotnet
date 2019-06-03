@@ -28,5 +28,24 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         [JsonProperty("link")]
         public string Link { get; set; }
+
+        /// <summary>
+        /// Copies this Webpush FCM options, and validates the content of it to ensure that it can
+        /// be serialized into the JSON format expected by the FCM service.
+        /// </summary>
+        internal WebpushFcmOptions CopyAndValidate()
+        {
+            if (this.Link != null && !this.Link.StartsWith("https"))
+            {
+                throw new ArgumentException("The link options should be a valid https url.");
+            }
+
+            var copy = new WebpushFcmOptions()
+            {
+                Link = this.Link,
+            };
+
+            return copy;
+        }
     }
 }
