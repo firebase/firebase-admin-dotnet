@@ -35,15 +35,15 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         internal WebpushFcmOptions CopyAndValidate()
         {
-            if (this.Link != null && !this.Link.StartsWith("https"))
-            {
-                throw new ArgumentException("The link options should be a valid https url.");
-            }
-
             var copy = new WebpushFcmOptions()
             {
                 Link = this.Link,
             };
+
+            if (copy.Link != null && Uri.IsWellFormedUriString(copy.Link, UriKind.Absolute) && !copy.Link.StartsWith("https"))
+            {
+                throw new ArgumentException("The link options should be a valid https url.");
+            }
 
             return copy;
         }

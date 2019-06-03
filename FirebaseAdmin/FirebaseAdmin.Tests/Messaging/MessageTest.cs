@@ -1572,7 +1572,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         Body = "body",
                         Icon = "icon",
                     },
-                    Options = new WebpushFcmOptions()
+                    FcmOptions = new WebpushFcmOptions()
                     {
                         Link = "https://www.firebase.io/",
                     },
@@ -1618,7 +1618,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         Body = "body",
                         Icon = "icon",
                     },
-                    Options = new WebpushFcmOptions()
+                    FcmOptions = new WebpushFcmOptions()
                     {
                         Link = "http://www.firebase.io/",
                     },

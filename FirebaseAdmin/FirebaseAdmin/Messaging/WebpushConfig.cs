@@ -48,7 +48,7 @@ namespace FirebaseAdmin.Messaging
         /// Gets or sets the Webpush options that will be included in the message.
         /// </summary>
         [JsonProperty("fcm_options")]
-        public WebpushFcmOptions Options { get; set; }
+        public WebpushFcmOptions FcmOptions { get; set; }
 
         /// <summary>
         /// Copies this Webpush config, and validates the content of it to ensure that it can be
@@ -61,7 +61,7 @@ namespace FirebaseAdmin.Messaging
                 Headers = this.Headers?.Copy(),
                 Data = this.Data?.Copy(),
                 Notification = this.Notification?.CopyAndValidate(),
-                Options = this.Options?.CopyAndValidate(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
         }
     }
