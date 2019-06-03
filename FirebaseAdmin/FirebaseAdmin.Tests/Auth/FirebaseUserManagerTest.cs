@@ -45,7 +45,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            var userRecord = await userManager.GetUserById("user1");
+            var userRecord = await userManager.GetUserByIdAsync("user1");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
@@ -60,6 +60,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Empty(userRecord.ProviderData);
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.Request);
+            Assert.Equal(new JArray("user1"), request["localId"]);
         }
 
         [Fact]
@@ -99,7 +102,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            var userRecord = await userManager.GetUserById("user1");
+            var userRecord = await userManager.GetUserByIdAsync("user1");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Equal("Test User", userRecord.DisplayName);
@@ -150,8 +153,145 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserById("user1"));
+            var exception = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.GetUserByIdAsync("user1"));
+            Assert.Equal("Failed to get user with uid: user1", exception.Message);
+        }
+
+        [Fact]
+        public async Task GetUserByIdNull()
+        {
+            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByIdAsync(null));
+        }
+
+        [Fact]
+        public async Task GetUserByIdEmpty()
+        {
+            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByIdAsync(string.Empty));
+        }
+
+        [Fact]
+        public async Task GetUserByEmail()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""users"": [
+                    {
+                        ""localId"": ""user1""
+                    }
+                ]}",
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var userRecord = await userManager.GetUserByEmailAsync("user@example.com");
+
+            Assert.Equal("user1", userRecord.Uid);
+            Assert.Null(userRecord.DisplayName);
+            Assert.Null(userRecord.Email);
+            Assert.Null(userRecord.PhoneNumber);
+            Assert.Null(userRecord.PhotoUrl);
+            Assert.Equal("firebase", userRecord.ProviderId);
+            Assert.False(userRecord.Disabled);
+            Assert.False(userRecord.EmailVerified);
+            Assert.Equal(UserRecord.UnixEpoch, userRecord.TokensValidAfterTimestamp);
+            Assert.Empty(userRecord.CustomClaims);
+            Assert.Empty(userRecord.ProviderData);
+            Assert.Null(userRecord.UserMetaData.CreationTimestamp);
+            Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.Request);
+            Assert.Equal(new JArray("user@example.com"), request["email"]);
+        }
+
+        [Fact]
+        public async Task GetUserByEmailUserNotFound()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""users"": []}",
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.GetUserByEmailAsync("user@example.com"));
+            Assert.Equal("Failed to get user with email: user@example.com", exception.Message);
+        }
+
+        [Fact]
+        public async Task GetUserByEmailNull()
+        {
+            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmailAsync(null));
+        }
+
+        [Fact]
+        public async Task GetUserByEmailEmpty()
+        {
+            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmailAsync(string.Empty));
+        }
+
+        [Fact]
+        public async Task GetUserByPhoneNumber()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""users"": [
+                    {
+                        ""localId"": ""user1""
+                    }
+                ]}",
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var userRecord = await userManager.GetUserByPhoneNumberAsync("+1234567890");
+
+            Assert.Equal("user1", userRecord.Uid);
+            Assert.Null(userRecord.DisplayName);
+            Assert.Null(userRecord.Email);
+            Assert.Null(userRecord.PhoneNumber);
+            Assert.Null(userRecord.PhotoUrl);
+            Assert.Equal("firebase", userRecord.ProviderId);
+            Assert.False(userRecord.Disabled);
+            Assert.False(userRecord.EmailVerified);
+            Assert.Equal(UserRecord.UnixEpoch, userRecord.TokensValidAfterTimestamp);
+            Assert.Empty(userRecord.CustomClaims);
+            Assert.Empty(userRecord.ProviderData);
+            Assert.Null(userRecord.UserMetaData.CreationTimestamp);
+            Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.Request);
+            Assert.Equal(new JArray("+1234567890"), request["phoneNumber"]);
+        }
+
+        [Fact]
+        public async Task GetUserByPhoneNumberUserNotFound()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""users"": []}",
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await userManager.GetUserByPhoneNumberAsync("+1234567890"));
+            Assert.Equal("Failed to get user with phone number: +1234567890", exception.Message);
+        }
+
+        [Fact]
+        public async Task GetUserByPhoneNumberNull()
+        {
+            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumberAsync(null));
+        }
+
+        [Fact]
+        public async Task GetUserByPhoneNumberEmpty()
+        {
+            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumberAsync(string.Empty));
         }
 
         [Fact]

@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [added] Implemented the `GetUserByEmailAsync()` and `GetUserByPhoneNumberAsync()`
+  APIs in the `FirebaseAuth` class.
 
 # v1.5.0
 
