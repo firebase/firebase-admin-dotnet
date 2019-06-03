@@ -404,6 +404,44 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
+        /// </summary>
+        /// <param name="args">Attributes that will be updated.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the updated user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while updating the user account.</exception>
+        public async Task<UserRecord> UpdateUserAsync(UserRecordArgs args)
+        {
+            return await this.UpdateUserAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
+        /// </summary>
+        /// <param name="args">Attributes that will be updated.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the updated user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while updating the user account.</exception>
+        public async Task<UserRecord> UpdateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var uid = await userManager.UpdateUserAsync(args, cancellationToken)
+                .ConfigureAwait(false);
+            return await userManager.GetUserByIdAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes the user identified by the specified <paramref name="uid"/>.
         /// </summary>
         /// <param name="uid">A user ID string.</param>

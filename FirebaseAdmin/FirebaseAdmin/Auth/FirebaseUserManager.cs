@@ -168,7 +168,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="args">The user account data to be updated.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        internal async Task UpdateUserAsync(
+        internal async Task<string> UpdateUserAsync(
             UserRecordArgs args, CancellationToken cancellationToken = default(CancellationToken))
         {
             var payload = args.ToUpdateUserRequest();
@@ -178,6 +178,8 @@ namespace FirebaseAdmin.Auth
             {
                 throw new FirebaseException($"Failed to update user: {payload.Uid}");
             }
+
+            return payload.Uid;
         }
 
         /// <summary>
