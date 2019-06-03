@@ -1605,7 +1605,7 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
-        public void WebpushNotificationWithInvalidLinkUrl()
+        public void WebpushNotificationWithInvalidHttpLinkUrl()
         {
             var message = new Message()
             {
@@ -1621,6 +1621,29 @@ namespace FirebaseAdmin.Messaging.Tests
                     FcmOptions = new WebpushFcmOptions()
                     {
                         Link = "http://www.firebase.io/",
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void WebpushNotificationWithInvalidHttpsLinkUrl()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Webpush = new WebpushConfig()
+                {
+                    Notification = new WebpushNotification()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Icon = "icon",
+                    },
+                    FcmOptions = new WebpushFcmOptions()
+                    {
+                        Link = "https whatever",
                     },
                 },
             };

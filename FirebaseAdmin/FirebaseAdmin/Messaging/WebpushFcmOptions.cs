@@ -40,9 +40,12 @@ namespace FirebaseAdmin.Messaging
                 Link = this.Link,
             };
 
-            if (copy.Link != null && Uri.IsWellFormedUriString(copy.Link, UriKind.Absolute) && !copy.Link.StartsWith("https"))
+            if (copy.Link != null)
             {
-                throw new ArgumentException("The link options should be a valid https url.");
+                if (!Uri.IsWellFormedUriString(copy.Link, UriKind.Absolute) || !copy.Link.StartsWith("https"))
+                {
+                    throw new ArgumentException("The link options should be a valid https url.");
+                }
             }
 
             return copy;
