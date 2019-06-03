@@ -293,7 +293,7 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return await userManager.GetUserById(uid, cancellationToken);
+            return await userManager.GetUserByIdAsync(uid, cancellationToken);
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return await userManager.GetUserByEmail(email, cancellationToken);
+            return await userManager.GetUserByEmailAsync(email, cancellationToken);
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace FirebaseAdmin.Auth
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return await userManager.GetUserByPhoneNumber(phoneNumber, cancellationToken);
+            return await userManager.GetUserByPhoneNumberAsync(phoneNumber, cancellationToken);
         }
 
         /// <summary>

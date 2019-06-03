@@ -45,7 +45,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            var userRecord = await userManager.GetUserById("user1");
+            var userRecord = await userManager.GetUserByIdAsync("user1");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
@@ -102,7 +102,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            var userRecord = await userManager.GetUserById("user1");
+            var userRecord = await userManager.GetUserByIdAsync("user1");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Equal("Test User", userRecord.DisplayName);
@@ -154,7 +154,7 @@ namespace FirebaseAdmin.Auth.Tests
             var userManager = this.CreateFirebaseUserManager(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserById("user1"));
+                async () => await userManager.GetUserByIdAsync("user1"));
             Assert.Equal("Failed to get user with uid: user1", exception.Message);
         }
 
@@ -162,14 +162,14 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task GetUserByIdNull()
         {
             var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserById(null));
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByIdAsync(null));
         }
 
         [Fact]
         public async Task GetUserByIdEmpty()
         {
             var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserById(string.Empty));
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByIdAsync(string.Empty));
         }
 
         [Fact]
@@ -185,7 +185,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            var userRecord = await userManager.GetUserByEmail("user@example.com");
+            var userRecord = await userManager.GetUserByEmailAsync("user@example.com");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
@@ -215,7 +215,7 @@ namespace FirebaseAdmin.Auth.Tests
             var userManager = this.CreateFirebaseUserManager(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserByEmail("user@example.com"));
+                async () => await userManager.GetUserByEmailAsync("user@example.com"));
             Assert.Equal("Failed to get user with email: user@example.com", exception.Message);
         }
 
@@ -223,14 +223,14 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task GetUserByEmailNull()
         {
             var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmail(null));
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmailAsync(null));
         }
 
         [Fact]
         public async Task GetUserByEmailEmpty()
         {
             var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmail(string.Empty));
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmailAsync(string.Empty));
         }
 
         [Fact]
@@ -246,7 +246,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var userManager = this.CreateFirebaseUserManager(handler);
 
-            var userRecord = await userManager.GetUserByPhoneNumber("+1234567890");
+            var userRecord = await userManager.GetUserByPhoneNumberAsync("+1234567890");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
@@ -276,7 +276,7 @@ namespace FirebaseAdmin.Auth.Tests
             var userManager = this.CreateFirebaseUserManager(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserByPhoneNumber("+1234567890"));
+                async () => await userManager.GetUserByPhoneNumberAsync("+1234567890"));
             Assert.Equal("Failed to get user with phone number: +1234567890", exception.Message);
         }
 
@@ -284,14 +284,14 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task GetUserByPhoneNumberNull()
         {
             var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumber(null));
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumberAsync(null));
         }
 
         [Fact]
         public async Task GetUserByPhoneNumberEmpty()
         {
             var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumber(string.Empty));
+            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumberAsync(string.Empty));
         }
 
         [Fact]
