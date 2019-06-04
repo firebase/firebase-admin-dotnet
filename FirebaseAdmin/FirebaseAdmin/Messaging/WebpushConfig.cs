@@ -25,8 +25,8 @@ namespace FirebaseAdmin.Messaging
     {
         /// <summary>
         /// Gets or sets the Webpush HTTP headers. Refer
-        /// <see href="https://tools.ietf.org/html/rfc8030#section-5">
-        /// Webpush specification</see> for supported headers.
+        /// <a href="https://tools.ietf.org/html/rfc8030#section-5">
+        /// Webpush specification</a> for supported headers.
         /// </summary>
         [JsonProperty("headers")]
         public IReadOnlyDictionary<string, string> Headers { get; set; }
