@@ -1,6 +1,7 @@
 # Unreleased
 
 - [added] Implemented the `CreateUserAsync()` and `UserRecordArgs` APIs.
+- [added] `WebpushFcmOptions` added to the `WebpushConfig` class.
 - [added] Implemented the `GetUserByEmailAsync()` and `GetUserByPhoneNumberAsync()`
   APIs in the `FirebaseAuth` class.
 

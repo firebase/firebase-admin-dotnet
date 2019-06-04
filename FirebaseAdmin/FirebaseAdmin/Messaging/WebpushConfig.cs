@@ -45,6 +45,12 @@ namespace FirebaseAdmin.Messaging
         public WebpushNotification Notification { get; set; }
 
         /// <summary>
+        /// Gets or sets the Webpush options that will be included in the message.
+        /// </summary>
+        [JsonProperty("fcm_options")]
+        public WebpushFcmOptions FcmOptions { get; set; }
+
+        /// <summary>
         /// Copies this Webpush config, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service.
         /// </summary>
@@ -55,6 +61,7 @@ namespace FirebaseAdmin.Messaging
                 Headers = this.Headers?.Copy(),
                 Data = this.Data?.Copy(),
                 Notification = this.Notification?.CopyAndValidate(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
         }
     }
