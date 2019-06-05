@@ -33,21 +33,18 @@ namespace FirebaseAdmin.Auth.Tests
             GoogleCredential.FromAccessToken("test-token");
 
         private static readonly string CreateUserResponse = @"{""localId"": ""user1""}";
+        private static readonly string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
 
         [Fact]
         public async Task GetUserById()
         {
             var handler = new MockMessageHandler()
             {
-                Response = @"{""users"": [
-                    {
-                        ""localId"": ""user1""
-                    }
-                ]}",
+                Response = GetUserResponse,
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
-            var userRecord = await userManager.GetUserByIdAsync("user1");
+            var userRecord = await auth.GetUserAsync("user1");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
@@ -102,9 +99,9 @@ namespace FirebaseAdmin.Auth.Tests
                     }
                 ]}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
-            var userRecord = await userManager.GetUserByIdAsync("user1");
+            var userRecord = await auth.GetUserAsync("user1");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Equal("Test User", userRecord.DisplayName);
@@ -153,25 +150,25 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = @"{""users"": []}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserByIdAsync("user1"));
+                async () => await auth.GetUserAsync("user1"));
             Assert.Equal("Failed to get user with uid: user1", exception.Message);
         }
 
         [Fact]
         public async Task GetUserByIdNull()
         {
-            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByIdAsync(null));
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserAsync(null));
         }
 
         [Fact]
         public async Task GetUserByIdEmpty()
         {
-            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByIdAsync(string.Empty));
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserAsync(string.Empty));
         }
 
         [Fact]
@@ -179,15 +176,11 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = @"{""users"": [
-                    {
-                        ""localId"": ""user1""
-                    }
-                ]}",
+                Response = GetUserResponse,
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
-            var userRecord = await userManager.GetUserByEmailAsync("user@example.com");
+            var userRecord = await auth.GetUserByEmailAsync("user@example.com");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
@@ -214,25 +207,25 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = @"{""users"": []}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserByEmailAsync("user@example.com"));
+                async () => await auth.GetUserByEmailAsync("user@example.com"));
             Assert.Equal("Failed to get user with email: user@example.com", exception.Message);
         }
 
         [Fact]
         public async Task GetUserByEmailNull()
         {
-            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmailAsync(null));
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByEmailAsync(null));
         }
 
         [Fact]
         public async Task GetUserByEmailEmpty()
         {
-            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByEmailAsync(string.Empty));
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByEmailAsync(string.Empty));
         }
 
         [Fact]
@@ -240,15 +233,11 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = @"{""users"": [
-                    {
-                        ""localId"": ""user1""
-                    }
-                ]}",
+                Response = GetUserResponse,
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
-            var userRecord = await userManager.GetUserByPhoneNumberAsync("+1234567890");
+            var userRecord = await auth.GetUserByPhoneNumberAsync("+1234567890");
 
             Assert.Equal("user1", userRecord.Uid);
             Assert.Null(userRecord.DisplayName);
@@ -275,47 +264,54 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = @"{""users"": []}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
-                async () => await userManager.GetUserByPhoneNumberAsync("+1234567890"));
+                async () => await auth.GetUserByPhoneNumberAsync("+1234567890"));
             Assert.Equal("Failed to get user with phone number: +1234567890", exception.Message);
         }
 
         [Fact]
         public async Task GetUserByPhoneNumberNull()
         {
-            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumberAsync(null));
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByPhoneNumberAsync(null));
         }
 
         [Fact]
         public async Task GetUserByPhoneNumberEmpty()
         {
-            var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
-            await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumberAsync(string.Empty));
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByPhoneNumberAsync(string.Empty));
         }
 
         [Fact]
         public async Task CreateUser()
         {
-            var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, GetUserResponse },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
 
-            var uid = await userManager.CreateUserAsync(new UserRecordArgs());
+            var user = await auth.CreateUserAsync(new UserRecordArgs());
 
-            Assert.Equal("user1", uid);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal("user1", user.Uid);
+            Assert.Equal(2, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.Empty(request);
         }
 
         [Fact]
         public async Task CreateUserWithArgs()
         {
-            var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, GetUserResponse },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
 
-            var uid = await userManager.CreateUserAsync(new UserRecordArgs()
+            var user = await auth.CreateUserAsync(new UserRecordArgs()
             {
                 Disabled = true,
                 DisplayName = "Test User",
@@ -327,8 +323,9 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             });
 
-            Assert.Equal("user1", uid);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal("user1", user.Uid);
+            Assert.Equal(2, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.True((bool)request["disabled"]);
             Assert.Equal("Test User", request["displayName"]);
             Assert.Equal("user@example.com", request["email"]);
@@ -341,10 +338,13 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task CreateUserWithExplicitDefaults()
         {
-            var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, GetUserResponse },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
 
-            var uid = await userManager.CreateUserAsync(new UserRecordArgs()
+            var user = await auth.CreateUserAsync(new UserRecordArgs()
             {
                 Disabled = false,
                 DisplayName = null,
@@ -356,8 +356,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = null,
             });
 
-            Assert.Equal("user1", uid);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal("user1", user.Uid);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.Equal(2, request.Count);
             Assert.False((bool)request["disabled"]);
             Assert.False((bool)request["emailVerified"]);
@@ -367,138 +367,138 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task CreateUserEmptyUid()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Uid = string.Empty,
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserLongUid()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Uid = new string('a', 129),
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserEmptyEmail()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Email = string.Empty,
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserInvalidEmail()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Email = "not-an-email",
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserEmptyPhoneNumber()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhoneNumber = string.Empty,
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserInvalidPhoneNumber()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhoneNumber = "1234567890",
             };
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
+                async () => await auth.CreateUserAsync(args));
             Assert.Equal(
                 "Phone number must be a valid, E.164 compliant identifier starting with a '+' sign.",
                 exception.Message);
-            Assert.Null(handler.LastRequestBody);
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserEmptyPhotoUrl()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhotoUrl = string.Empty,
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserInvalidPhotoUrl()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhotoUrl = "not a url",
             };
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task CreateUserShortPassword()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Password = "only5",
             };
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.CreateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
@@ -508,17 +508,20 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = "{}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             var args = new UserRecordArgs();
-            await Assert.ThrowsAsync<FirebaseException>(async () => await userManager.CreateUserAsync(args));
+            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.CreateUserAsync(args));
         }
 
         [Fact]
         public async Task UpdateUser()
         {
-            var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, GetUserResponse },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
             var customClaims = new Dictionary<string, object>()
             {
                     { "admin", true },
@@ -526,7 +529,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { "package", "gold" },
             };
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
+            var user = await auth.UpdateUserAsync(new UserRecordArgs()
             {
                 CustomClaims = customClaims,
                 Disabled = true,
@@ -539,7 +542,9 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal("user1", user.Uid);
+            Assert.Equal(2, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["disableUser"]);
             Assert.Equal("Test User", request["displayName"]);
@@ -558,16 +563,21 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task UpdateUserPartial()
         {
-            var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, GetUserResponse },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
+            var user = await auth.UpdateUserAsync(new UserRecordArgs()
             {
                 EmailVerified = true,
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal("user1", user.Uid);
+            Assert.Equal(2, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["emailVerified"]);
@@ -576,17 +586,22 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task UpdateUserRemoveAttributes()
         {
-            var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, GetUserResponse },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
+            var user = await auth.UpdateUserAsync(new UserRecordArgs()
             {
                 DisplayName = null,
                 PhotoUrl = null,
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal("user1", user.Uid);
+            Assert.Equal(2, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal(
@@ -597,16 +612,21 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task UpdateUserRemoveProviders()
         {
-            var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, GetUserResponse },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
+            var user = await auth.UpdateUserAsync(new UserRecordArgs()
             {
                 PhoneNumber = null,
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal("user1", user.Uid);
+            Assert.Equal(2, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal(
@@ -618,7 +638,7 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task UpdateUserSetCustomClaims()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var customClaims = new Dictionary<string, object>()
             {
                     { "admin", true },
@@ -626,11 +646,7 @@ namespace FirebaseAdmin.Auth.Tests
                     { "package", "gold" },
             };
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
-            {
-                Uid = "user1",
-                CustomClaims = customClaims,
-            });
+            await auth.SetCustomUserClaimsAsync("user1", customClaims);
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
@@ -645,30 +661,22 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task LargeClaimsUnderLimit()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var customClaims = new Dictionary<string, object>()
             {
                     { "testClaim", new string('a', 950) },
             };
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
-            {
-                Uid = "user1",
-                CustomClaims = customClaims,
-            });
+            await auth.SetCustomUserClaimsAsync("user1", customClaims);
         }
 
         [Fact]
         public async Task EmptyClaims()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
-            {
-                Uid = "user1",
-                CustomClaims = new Dictionary<string, object>(),
-            });
+            await auth.SetCustomUserClaimsAsync("user1", new Dictionary<string, object>());
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal("user1", request["localId"]);
@@ -679,13 +687,9 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task NullClaims()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
-            await userManager.UpdateUserAsync(new UserRecordArgs()
-            {
-                Uid = "user1",
-                CustomClaims = null,
-            });
+            await auth.SetCustomUserClaimsAsync("user1", null);
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal("user1", request["localId"]);
@@ -696,7 +700,7 @@ namespace FirebaseAdmin.Auth.Tests
         public void ReservedClaims()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             foreach (var key in FirebaseTokenFactory.ReservedClaims)
             {
@@ -705,12 +709,8 @@ namespace FirebaseAdmin.Auth.Tests
                     { key, "value" },
                 };
 
-                var args = new UserRecordArgs()
-                {
-                    Uid = "user1",
-                    CustomClaims = customClaims,
-                };
-                Assert.ThrowsAsync<ArgumentException>(async () => await userManager.UpdateUserAsync(args));
+                Assert.ThrowsAsync<ArgumentException>(
+                    async () => await auth.SetCustomUserClaimsAsync("user1", customClaims));
             }
         }
 
@@ -718,48 +718,48 @@ namespace FirebaseAdmin.Auth.Tests
         public void UpdateUserNoUid()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             var args = new UserRecordArgs()
             {
                 EmailVerified = true,
             };
-            Assert.ThrowsAsync<ArgumentException>(async () => await userManager.UpdateUserAsync(args));
+            Assert.ThrowsAsync<ArgumentException>(async () => await auth.UpdateUserAsync(args));
         }
 
         [Fact]
         public void UpdateUserInvalidUid()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             var args = new UserRecordArgs()
             {
                 EmailVerified = true,
                 Uid = new string('a', 129),
             };
-            Assert.ThrowsAsync<ArgumentException>(async () => await userManager.UpdateUserAsync(args));
+            Assert.ThrowsAsync<ArgumentException>(async () => await auth.UpdateUserAsync(args));
         }
 
         [Fact]
         public async Task UpdateUserEmptyUid()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Uid = string.Empty,
             };
 
-            await Assert.ThrowsAsync<ArgumentException>(async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+            await Assert.ThrowsAsync<ArgumentException>(async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task UpdateUserEmptyEmail()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Email = string.Empty,
@@ -767,15 +767,15 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task UpdateUserInvalidEmail()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Email = "not-an-email",
@@ -783,15 +783,15 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task UpdateUserEmptyPhoneNumber()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhoneNumber = string.Empty,
@@ -799,15 +799,15 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task UpdateUserInvalidPhoneNumber()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhoneNumber = "1234567890",
@@ -815,18 +815,18 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.UpdateUserAsync(args));
+                async () => await auth.UpdateUserAsync(args));
             Assert.Equal(
                 "Phone number must be a valid, E.164 compliant identifier starting with a '+' sign.",
                 exception.Message);
-            Assert.Null(handler.LastRequestBody);
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task UpdateUserEmptyPhotoUrl()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhotoUrl = string.Empty,
@@ -834,15 +834,15 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task UpdateUserInvalidPhotoUrl()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 PhotoUrl = "not a url",
@@ -850,15 +850,15 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public async Task UpdateUserShortPassword()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Password = "only5",
@@ -866,44 +866,36 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.LastRequestBody);
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
         }
 
         [Fact]
         public void EmptyNameClaims()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var emptyClaims = new Dictionary<string, object>()
             {
                     { string.Empty, "value" },
             };
 
-            var args = new UserRecordArgs()
-            {
-                Uid = "user1",
-                CustomClaims = emptyClaims,
-            };
-            Assert.ThrowsAsync<ArgumentException>(async () => await userManager.UpdateUserAsync(args));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.SetCustomUserClaimsAsync("user1", emptyClaims));
         }
 
         [Fact]
         public void LargeClaimsOverLimit()
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
             var largeClaims = new Dictionary<string, object>()
             {
                 { "testClaim", new string('a', 1001) },
             };
 
-            var args = new UserRecordArgs()
-            {
-                Uid = "user1",
-                CustomClaims = largeClaims,
-            };
-            Assert.ThrowsAsync<ArgumentException>(async () => await userManager.UpdateUserAsync(args));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.SetCustomUserClaimsAsync("user1", largeClaims));
         }
 
         [Fact]
@@ -913,18 +905,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = "{}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
-            var customClaims = new Dictionary<string, object>()
-            {
-                { "admin", true },
-            };
-
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Uid = "user1",
-                CustomClaims = customClaims,
             };
-            await Assert.ThrowsAsync<FirebaseException>(async () => await userManager.UpdateUserAsync(args));
+
+            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.UpdateUserAsync(args));
         }
 
         [Fact]
@@ -934,18 +921,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = @"{""localId"": ""notuser1""}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
-            var customClaims = new Dictionary<string, object>()
-            {
-                { "admin", true },
-            };
-
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Uid = "user1",
-                CustomClaims = customClaims,
             };
-            await Assert.ThrowsAsync<FirebaseException>(async () => await userManager.UpdateUserAsync(args));
+
+            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.UpdateUserAsync(args));
         }
 
         [Fact]
@@ -955,18 +937,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 StatusCode = HttpStatusCode.InternalServerError,
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
-            var customClaims = new Dictionary<string, object>()
-            {
-                { "admin", true },
-            };
+            var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
             {
                 Uid = "user1",
-                CustomClaims = customClaims,
             };
 
-            await Assert.ThrowsAsync<FirebaseException>(async () => await userManager.UpdateUserAsync(args));
+            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.UpdateUserAsync(args));
         }
 
         [Fact]
@@ -976,9 +953,9 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Response = @"{""kind"": ""identitytoolkit#DeleteAccountResponse""}",
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
-            await userManager.DeleteUserAsync("user1");
+            await auth.DeleteUserAsync("user1");
         }
 
         [Fact]
@@ -988,21 +965,26 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 StatusCode = HttpStatusCode.NotFound,
             };
-            var userManager = this.CreateFirebaseUserManager(handler);
+            var auth = this.CreateFirebaseAuth(handler);
 
             await Assert.ThrowsAsync<FirebaseException>(
-               async () => await userManager.DeleteUserAsync("user1"));
+               async () => await auth.DeleteUserAsync("user1"));
         }
 
-        private FirebaseUserManager CreateFirebaseUserManager(HttpMessageHandler handler)
+        private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler)
         {
-            var args = new FirebaseUserManagerArgs
+            var userManager = new FirebaseUserManager(new FirebaseUserManagerArgs
             {
                 Credential = MockCredential,
                 ProjectId = MockProjectId,
                 ClientFactory = new MockHttpClientFactory(handler),
-            };
-            return new FirebaseUserManager(args);
+            });
+            return new FirebaseAuth(new FirebaseAuth.FirebaseAuthArgs()
+            {
+                UserManager = new Lazy<FirebaseUserManager>(userManager),
+                TokenFactory = new Lazy<FirebaseTokenFactory>(),
+                IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
+            });
         }
     }
 }

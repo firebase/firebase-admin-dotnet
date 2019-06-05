@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth
 {
@@ -25,22 +26,18 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class FirebaseAuth : IFirebaseService
     {
-        private readonly FirebaseApp app;
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
         private readonly object authLock = new object();
         private bool deleted;
 
-        private FirebaseAuth(FirebaseApp app)
+        internal FirebaseAuth(FirebaseAuthArgs args)
         {
-            this.app = app;
-            this.tokenFactory = new Lazy<FirebaseTokenFactory>(
-                () => FirebaseTokenFactory.Create(this.app), true);
-            this.idTokenVerifier = new Lazy<FirebaseTokenVerifier>(
-                () => FirebaseTokenVerifier.CreateIDTokenVerifier(this.app), true);
-            this.userManager = new Lazy<FirebaseUserManager>(
-                () => FirebaseUserManager.Create(this.app), true);
+            args.ThrowIfNull(nameof(args));
+            this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
+            this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
+            this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
         }
 
         /// <summary>
@@ -77,7 +74,7 @@ namespace FirebaseAdmin.Auth
 
             return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
             {
-                return new FirebaseAuth(app);
+                return new FirebaseAuth(FirebaseAuthArgs.Create(app));
             });
         }
 
@@ -546,6 +543,28 @@ namespace FirebaseAdmin.Auth
                 }
 
                 return func();
+            }
+        }
+
+        internal sealed class FirebaseAuthArgs
+        {
+            internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
+
+            internal Lazy<FirebaseTokenVerifier> IdTokenVerifier { get; set; }
+
+            internal Lazy<FirebaseUserManager> UserManager { get; set; }
+
+            internal static FirebaseAuthArgs Create(FirebaseApp app)
+            {
+                return new FirebaseAuthArgs()
+                {
+                    TokenFactory = new Lazy<FirebaseTokenFactory>(
+                        () => FirebaseTokenFactory.Create(app), true),
+                    IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
+                        () => FirebaseTokenVerifier.CreateIDTokenVerifier(app), true),
+                    UserManager = new Lazy<FirebaseUserManager>(
+                        () => FirebaseUserManager.Create(app), true),
+                };
             }
         }
     }
