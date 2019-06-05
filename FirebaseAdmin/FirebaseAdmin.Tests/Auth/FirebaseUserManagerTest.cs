@@ -63,7 +63,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
             Assert.Equal(new JArray("user1"), request["localId"]);
         }
 
@@ -203,7 +203,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
             Assert.Equal(new JArray("user@example.com"), request["email"]);
         }
 
@@ -264,7 +264,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
             Assert.Equal(new JArray("+1234567890"), request["phoneNumber"]);
         }
 
@@ -305,7 +305,7 @@ namespace FirebaseAdmin.Auth.Tests
             var uid = await userManager.CreateUserAsync(new UserRecordArgs());
 
             Assert.Equal("user1", uid);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Empty(request);
         }
 
@@ -328,7 +328,7 @@ namespace FirebaseAdmin.Auth.Tests
             });
 
             Assert.Equal("user1", uid);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.True((bool)request["disabled"]);
             Assert.Equal("Test User", request["displayName"]);
             Assert.Equal("user@example.com", request["email"]);
@@ -357,7 +357,7 @@ namespace FirebaseAdmin.Auth.Tests
             });
 
             Assert.Equal("user1", uid);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.False((bool)request["disabled"]);
             Assert.False((bool)request["emailVerified"]);
@@ -375,7 +375,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -390,7 +390,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -405,7 +405,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -420,7 +420,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -435,7 +435,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -453,7 +453,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(
                 "Phone number must be a valid, E.164 compliant identifier starting with a '+' sign.",
                 exception.Message);
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -468,7 +468,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -483,7 +483,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -498,7 +498,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.CreateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -539,7 +539,7 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["disableUser"]);
             Assert.Equal("Test User", request["displayName"]);
@@ -567,7 +567,7 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["emailVerified"]);
@@ -586,7 +586,7 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal(
@@ -606,7 +606,7 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal(
@@ -632,7 +632,7 @@ namespace FirebaseAdmin.Auth.Tests
                 CustomClaims = customClaims,
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             var claims = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>((string)request["customAttributes"]);
@@ -670,7 +670,7 @@ namespace FirebaseAdmin.Auth.Tests
                 CustomClaims = new Dictionary<string, object>(),
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal("{}", request["customAttributes"]);
         }
@@ -687,7 +687,7 @@ namespace FirebaseAdmin.Auth.Tests
                 CustomClaims = null,
             });
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.RequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal("{}", request["customAttributes"]);
         }
@@ -752,7 +752,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             await Assert.ThrowsAsync<ArgumentException>(async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -768,7 +768,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -784,7 +784,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -800,7 +800,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -819,7 +819,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(
                 "Phone number must be a valid, E.164 compliant identifier starting with a '+' sign.",
                 exception.Message);
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -835,7 +835,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -851,7 +851,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
@@ -867,7 +867,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 async () => await userManager.UpdateUserAsync(args));
-            Assert.Null(handler.RequestBody);
+            Assert.Null(handler.LastRequestBody);
         }
 
         [Fact]
