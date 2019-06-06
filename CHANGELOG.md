@@ -1,6 +1,6 @@
 # Unreleased
 
--
+- [added] Implemented the `CreateUserAsync()` and `UserRecordArgs` APIs.
 
 # v1.6.0
 
