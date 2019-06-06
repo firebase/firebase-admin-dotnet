@@ -19,7 +19,8 @@ namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// Represents the Webpush-specific notification options that can be included in a <see cref="Message"/>.
-    /// See <see href="https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#WebpushFcmOptions">this link</see>.
+    /// See <a href="https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#WebpushFcmOptions">REST
+    /// API reference</a> for a list of supported fields.
     /// </summary>
     public sealed class WebpushFcmOptions
     {
