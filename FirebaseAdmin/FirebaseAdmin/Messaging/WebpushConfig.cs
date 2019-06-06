@@ -39,13 +39,13 @@ namespace FirebaseAdmin.Messaging
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
         /// <summary>
-        /// Gets or sets the Webpush notification that will be included in the message.
+        /// Gets or sets the Webpush notification included in the message.
         /// </summary>
         [JsonProperty("notification")]
         public WebpushNotification Notification { get; set; }
 
         /// <summary>
-        /// Gets or sets the Webpush options that will be included in the message.
+        /// Gets or sets the Webpush options included in the message.
         /// </summary>
         [JsonProperty("fcm_options")]
         public WebpushFcmOptions FcmOptions { get; set; }
