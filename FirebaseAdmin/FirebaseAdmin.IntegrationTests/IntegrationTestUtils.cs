@@ -45,5 +45,10 @@ namespace FirebaseAdmin.IntegrationTests
         {
             return System.IO.File.ReadAllText(ApiKeyFile).Trim();
         }
+
+        public static string GetDefaultBucketName(string projectId)
+        {
+            return projectId + ".appspot.com";
+        }
     }
 }

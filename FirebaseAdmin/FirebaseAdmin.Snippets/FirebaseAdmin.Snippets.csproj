@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.35.1" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.1" />
   </ItemGroup>
 
   <ItemGroup>
