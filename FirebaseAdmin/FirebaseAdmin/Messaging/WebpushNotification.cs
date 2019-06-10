@@ -23,8 +23,8 @@ namespace FirebaseAdmin.Messaging
     /// <summary>
     /// Represents the Webpush-specific notification options that can be included in a
     /// <see cref="Message"/>. Supports most standard options defined in the
-    /// <see href="https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification">
-    /// Web Notification specification</see>.
+    /// <a href="https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification">
+    /// Web Notification specification</a>.
     /// </summary>
     public sealed class WebpushNotification
     {

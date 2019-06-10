@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
+using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth
@@ -49,7 +50,12 @@ namespace FirebaseAdmin.Auth
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
         }
 
-        public static FirebaseUserManager Create(FirebaseApp app)
+        public void Dispose()
+        {
+            this.httpClient.Dispose();
+        }
+
+        internal static FirebaseUserManager Create(FirebaseApp app)
         {
             var args = new FirebaseUserManagerArgs
             {
@@ -68,7 +74,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A record of user with the queried id if one exists.</returns>
-        public async Task<UserRecord> GetUserById(
+        internal async Task<UserRecord> GetUserByIdAsync(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(uid))
@@ -76,37 +82,101 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException("User ID cannot be null or empty.");
             }
 
-            const string getUserPath = "accounts:lookup";
-            var payload = new Dictionary<string, object>()
+            var query = new UserQuery()
             {
-                { "localId", uid },
+                Field = "localId",
+                Value = uid,
+                Label = "uid",
             };
-            var response = await this.PostAndDeserializeAsync<JObject>(
-                getUserPath, payload, cancellationToken).ConfigureAwait(false);
-            if (response == null || uid != (string)response["localId"])
+            return await this.GetUserAsync(query, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the user data corresponding to the given email address.
+        /// </summary>
+        /// <param name="email">An email address.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A record of user with the queried email if one exists.</returns>
+        internal async Task<UserRecord> GetUserByEmailAsync(
+            string email, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrEmpty(email))
             {
-                throw new FirebaseException($"Failed to get user: {uid}");
+                throw new ArgumentException("Email cannot be null or empty.");
             }
 
-            return new UserRecord((string)response["localId"]);
+            var query = new UserQuery()
+            {
+                Field = "email",
+                Value = email,
+            };
+            return await this.GetUserAsync(query, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the user data corresponding to the given phone number.
+        /// </summary>
+        /// <param name="phoneNumber">A phone number.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A record of user with the queried phone number if one exists.</returns>
+        internal async Task<UserRecord> GetUserByPhoneNumberAsync(
+            string phoneNumber, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrEmpty(phoneNumber))
+            {
+                throw new ArgumentException("Phone number cannot be null or empty.");
+            }
+
+            var query = new UserQuery()
+            {
+                Field = "phoneNumber",
+                Value = phoneNumber,
+                Label = "phone number",
+            };
+            return await this.GetUserAsync(query, cancellationToken);
+        }
+
+        /// <summary>
+        /// Create a new user account.
+        /// </summary>
+        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
+        /// <param name="args">The data to create the user account with.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>The unique uid assigned to the newly created user account.</returns>
+        internal async Task<string> CreateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var payload = args.ThrowIfNull(nameof(args)).ToCreateUserRequest();
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                "accounts", payload, cancellationToken).ConfigureAwait(false);
+            var uid = response["localId"];
+            if (uid == null)
+            {
+                throw new FirebaseException("Failed to create new user.");
+            }
+
+            return uid.Value<string>();
         }
 
         /// <summary>
         /// Update an existing user.
         /// </summary>
         /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
-        /// <param name="user">The user which we want to update.</param>
+        /// <param name="args">The user account data to be updated.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        public async Task UpdateUserAsync(
-            UserRecord user, CancellationToken cancellationToken = default(CancellationToken))
+        internal async Task UpdateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken = default(CancellationToken))
         {
-            const string updatePath = "accounts:update";
+            var payload = args.ToUpdateUserRequest();
             var response = await this.PostAndDeserializeAsync<JObject>(
-                updatePath, user, cancellationToken).ConfigureAwait(false);
-            if (user.Uid != (string)response["localId"])
+                "accounts:update", payload, cancellationToken).ConfigureAwait(false);
+            if (payload.Uid != (string)response["localId"])
             {
-                throw new FirebaseException($"Failed to update user: {user.Uid}");
+                throw new FirebaseException($"Failed to update user: {payload.Uid}");
             }
         }
 
@@ -116,7 +186,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="uid">A user ID string.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        public async Task DeleteUser(
+        internal async Task DeleteUserAsync(
             string uid, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrEmpty(uid))
@@ -124,22 +194,28 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException("User id cannot be null or empty.");
             }
 
-            const string getUserPath = "accounts:delete";
             var payload = new Dictionary<string, object>()
             {
                 { "localId", uid },
             };
             var response = await this.PostAndDeserializeAsync<JObject>(
-                getUserPath, payload, cancellationToken).ConfigureAwait(false);
+                "accounts:delete", payload, cancellationToken).ConfigureAwait(false);
             if (response == null || (string)response["kind"] == null)
             {
                 throw new FirebaseException($"Failed to delete user: {uid}");
             }
         }
 
-        public void Dispose()
+        private async Task<UserRecord> GetUserAsync(UserQuery query, CancellationToken cancellationToken)
         {
-            this.httpClient.Dispose();
+            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
+                "accounts:lookup", query.Build(), cancellationToken).ConfigureAwait(false);
+            if (response == null || response.Users == null || response.Users.Count == 0)
+            {
+                throw new FirebaseException($"Failed to get user with {query.Description}");
+            }
+
+            return new UserRecord(response.Users[0]);
         }
 
         private async Task<TResult> PostAndDeserializeAsync<TResult>(
@@ -194,6 +270,44 @@ namespace FirebaseAdmin.Auth
             catch (HttpRequestException e)
             {
                 throw new FirebaseException("Error while calling Firebase Auth service", e);
+            }
+        }
+
+        /// <summary>
+        /// Represents a query that can be executed against the Firebase Auth service to retrieve user records.
+        /// A query mainly consists of a <see cref="UserQuery.Field"/> and a <see cref="UserQuery.Value"/> (e.g.
+        /// <c>Field = localId</c> and <c>Value = alice</c>). Additionally, a query may also specify a more
+        /// human-readable <see cref="UserQuery.Label"/> for the field, which will appear on any error messages
+        /// produced by the query.
+        /// </summary>
+        private class UserQuery
+        {
+            internal string Field { get; set; }
+
+            internal string Value { get; set; }
+
+            internal string Label { get; set; }
+
+            internal string Description
+            {
+                get
+                {
+                    var label = this.Label;
+                    if (string.IsNullOrEmpty(label))
+                    {
+                        label = this.Field;
+                    }
+
+                    return $"{label}: {this.Value}";
+                }
+            }
+
+            internal Dictionary<string, object> Build()
+            {
+                return new Dictionary<string, object>()
+                {
+                    { this.Field, new string[] { this.Value } },
+                };
             }
         }
     }

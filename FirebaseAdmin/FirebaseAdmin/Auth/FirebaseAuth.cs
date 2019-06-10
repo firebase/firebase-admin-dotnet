@@ -264,6 +264,176 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// </summary>
+        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the newly created user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        public async Task<UserRecord> CreateUserAsync(UserRecordArgs args)
+        {
+            return await this.CreateUserAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// </summary>
+        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the newly created user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        public async Task<UserRecord> CreateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var uid = await userManager.CreateUserAsync(args, cancellationToken)
+                .ConfigureAwait(false);
+            return await userManager.GetUserByIdAsync(uid, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user who's
+        /// user ID was specified in <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">The user ID for the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified user ID.</returns>
+        /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
+        public async Task<UserRecord> GetUserAsync(string uid)
+        {
+            return await this.GetUserAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user who's
+        /// user ID was specified in <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">The user ID for the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified user ID.</returns>
+        /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
+        public async Task<UserRecord> GetUserAsync(
+            string uid, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.GetUserByIdAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="email"/>.
+        /// </summary>
+        /// <param name="email">The email of the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified email.</returns>
+        /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified email.</exception>
+        public async Task<UserRecord> GetUserByEmailAsync(string email)
+        {
+            return await this.GetUserByEmailAsync(email, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="email"/>.
+        /// </summary>
+        /// <param name="email">The email of the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified email.</returns>
+        /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified email.</exception>
+        public async Task<UserRecord> GetUserByEmailAsync(
+            string email, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.GetUserByEmailAsync(email, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="phoneNumber"/>.
+        /// </summary>
+        /// <param name="phoneNumber">The phone number of the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified phone number.</returns>
+        /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified phone number.</exception>
+        public async Task<UserRecord> GetUserByPhoneNumberAsync(string phoneNumber)
+        {
+            return await this.GetUserByPhoneNumberAsync(phoneNumber, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="phoneNumber"/>.
+        /// </summary>
+        /// <param name="phoneNumber">The phone number of the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified phone number.</returns>
+        /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If a user cannot be found with the specified phone number.</exception>
+        public async Task<UserRecord> GetUserByPhoneNumberAsync(
+            string phoneNumber, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.GetUserByPhoneNumberAsync(phoneNumber, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the user identified by the specified <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <returns>A task that completes when the user account has been deleted.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while deleting the user.</exception>
+        public async Task DeleteUserAsync(string uid)
+        {
+            await this.DeleteUserAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the user identified by the specified <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes when the user account has been deleted.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while deleting the user.</exception>
+        public async Task DeleteUserAsync(string uid, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            await userManager.DeleteUserAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Sets the specified custom claims on an existing user account. A null claims value
         /// removes any claims currently set on the user account. The claims must serialize into
         /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
@@ -281,7 +451,8 @@ namespace FirebaseAdmin.Auth
         public async Task SetCustomUserClaimsAsync(
             string uid, IReadOnlyDictionary<string, object> claims)
         {
-            await this.SetCustomUserClaimsAsync(uid, claims, default(CancellationToken));
+            await this.SetCustomUserClaimsAsync(uid, claims, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -305,8 +476,9 @@ namespace FirebaseAdmin.Auth
             string uid, IReadOnlyDictionary<string, object> claims, CancellationToken cancellationToken)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
-            var user = new UserRecord(uid)
+            var user = new UserRecordArgs()
             {
+                Uid = uid,
                 CustomClaims = claims,
             };
 
