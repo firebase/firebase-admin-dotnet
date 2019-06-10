@@ -22,8 +22,8 @@ namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// Represents the APNS-specific options that can be included in a <see cref="Message"/>. Refer
-    /// to <see href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/APNSOverview.html">
-    /// APNs documentation</see> for various headers and payload fields supported by APNS.
+    /// to <a href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/APNSOverview.html">
+    /// APNs documentation</a> for various headers and payload fields supported by APNS.
     /// </summary>
     public sealed class ApnsConfig
     {

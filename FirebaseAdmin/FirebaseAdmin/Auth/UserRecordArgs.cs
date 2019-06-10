@@ -378,7 +378,11 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        internal class Optional<T>
+        /// <summary>
+        /// Wraps a nullable value. Used to differentiate between parameters that have not been set, and
+        /// the parameters that have been explicitly set to null.
+        /// </summary>
+        private class Optional<T>
         {
             internal Optional(T value)
             {

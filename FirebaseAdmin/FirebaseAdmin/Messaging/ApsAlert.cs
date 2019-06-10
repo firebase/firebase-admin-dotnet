@@ -20,8 +20,8 @@ using Newtonsoft.Json;
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Represents the <see href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html#//apple_ref/doc/uid/TP40008194-CH17-SW5">
-    /// alert property</see> that can be included in the <c>aps</c> dictionary of an APNs
+    /// Represents the <a href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html#//apple_ref/doc/uid/TP40008194-CH17-SW5">
+    /// alert property</a> that can be included in the <c>aps</c> dictionary of an APNs
     /// payload.
     /// </summary>
     public sealed class ApsAlert
