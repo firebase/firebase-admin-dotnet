@@ -36,7 +36,7 @@ namespace FirebaseAdmin.IntegrationTests
 
         private void TestBucket(string projectId, StorageClient storageClient)
         {
-            var bucketName = IntegrationTestUtils.GetDefaultBucketName(projectId);
+            var bucketName = this.GetDefaultBucketName(projectId);
 
             var fileName = "FirebaseStorageTest.txt";
             var content = "FirebaseStorageTest";
@@ -53,6 +53,11 @@ namespace FirebaseAdmin.IntegrationTests
             }
 
             storageClient.DeleteObject(bucketName, fileName);
+        }
+
+        private string GetDefaultBucketName(string projectId)
+        {
+            return projectId + ".appspot.com";
         }
     }
 }
