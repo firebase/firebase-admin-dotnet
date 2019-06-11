@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using FirebaseAdmin.Cloud;
 using Google.Cloud.Storage.V1;
 using Xunit;
@@ -36,23 +32,6 @@ namespace FirebaseAdmin.IntegrationTests
         {
             var storageClient = StorageClientHelper.GetStorageClient();
             this.TestBucket(FirebaseApp.DefaultInstance.GetProjectId(), storageClient);
-        }
-
-        [Fact]
-        public void UseBucketWithCustomEncryptionKey()
-        {
-            var app = FirebaseApp.Create(FirebaseApp.DefaultInstance.Options, "CustomEncryptionApp");
-            try
-            {
-                EncryptionKey encryptionKey = EncryptionKey.Generate();
-                var storageClient = StorageClientHelper.GetStorageClient(app, encryptionKey);
-                Assert.Equal(encryptionKey, storageClient.EncryptionKey);
-                this.TestBucket(app.GetProjectId(), storageClient);
-            }
-            finally
-            {
-                app.Delete();
-            }
         }
 
         private void TestBucket(string projectId, StorageClient storageClient)

@@ -13,12 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using FirebaseAdmin.Cloud;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using Xunit;
@@ -54,17 +48,6 @@ namespace FirebaseAdmin.Cloud.Tests
             Assert.Same(storageClient, StorageClientHelper.GetStorageClient(app));
             app.Delete();
             Assert.Throws<InvalidOperationException>(() => StorageClientHelper.GetStorageClient(app));
-        }
-
-        [Fact]
-        public void GetStorageClientWithEncryptionKey()
-        {
-            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            EncryptionKey encryptionKey = EncryptionKey.Generate();
-            StorageClient storageClient = StorageClientHelper.GetStorageClient(app, encryptionKey);
-            Assert.Same(storageClient, StorageClientHelper.GetStorageClient(app, encryptionKey));
-            app.Delete();
-            Assert.Throws<InvalidOperationException>(() => StorageClientHelper.GetStorageClient(app, encryptionKey));
         }
 
         [Fact]

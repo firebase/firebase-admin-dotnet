@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Google.Cloud.Storage.V1;
 
 namespace FirebaseAdmin.Cloud
@@ -27,19 +25,18 @@ namespace FirebaseAdmin.Cloud
     {
         private StorageClient storageClient;
 
-        private StorageClientHelper(FirebaseApp app, EncryptionKey encryptionKey = null)
+        private StorageClientHelper(FirebaseApp app)
         {
-            this.storageClient = StorageClient.Create(app.Options.Credential, encryptionKey);
+            this.storageClient = StorageClient.Create(app.Options.Credential);
         }
 
         /// <summary>
         /// Gets the StorageClient instance associated with the default Firebase app. Return value is
         /// <c>null</c> if the default app doesn't yet exist.
         /// </summary>
-        /// <param name="encryptionKey">Optional EncryptionKey to use for all relevant object-based operations by default. May be null.</param>
         /// <returns>The <see cref="StorageClient"/> instance associated with the specified
         /// app.</returns>
-        public static StorageClient GetStorageClient(EncryptionKey encryptionKey = null)
+        public static StorageClient GetStorageClient()
         {
             var app = FirebaseApp.DefaultInstance;
             if (app == null)
@@ -47,7 +44,7 @@ namespace FirebaseAdmin.Cloud
                 return null;
             }
 
-            return GetStorageClient(app, encryptionKey);
+            return GetStorageClient(app);
         }
 
         /// <summary>
@@ -57,8 +54,7 @@ namespace FirebaseAdmin.Cloud
         /// app.</returns>
         /// <exception cref="System.ArgumentNullException">If the app argument is null.</exception>
         /// <param name="app">An app instance.</param>
-        /// <param name="encryptionKey">Optional EncryptionKey to use for all relevant object-based operations by default. May be null.</param>
-        public static StorageClient GetStorageClient(FirebaseApp app, EncryptionKey encryptionKey = null)
+        public static StorageClient GetStorageClient(FirebaseApp app)
         {
             if (app == null)
             {
@@ -67,7 +63,7 @@ namespace FirebaseAdmin.Cloud
 
             return app.GetOrInit<StorageClientHelper>(typeof(StorageClientHelper).Name, () =>
             {
-                return new StorageClientHelper(app, encryptionKey);
+                return new StorageClientHelper(app);
             }).storageClient;
         }
 
