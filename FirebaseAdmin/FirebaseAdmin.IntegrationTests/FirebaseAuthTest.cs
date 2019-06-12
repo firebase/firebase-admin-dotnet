@@ -119,7 +119,7 @@ namespace FirebaseAdmin.IntegrationTests
             var customClaims = new Dictionary<string, object>();
 
             await Assert.ThrowsAsync<FirebaseException>(
-                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("mock-uid", customClaims));
+                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("non.existing", customClaims));
         }
 
         [Fact]
@@ -165,35 +165,91 @@ namespace FirebaseAdmin.IntegrationTests
             // Create user
             var user = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs());
             var uid = user.Uid;
-            Assert.Null(user.Email);
-            Assert.Null(user.PhoneNumber);
-            Assert.Null(user.DisplayName);
-            Assert.Null(user.PhotoUrl);
-            Assert.False(user.EmailVerified);
-            Assert.False(user.Disabled);
-            Assert.NotNull(user.UserMetaData.CreationTimestamp);
-            Assert.Null(user.UserMetaData.LastSignInTimestamp);
-            Assert.Empty(user.ProviderData);
-            Assert.Empty(user.CustomClaims);
+            try
+            {
+                Assert.Null(user.Email);
+                Assert.Null(user.PhoneNumber);
+                Assert.Null(user.DisplayName);
+                Assert.Null(user.PhotoUrl);
+                Assert.False(user.EmailVerified);
+                Assert.False(user.Disabled);
+                Assert.NotNull(user.UserMetaData.CreationTimestamp);
+                Assert.Null(user.UserMetaData.LastSignInTimestamp);
+                Assert.Empty(user.ProviderData);
+                Assert.Empty(user.CustomClaims);
 
-            // Get user by ID
-            user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
-            Assert.Equal(uid, user.Uid);
-            Assert.Null(user.Email);
-            Assert.Null(user.PhoneNumber);
-            Assert.Null(user.DisplayName);
-            Assert.Null(user.PhotoUrl);
-            Assert.False(user.EmailVerified);
-            Assert.False(user.Disabled);
-            Assert.NotNull(user.UserMetaData.CreationTimestamp);
-            Assert.Null(user.UserMetaData.LastSignInTimestamp);
-            Assert.Empty(user.ProviderData);
-            Assert.Empty(user.CustomClaims);
+                // Get user by ID
+                user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+                Assert.Equal(uid, user.Uid);
+                Assert.Null(user.Email);
+                Assert.Null(user.PhoneNumber);
+                Assert.Null(user.DisplayName);
+                Assert.Null(user.PhotoUrl);
+                Assert.False(user.EmailVerified);
+                Assert.False(user.Disabled);
+                Assert.NotNull(user.UserMetaData.CreationTimestamp);
+                Assert.Null(user.UserMetaData.LastSignInTimestamp);
+                Assert.Empty(user.ProviderData);
+                Assert.Empty(user.CustomClaims);
 
-            // Delete user
-            await FirebaseAuth.DefaultInstance.DeleteUserAsync(uid);
-            await Assert.ThrowsAsync<FirebaseException>(
-                async () => await FirebaseAuth.DefaultInstance.GetUserAsync(uid));
+                // Update user
+                var randomUser = RandomUser.Create();
+                var updateArgs = new UserRecordArgs()
+                {
+                    Uid = uid,
+                    DisplayName = "Updated Name",
+                    Email = randomUser.Email,
+                    PhoneNumber = randomUser.PhoneNumber,
+                    PhotoUrl = "https://example.com/photo.png",
+                    EmailVerified = true,
+                    Password = "secret",
+                };
+                user = await FirebaseAuth.DefaultInstance.UpdateUserAsync(updateArgs);
+                Assert.Equal(uid, user.Uid);
+                Assert.Equal(randomUser.Email, user.Email);
+                Assert.Equal(randomUser.PhoneNumber, user.PhoneNumber);
+                Assert.Equal("Updated Name", user.DisplayName);
+                Assert.Equal("https://example.com/photo.png", user.PhotoUrl);
+                Assert.True(user.EmailVerified);
+                Assert.False(user.Disabled);
+                Assert.NotNull(user.UserMetaData.CreationTimestamp);
+                Assert.Null(user.UserMetaData.LastSignInTimestamp);
+                Assert.Equal(2, user.ProviderData.Length);
+                Assert.Empty(user.CustomClaims);
+
+                // Get user by email
+                user = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(randomUser.Email);
+                Assert.Equal(uid, user.Uid);
+
+                // Disable user and remove properties
+                var disableArgs = new UserRecordArgs()
+                {
+                    Uid = uid,
+                    Disabled = true,
+                    DisplayName = null,
+                    PhoneNumber = null,
+                    PhotoUrl = null,
+                };
+                user = await FirebaseAuth.DefaultInstance.UpdateUserAsync(disableArgs);
+                Assert.Equal(uid, user.Uid);
+                Assert.Equal(randomUser.Email, user.Email);
+                Assert.Null(user.PhoneNumber);
+                Assert.Null(user.DisplayName);
+                Assert.Null(user.PhotoUrl);
+                Assert.True(user.EmailVerified);
+                Assert.True(user.Disabled);
+                Assert.NotNull(user.UserMetaData.CreationTimestamp);
+                Assert.Null(user.UserMetaData.LastSignInTimestamp);
+                Assert.Single(user.ProviderData);
+                Assert.Empty(user.CustomClaims);
+            }
+            finally
+            {
+                // Delete user
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(uid);
+                await Assert.ThrowsAsync<FirebaseException>(
+                    async () => await FirebaseAuth.DefaultInstance.GetUserAsync(uid));
+            }
         }
 
         [Fact]
@@ -208,6 +264,17 @@ namespace FirebaseAdmin.IntegrationTests
         {
             await Assert.ThrowsAsync<FirebaseException>(
                 async () => await FirebaseAuth.DefaultInstance.GetUserByEmailAsync("non.existing@definitely.non.existing"));
+        }
+
+        [Fact]
+        public async Task UpdateUserNonExistingUid()
+        {
+            var args = new UserRecordArgs()
+            {
+                Uid = "non.existing",
+            };
+            await Assert.ThrowsAsync<FirebaseException>(
+                async () => await FirebaseAuth.DefaultInstance.UpdateUserAsync(args));
         }
 
         [Fact]
