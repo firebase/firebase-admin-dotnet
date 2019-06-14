@@ -14,10 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
+using Google.Api.Gax;
+using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
@@ -294,6 +297,146 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var userManager = this.CreateFirebaseUserManager(new MockMessageHandler());
             await Assert.ThrowsAsync<ArgumentException>(() => userManager.GetUserByPhoneNumberAsync(string.Empty));
+        }
+
+        [Fact]
+        public async Task ListUsersPaged()
+        {
+            var nextPageToken = Guid.NewGuid().ToString();
+            var firstCallHandler = new MockMessageHandler()
+            {
+                Response = new DownloadAccountResponse()
+                {
+                    NextPageToken = nextPageToken,
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
+                        new GetAccountInfoResponse.User() { UserId = "user2" },
+                        new GetAccountInfoResponse.User() { UserId = "user3" },
+                    },
+                },
+            };
+
+            var secondCallHandler = new MockMessageHandler()
+            {
+                Response = new DownloadAccountResponse()
+                {
+                    NextPageToken = string.Empty,
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserId = "user4" },
+                        new GetAccountInfoResponse.User() { UserId = "user5" },
+                        new GetAccountInfoResponse.User() { UserId = "user6" },
+                    },
+                },
+            };
+
+            var factory = new MockHttpClientFactory(new MultipleMockMessageHandler(new Dictionary<Func<HttpRequestMessage, bool>, MockMessageHandler>
+            {
+                { initMessage => initMessage.RequestUri.Query.Equals("?maxResults=3&nextPageToken="), firstCallHandler },
+                { initMessage => initMessage.RequestUri.Query.Equals($"?maxResults=3&nextPageToken={nextPageToken}"), secondCallHandler },
+            }));
+
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+
+            var usersPage = userManager.ListUsers(new ListUsersOptions());
+
+            var users = new List<ExportedUserRecord>();
+            var pageCounter = 0;
+
+            for (Page<ExportedUserRecord> userPage; (userPage = await usersPage.ReadPageAsync(3)) != null;)
+            {
+                pageCounter++;
+                users.AddRange(userPage);
+
+                if (string.IsNullOrEmpty(userPage.NextPageToken))
+                {
+                    break;
+                }
+            }
+
+            Assert.Equal(6, users.Count);
+            Assert.Equal(2, pageCounter);
+            Assert.Equal("user1", users[0].Uid);
+            Assert.Equal("user2", users[1].Uid);
+            Assert.Equal("user3", users[2].Uid);
+            Assert.Equal("user4", users[3].Uid);
+            Assert.Equal("user5", users[4].Uid);
+            Assert.Equal("user6", users[5].Uid);
+        }
+
+        [Fact]
+        public async Task ListUsers()
+        {
+            var nextPageToken = Guid.NewGuid().ToString();
+            var handler = new MockMessageHandler()
+            {
+                Response = new DownloadAccountResponse()
+                {
+                    NextPageToken = nextPageToken,
+                    Users = new List<GetAccountInfoResponse.User>()
+                    {
+                        new GetAccountInfoResponse.User() { UserId = "user1" },
+                        new GetAccountInfoResponse.User() { UserId = "user2" },
+                        new GetAccountInfoResponse.User() { UserId = "user3" },
+                    },
+                },
+            };
+
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+
+            var usersPage = userManager.ListUsers(new ListUsersOptions());
+            var listUsersRequest = await usersPage.ReadPageAsync(3);
+            var userRecords = listUsersRequest.ToList();
+            Assert.Equal(nextPageToken, listUsersRequest.NextPageToken);
+            Assert.Equal(3, userRecords.Count);
+            Assert.Equal("user1", userRecords[0].Uid);
+            Assert.Equal("user2", userRecords[1].Uid);
+            Assert.Equal("user3", userRecords[2].Uid);
+        }
+
+        [Fact]
+        public void ListUsersRequestOptionsAreSet()
+        {
+            var handler = new MockMessageHandler()
+            {
+            };
+
+            var factory = new MockHttpClientFactory(handler);
+            var userManager = new FirebaseUserManager(
+                new FirebaseUserManagerArgs
+                {
+                    Credential = MockCredential,
+                    ProjectId = MockProjectId,
+                    ClientFactory = factory,
+                });
+
+            var listUsersRequest = userManager.CreateListUserRequest(new ListUsersOptions());
+
+            // by default they are set
+            Assert.True(listUsersRequest.RequestParameters.ContainsKey("maxResults"));
+            Assert.True(listUsersRequest.RequestParameters.ContainsKey("nextPageToken"));
+            Assert.Equal(FirebaseUserManager.MaxListUsersResults, int.Parse(listUsersRequest.RequestParameters["maxResults"].DefaultValue));
+            Assert.Null(listUsersRequest.RequestParameters["nextPageToken"].DefaultValue);
+
+            // change the values and check again
+            listUsersRequest.SetPageSize(10);
+            listUsersRequest.SetPageToken("theNewNextPageToken");
+            Assert.Equal(10, int.Parse(listUsersRequest.RequestParameters["maxResults"].DefaultValue));
+            Assert.Equal("theNewNextPageToken", listUsersRequest.RequestParameters["nextPageToken"].DefaultValue);
         }
 
         [Fact]

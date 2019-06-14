@@ -22,7 +22,7 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    public sealed class UserRecord : IUserInfo
+    public class UserRecord : IUserInfo
     {
         internal static readonly DateTime UnixEpoch = new DateTime(
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -55,6 +55,9 @@ namespace FirebaseAdmin.Auth
             this.DisplayName = user.DisplayName;
             this.PhotoUrl = user.PhotoUrl;
             this.Disabled = user.Disabled;
+            this.CreatedAt = user.CreatedAt;
+            this.LastLoginAt = user.LastLoginAt;
+            this.ValidSince = user.ValidSince;
 
             if (user.Providers == null || user.Providers.Count == 0)
             {
@@ -119,6 +122,21 @@ namespace FirebaseAdmin.Auth
         /// Gets a non-null array of provider data for this user. Possibly empty.
         /// </summary>
         public IUserInfo[] ProviderData { get; }
+
+        /// <summary>
+        /// Gets the timestamp representing the time that the user account was created.
+        /// </summary>
+        public long CreatedAt { get; }
+
+        /// <summary>
+        /// Gets the timestamp representing the last time that the user has logged in.
+        /// </summary>
+        public long LastLoginAt { get; }
+
+        /// <summary>
+        /// Gets the timestamp representing the time that the user account was first valid.
+        /// </summary>
+        public long ValidSince { get; }
 
         /// <summary>
         /// Gets a timestamp that indicates the earliest point in time at which a valid ID token

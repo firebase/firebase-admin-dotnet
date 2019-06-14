@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -53,7 +54,7 @@ namespace FirebaseAdmin.Tests
 
         public SetContentHeaders ApplyContentHeaders { get; set; }
 
-        protected override async Task<HttpResponseMessage> SendAsyncCore(
+        protected internal override async Task<HttpResponseMessage> SendAsyncCore(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
             if (request.Content != null)
@@ -116,15 +117,41 @@ namespace FirebaseAdmin.Tests
             get { return this.calls; }
         }
 
+        protected internal abstract Task<HttpResponseMessage> SendAsyncCore(
+            HttpRequestMessage request, CancellationToken cancellationToken);
+
         protected sealed override Task<HttpResponseMessage> SendAsync(
           HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Interlocked.Increment(ref this.calls);
             return this.SendAsyncCore(request, cancellationToken);
         }
+    }
 
-        protected abstract Task<HttpResponseMessage> SendAsyncCore(
-            HttpRequestMessage request, CancellationToken cancellationToken);
+    internal class MultipleMockMessageHandler : CountableMessageHandler
+    {
+        private readonly IDictionary<Func<HttpRequestMessage, bool>, MockMessageHandler> messageHandlers;
+
+        public MultipleMockMessageHandler(IDictionary<Func<HttpRequestMessage, bool>, MockMessageHandler> messageHandlers)
+        {
+            this.messageHandlers = messageHandlers;
+        }
+
+        protected internal override async Task<HttpResponseMessage> SendAsyncCore(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            foreach (var (requestCheck, mockMessageHandler) in this.messageHandlers)
+            {
+                // check if the messagehandler is responsible for the current request
+                if (requestCheck.Invoke(request))
+                {
+                    this.messageHandlers.Remove(requestCheck);
+                    return await mockMessageHandler.SendAsyncCore(request, cancellationToken);
+                }
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
     }
 
     internal class MockHttpClientFactory : HttpClientFactory
