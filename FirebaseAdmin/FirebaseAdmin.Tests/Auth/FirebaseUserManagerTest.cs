@@ -303,7 +303,7 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task ListUsersPaged()
         {
             var nextPageToken = Guid.NewGuid().ToString();
-            var handlerInit = new MockMessageHandler()
+            var firstCallHandler = new MockMessageHandler()
             {
                 Response = new DownloadAccountResponse()
                 {
@@ -317,7 +317,7 @@ namespace FirebaseAdmin.Auth.Tests
                 },
             };
 
-            var handlerSecondCall = new MockMessageHandler()
+            var secondCallHandler = new MockMessageHandler()
             {
                 Response = new DownloadAccountResponse()
                 {
@@ -333,8 +333,8 @@ namespace FirebaseAdmin.Auth.Tests
 
             var factory = new MockHttpClientFactory(new MultipleMockMessageHandler(new Dictionary<Func<HttpRequestMessage, bool>, MockMessageHandler>
             {
-                { initMessage => initMessage.RequestUri.Query.Equals("?maxResults=3&nextPageToken="), handlerInit },
-                { initMessage => initMessage.RequestUri.Query.Equals($"?maxResults=3&nextPageToken={nextPageToken}"), handlerSecondCall },
+                { initMessage => initMessage.RequestUri.Query.Equals("?maxResults=3&nextPageToken="), firstCallHandler },
+                { initMessage => initMessage.RequestUri.Query.Equals($"?maxResults=3&nextPageToken={nextPageToken}"), secondCallHandler },
             }));
 
             var userManager = new FirebaseUserManager(
@@ -345,10 +345,7 @@ namespace FirebaseAdmin.Auth.Tests
                     ClientFactory = factory,
                 });
 
-            var requestOptions = new ListUsersOptions();
-            var usersPage = new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
-                () => userManager.CreateListUserRequest(requestOptions),
-                new ListUsersPageManager());
+            var usersPage = userManager.ListUsers(new ListUsersOptions());
 
             var users = new List<ExportedUserRecord>();
             var pageCounter = 0;
@@ -400,13 +397,15 @@ namespace FirebaseAdmin.Auth.Tests
                     ProjectId = MockProjectId,
                     ClientFactory = factory,
                 });
-            var listUsersRequest = userManager.CreateListUserRequest(new ListUsersOptions());
-            var userRecords = await listUsersRequest.ExecuteAsync();
-            Assert.Equal(nextPageToken, userRecords.NextPageToken);
-            Assert.Equal(3, userRecords.Users.Count);
-            Assert.Equal("user1", userRecords.Users[0].Uid);
-            Assert.Equal("user2", userRecords.Users[1].Uid);
-            Assert.Equal("user3", userRecords.Users[2].Uid);
+
+            var usersPage = userManager.ListUsers(new ListUsersOptions());
+            var listUsersRequest = await usersPage.ReadPageAsync(3);
+            var userRecords = listUsersRequest.ToList();
+            Assert.Equal(nextPageToken, listUsersRequest.NextPageToken);
+            Assert.Equal(3, userRecords.Count);
+            Assert.Equal("user1", userRecords[0].Uid);
+            Assert.Equal("user2", userRecords[1].Uid);
+            Assert.Equal("user3", userRecords[2].Uid);
         }
 
         [Fact]
