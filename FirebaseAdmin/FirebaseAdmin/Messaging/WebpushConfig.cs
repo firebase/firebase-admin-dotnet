@@ -25,8 +25,8 @@ namespace FirebaseAdmin.Messaging
     {
         /// <summary>
         /// Gets or sets the Webpush HTTP headers. Refer
-        /// <see href="https://tools.ietf.org/html/rfc8030#section-5">
-        /// Webpush specification</see> for supported headers.
+        /// <a href="https://tools.ietf.org/html/rfc8030#section-5">
+        /// Webpush specification</a> for supported headers.
         /// </summary>
         [JsonProperty("headers")]
         public IReadOnlyDictionary<string, string> Headers { get; set; }
@@ -39,10 +39,16 @@ namespace FirebaseAdmin.Messaging
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
         /// <summary>
-        /// Gets or sets the Webpush notification that will be included in the message.
+        /// Gets or sets the Webpush notification included in the message.
         /// </summary>
         [JsonProperty("notification")]
         public WebpushNotification Notification { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Webpush options included in the message.
+        /// </summary>
+        [JsonProperty("fcm_options")]
+        public WebpushFcmOptions FcmOptions { get; set; }
 
         /// <summary>
         /// Copies this Webpush config, and validates the content of it to ensure that it can be
@@ -55,6 +61,7 @@ namespace FirebaseAdmin.Messaging
                 Headers = this.Headers?.Copy(),
                 Data = this.Data?.Copy(),
                 Notification = this.Notification?.CopyAndValidate(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
         }
     }
