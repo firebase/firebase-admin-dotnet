@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Api.Gax;
+using Google.Api.Gax.Rest;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
@@ -99,9 +101,13 @@ namespace FirebaseAdmin.Auth
             return new UserRecord(user);
         }
 
-        public ListUsersRequest CreateListUserRequest(ListUsersOptions requestOptions)
+        public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(ListUsersOptions requestOptions)
         {
-            return new ListUsersRequest(this.baseUrl, this.httpClient, requestOptions);
+            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
+                () => this.CreateListUserRequest(requestOptions),
+                new ListUsersPageManager());
+
+            return restPagedAsyncEnumerable;
         }
 
         /// <summary>
@@ -159,6 +165,11 @@ namespace FirebaseAdmin.Auth
         public void Dispose()
         {
             this.httpClient.Dispose();
+        }
+
+        internal ListUsersRequest CreateListUserRequest(ListUsersOptions requestOptions)
+        {
+            return new ListUsersRequest(this.baseUrl, this.httpClient, requestOptions);
         }
 
         private async Task<TResult> PostAndDeserializeAsync<TResult>(
