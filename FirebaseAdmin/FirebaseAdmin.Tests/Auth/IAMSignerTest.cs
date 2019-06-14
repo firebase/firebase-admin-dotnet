@@ -54,7 +54,7 @@ namespace FirebaseAdmin.Auth.Tests
             byte[] signature = await signer.SignDataAsync(data);
             Assert.Equal(bytes, signature);
             var req = NewtonsoftJsonSerializer.Instance.Deserialize<IAMSigner.SignBlobRequest>(
-                handler.Request);
+                handler.LastRequestBody);
             Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
             Assert.Equal(2, handler.Calls);
         }
@@ -99,7 +99,7 @@ namespace FirebaseAdmin.Auth.Tests
             byte[] signature = await signer.SignDataAsync(data);
             Assert.Equal(bytes, signature);
             var req = NewtonsoftJsonSerializer.Instance.Deserialize<IAMSigner.SignBlobRequest>(
-                handler.Request);
+                handler.LastRequestBody);
             Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
             Assert.Equal(1, handler.Calls);
         }
