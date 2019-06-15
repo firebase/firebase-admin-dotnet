@@ -34,8 +34,6 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal class FirebaseUserManager : IDisposable
     {
-        public const int MaxListUsersResults = 1000;
-
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
         private readonly ConfigurableHttpClient httpClient;
@@ -141,13 +139,12 @@ namespace FirebaseAdmin.Auth
             return await this.GetUserAsync(query, cancellationToken);
         }
 
-        internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(ListUsersOptions requestOptions)
+        internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
+            ListUsersOptions requestOptions)
         {
-            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
-                () => this.CreateListUserRequest(requestOptions),
-                new ListUsersPageManager());
-
-            return restPagedAsyncEnumerable;
+            var request = new ListUsersRequest(this.baseUrl, this.httpClient, requestOptions);
+            return new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
+                () => request, new ListUsersPageManager());
         }
 
         /// <summary>
@@ -218,11 +215,6 @@ namespace FirebaseAdmin.Auth
             {
                 throw new FirebaseException($"Failed to delete user: {uid}");
             }
-        }
-
-        internal ListUsersRequest CreateListUserRequest(ListUsersOptions requestOptions)
-        {
-            return new ListUsersRequest(this.baseUrl, this.httpClient, requestOptions);
         }
 
         private async Task<UserRecord> GetUserAsync(UserQuery query, CancellationToken cancellationToken)

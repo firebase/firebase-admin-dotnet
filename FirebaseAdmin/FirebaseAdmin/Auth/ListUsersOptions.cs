@@ -17,21 +17,21 @@ using Google.Api.Gax;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Options for <c>ListUsersOptions</c> operations.
+    /// Options for <see cref="FirebaseAuth.ListUsersAsync(ListUsersOptions)"/> API.
     /// </summary>
     public sealed class ListUsersOptions
     {
         /// <summary>
-        /// Gets or sets the number of results to return per page. (This modifies the per-request page size;
-        /// it does not affect the total number of results returned.)
+        /// Gets or sets the number of results to return per page. This modifies the per-request page size.
+        /// It does not affect the total number of results returned.
         /// </summary>
         public int? PageSize { get; set; }
 
         /// <summary>
-        /// Gets or sets the page-token.
-        /// If set, this token is used to indicate a continued list operation.
-        /// The value should be taken from the <c>NextPageToken</c> property of either
-        /// a <see cref="Page{TResource}"/> or a raw response from <see cref="PagedEnumerable{TResponse, TResource}.AsRawResponses"/>.
+        /// Gets or sets the page-token. If set, this token is used to indicate a continued list operation.
+        /// The value should be taken from the <c>NextPageToken</c> property of either a
+        /// <see cref="Page{TResource}"/> or a raw response from
+        /// <see cref="PagedEnumerable{TResponse, TResource}.AsRawResponses"/>.
         /// </summary>
         public string PageToken { get; set; }
     }

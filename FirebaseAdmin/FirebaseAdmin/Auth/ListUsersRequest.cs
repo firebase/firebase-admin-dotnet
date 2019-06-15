@@ -26,8 +26,15 @@ using Google.Apis.Services;
 
 namespace FirebaseAdmin.Auth
 {
+    /// <summary>
+    /// Represents a request made using the Google API client to list all Firebase users in a
+    /// project.
+    /// </summary>
     internal class ListUsersRequest : IClientServiceRequest<ExportedUserRecords>
     {
+        // This is the default page-size if no other value is set.
+        internal const int MaxListUsersResults = 1000;
+
         private readonly string baseUrl;
         private readonly HttpClient httpClient;
         private readonly ListUsersOptions requestOptions;
@@ -39,8 +46,7 @@ namespace FirebaseAdmin.Auth
             this.requestOptions = requestOptions;
             this.RequestParameters = new Dictionary<string, IParameter>();
 
-            // this is the default page-size if no other value is set.
-            this.SetPageSize(requestOptions.PageSize ?? FirebaseUserManager.MaxListUsersResults);
+            this.SetPageSize(requestOptions.PageSize ?? MaxListUsersResults);
             this.SetPageToken(requestOptions.PageToken);
         }
 
@@ -50,7 +56,7 @@ namespace FirebaseAdmin.Auth
 
         public string HttpMethod => "GET";
 
-        public IDictionary<string, IParameter> RequestParameters { get; private set; }
+        public IDictionary<string, IParameter> RequestParameters { get; }
 
         public IClientService Service { get; }
 
@@ -67,15 +73,13 @@ namespace FirebaseAdmin.Auth
 
         public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
         {
-            var queryParameters = string.Join("&", this.RequestParameters.Select(kvp => $"{kvp.Key}={kvp.Value.DefaultValue}"));
-
-            var request = new HttpRequestMessage()
+            var queryParameters = string.Join("&", this.RequestParameters.Select(
+                kvp => $"{kvp.Key}={kvp.Value.DefaultValue}"));
+            return new HttpRequestMessage()
             {
                 Method = System.Net.Http.HttpMethod.Get,
                 RequestUri = new Uri($"{this.baseUrl}/{this.RestPath}?{queryParameters}"),
             };
-
-            return request;
         }
 
         public Task<Stream> ExecuteAsStreamAsync()
@@ -101,7 +105,8 @@ namespace FirebaseAdmin.Auth
 
         public async Task<ExportedUserRecords> ExecuteAsync(CancellationToken cancellationToken)
         {
-            var downloadAccountResponse = await this.SendAndDeserializeAsync<DownloadAccountResponse>(this.CreateRequest(), cancellationToken);
+            var downloadAccountResponse = await this.SendAndDeserializeAsync(
+                this.CreateRequest(), cancellationToken);
             return ConvertToExportedUserRecords(downloadAccountResponse);
         }
 
@@ -110,17 +115,21 @@ namespace FirebaseAdmin.Auth
             return this.ExecuteAsync().Result;
         }
 
-        private static ExportedUserRecords ConvertToExportedUserRecords(DownloadAccountResponse downloadAccountResponse)
+        private static ExportedUserRecords ConvertToExportedUserRecords(
+            DownloadAccountResponse downloadAccountResponse)
         {
-            var userRecords = new List<ExportedUserRecord>();
-            downloadAccountResponse.Users?.ForEach(u => userRecords.Add(new ExportedUserRecord(u)));
-            return new ExportedUserRecords { NextPageToken = downloadAccountResponse.NextPageToken, Users = userRecords };
+            var userRecords = downloadAccountResponse.Users?.Select(u => new ExportedUserRecord(u));
+            return new ExportedUserRecords
+            {
+                NextPageToken = downloadAccountResponse.NextPageToken,
+                Users = userRecords,
+            };
         }
 
-        private async Task<TResult> SendAndDeserializeAsync<TResult>(HttpRequestMessage request, CancellationToken cancellationToken)
+        private async Task<DownloadAccountResponse> SendAndDeserializeAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var response = await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
@@ -130,7 +139,7 @@ namespace FirebaseAdmin.Auth
                 throw new FirebaseException(error);
             }
 
-            return this.SafeDeserialize<TResult>(json);
+            return this.SafeDeserialize(json);
         }
 
         private async Task<HttpResponseMessage> SendAsync(
@@ -147,11 +156,11 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        private TResult SafeDeserialize<TResult>(string json)
+        private DownloadAccountResponse SafeDeserialize(string json)
         {
             try
             {
-                return NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(json);
+                return NewtonsoftJsonSerializer.Instance.Deserialize<DownloadAccountResponse>(json);
             }
             catch (Exception e)
             {

@@ -17,6 +17,9 @@ using Google.Api.Gax.Rest;
 
 namespace FirebaseAdmin.Auth
 {
+    /// <summary>
+    /// Utility for paging through user accounts in the Google API client.
+    /// </summary>
     internal class ListUsersPageManager : IPageManager<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>
     {
         public void SetPageSize(ListUsersRequest request, int pageSize)

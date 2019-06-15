@@ -29,6 +29,6 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the users.
         /// </summary>
-        public List<ExportedUserRecord> Users { get; set; }
+        public IEnumerable<ExportedUserRecord> Users { get; set; }
     }
 }
