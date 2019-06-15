@@ -46,7 +46,12 @@ namespace FirebaseAdmin.Auth
             this.options = new ListUsersOptions(options);
             this.RequestParameters = new Dictionary<string, IParameter>();
             this.SetPageSize(this.options.PageSize ?? MaxListUsersResults);
-            if (!string.IsNullOrEmpty(this.options.PageToken))
+
+            if (this.options.PageToken == string.Empty)
+            {
+                throw new ArgumentException("Starting page token must not be empty.");
+            }
+            else if (this.options.PageToken != null)
             {
                 this.SetPageToken(this.options.PageToken);
             }

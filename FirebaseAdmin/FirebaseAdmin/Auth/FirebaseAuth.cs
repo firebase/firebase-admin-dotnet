@@ -528,7 +528,8 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets an async enumerable to iterate or page through users starting from the specified
         /// page token. If the page token is null or unspecified, iteration starts from the first
-        /// page.
+        /// page. See <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
+        /// Page Streaming</a> for more details on how to use this API.
         /// </summary>
         /// <param name="options">The options to control the starting point and page size.</param>
         /// <returns>A <see cref="PagedAsyncEnumerable{ExportedUserRecords, ExportedUserRecord}"/> instance.</returns>
