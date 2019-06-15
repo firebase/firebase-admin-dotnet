@@ -20,7 +20,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Api.Gax;
-using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
@@ -318,7 +317,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void ListUsers()
+        public async Task ListUsers()
         {
             var handler = new MockMessageHandler()
             {
@@ -328,9 +327,50 @@ namespace FirebaseAdmin.Auth.Tests
             var users = new List<ExportedUserRecord>();
 
             var pagedEnumerable = userManager.ListUsers(null);
-            foreach (var user in pagedEnumerable.ToEnumerable())
+            var enumerator = pagedEnumerable.GetEnumerator();
+            while (await enumerator.MoveNext())
+            {
+                users.Add(enumerator.Current);
+            }
+
+            Assert.Equal(6, users.Count);
+            Assert.Equal("user1", users[0].Uid);
+            Assert.Equal("user2", users[1].Uid);
+            Assert.Equal("user3", users[2].Uid);
+            Assert.Equal("user4", users[3].Uid);
+            Assert.Equal("user5", users[4].Uid);
+            Assert.Equal("user6", users[5].Uid);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("1000", query["maxResults"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("1000", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
+        }
+
+        [Fact]
+        public void ListUsersForEach()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+            var users = new List<ExportedUserRecord>();
+
+            var pagedEnumerable = userManager.ListUsers(null);
+            var enumerator = pagedEnumerable.ToEnumerable();
+            foreach (var user in enumerator)
             {
                 users.Add(user);
+                if (users.Count % 3 == 0)
+                {
+                    Assert.Equal(users.Count / 3, handler.Requests.Count);
+                }
             }
 
             Assert.Equal(6, users.Count);
@@ -394,38 +434,26 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public async Task ListUsersPaged()
+        public async Task ListUsersPage()
         {
             var handler = new MockMessageHandler()
             {
-                Response = ListUsersResponse,
+                Response = new List<string>()
+                {
+                    ListUsersResponse[0],
+                    ListUsersResponse[0],
+                },
             };
             var userManager = this.CreateFirebaseUserManager(handler);
-            var users = new List<ExportedUserRecord>();
-            var tokens = new List<string>();
 
-            var pagedEnumerable = userManager.ListUsers(new ListUsersOptions());
-            for (Page<ExportedUserRecord> userPage; (userPage = await pagedEnumerable.ReadPageAsync(3)) != null;)
+            var pagedEnumerable = userManager.ListUsers(null);
+            for (int i = 0; i < 2; i++)
             {
-                tokens.Add(userPage.NextPageToken);
-                users.AddRange(userPage);
-                if (userPage.NextPageToken == null)
-                {
-                    break;
-                }
+                var userPage = await pagedEnumerable.ReadPageAsync(3);
+
+                Assert.Equal("token", userPage.NextPageToken);
+                Assert.Equal(3, userPage.Count());
             }
-
-            Assert.Equal(2, tokens.Count);
-            Assert.Equal("token", tokens[0]);
-            Assert.Null(tokens[1]);
-
-            Assert.Equal(6, users.Count);
-            Assert.Equal("user1", users[0].Uid);
-            Assert.Equal("user2", users[1].Uid);
-            Assert.Equal("user3", users[2].Uid);
-            Assert.Equal("user4", users[3].Uid);
-            Assert.Equal("user5", users[4].Uid);
-            Assert.Equal("user6", users[5].Uid);
 
             Assert.Equal(2, handler.Requests.Count);
             var query = this.ExtractQueryParams(handler.Requests[0]);
@@ -433,13 +461,38 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("3", query["maxResults"]);
 
             query = this.ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
+            Assert.Single(query);
             Assert.Equal("3", query["maxResults"]);
+        }
+
+        [Fact]
+        public async Task ListUsersPageMultipleCalls()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+
+            var pagedEnumerable = userManager.ListUsers(null);
+            var userPage = await pagedEnumerable.ReadPageAsync(10);
+
+            Assert.Null(userPage.NextPageToken);
+            Assert.Equal(6, userPage.Count());
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("10", query["maxResults"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("7", query["maxResults"]);
             Assert.Equal("token", query["nextPageToken"]);
         }
 
         [Fact]
-        public void ListUsersAsRawResponses()
+        public async Task ListUsersAsRawResponses()
         {
             var handler = new MockMessageHandler()
             {
@@ -450,11 +503,12 @@ namespace FirebaseAdmin.Auth.Tests
             var tokens = new List<string>();
 
             var pagedEnumerable = userManager.ListUsers(null);
-            var responses = pagedEnumerable.AsRawResponses();
-            foreach (var records in responses.ToEnumerable())
+            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
+            while (await responses.MoveNext())
             {
-                users.AddRange(records.Users);
-                tokens.Add(records.NextPageToken);
+                users.AddRange(responses.Current.Users);
+                tokens.Add(responses.Current.NextPageToken);
+                Assert.Equal(tokens.Count, handler.Requests.Count);
             }
 
             Assert.Equal(2, tokens.Count);
@@ -561,24 +615,25 @@ namespace FirebaseAdmin.Auth.Tests
                 Response = ListUsersResponse,
             };
             var userManager = this.CreateFirebaseUserManager(handler);
-            var users = new List<ExportedUserRecord>();
 
             var pagedEnumerable = userManager.ListUsers(null);
-            var page = await pagedEnumerable.ReadPageAsync(3);
-            Assert.Equal(3, page.Count());
+            var enumerator = pagedEnumerable.GetEnumerator();
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.True(await enumerator.MoveNext());
+            }
 
             handler.StatusCode = HttpStatusCode.InternalServerError;
-            await Assert.ThrowsAsync<FirebaseException>(
-                async () => await pagedEnumerable.ReadPageAsync(3));
+            await Assert.ThrowsAsync<FirebaseException>(async () => await enumerator.MoveNext());
 
             Assert.Equal(2, handler.Requests.Count);
             var query = this.ExtractQueryParams(handler.Requests[0]);
             Assert.Single(query);
-            Assert.Equal("3", query["maxResults"]);
+            Assert.Equal("1000", query["maxResults"]);
 
             query = this.ExtractQueryParams(handler.Requests[1]);
             Assert.Equal(2, query.Count);
-            Assert.Equal("3", query["maxResults"]);
+            Assert.Equal("1000", query["maxResults"]);
             Assert.Equal("token", query["nextPageToken"]);
         }
 

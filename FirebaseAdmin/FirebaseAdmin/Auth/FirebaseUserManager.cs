@@ -142,9 +142,11 @@ namespace FirebaseAdmin.Auth
         internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
             ListUsersOptions options)
         {
-            var request = new ListUsersRequest(this.baseUrl, this.httpClient, options);
-            return new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
-                () => request, new ListUsersPageManager());
+            var factory = new ListUsersRequest.Factory(this.baseUrl, this.httpClient, options);
+            return new RestPagedAsyncEnumerable
+                <ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
+                () => factory.Create(),
+                new ListUsersPageManager());
         }
 
         /// <summary>

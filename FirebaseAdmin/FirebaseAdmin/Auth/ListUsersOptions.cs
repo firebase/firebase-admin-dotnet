@@ -12,34 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Google.Api.Gax;
-
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Options for <see cref="FirebaseAuth.ListUsersAsync(ListUsersOptions)"/> API.
+    /// Options for the <see cref="FirebaseAuth.ListUsersAsync(ListUsersOptions)"/> API.
     /// </summary>
     public sealed class ListUsersOptions
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ListUsersOptions"/> class.
-        /// </summary>
-        public ListUsersOptions() { }
-
-        internal ListUsersOptions(ListUsersOptions source)
-        {
-            this.PageSize = source?.PageSize;
-            this.PageToken = source?.PageToken;
-        }
-
-        /// <summary>
-        /// Gets or sets the number of results to return per page. This modifies the per-request page size.
-        /// It does not affect the total number of results returned. Must not exceed 1000.
+        /// Gets or sets the number of results to fetch in a single API call. This does not affect
+        /// the total number of results returned. Must not exceed 1000.
         /// </summary>
         public int? PageSize { get; set; }
 
         /// <summary>
-        /// Gets or sets the page token. If set, this token is used to indicate a continued list operation.
+        /// Gets or sets the page token. If set, this token is used to indicate a continued list
+        /// operation.
         /// </summary>
         public string PageToken { get; set; }
     }

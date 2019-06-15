@@ -30,30 +30,24 @@ namespace FirebaseAdmin.Auth
     /// Represents a request made using the Google API client to list all Firebase users in a
     /// project.
     /// </summary>
-    internal class ListUsersRequest : IClientServiceRequest<ExportedUserRecords>
+    internal sealed class ListUsersRequest : IClientServiceRequest<ExportedUserRecords>
     {
-        // This is the default page-size if no other value is set.
         private const int MaxListUsersResults = 1000;
 
         private readonly string baseUrl;
         private readonly HttpClient httpClient;
-        private readonly ListUsersOptions options;
 
-        internal ListUsersRequest(string baseUrl, HttpClient httpClient, ListUsersOptions options)
+        private ListUsersRequest(
+            string baseUrl, HttpClient httpClient, ListUsersOptions options = null)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
-            this.options = new ListUsersOptions(options);
             this.RequestParameters = new Dictionary<string, IParameter>();
-            this.SetPageSize(this.options.PageSize ?? MaxListUsersResults);
-
-            if (this.options.PageToken == string.Empty)
+            this.SetPageSize(options?.PageSize ?? MaxListUsersResults);
+            var pageToken = options?.PageToken;
+            if (pageToken != null)
             {
-                throw new ArgumentException("Starting page token must not be empty.");
-            }
-            else if (this.options.PageToken != null)
-            {
-                this.SetPageToken(this.options.PageToken);
+                this.SetPageToken(pageToken);
             }
         }
 
@@ -83,8 +77,12 @@ namespace FirebaseAdmin.Auth
 
         public void SetPageToken(string pageToken)
         {
+            if (pageToken == string.Empty)
+            {
+                throw new ArgumentException("Page token must not be empty.");
+            }
+
             this.AddOrUpdate("nextPageToken", pageToken);
-            this.options.PageToken = pageToken;
         }
 
         public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
@@ -122,19 +120,9 @@ namespace FirebaseAdmin.Auth
         public async Task<ExportedUserRecords> ExecuteAsync(CancellationToken cancellationToken)
         {
             var downloadAccountResponse = await this.SendAndDeserializeAsync(
-                this.CreateRequest(), cancellationToken);
-            return ConvertToExportedUserRecords(downloadAccountResponse);
-        }
-
-        public ExportedUserRecords Execute()
-        {
-            return this.ExecuteAsync().Result;
-        }
-
-        private static ExportedUserRecords ConvertToExportedUserRecords(
-            DownloadAccountResponse downloadAccountResponse)
-        {
-            var userRecords = downloadAccountResponse.Users?.Select(u => new ExportedUserRecord(u));
+                this.CreateRequest(), cancellationToken).ConfigureAwait(false);
+            var userRecords = downloadAccountResponse.Users?.Select(
+                u => new ExportedUserRecord(u));
             return new ExportedUserRecords
             {
                 NextPageToken = downloadAccountResponse.NextPageToken,
@@ -142,46 +130,9 @@ namespace FirebaseAdmin.Auth
             };
         }
 
-        private async Task<DownloadAccountResponse> SendAndDeserializeAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
+        public ExportedUserRecords Execute()
         {
-            var response = await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = "Response status code does not indicate success: "
-                            + $"{(int)response.StatusCode} ({response.StatusCode})"
-                            + $"{Environment.NewLine}{json}";
-                throw new FirebaseException(error);
-            }
-
-            return this.SafeDeserialize(json);
-        }
-
-        private async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await this.httpClient.SendAsync(request, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException e)
-            {
-                throw new FirebaseException("Error while calling Firebase Auth service", e);
-            }
-        }
-
-        private DownloadAccountResponse SafeDeserialize(string json)
-        {
-            try
-            {
-                return NewtonsoftJsonSerializer.Instance.Deserialize<DownloadAccountResponse>(json);
-            }
-            catch (Exception e)
-            {
-                throw new FirebaseException("Error while parsing Auth service response", e);
-            }
+            return this.ExecuteAsync().Result;
         }
 
         private void AddOrUpdate(string paramName, string value)
@@ -200,6 +151,89 @@ namespace FirebaseAdmin.Auth
             else
             {
                 this.RequestParameters[paramName] = parameter;
+            }
+        }
+
+        private async Task<DownloadAccountResponse> SendAndDeserializeAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var json = await this.SendAndReadAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+            try
+            {
+                return NewtonsoftJsonSerializer.Instance.Deserialize<DownloadAccountResponse>(json);
+            }
+            catch (Exception e)
+            {
+                throw new FirebaseException("Error while parsing Auth service response", e);
+            }
+        }
+
+        private async Task<string> SendAndReadAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var response = await this.SendAsync(request, cancellationToken)
+                    .ConfigureAwait(false);
+                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = "Response status code does not indicate success: "
+                                + $"{(int)response.StatusCode} ({response.StatusCode})"
+                                + $"{Environment.NewLine}{json}";
+                    throw new FirebaseException(error);
+                }
+
+                return json;
+            }
+            catch (HttpRequestException e)
+            {
+                throw new FirebaseException("Error while calling Firebase Auth service", e);
+            }
+        }
+
+        private async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return await this.httpClient.SendAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        internal class Factory
+        {
+            private readonly string baseUrl;
+            private readonly HttpClient httpClient;
+            private readonly ListUsersOptions options;
+
+            internal Factory(
+                string baseUrl, HttpClient httpClient, ListUsersOptions options = null)
+            {
+                this.baseUrl = baseUrl;
+                this.httpClient = httpClient;
+                this.options = new ListUsersOptions()
+                {
+                    PageSize = options?.PageSize ?? MaxListUsersResults,
+                    PageToken = options?.PageToken,
+                };
+
+                if (this.options.PageSize > MaxListUsersResults)
+                {
+                    throw new ArgumentException("Page size must not exceed 1000.");
+                }
+                else if (this.options.PageSize <= 0)
+                {
+                    throw new ArgumentException("Page size must be a positive integer.");
+                }
+                else if (this.options.PageToken == string.Empty)
+                {
+                    throw new ArgumentException("Initial page token must not be empty.");
+                }
+            }
+
+            internal ListUsersRequest Create()
+            {
+                return new ListUsersRequest(this.baseUrl, this.httpClient, this.options);
             }
         }
     }
