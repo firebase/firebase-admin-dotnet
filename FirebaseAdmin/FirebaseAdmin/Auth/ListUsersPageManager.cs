@@ -34,12 +34,7 @@ namespace FirebaseAdmin.Auth
 
         public IEnumerable<ExportedUserRecord> GetResources(ExportedUserRecords response)
         {
-            if (response?.Users == null)
-            {
-                return new ExportedUserRecord[0];
-            }
-
-            return response.Users;
+            return response?.Users;
         }
 
         public string GetNextPageToken(ExportedUserRecords response)

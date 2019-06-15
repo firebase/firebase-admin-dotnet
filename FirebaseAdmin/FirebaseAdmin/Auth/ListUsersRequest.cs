@@ -33,21 +33,23 @@ namespace FirebaseAdmin.Auth
     internal class ListUsersRequest : IClientServiceRequest<ExportedUserRecords>
     {
         // This is the default page-size if no other value is set.
-        internal const int MaxListUsersResults = 1000;
+        private const int MaxListUsersResults = 1000;
 
         private readonly string baseUrl;
         private readonly HttpClient httpClient;
-        private readonly ListUsersOptions requestOptions;
+        private readonly ListUsersOptions options;
 
-        internal ListUsersRequest(string baseUrl, HttpClient httpClient, ListUsersOptions requestOptions)
+        internal ListUsersRequest(string baseUrl, HttpClient httpClient, ListUsersOptions options)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
-            this.requestOptions = requestOptions;
+            this.options = new ListUsersOptions(options);
             this.RequestParameters = new Dictionary<string, IParameter>();
-
-            this.SetPageSize(requestOptions.PageSize ?? MaxListUsersResults);
-            this.SetPageToken(requestOptions.PageToken);
+            this.SetPageSize(this.options.PageSize ?? MaxListUsersResults);
+            if (!string.IsNullOrEmpty(this.options.PageToken))
+            {
+                this.SetPageToken(this.options.PageToken);
+            }
         }
 
         public string MethodName => "ListUsers";
@@ -62,13 +64,22 @@ namespace FirebaseAdmin.Auth
 
         public void SetPageSize(int pageSize)
         {
+            if (pageSize > MaxListUsersResults)
+            {
+                throw new ArgumentException("Page size must not exceed 1000.");
+            }
+            else if (pageSize <= 0)
+            {
+                throw new ArgumentException("Page size must be a positive integer.");
+            }
+
             this.AddOrUpdate("maxResults", pageSize.ToString());
         }
 
         public void SetPageToken(string pageToken)
         {
             this.AddOrUpdate("nextPageToken", pageToken);
-            this.requestOptions.PageToken = pageToken;
+            this.options.PageToken = pageToken;
         }
 
         public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)

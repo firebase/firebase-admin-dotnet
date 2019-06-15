@@ -22,16 +22,24 @@ namespace FirebaseAdmin.Auth
     public sealed class ListUsersOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="ListUsersOptions"/> class.
+        /// </summary>
+        public ListUsersOptions() { }
+
+        internal ListUsersOptions(ListUsersOptions source)
+        {
+            this.PageSize = source?.PageSize;
+            this.PageToken = source?.PageToken;
+        }
+
+        /// <summary>
         /// Gets or sets the number of results to return per page. This modifies the per-request page size.
-        /// It does not affect the total number of results returned.
+        /// It does not affect the total number of results returned. Must not exceed 1000.
         /// </summary>
         public int? PageSize { get; set; }
 
         /// <summary>
-        /// Gets or sets the page-token. If set, this token is used to indicate a continued list operation.
-        /// The value should be taken from the <c>NextPageToken</c> property of either a
-        /// <see cref="Page{TResource}"/> or a raw response from
-        /// <see cref="PagedEnumerable{TResponse, TResource}.AsRawResponses"/>.
+        /// Gets or sets the page token. If set, this token is used to indicate a continued list operation.
         /// </summary>
         public string PageToken { get; set; }
     }

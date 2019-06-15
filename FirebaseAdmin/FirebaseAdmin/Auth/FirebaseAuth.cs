@@ -526,15 +526,18 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets an async enumerable to page users starting from the specified pageToken. If the pageToken is empty, it starts from the first page.
+        /// Gets an async enumerable to iterate or page through users starting from the specified
+        /// page token. If the page token is null or unspecified, iteration starts from the first
+        /// page.
         /// </summary>
-        /// <param name="requestOptions">The options for the next remote call.</param>
-        /// <returns>A <see cref="PagedAsyncEnumerable{DownloadAccountResponse, UserRecord}"/> instance.</returns>
-        public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(ListUsersOptions requestOptions)
+        /// <param name="options">The options to control the starting point and page size.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{ExportedUserRecords, ExportedUserRecord}"/> instance.</returns>
+        public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(
+            ListUsersOptions options)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
-            return userManager.ListUsers(requestOptions);
+            return userManager.ListUsers(options);
         }
 
         /// <summary>

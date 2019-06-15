@@ -1,4 +1,4 @@
-// Copyright 2019, Google Inc. All rights reserved.
+﻿// Copyright 2019, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -140,9 +140,9 @@ namespace FirebaseAdmin.Auth
         }
 
         internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
-            ListUsersOptions requestOptions)
+            ListUsersOptions options)
         {
-            var request = new ListUsersRequest(this.baseUrl, this.httpClient, requestOptions);
+            var request = new ListUsersRequest(this.baseUrl, this.httpClient, options);
             return new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
                 () => request, new ListUsersPageManager());
         }
