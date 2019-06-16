@@ -19,7 +19,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
-using Google.Api.Gax;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
@@ -577,7 +576,23 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void ListUsersPageSizeTooLarge()
+        public async Task ListUsersReadPageSizeTooLarge()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var userManager = this.CreateFirebaseUserManager(handler);
+            var pagedEnumerable = userManager.ListUsers(null);
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await pagedEnumerable.ReadPageAsync(1001));
+
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public void ListUsersOptionsPageSizeTooLarge()
         {
             var handler = new MockMessageHandler()
             {
@@ -594,7 +609,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void ListUsersPageSizeTooSmall()
+        public void ListUsersOptionsPageSizeTooSmall()
         {
             var handler = new MockMessageHandler()
             {
@@ -615,7 +630,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void ListUsersPageTokenEmpty()
+        public void ListUsersOptionsPageTokenEmpty()
         {
             var handler = new MockMessageHandler()
             {

@@ -43,12 +43,8 @@ namespace FirebaseAdmin.Auth
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
             this.RequestParameters = new Dictionary<string, IParameter>();
-            this.SetPageSize(options.PageSize ?? MaxListUsersResults);
-            var pageToken = options.PageToken;
-            if (pageToken != null)
-            {
-                this.SetPageToken(pageToken);
-            }
+            this.SetPageSize(options.PageSize);
+            this.SetPageToken(options.PageToken);
         }
 
         public string MethodName => "ListUsers";
@@ -60,16 +56,6 @@ namespace FirebaseAdmin.Auth
         public IDictionary<string, IParameter> RequestParameters { get; }
 
         public IClientService Service { get; }
-
-        public void SetPageSize(int pageSize)
-        {
-            this.AddOrUpdate("maxResults", pageSize.ToString());
-        }
-
-        public void SetPageToken(string pageToken)
-        {
-            this.AddOrUpdate("nextPageToken", pageToken);
-        }
 
         public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
         {
@@ -119,6 +105,47 @@ namespace FirebaseAdmin.Auth
         public ExportedUserRecords Execute()
         {
             return this.ExecuteAsync().Result;
+        }
+
+        internal void SetPageSize(int? pageSize)
+        {
+            this.AddOrUpdate("maxResults", CheckPageSize(pageSize).ToString());
+        }
+
+        internal void SetPageToken(string pageToken)
+        {
+            if (pageToken != null)
+            {
+                this.AddOrUpdate("nextPageToken", CheckPageToken(pageToken));
+            }
+            else
+            {
+                this.RequestParameters.Remove("nextPageToken");
+            }
+        }
+
+        private static int CheckPageSize(int? pageSize)
+        {
+            if (pageSize > MaxListUsersResults)
+            {
+                throw new ArgumentException("Page size must not exceed 1000.");
+            }
+            else if (pageSize <= 0)
+            {
+                throw new ArgumentException("Page size must be positive.");
+            }
+
+            return pageSize ?? MaxListUsersResults;
+        }
+
+        private static string CheckPageToken(string token)
+        {
+            if (token == string.Empty)
+            {
+                throw new ArgumentException("Page token must not be empty.");
+            }
+
+            return token;
         }
 
         private void AddOrUpdate(string paramName, string value)
@@ -190,7 +217,7 @@ namespace FirebaseAdmin.Auth
         /// Factory class that validates arguments, and then creates new instances of the
         /// <see cref="ListUsersRequest"/> class.
         /// </summary>
-        internal class Factory
+        internal sealed class Factory
         {
             private readonly string baseUrl;
             private readonly HttpClient httpClient;
@@ -203,22 +230,9 @@ namespace FirebaseAdmin.Auth
                 this.httpClient = httpClient;
                 this.options = new ListUsersOptions()
                 {
-                    PageSize = options?.PageSize ?? MaxListUsersResults,
-                    PageToken = options?.PageToken,
+                    PageSize = CheckPageSize(options?.PageSize),
+                    PageToken = CheckPageToken(options?.PageToken),
                 };
-
-                if (this.options.PageSize > MaxListUsersResults)
-                {
-                    throw new ArgumentException("Page size must not exceed 1000.");
-                }
-                else if (this.options.PageSize <= 0)
-                {
-                    throw new ArgumentException("Page size must be positive.");
-                }
-                else if (this.options.PageToken == string.Empty)
-                {
-                    throw new ArgumentException("Initial page token must not be empty.");
-                }
             }
 
             internal ListUsersRequest Create()

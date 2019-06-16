@@ -22,7 +22,7 @@ namespace FirebaseAdmin.Auth
     public sealed class ExportedUserRecords
     {
         /// <summary>
-        /// Gets the token representing the next page of users.
+        /// Gets the token representing the next page of users. Null if there are no more pages.
         /// </summary>
         public string NextPageToken { get; internal set; }
 
