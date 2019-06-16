@@ -38,13 +38,13 @@ namespace FirebaseAdmin.Auth
         private readonly HttpClient httpClient;
 
         private ListUsersRequest(
-            string baseUrl, HttpClient httpClient, ListUsersOptions options = null)
+            string baseUrl, HttpClient httpClient, ListUsersOptions options)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
             this.RequestParameters = new Dictionary<string, IParameter>();
-            this.SetPageSize(options?.PageSize ?? MaxListUsersResults);
-            var pageToken = options?.PageToken;
+            this.SetPageSize(options.PageSize ?? MaxListUsersResults);
+            var pageToken = options.PageToken;
             if (pageToken != null)
             {
                 this.SetPageToken(pageToken);
@@ -200,6 +200,10 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Factory class that validates arguments, and then creates new instances of the
+        /// <see cref="ListUsersRequest"/> class.
+        /// </summary>
         internal class Factory
         {
             private readonly string baseUrl;
@@ -223,7 +227,7 @@ namespace FirebaseAdmin.Auth
                 }
                 else if (this.options.PageSize <= 0)
                 {
-                    throw new ArgumentException("Page size must be a positive integer.");
+                    throw new ArgumentException("Page size must be positive.");
                 }
                 else if (this.options.PageToken == string.Empty)
                 {
