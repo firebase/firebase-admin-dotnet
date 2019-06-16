@@ -22,13 +22,13 @@ namespace FirebaseAdmin.Auth
     public sealed class ExportedUserRecords
     {
         /// <summary>
-        /// Gets or sets the next page link.
+        /// Gets the token representing the next page of users.
         /// </summary>
-        public string NextPageToken { get; set; }
+        public string NextPageToken { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the users.
+        /// Gets the users included in the current page.
         /// </summary>
-        public IEnumerable<ExportedUserRecord> Users { get; set; }
+        public IEnumerable<ExportedUserRecord> Users { get; internal set; }
     }
 }

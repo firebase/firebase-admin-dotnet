@@ -63,25 +63,11 @@ namespace FirebaseAdmin.Auth
 
         public void SetPageSize(int pageSize)
         {
-            if (pageSize > MaxListUsersResults)
-            {
-                throw new ArgumentException("Page size must not exceed 1000.");
-            }
-            else if (pageSize <= 0)
-            {
-                throw new ArgumentException("Page size must be a positive integer.");
-            }
-
             this.AddOrUpdate("maxResults", pageSize.ToString());
         }
 
         public void SetPageToken(string pageToken)
         {
-            if (pageToken == string.Empty)
-            {
-                throw new ArgumentException("Page token must not be empty.");
-            }
-
             this.AddOrUpdate("nextPageToken", pageToken);
         }
 
