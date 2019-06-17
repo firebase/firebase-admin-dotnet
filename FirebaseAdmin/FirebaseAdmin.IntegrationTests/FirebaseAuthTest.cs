@@ -284,6 +284,38 @@ namespace FirebaseAdmin.IntegrationTests
                 async () => await FirebaseAuth.DefaultInstance.DeleteUserAsync("non.existing"));
         }
 
+        [Fact]
+        public async Task ListUsers()
+        {
+            var users = new List<string>();
+            for (int i = 0; i < 3; i++)
+            {
+                var user = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs()
+                {
+                    Password = "password",
+                });
+                users.Add(user.Uid);
+            }
+
+            var pagedEnumerable = FirebaseAuth.DefaultInstance.ListUsersAsync(null);
+            var enumerator = pagedEnumerable.GetEnumerator();
+
+            var listedUsers = new List<string>();
+            while (await enumerator.MoveNext())
+            {
+                var uid = enumerator.Current.Uid;
+                if (users.Contains(uid) && !listedUsers.Contains(uid))
+                {
+                    listedUsers.Add(uid);
+                    Assert.NotNull(enumerator.Current.PasswordHash);
+                    Assert.NotNull(enumerator.Current.PasswordSalt);
+                }
+            }
+
+            Assert.Equal(3, listedUsers.Count);
+            users.ForEach(async (uid) => await FirebaseAuth.DefaultInstance.DeleteUserAsync(uid));
+        }
+
         private static async Task<string> SignInWithCustomTokenAsync(string customToken)
         {
             var rb = new Google.Apis.Requests.RequestBuilder()
