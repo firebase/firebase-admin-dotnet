@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Api.Gax;
 using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth
@@ -518,6 +519,18 @@ namespace FirebaseAdmin.Auth
             };
 
             await userManager.UpdateUserAsync(user, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets an async enumerable to page users starting from the specified pageToken. If the pageToken is empty, it starts from the first page.
+        /// </summary>
+        /// <param name="requestOptions">The options for the next remote call.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{DownloadAccountResponse, UserRecord}"/> instance.</returns>
+        public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(ListUsersOptions requestOptions)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return userManager.ListUsers(requestOptions);
         }
 
         /// <summary>
