@@ -20,38 +20,29 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class ExportedUserRecord : UserRecord
     {
-        private readonly string passwordHash;
-        private readonly string passwordSalt;
-
         internal ExportedUserRecord(GetAccountInfoResponse.User user)
             : base(user)
         {
-            this.passwordHash = user.PasswordHash;
-            this.passwordSalt = user.PasswordSalt;
+            this.PasswordHash = user.PasswordHash;
+            this.PasswordSalt = user.PasswordSalt;
         }
 
         /// <summary>
         /// Gets the user's password hash as a base64-encoded string.
         /// If the Firebase Auth hashing algorithm (SCRYPT) was used to create the user account,
-        /// returns the base64-encoded password hash of the user.If a different hashing algorithm was
+        /// returns the base64-encoded password hash of the user. If a different hashing algorithm was
         /// used to create this user, as is typical when migrating from another Auth system, returns
         /// an empty string. Returns null if no password is set.
         /// </summary>
-        public string PasswordHash
-        {
-            get => this.passwordHash;
-        }
+        public string PasswordHash { get; }
 
         /// <summary>
         /// Gets the user's password salt as a base64-encoded string.
         /// If the Firebase Auth hashing algorithm (SCRYPT) was used to create the user account,
-        /// returns the base64-encoded password salt of the user.If a different hashing algorithm was
+        /// returns the base64-encoded password salt of the user. If a different hashing algorithm was
         /// used to create this user, as is typical when migrating from another Auth system, returns
         /// an empty string. Returns null if no password is set.
         /// </summary>
-        public string PasswordSalt
-        {
-            get => this.passwordSalt;
-        }
+        public string PasswordSalt { get; }
     }
 }

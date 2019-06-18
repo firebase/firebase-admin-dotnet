@@ -32,6 +32,6 @@ namespace FirebaseAdmin.Auth
         /// Gets or sets the users.
         /// </summary>
         [JsonProperty("users")]
-        public List<GetAccountInfoResponse.User> Users { get; set; }
+        public IEnumerable<GetAccountInfoResponse.User> Users { get; set; }
     }
 }

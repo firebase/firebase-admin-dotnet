@@ -1,4 +1,4 @@
-// Copyright 2019, Google Inc. All rights reserved.
+﻿// Copyright 2019, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,8 +34,6 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal class FirebaseUserManager : IDisposable
     {
-        public const int MaxListUsersResults = 1000;
-
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
         private readonly ConfigurableHttpClient httpClient;
@@ -141,13 +139,14 @@ namespace FirebaseAdmin.Auth
             return await this.GetUserAsync(query, cancellationToken);
         }
 
-        internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(ListUsersOptions requestOptions)
+        internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
+            ListUsersOptions options)
         {
-            var restPagedAsyncEnumerable = new RestPagedAsyncEnumerable<ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
-                () => this.CreateListUserRequest(requestOptions),
+            var factory = new ListUsersRequest.Factory(this.baseUrl, this.httpClient, options);
+            return new RestPagedAsyncEnumerable
+                <ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
+                () => factory.Create(),
                 new ListUsersPageManager());
-
-            return restPagedAsyncEnumerable;
         }
 
         /// <summary>
@@ -218,11 +217,6 @@ namespace FirebaseAdmin.Auth
             {
                 throw new FirebaseException($"Failed to delete user: {uid}");
             }
-        }
-
-        internal ListUsersRequest CreateListUserRequest(ListUsersOptions requestOptions)
-        {
-            return new ListUsersRequest(this.baseUrl, this.httpClient, requestOptions);
         }
 
         private async Task<UserRecord> GetUserAsync(UserQuery query, CancellationToken cancellationToken)

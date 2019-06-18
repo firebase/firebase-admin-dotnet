@@ -19,8 +19,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
-using Google.Api.Gax;
-using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
@@ -37,6 +35,24 @@ namespace FirebaseAdmin.Auth.Tests
 
         private static readonly string CreateUserResponse = @"{""localId"": ""user1""}";
         private static readonly string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
+        private static readonly IList<string> ListUsersResponse = new List<string>()
+        {
+            @"{
+                ""nextPageToken"": ""token"",
+                ""users"": [
+                    {""localId"": ""user1""},
+                    {""localId"": ""user2""},
+                    {""localId"": ""user3""}
+                ]
+            }",
+            @"{
+                ""users"": [
+                    {""localId"": ""user4""},
+                    {""localId"": ""user5""},
+                    {""localId"": ""user6""}
+                ]
+            }",
+        };
 
         [Fact]
         public async Task GetUserById()
@@ -289,87 +305,382 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public async Task ListUsersPaged()
+        public async Task ListUsers()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var users = new List<ExportedUserRecord>();
+
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            var enumerator = pagedEnumerable.GetEnumerator();
+            while (await enumerator.MoveNext())
+            {
+                users.Add(enumerator.Current);
+                if (users.Count % 3 == 0)
+                {
+                    Assert.Equal(users.Count / 3, handler.Requests.Count);
+                }
+            }
+
+            Assert.Equal(6, users.Count);
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal($"user{i + 1}", users[i].Uid);
+            }
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("1000", query["maxResults"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("1000", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
+        }
+
+        [Fact]
+        public void ListUsersForEach()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var users = new List<ExportedUserRecord>();
+
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            foreach (var user in pagedEnumerable.ToEnumerable())
+            {
+                users.Add(user);
+                if (users.Count % 3 == 0)
+                {
+                    Assert.Equal(users.Count / 3, handler.Requests.Count);
+                }
+            }
+
+            Assert.Equal(6, users.Count);
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal($"user{i + 1}", users[i].Uid);
+            }
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("1000", query["maxResults"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("1000", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
+        }
+
+        [Fact]
+        public void ListUsersCustomOptions()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var users = new List<ExportedUserRecord>();
+            var customOptions = new ListUsersOptions()
+            {
+                PageSize = 3,
+                PageToken = "custom-token",
+            };
+
+            var pagedEnumerable = auth.ListUsersAsync(customOptions);
+            foreach (var user in pagedEnumerable.ToEnumerable())
+            {
+                users.Add(user);
+            }
+
+            Assert.Equal(6, users.Count);
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal($"user{i + 1}", users[i].Uid);
+            }
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["maxResults"]);
+            Assert.Equal("custom-token", query["nextPageToken"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
+        }
+
+        [Fact]
+        public async Task ListUsersReadPage()
         {
             var handler = new MockMessageHandler()
             {
                 Response = new List<string>()
                 {
-                    @"{
-                        ""nextPageToken"": ""token"",
-                        ""users"": [
-                            {""localId"": ""user1""},
-                            {""localId"": ""user2""},
-                            {""localId"": ""user3""}
-                        ]
-                    }",
-                    @"{
-                        ""users"": [
-                            {""localId"": ""user4""},
-                            {""localId"": ""user5""},
-                            {""localId"": ""user6""}
-                        ]
-                    }",
+                    ListUsersResponse[0],
+                    ListUsersResponse[0],
                 },
             };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var usersPage = auth.ListUsersAsync(new ListUsersOptions());
+            // Retrieve a page of users.
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            var userPage = await pagedEnumerable.ReadPageAsync(3);
 
-            var users = new List<ExportedUserRecord>();
-            var tokens = new List<string>();
-            var pageCounter = 0;
-            for (Page<ExportedUserRecord> userPage; (userPage = await usersPage.ReadPageAsync(3)) != null;)
-            {
-                pageCounter++;
-                tokens.Add(userPage.NextPageToken);
-                users.AddRange(userPage);
-                if (string.IsNullOrEmpty(userPage.NextPageToken))
-                {
-                    break;
-                }
-            }
+            Assert.Equal("token", userPage.NextPageToken);
+            Assert.Equal(3, userPage.Count());
+            Assert.Equal(1, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("3", query["maxResults"]);
 
-            Assert.Equal(2, pageCounter);
-            Assert.Equal(6, users.Count);
-            Assert.Equal("token", tokens[0]);
-            Assert.Null(tokens[1]);
-            Assert.Equal("user1", users[0].Uid);
-            Assert.Equal("user2", users[1].Uid);
-            Assert.Equal("user3", users[2].Uid);
-            Assert.Equal("user4", users[3].Uid);
-            Assert.Equal("user5", users[4].Uid);
-            Assert.Equal("user6", users[5].Uid);
+            // Retrieve the same page of users again.
+            userPage = await pagedEnumerable.ReadPageAsync(3);
+
+            Assert.Equal("token", userPage.NextPageToken);
+            Assert.Equal(3, userPage.Count());
+            Assert.Equal(2, handler.Requests.Count);
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Single(query);
+            Assert.Equal("3", query["maxResults"]);
         }
 
         [Fact]
-        public async Task ListUsers()
+        public async Task ListUsersByPages()
         {
-            var nextPageToken = Guid.NewGuid().ToString();
             var handler = new MockMessageHandler()
             {
-                Response = new DownloadAccountResponse()
-                {
-                    NextPageToken = nextPageToken,
-                    Users = new List<GetAccountInfoResponse.User>()
-                    {
-                        new GetAccountInfoResponse.User() { UserId = "user1" },
-                        new GetAccountInfoResponse.User() { UserId = "user2" },
-                        new GetAccountInfoResponse.User() { UserId = "user3" },
-                    },
-                },
+                Response = ListUsersResponse,
             };
+            var auth = this.CreateFirebaseAuth(handler);
+            var users = new List<ExportedUserRecord>();
 
+            // Read page 1.
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            var userPage = await pagedEnumerable.ReadPageAsync(3);
+
+            Assert.Equal(3, userPage.Count());
+            Assert.Equal("token", userPage.NextPageToken);
+            Assert.Single(handler.Requests);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("3", query["maxResults"]);
+            users.AddRange(userPage);
+
+            // Read page 2.
+            pagedEnumerable = auth.ListUsersAsync(new ListUsersOptions()
+            {
+                PageToken = userPage.NextPageToken,
+            });
+            userPage = await pagedEnumerable.ReadPageAsync(3);
+
+            Assert.Equal(3, userPage.Count());
+            Assert.Null(userPage.NextPageToken);
+            Assert.Equal(2, handler.Requests.Count);
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
+            users.AddRange(userPage);
+
+            Assert.Equal(6, users.Count);
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal($"user{i + 1}", users[i].Uid);
+            }
+        }
+
+        [Fact]
+        public async Task ListUsersReadLargePageSize()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var usersPage = auth.ListUsersAsync(new ListUsersOptions());
-            var listUsersRequest = await usersPage.ReadPageAsync(3);
-            var userRecords = listUsersRequest.ToList();
-            Assert.Equal(nextPageToken, listUsersRequest.NextPageToken);
-            Assert.Equal(3, userRecords.Count);
-            Assert.Equal("user1", userRecords[0].Uid);
-            Assert.Equal("user2", userRecords[1].Uid);
-            Assert.Equal("user3", userRecords[2].Uid);
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            var userPage = await pagedEnumerable.ReadPageAsync(10);
+
+            Assert.Null(userPage.NextPageToken);
+            Assert.Equal(6, userPage.Count());
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("10", query["maxResults"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("7", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
+        }
+
+        [Fact]
+        public async Task ListUsersAsRawResponses()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var users = new List<ExportedUserRecord>();
+            var tokens = new List<string>();
+
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
+            while (await responses.MoveNext())
+            {
+                users.AddRange(responses.Current.Users);
+                tokens.Add(responses.Current.NextPageToken);
+                Assert.Equal(tokens.Count, handler.Requests.Count);
+            }
+
+            Assert.Equal(2, tokens.Count);
+            Assert.Equal("token", tokens[0]);
+            Assert.Null(tokens[1]);
+
+            Assert.Equal(6, users.Count);
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal($"user{i + 1}", users[i].Uid);
+            }
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("1000", query["maxResults"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("1000", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
+        }
+
+        [Fact]
+        public async Task ListUsersReadPageSizeTooLarge()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var pagedEnumerable = auth.ListUsersAsync(null);
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await pagedEnumerable.ReadPageAsync(1001));
+
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public void ListUsersOptionsPageSizeTooLarge()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var options = new ListUsersOptions()
+            {
+                PageSize = 1001,
+            };
+
+            Assert.Throws<ArgumentException>(() => auth.ListUsersAsync(options));
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public void ListUsersOptionsPageSizeTooSmall()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            foreach (var pageSize in new int[] { 0, -1 })
+            {
+                var options = new ListUsersOptions()
+                {
+                    PageSize = pageSize,
+                };
+
+                Assert.Throws<ArgumentException>(() => auth.ListUsersAsync(options));
+                Assert.Empty(handler.Requests);
+            }
+        }
+
+        [Fact]
+        public void ListUsersOptionsPageTokenEmpty()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var options = new ListUsersOptions()
+            {
+                PageToken = string.Empty,
+            };
+
+            Assert.Throws<ArgumentException>(() => auth.ListUsersAsync(options));
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public async Task ListUsersHttpError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            await Assert.ThrowsAsync<FirebaseException>(async () => await pagedEnumerable.First());
+
+            Assert.Single(handler.Requests);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("1000", query["maxResults"]);
+        }
+
+        [Fact]
+        public async Task ListUsersIntermittentHttpError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListUsersResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            var enumerator = pagedEnumerable.GetEnumerator();
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.True(await enumerator.MoveNext());
+            }
+
+            handler.StatusCode = HttpStatusCode.InternalServerError;
+            await Assert.ThrowsAsync<FirebaseException>(async () => await enumerator.MoveNext());
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("1000", query["maxResults"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("1000", query["maxResults"]);
+            Assert.Equal("token", query["nextPageToken"]);
         }
 
         [Fact]
@@ -1072,6 +1383,12 @@ namespace FirebaseAdmin.Auth.Tests
                 TokenFactory = new Lazy<FirebaseTokenFactory>(),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
             });
+        }
+
+        private IDictionary<string, string> ExtractQueryParams(MockMessageHandler.IncomingRequest req)
+        {
+            return req.Url.Query.Substring(1).Split('&').ToDictionary(
+                entry => entry.Split('=')[0], entry => entry.Split('=')[1]);
         }
     }
 }
