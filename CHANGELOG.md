@@ -1,5 +1,6 @@
 # Unreleased
 
+- [added] Implemented the `ListUsersAsync()` API.
 - [added] Implemented the `UpdateUserAsync()` API.
 - [added] Implemented the `CreateUserAsync()` and `UserRecordArgs` APIs.
 

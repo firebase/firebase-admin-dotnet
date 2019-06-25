@@ -527,7 +527,8 @@ namespace FirebaseAdmin.Auth
         /// page. See <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
         /// Page Streaming</a> for more details on how to use this API.
         /// </summary>
-        /// <param name="options">The options to control the starting point and page size.</param>
+        /// <param name="options">The options to control the starting point and page size. Pass null
+        /// to list from the beginning with default settings.</param>
         /// <returns>A <see cref="PagedAsyncEnumerable{ExportedUserRecords, ExportedUserRecord}"/> instance.</returns>
         public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(
             ListUsersOptions options)
