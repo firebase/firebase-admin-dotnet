@@ -264,12 +264,12 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// </summary>
-        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <param name="args">Attributes to add to the new user account.</param>
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// the newly created user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
         public async Task<UserRecord> CreateUserAsync(UserRecordArgs args)
         {
             return await this.CreateUserAsync(args, default(CancellationToken))
@@ -279,14 +279,14 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// </summary>
-        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <param name="args">Attributes to add to the new user account.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// the newly created user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
         public async Task<UserRecord> CreateUserAsync(
             UserRecordArgs args, CancellationToken cancellationToken)
         {
@@ -405,7 +405,7 @@ namespace FirebaseAdmin.Auth
         /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
         /// </summary>
-        /// <param name="args">Attributes that will be updated.</param>
+        /// <param name="args">The attributes to update.</param>
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// the updated user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
@@ -421,7 +421,7 @@ namespace FirebaseAdmin.Auth
         /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
         /// </summary>
-        /// <param name="args">Attributes that will be updated.</param>
+        /// <param name="args">The attributes to update.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
@@ -527,7 +527,8 @@ namespace FirebaseAdmin.Auth
         /// page. See <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
         /// Page Streaming</a> for more details on how to use this API.
         /// </summary>
-        /// <param name="options">The options to control the starting point and page size.</param>
+        /// <param name="options">The options to control the starting point and page size. Pass null
+        /// to list from the beginning with default settings.</param>
         /// <returns>A <see cref="PagedAsyncEnumerable{ExportedUserRecords, ExportedUserRecord}"/> instance.</returns>
         public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(
             ListUsersOptions options)
