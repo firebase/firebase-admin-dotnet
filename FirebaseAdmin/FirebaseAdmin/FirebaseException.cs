@@ -26,5 +26,16 @@ namespace FirebaseAdmin
 
         internal FirebaseException(string message, Exception inner)
         : base(message, inner) { }
+
+        internal FirebaseException(ErrorCode code, string message, Exception inner = null)
+        : base(message, inner)
+        {
+            this.ErrorCode = code;
+        }
+
+        /// <summary>
+        /// Gets the platform-wide error code associated with this exception.
+        /// </summary>
+        public ErrorCode ErrorCode { get; private set; }
     }
 }
