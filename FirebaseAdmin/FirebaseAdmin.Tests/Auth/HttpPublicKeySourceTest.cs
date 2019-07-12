@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Auth.Tests
             var handler = new MockMessageHandler()
             {
                 Response = File.ReadAllBytes("./resources/public_keys.json"),
-                ApplyHeaders = (header) => header.CacheControl = cacheControl,
+                ApplyHeaders = (header, _) => header.CacheControl = cacheControl,
             };
             var clientFactory = new MockHttpClientFactory(handler);
             var keyManager = new HttpPublicKeySource(

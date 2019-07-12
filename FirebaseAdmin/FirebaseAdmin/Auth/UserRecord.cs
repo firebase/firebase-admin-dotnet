@@ -22,7 +22,7 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    public sealed class UserRecord : IUserInfo
+    public class UserRecord : IUserInfo
     {
         internal static readonly DateTime UnixEpoch = new DateTime(
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);

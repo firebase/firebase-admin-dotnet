@@ -26,9 +26,10 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class UserRecordArgs
     {
-        private static readonly object Unspecified = new object();
-
-        private object customClaims = Unspecified;
+        private Optional<string> displayName;
+        private Optional<string> photoUrl;
+        private Optional<string> phoneNumber;
+        private Optional<IReadOnlyDictionary<string, object>> customClaims;
         private bool? disabled = null;
         private bool? emailVerified = null;
 
@@ -45,12 +46,20 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the phone number of the user.
         /// </summary>
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber
+        {
+            get => this.phoneNumber?.Value;
+            set => this.phoneNumber = this.Wrap(value);
+        }
 
         /// <summary>
         /// Gets or sets the display name of the user account.
         /// </summary>
-        public string DisplayName { get; set; }
+        public string DisplayName
+        {
+            get => this.displayName?.Value;
+            set => this.displayName = this.Wrap(value);
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether the user email address has been verified or not.
@@ -64,7 +73,11 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the photo URL of the user.
         /// </summary>
-        public string PhotoUrl { get; set; }
+        public string PhotoUrl
+        {
+            get => this.photoUrl?.Value;
+            set => this.photoUrl = this.Wrap(value);
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether the user account should be disabled by default or not.
@@ -82,8 +95,8 @@ namespace FirebaseAdmin.Auth
 
         internal IReadOnlyDictionary<string, object> CustomClaims
         {
-            get => this.GetIfSpecified<Dictionary<string, object>>(this.customClaims);
-            set => this.customClaims = value;
+            get => this.customClaims?.Value;
+            set => this.customClaims = this.Wrap(value);
         }
 
         internal CreateUserRequest ToCreateUserRequest()
@@ -212,14 +225,9 @@ namespace FirebaseAdmin.Auth
             return customClaimsString;
         }
 
-        private T GetIfSpecified<T>(object value)
+        private Optional<T> Wrap<T>(T value)
         {
-            if (value == Unspecified)
-            {
-                return default(T);
-            }
-
-            return (T)value;
+            return new Optional<T>(value);
         }
 
         internal sealed class CreateUserRequest
@@ -266,17 +274,122 @@ namespace FirebaseAdmin.Auth
             internal UpdateUserRequest(UserRecordArgs args)
             {
                 this.Uid = CheckUid(args.Uid, required: true);
-                if (args.customClaims != Unspecified)
+                if (args.customClaims != null)
                 {
-                    this.CustomClaims = CheckCustomClaims(args.CustomClaims);
+                    this.CustomClaims = CheckCustomClaims(args.customClaims.Value);
+                }
+
+                this.Disabled = args.disabled;
+                this.Email = CheckEmail(args.Email);
+                this.EmailVerified = args.emailVerified;
+                this.Password = CheckPassword(args.Password);
+
+                if (args.displayName != null)
+                {
+                    var displayName = args.displayName.Value;
+                    if (displayName == null)
+                    {
+                        this.AddDeleteAttribute("DISPLAY_NAME");
+                    }
+                    else
+                    {
+                        this.DisplayName = displayName;
+                    }
+                }
+
+                if (args.photoUrl != null)
+                {
+                    var photoUrl = args.photoUrl.Value;
+                    if (photoUrl == null)
+                    {
+                        this.AddDeleteAttribute("PHOTO_URL");
+                    }
+                    else
+                    {
+                        this.PhotoUrl = CheckPhotoUrl(photoUrl);
+                    }
+                }
+
+                if (args.phoneNumber != null)
+                {
+                    var phoneNumber = args.phoneNumber.Value;
+                    if (phoneNumber == null)
+                    {
+                        this.AddDeleteProvider("phone");
+                    }
+                    else
+                    {
+                        this.PhoneNumber = CheckPhoneNumber(phoneNumber);
+                    }
                 }
             }
+
+            [JsonProperty("customAttributes")]
+            public string CustomClaims { get; set; }
+
+            [JsonProperty("deleteAttribute")]
+            public IList<string> DeleteAttribute { get; set; }
+
+            [JsonProperty("deleteProvider")]
+            public IList<string> DeleteProvider { get; set; }
+
+            [JsonProperty("disableUser")]
+            public bool? Disabled { get; set; }
+
+            [JsonProperty("displayName")]
+            public string DisplayName { get; set; }
+
+            [JsonProperty("email")]
+            public string Email { get; set; }
+
+            [JsonProperty("emailVerified")]
+            public bool? EmailVerified { get; set; }
+
+            [JsonProperty("password")]
+            public string Password { get; set; }
+
+            [JsonProperty("phoneNumber")]
+            public string PhoneNumber { get; set; }
+
+            [JsonProperty("photoUrl")]
+            public string PhotoUrl { get; set; }
 
             [JsonProperty("localId")]
             public string Uid { get; set; }
 
-            [JsonProperty("customAttributes")]
-            public string CustomClaims { get; set; }
+            private void AddDeleteAttribute(string attribute)
+            {
+                if (this.DeleteAttribute == null)
+                {
+                    this.DeleteAttribute = new List<string>();
+                }
+
+                this.DeleteAttribute.Add(attribute);
+            }
+
+            private void AddDeleteProvider(string provider)
+            {
+                if (this.DeleteProvider == null)
+                {
+                    this.DeleteProvider = new List<string>();
+                }
+
+                this.DeleteProvider.Add(provider);
+            }
+        }
+
+        /// <summary>
+        /// Wraps a nullable value. Used to differentiate between parameters that have not been set, and
+        /// the parameters that have been explicitly set to null.
+        /// </summary>
+        private class Optional<T>
+        {
+            internal Optional(T value)
+            {
+                this.Value = value;
+            }
+
+            internal T Value { get; private set; }
         }
     }
 }

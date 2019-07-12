@@ -75,11 +75,11 @@ namespace FirebaseAdmin.Messaging.Tests
             var response = await client.SendAsync(message);
 
             Assert.Equal("test-response", response);
-            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(handler.Request);
+            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(handler.LastRequestBody);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
-            var versionHeader = handler.RequestHeaders.GetValues("X-Firebase-Client").First();
+            var versionHeader = handler.LastRequestHeaders.GetValues("X-Firebase-Client").First();
             Assert.Equal(FirebaseMessagingClient.ClientVersion, versionHeader);
         }
 
@@ -103,11 +103,11 @@ namespace FirebaseAdmin.Messaging.Tests
             var response = await client.SendAsync(message, dryRun: true);
 
             Assert.Equal("test-response", response);
-            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(handler.Request);
+            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(handler.LastRequestBody);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.True(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
-            var versionHeader = handler.RequestHeaders.GetValues("X-Firebase-Client").First();
+            var versionHeader = handler.LastRequestHeaders.GetValues("X-Firebase-Client").First();
             Assert.Equal(FirebaseMessagingClient.ClientVersion, versionHeader);
         }
 
@@ -148,7 +148,7 @@ Vary: Referer
             var handler = new MockMessageHandler()
             {
                 Response = rawResponse,
-                ApplyContentHeaders = (headers) =>
+                ApplyHeaders = (_, headers) =>
                 {
                     headers.Remove("Content-Type");
                     headers.TryAddWithoutValidation("Content-Type", "multipart/mixed; boundary=batch_test-boundary");
@@ -172,7 +172,7 @@ Vary: Referer
             Assert.Equal("projects/fir-adminintegrationtests/messages/5903525881088369386", response.Responses[1].MessageId);
             Assert.Equal(1, handler.Calls);
             var versionHeader = $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
-            Assert.Equal(2, this.CountLinesWithPrefix(handler.Request, versionHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, versionHeader));
         }
 
         [Fact]
@@ -223,7 +223,7 @@ Vary: Referer
             var handler = new MockMessageHandler()
             {
                 Response = rawResponse,
-                ApplyContentHeaders = (headers) =>
+                ApplyHeaders = (_, headers) =>
                 {
                     headers.Remove("Content-Type");
                     headers.TryAddWithoutValidation("Content-Type", "multipart/mixed; boundary=batch_test-boundary");
@@ -248,7 +248,7 @@ Vary: Referer
             Assert.NotNull(response.Responses[1].Exception);
             Assert.Equal(1, handler.Calls);
             var versionHeader = $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
-            Assert.Equal(2, this.CountLinesWithPrefix(handler.Request, versionHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, versionHeader));
         }
 
         [Fact]
@@ -295,7 +295,7 @@ Vary: Referer
                 async () => await client.SendAsync(message));
             Assert.Contains("not json", ex.Message);
             var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
-                handler.Request);
+                handler.LastRequestBody);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);

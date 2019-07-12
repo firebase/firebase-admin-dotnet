@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>1.6.0</Version>
-    <TargetFrameworks>netstandard1.5;net45</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.5</TargetFrameworks>
+    <Version>1.7.0</Version>
+    <TargetFrameworks>netstandard1.5;netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.5;netstandard2.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyOriginatorKeyFile>../../FirebaseAdmin.snk</AssemblyOriginatorKeyFile>
@@ -17,7 +17,7 @@
     <PackageTags>firebase;Google;Cloud</PackageTags>
     <Copyright>Copyright 2018 Google LLC</Copyright>
     <Authors>Google Inc.</Authors>
-    <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Firebase/firebase-admin-dotnet</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Firebase/firebase-admin-dotnet</RepositoryUrl>
@@ -25,7 +25,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Apis.Auth" Version="1.35.1" />
+    <PackageReference Include="Google.Api.Gax" Version="2.7.0" />
+    <PackageReference Include="Google.Api.Gax.Rest" Version="2.7.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.40.0" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.1" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61">

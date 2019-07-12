@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Api.Gax;
+using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth
 {
@@ -25,22 +27,18 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class FirebaseAuth : IFirebaseService
     {
-        private readonly FirebaseApp app;
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
         private readonly object authLock = new object();
         private bool deleted;
 
-        private FirebaseAuth(FirebaseApp app)
+        internal FirebaseAuth(FirebaseAuthArgs args)
         {
-            this.app = app;
-            this.tokenFactory = new Lazy<FirebaseTokenFactory>(
-                () => FirebaseTokenFactory.Create(this.app), true);
-            this.idTokenVerifier = new Lazy<FirebaseTokenVerifier>(
-                () => FirebaseTokenVerifier.CreateIDTokenVerifier(this.app), true);
-            this.userManager = new Lazy<FirebaseUserManager>(
-                () => FirebaseUserManager.Create(this.app), true);
+            args.ThrowIfNull(nameof(args));
+            this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
+            this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
+            this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
         }
 
         /// <summary>
@@ -77,7 +75,7 @@ namespace FirebaseAdmin.Auth
 
             return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
             {
-                return new FirebaseAuth(app);
+                return new FirebaseAuth(FirebaseAuthArgs.Create(app));
             });
         }
 
@@ -266,12 +264,12 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// </summary>
-        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <param name="args">Attributes to add to the new user account.</param>
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// the newly created user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
         public async Task<UserRecord> CreateUserAsync(UserRecordArgs args)
         {
             return await this.CreateUserAsync(args, default(CancellationToken))
@@ -281,14 +279,14 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// </summary>
-        /// <param name="args">Attributes that will be added to the new user account.</param>
+        /// <param name="args">Attributes to add to the new user account.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// the newly created user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating rhe user account.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
         public async Task<UserRecord> CreateUserAsync(
             UserRecordArgs args, CancellationToken cancellationToken)
         {
@@ -404,6 +402,44 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
+        /// </summary>
+        /// <param name="args">The attributes to update.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the updated user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while updating the user account.</exception>
+        public async Task<UserRecord> UpdateUserAsync(UserRecordArgs args)
+        {
+            return await this.UpdateUserAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
+        /// </summary>
+        /// <param name="args">The attributes to update.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the updated user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseException">If an error occurs while updating the user account.</exception>
+        public async Task<UserRecord> UpdateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var uid = await userManager.UpdateUserAsync(args, cancellationToken)
+                .ConfigureAwait(false);
+            return await userManager.GetUserByIdAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes the user identified by the specified <paramref name="uid"/>.
         /// </summary>
         /// <param name="uid">A user ID string.</param>
@@ -486,6 +522,23 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets an async enumerable to iterate or page through users starting from the specified
+        /// page token. If the page token is null or unspecified, iteration starts from the first
+        /// page. See <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
+        /// Page Streaming</a> for more details on how to use this API.
+        /// </summary>
+        /// <param name="options">The options to control the starting point and page size. Pass null
+        /// to list from the beginning with default settings.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{ExportedUserRecords, ExportedUserRecord}"/> instance.</returns>
+        public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(
+            ListUsersOptions options)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return userManager.ListUsers(options);
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
@@ -508,6 +561,28 @@ namespace FirebaseAdmin.Auth
                 }
 
                 return func();
+            }
+        }
+
+        internal sealed class FirebaseAuthArgs
+        {
+            internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
+
+            internal Lazy<FirebaseTokenVerifier> IdTokenVerifier { get; set; }
+
+            internal Lazy<FirebaseUserManager> UserManager { get; set; }
+
+            internal static FirebaseAuthArgs Create(FirebaseApp app)
+            {
+                return new FirebaseAuthArgs()
+                {
+                    TokenFactory = new Lazy<FirebaseTokenFactory>(
+                        () => FirebaseTokenFactory.Create(app), true),
+                    IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
+                        () => FirebaseTokenVerifier.CreateIDTokenVerifier(app), true),
+                    UserManager = new Lazy<FirebaseUserManager>(
+                        () => FirebaseUserManager.Create(app), true),
+                };
             }
         }
     }

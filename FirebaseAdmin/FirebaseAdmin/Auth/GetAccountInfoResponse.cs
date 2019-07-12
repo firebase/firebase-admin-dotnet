@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
@@ -38,6 +36,18 @@ namespace FirebaseAdmin.Auth
             /// </summary>
             [JsonProperty(PropertyName = "email")]
             public string Email { get; set; }
+
+            /// <summary>
+            /// Gets or sets the user's password hash.
+            /// </summary>
+            [JsonProperty(PropertyName = "passwordHash")]
+            public string PasswordHash { get; set; }
+
+            /// <summary>
+            /// Gets or sets the user's password salt.
+            /// </summary>
+            [JsonProperty(PropertyName = "salt")]
+            public string PasswordSalt { get; set; }
 
             /// <summary>
             /// Gets or sets the user's phone number.

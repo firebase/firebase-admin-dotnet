@@ -1,4 +1,4 @@
-// Copyright 2019, Google Inc. All rights reserved.
+﻿// Copyright 2019, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Auth.OAuth2;
+using Google.Api.Gax;
+using Google.Api.Gax.Rest;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
@@ -138,6 +139,16 @@ namespace FirebaseAdmin.Auth
             return await this.GetUserAsync(query, cancellationToken);
         }
 
+        internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
+            ListUsersOptions options)
+        {
+            var factory = new ListUsersRequest.Factory(this.baseUrl, this.httpClient, options);
+            return new RestPagedAsyncEnumerable
+                <ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
+                () => factory.Create(),
+                new ListUsersPageManager());
+        }
+
         /// <summary>
         /// Create a new user account.
         /// </summary>
@@ -168,7 +179,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="args">The user account data to be updated.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        internal async Task UpdateUserAsync(
+        internal async Task<string> UpdateUserAsync(
             UserRecordArgs args, CancellationToken cancellationToken = default(CancellationToken))
         {
             var payload = args.ToUpdateUserRequest();
@@ -178,6 +189,8 @@ namespace FirebaseAdmin.Auth
             {
                 throw new FirebaseException($"Failed to update user: {payload.Uid}");
             }
+
+            return payload.Uid;
         }
 
         /// <summary>
