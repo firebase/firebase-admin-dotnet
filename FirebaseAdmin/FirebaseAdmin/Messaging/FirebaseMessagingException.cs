@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Net.Http;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -25,8 +26,9 @@ namespace FirebaseAdmin.Messaging
           ErrorCode code,
           string message,
           MessagingErrorCode? fcmCode = null,
-          Exception inner = null)
-        : base(code, message, inner)
+          Exception inner = null,
+          HttpResponseMessage response = null)
+        : base(code, message, inner, response)
         {
             this.MessagingErrorCode = fcmCode;
         }

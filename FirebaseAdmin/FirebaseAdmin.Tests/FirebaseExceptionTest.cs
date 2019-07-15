@@ -14,10 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Text;
 using Xunit;
 
 namespace FirebaseAdmin.Tests
@@ -112,99 +110,6 @@ namespace FirebaseAdmin.Tests
                 exception.Message);
             Assert.Same(httpError, exception.InnerException);
             Assert.Null(exception.HttpResponse);
-        }
-
-        [Fact]
-        public void PlatformError()
-        {
-            var json = @"{
-                ""error"": {
-                    ""status"": ""UNAVAILABLE"",
-                    ""message"": ""Test error message""
-                }
-            }";
-            var resp = new HttpResponseMessage()
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                Content = new StringContent(json, Encoding.UTF8, "application/json"),
-            };
-
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
-
-            Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
-            Assert.Equal("Test error message", error.Message);
-            Assert.Same(resp, error.HttpResponse);
-            Assert.Null(error.InnerException);
-        }
-
-        [Fact]
-        public void PlatformErrorWithoutCode()
-        {
-            var json = @"{
-                ""error"": {
-                    ""message"": ""Test error message""
-                }
-            }";
-            var resp = new HttpResponseMessage()
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                Content = new StringContent(json, Encoding.UTF8, "application/json"),
-            };
-
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
-
-            Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
-            Assert.Equal("Test error message", error.Message);
-            Assert.Same(resp, error.HttpResponse);
-            Assert.Null(error.InnerException);
-        }
-
-        [Fact]
-        public void PlatformErrorWithoutMessage()
-        {
-            var json = @"{
-                ""error"": {
-                    ""status"": ""INVALID_ARGUMENT"",
-                }
-            }";
-            var resp = new HttpResponseMessage()
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                Content = new StringContent(json, Encoding.UTF8, "application/json"),
-            };
-
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
-
-            Assert.Equal(ErrorCode.InvalidArgument, error.ErrorCode);
-            Assert.Equal(
-                $"Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{json}",
-                error.Message);
-            Assert.Same(resp, error.HttpResponse);
-            Assert.Null(error.InnerException);
-        }
-
-        [Fact]
-        public void PlatformErrorWithoutCodeOrMessage()
-        {
-            var json = @"{}";
-            var resp = new HttpResponseMessage()
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                Content = new StringContent(json, Encoding.UTF8, "application/json"),
-            };
-
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
-
-            Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
-            Assert.Equal(
-                "Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{}",
-                error.Message);
-            Assert.Same(resp, error.HttpResponse);
-            Assert.Null(error.InnerException);
         }
     }
 }

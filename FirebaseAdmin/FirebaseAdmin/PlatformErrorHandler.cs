@@ -31,7 +31,7 @@ namespace FirebaseAdmin
                 { "UNAVAILABLE", ErrorCode.Unavailable },
             };
 
-        protected override ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string json)
+        protected sealed override ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string json)
         {
             var parsedResponse = NewtonsoftJsonSerializer.Instance.Deserialize<PlatformErrorResponse>(json);
             var status = parsedResponse.Error?.Status ?? string.Empty;
@@ -56,7 +56,7 @@ namespace FirebaseAdmin
             };
         }
 
-        internal class PlatformErrorResponse
+        internal sealed class PlatformErrorResponse
         {
             [JsonProperty("error")]
             public PlatformError Error { get; set; }
