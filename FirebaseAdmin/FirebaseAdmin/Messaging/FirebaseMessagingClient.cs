@@ -166,20 +166,6 @@ namespace FirebaseAdmin.Messaging
             request.Headers.Add("X-Firebase-Client", ClientVersion);
         }
 
-        private async Task<FirebaseMessagingException> CreateExceptionFor(HttpResponseMessage response)
-        {
-            var json = await response.Content.ReadAsStringAsync();
-            try
-            {
-                this.errorHandler.ThrowIfError(response, json);
-                return null;
-            }
-            catch (FirebaseMessagingException ex)
-            {
-                return ex;
-            }
-        }
-
         private async Task<HttpResponseMessage> SendRequestAsync(object body, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage()
@@ -204,21 +190,24 @@ namespace FirebaseAdmin.Messaging
                 dryRun,
                 async (content, error, index, message) =>
                 {
+                    SendResponse sendResponse;
                     if (error != null)
                     {
-                        responses.Add(SendResponse.FromException(await this.CreateExceptionFor(message)));
+                        sendResponse = SendResponse.FromException(await this.CreateExceptionFor(message));
                     }
                     else if (content != null)
                     {
-                        responses.Add(SendResponse.FromMessageId(content.Name));
+                        sendResponse = SendResponse.FromMessageId(content.Name);
                     }
                     else
                     {
                         var exception = new FirebaseMessagingException(
                             ErrorCode.Unknown,
                             $"Unexpected batch response. Response status code: {message.StatusCode}.");
-                        responses.Add(SendResponse.FromException(exception));
+                        sendResponse = SendResponse.FromException(exception);
                     }
+
+                    responses.Add(sendResponse);
                 });
 
             await batch.ExecuteAsync(cancellationToken).ConfigureAwait(false);
@@ -243,6 +232,20 @@ namespace FirebaseAdmin.Messaging
             }
 
             return batch;
+        }
+
+        private async Task<FirebaseMessagingException> CreateExceptionFor(HttpResponseMessage response)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            try
+            {
+                this.errorHandler.ThrowIfError(response, json);
+                throw new InvalidOperationException("Invalid batch response");
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                return ex;
+            }
         }
 
         /// <summary>

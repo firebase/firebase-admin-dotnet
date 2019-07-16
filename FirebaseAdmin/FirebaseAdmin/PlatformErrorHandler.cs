@@ -64,6 +64,9 @@ namespace FirebaseAdmin
             }
             catch
             {
+                // Ignore any error that may occur while parsing the error response. The server
+                // may have responded with a non-json payload. Return an empty return value, and
+                // let the base class logic come into play.
                 return new PlatformErrorResponse();
             }
         }

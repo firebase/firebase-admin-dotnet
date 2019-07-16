@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -21,6 +22,19 @@ namespace FirebaseAdmin.Messaging.Tests
 {
     public class MessagingErrorHandlerTest
     {
+        public static readonly IEnumerable<object[]> MessagingErrorCodes =
+            new List<object[]>()
+            {
+                new object[] { "APNS_AUTH_ERROR", MessagingErrorCode.ThirdPartyAuthError },
+                new object[] { "INTERNAL", MessagingErrorCode.Internal },
+                new object[] { "INVALID_ARGUMENT", MessagingErrorCode.InvalidArgument },
+                new object[] { "QUOTA_EXCEEDED", MessagingErrorCode.QuotaExceeded },
+                new object[] { "SENDER_ID_MISMATCH", MessagingErrorCode.SenderIdMismatch },
+                new object[] { "THIRD_PARTY_AUTH_ERROR", MessagingErrorCode.ThirdPartyAuthError },
+                new object[] { "UNAVAILABLE", MessagingErrorCode.Unavailable },
+                new object[] { "UNREGISTERED", MessagingErrorCode.Unregistered },
+            };
+
         [Fact]
         public void PlatformError()
         {
@@ -46,8 +60,40 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Null(error.InnerException);
         }
 
+        [Theory]
+        [MemberData(nameof(MessagingErrorCodes))]
+        public void KnownMessagingErrorCode(string code, MessagingErrorCode expected)
+        {
+            var json = $@"{{
+                ""error"": {{
+                    ""status"": ""PERMISSION_DENIED"",
+                    ""message"": ""Test error message"",
+                    ""details"": [
+                        {{
+                            ""@type"": ""type.googleapis.com/google.firebase.fcm.v1.FcmError"",
+                            ""errorCode"": ""{code}""
+                        }}
+                    ]
+                }}
+            }}";
+            var resp = new HttpResponseMessage()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
+            };
+
+            var handler = new MessagingErrorHandler();
+            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+
+            Assert.Equal(ErrorCode.PermissionDenied, error.ErrorCode);
+            Assert.Equal("Test error message", error.Message);
+            Assert.Equal(expected, error.MessagingErrorCode);
+            Assert.Same(resp, error.HttpResponse);
+            Assert.Null(error.InnerException);
+        }
+
         [Fact]
-        public void PlatformErrorWithMessagingErrorCode()
+        public void UnknownMessagingErrorCode()
         {
             var json = @"{
                 ""error"": {
@@ -56,7 +102,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     ""details"": [
                         {
                             ""@type"": ""type.googleapis.com/google.firebase.fcm.v1.FcmError"",
-                            ""errorCode"": ""UNREGISTERED""
+                            ""errorCode"": ""SOMETHING_UNUSUAL""
                         }
                     ]
                 }
@@ -72,13 +118,13 @@ namespace FirebaseAdmin.Messaging.Tests
 
             Assert.Equal(ErrorCode.PermissionDenied, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
-            Assert.Equal(MessagingErrorCode.Unregistered, error.MessagingErrorCode);
+            Assert.Null(error.MessagingErrorCode);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
         }
 
         [Fact]
-        public void PlatformErrorWithoutAnyDetails()
+        public void NoDetails()
         {
             var json = @"{}";
             var resp = new HttpResponseMessage()
