@@ -42,6 +42,7 @@ namespace FirebaseAdmin.Messaging
         private readonly string sendUrl;
         private readonly string restPath;
         private readonly FCMClientService fcmClientService;
+        private readonly HttpErrorHandler errorHandler;
 
         public FirebaseMessagingClient(
             HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
@@ -60,6 +61,7 @@ namespace FirebaseAdmin.Messaging
             this.sendUrl = string.Format(FcmSendUrl, projectId);
             this.restPath = this.sendUrl.Substring(FcmBaseUrl.Length);
             this.fcmClientService = new FCMClientService(this.httpClient);
+            this.errorHandler = new MessagingErrorHandler();
         }
 
         internal static string ClientVersion
@@ -103,14 +105,7 @@ namespace FirebaseAdmin.Messaging
             {
                 var response = await this.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
-                {
-                    // TODO(hkj): Handle error responses.
-                    var error = "Response status code does not indicate success: "
-                            + $"{(int)response.StatusCode} ({response.StatusCode})"
-                            + $"{Environment.NewLine}{json}";
-                    throw new FirebaseException(error);
-                }
+                this.errorHandler.ThrowIfError(response, json);
 
                 var parsed = JsonConvert.DeserializeObject<SingleMessageResponse>(json);
                 return parsed.Name;
@@ -157,7 +152,7 @@ namespace FirebaseAdmin.Messaging
             }
             catch (HttpRequestException e)
             {
-                throw new FirebaseException("Error while calling the FCM service.", e);
+                throw e.ToFirebaseException();
             }
         }
 
@@ -171,9 +166,18 @@ namespace FirebaseAdmin.Messaging
             request.Headers.Add("X-Firebase-Client", ClientVersion);
         }
 
-        private static FirebaseException CreateExceptionFor(RequestError requestError)
+        private async Task<FirebaseMessagingException> CreateExceptionFor(HttpResponseMessage response)
         {
-            return new FirebaseException(requestError.ToString());
+            var json = await response.Content.ReadAsStringAsync();
+            try
+            {
+                this.errorHandler.ThrowIfError(response, json);
+                return null;
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                return ex;
+            }
         }
 
         private async Task<HttpResponseMessage> SendRequestAsync(object body, CancellationToken cancellationToken)
@@ -198,11 +202,11 @@ namespace FirebaseAdmin.Messaging
             var batch = this.CreateBatchRequest(
                 messages,
                 dryRun,
-                (content, error, index, message) =>
+                async (content, error, index, message) =>
                 {
                     if (error != null)
                     {
-                        responses.Add(SendResponse.FromException(CreateExceptionFor(error)));
+                        responses.Add(SendResponse.FromException(await this.CreateExceptionFor(message)));
                     }
                     else if (content != null)
                     {
@@ -210,8 +214,10 @@ namespace FirebaseAdmin.Messaging
                     }
                     else
                     {
-                        responses.Add(SendResponse.FromException(new FirebaseException(
-                            $"Unexpected batch response. Response status code was {message.StatusCode}.")));
+                        var exception = new FirebaseMessagingException(
+                            ErrorCode.Unknown,
+                            $"Unexpected batch response. Response status code: {message.StatusCode}.");
+                        responses.Add(SendResponse.FromException(exception));
                     }
                 });
 

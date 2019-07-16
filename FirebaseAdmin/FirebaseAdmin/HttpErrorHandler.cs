@@ -19,6 +19,9 @@ using System.Net.Http;
 
 namespace FirebaseAdmin
 {
+    /// <summary>
+    /// Base class for handling HTTP error responses.
+    /// </summary>
     internal class HttpErrorHandler
     {
         private static readonly IReadOnlyDictionary<HttpStatusCode, ErrorCode> HttpErrorCodes =
@@ -34,25 +37,33 @@ namespace FirebaseAdmin
                 { HttpStatusCode.ServiceUnavailable, ErrorCode.Unavailable },
             };
 
-        internal void ThrowIfError(HttpResponseMessage response, string json)
+        /// <summary>
+        /// Parses the given HTTP response and throws a <see cref="FirebaseException"/> if it
+        /// contains an error. Does nothing if the status code of the HTTP response indicates
+        /// success.
+        /// </summary>
+        /// <param name="response">HTTP response message to process.</param>
+        /// <param name="body">The response body read from the message.</param>
+        /// <exception cref="FirebaseException">If the response contains an error.</exception>
+        internal void ThrowIfError(HttpResponseMessage response, string body)
         {
             if (response.IsSuccessStatusCode)
             {
                 return;
             }
 
-            var info = this.ExtractErrorInfo(response, json);
+            var info = this.ExtractErrorInfo(response, body);
             var args = new FirebaseExceptionArgs()
             {
                 Code = info.Code,
                 Message = info.Message,
                 HttpResponse = response,
-                ResponseBody = json,
+                ResponseBody = body,
             };
             throw this.CreateException(args);
         }
 
-        protected virtual ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string json)
+        protected virtual ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string body)
         {
             ErrorCode code;
             if (!HttpErrorCodes.TryGetValue(response.StatusCode, out code))
@@ -62,7 +73,7 @@ namespace FirebaseAdmin
 
             var message = "Unexpected HTTP response with status: "
                 + $"{(int)response.StatusCode} ({response.StatusCode})"
-                + $"{Environment.NewLine}{json}";
+                + $"{Environment.NewLine}{body}";
             return new ErrorInfo()
             {
                 Code = code,

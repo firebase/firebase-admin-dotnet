@@ -291,9 +291,17 @@ Vary: Referer
             {
                 Topic = "test-topic",
             };
-            var ex = await Assert.ThrowsAsync<FirebaseException>(
+
+            var ex = await Assert.ThrowsAsync<FirebaseMessagingException>(
                 async () => await client.SendAsync(message));
-            Assert.Contains("not json", ex.Message);
+
+            Assert.Equal(ErrorCode.Internal, ex.ErrorCode);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: {500} (InternalServerError)\nnot json",
+                ex.Message);
+            Assert.Null(ex.MessagingErrorCode);
+            Assert.NotNull(ex.HttpResponse);
+
             var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
                 handler.LastRequestBody);
             Assert.Equal("test-topic", req.Message.Topic);

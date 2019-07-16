@@ -14,11 +14,16 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using Google.Apis.Json;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
+    /// <summary>
+    /// Parses error responses received from the FCM service, and creates instances of
+    /// <see cref="FirebaseMessagingException"/>.
+    /// </summary>
     internal sealed class MessagingErrorHandler : PlatformErrorHandler
     {
         private static readonly string MessagingErrorType =
@@ -39,13 +44,25 @@ namespace FirebaseAdmin.Messaging
 
         protected override FirebaseException CreateException(FirebaseExceptionArgs args)
         {
-            var fcmError = NewtonsoftJsonSerializer.Instance.Deserialize<MessagingErrorResponse>(
-                args.ResponseBody);
             return new FirebaseMessagingException(
                 args.Code,
                 args.Message,
-                fcmError.Error?.GetMessagingErrorCode(),
+                this.GetMessagingErrorCode(args.ResponseBody),
                 response: args.HttpResponse);
+        }
+
+        private MessagingErrorCode? GetMessagingErrorCode(string body)
+        {
+            try
+            {
+                var fcmError = NewtonsoftJsonSerializer.Instance.Deserialize<MessagingErrorResponse>(
+                    body);
+                return fcmError.Error?.GetMessagingErrorCode();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private sealed class MessagingErrorResponse

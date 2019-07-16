@@ -31,11 +31,11 @@ namespace FirebaseAdmin
                 { "UNAVAILABLE", ErrorCode.Unavailable },
             };
 
-        protected sealed override ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string json)
+        protected sealed override ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string body)
         {
-            var parsedResponse = NewtonsoftJsonSerializer.Instance.Deserialize<PlatformErrorResponse>(json);
+            var parsedResponse = this.ParseResponseBody(body);
             var status = parsedResponse.Error?.Status ?? string.Empty;
-            var defaults = base.ExtractErrorInfo(response, json);
+            var defaults = base.ExtractErrorInfo(response, body);
 
             ErrorCode code;
             if (!PlatformErrorCodes.TryGetValue(status, out code))
@@ -54,6 +54,18 @@ namespace FirebaseAdmin
                 Code = code,
                 Message = message,
             };
+        }
+
+        private PlatformErrorResponse ParseResponseBody(string body)
+        {
+            try
+            {
+                return NewtonsoftJsonSerializer.Instance.Deserialize<PlatformErrorResponse>(body);
+            }
+            catch
+            {
+                return new PlatformErrorResponse();
+            }
         }
 
         internal sealed class PlatformErrorResponse

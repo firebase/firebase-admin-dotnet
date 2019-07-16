@@ -57,6 +57,28 @@ namespace FirebaseAdmin.Tests
             Assert.Null(error.InnerException);
         }
 
+        [Theory]
+        [MemberData(nameof(HttpErrorCodes))]
+        public void NonJsonResponse(HttpStatusCode statusCode, ErrorCode expected)
+        {
+            var text = "not json";
+            var resp = new HttpResponseMessage()
+            {
+                StatusCode = statusCode,
+                Content = new StringContent(text, Encoding.UTF8, "text/plain"),
+            };
+
+            var handler = new HttpErrorHandler();
+            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, text));
+
+            Assert.Equal(expected, error.ErrorCode);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: {(int)statusCode} ({statusCode})\n{text}",
+                error.Message);
+            Assert.Same(resp, error.HttpResponse);
+            Assert.Null(error.InnerException);
+        }
+
         [Fact]
         public void UnknownHttpStatusCode()
         {

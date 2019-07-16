@@ -42,9 +42,7 @@ namespace FirebaseAdmin.Tests.Messaging
                 SendResponse.FromMessageId("message1"),
                 SendResponse.FromMessageId("message2"),
                 SendResponse.FromException(
-                    new FirebaseException(
-                        "error-message",
-                        null)),
+                    new FirebaseMessagingException(ErrorCode.Unknown, "error-message")),
             };
 
             var batchResponse = new BatchResponse(responses);

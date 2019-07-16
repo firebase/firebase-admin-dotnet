@@ -60,7 +60,7 @@ namespace FirebaseAdmin.Messaging
             return new SendResponse(messageId);
         }
 
-        internal static SendResponse FromException(FirebaseException exception)
+        internal static SendResponse FromException(FirebaseMessagingException exception)
         {
             if (exception == null)
             {

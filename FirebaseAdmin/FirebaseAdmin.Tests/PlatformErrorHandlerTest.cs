@@ -46,6 +46,27 @@ namespace FirebaseAdmin.Tests
         }
 
         [Fact]
+        public void NonJsonResponse()
+        {
+            var text = "not json";
+            var resp = new HttpResponseMessage()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Content = new StringContent(text, Encoding.UTF8, "text/plain"),
+            };
+
+            var handler = new PlatformErrorHandler();
+            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, text));
+
+            Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{text}",
+                error.Message);
+            Assert.Same(resp, error.HttpResponse);
+            Assert.Null(error.InnerException);
+        }
+
+        [Fact]
         public void PlatformErrorWithoutCode()
         {
             var json = @"{
