@@ -36,6 +36,12 @@ namespace FirebaseAdmin.Messaging
         public IReadOnlyDictionary<string, string> Headers { get; set; }
 
         /// <summary>
+        /// Gets or sets the FCM options to be included in the message.
+        /// </summary>
+        [JsonProperty("fcm_options")]
+        public FcmOptions FcmOptions { get; set; }
+
+        /// <summary>
         /// Gets or sets the <c>aps</c> dictionary to be included in the APNs payload.
         /// </summary>
         [JsonIgnore]

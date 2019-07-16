@@ -67,6 +67,12 @@ namespace FirebaseAdmin.Messaging
         public AndroidNotification Notification { get; set; }
 
         /// <summary>
+        /// Gets or sets the FCM options to be included in the message.
+        /// </summary>
+        [JsonProperty("fcm_options")]
+        public FcmOptions FcmOptions { get; set; }
+
+        /// <summary>
         /// Gets or sets the string representation of <see cref="Priority"/> as accepted by the FCM
         /// backend service.
         /// </summary>
