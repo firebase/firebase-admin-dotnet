@@ -125,6 +125,7 @@ namespace FirebaseAdmin.Messaging
                 Topic = this.Topic,
                 Condition = this.Condition,
                 Data = this.Data?.Copy(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             var list = new List<string>()
             {

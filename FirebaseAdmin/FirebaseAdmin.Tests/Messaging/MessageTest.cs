@@ -75,6 +75,10 @@ namespace FirebaseAdmin.Messaging.Tests
                     Title = "title",
                     Body = "body",
                 },
+                FcmOptions = new FcmOptions()
+                {
+                    AnalyticsLabel = "label",
+                },
             };
             var expected = new JObject()
             {
@@ -84,6 +88,12 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         { "title", "title" },
                         { "body", "body" },
+                    }
+                },
+                {
+                    "fcm_options", new JObject()
+                    {
+                        { "analytics_label", "label" },
                     }
                 },
             };
@@ -117,6 +127,10 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Data = new Dictionary<string, string>() { { "key", "value" } },
                 },
+                FcmOptions = new FcmOptions()
+                {
+                    AnalyticsLabel = "label",
+                },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
@@ -128,6 +142,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
             Assert.Equal(original.Apns.Aps.AlertString, copy.Apns.Aps.AlertString);
             Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
+            Assert.Equal(original.FcmOptions.AnalyticsLabel, copy.FcmOptions.AnalyticsLabel);
         }
 
         [Fact]
@@ -236,6 +251,10 @@ namespace FirebaseAdmin.Messaging.Tests
                         BodyLocArgs = new List<string>() { "arg3", "arg4" },
                         ChannelId = "channel-id",
                     },
+                    FcmOptions = new AndroidFcmOptions()
+                    {
+                        AnalyticsLabel = "label",
+                    },
                 },
             };
             var expected = new JObject()
@@ -264,6 +283,12 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "body_loc_key", "body-loc-key" },
                                 { "body_loc_args", new JArray() { "arg3", "arg4" } },
                                 { "channel_id", "channel-id" },
+                            }
+                        },
+                        {
+                            "fcm_options", new JObject()
+                            {
+                                { "analytics_label", "label" },
                             }
                         },
                     }
@@ -843,6 +868,10 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "custom-key3", "custom-data" },
                         { "custom-key4", true },
                     },
+                    FcmOptions = new ApnsFcmOptions()
+                    {
+                        AnalyticsLabel = "label",
+                    },
                 },
             };
             var expected = new JObject()
@@ -877,6 +906,12 @@ namespace FirebaseAdmin.Messaging.Tests
                                 },
                                 { "custom-key3", "custom-data" },
                                 { "custom-key4", true },
+                            }
+                        },
+                        {
+                            "fcm_options", new JObject()
+                            {
+                                { "analytics_label", "label" },
                             }
                         },
                     }
@@ -1648,6 +1683,42 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AnalyticsLabelInvalid()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Notification = new Notification()
+                {
+                    Title = "title",
+                    Body = "body",
+                },
+                FcmOptions = new FcmOptions()
+                {
+                    AnalyticsLabel = "label!",
+                },
+            };
+            var expected = new JObject()
+            {
+                { "topic", "test-topic" },
+                {
+                    "notification", new JObject()
+                    {
+                        { "title", "title" },
+                        { "body", "body" },
+                    }
+                },
+                {
+                    "fcm_options", new JObject()
+                    {
+                        { "analytics_label", "label" },
+                    }
+                },
+            };
+            Assert.Throws<ArgumentException>(() => this.AssertJsonEquals(expected, message));
         }
 
         private void AssertJsonEquals(JObject expected, Message actual)

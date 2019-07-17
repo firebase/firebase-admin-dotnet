@@ -70,7 +70,7 @@ namespace FirebaseAdmin.Messaging
         /// Gets or sets the FCM options to be included in the message.
         /// </summary>
         [JsonProperty("fcm_options")]
-        public FcmOptions FcmOptions { get; set; }
+        public AndroidFcmOptions FcmOptions { get; set; }
 
         /// <summary>
         /// Gets or sets the string representation of <see cref="Priority"/> as accepted by the FCM
@@ -165,6 +165,7 @@ namespace FirebaseAdmin.Messaging
                 TimeToLive = this.TimeToLive,
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data?.Copy(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             var totalSeconds = copy.TimeToLive?.TotalSeconds ?? 0;
             if (totalSeconds < 0)

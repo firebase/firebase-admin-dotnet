@@ -39,7 +39,7 @@ namespace FirebaseAdmin.Messaging
         /// Gets or sets the FCM options to be included in the message.
         /// </summary>
         [JsonProperty("fcm_options")]
-        public FcmOptions FcmOptions { get; set; }
+        public ApnsFcmOptions FcmOptions { get; set; }
 
         /// <summary>
         /// Gets or sets the <c>aps</c> dictionary to be included in the APNs payload.
@@ -108,6 +108,7 @@ namespace FirebaseAdmin.Messaging
             {
                 Headers = this.Headers?.Copy(),
                 Payload = this.Payload.CopyAndValidate(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             return copy;
         }
