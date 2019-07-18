@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [added] Added `FirebaseMessagingException` class and improved FCM error
+  handling logic.
 
 # v1.7.0
 
