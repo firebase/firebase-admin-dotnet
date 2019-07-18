@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace FirebaseAdmin.Messaging.Util
@@ -8,7 +11,7 @@ namespace FirebaseAdmin.Messaging.Util
     /// </summary>
     public static class AnalyticsLabelChecker
     {
-        private static string pattern = "^[a-zA-Z0-9-_.~%]{0,50}$";
+        private static ImmutableHashSet<char> alowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-~%".ToCharArray().ToImmutableHashSet();
 
         /// <summary>
         /// Checks anytytics labels an throw if not valid.
@@ -17,9 +20,17 @@ namespace FirebaseAdmin.Messaging.Util
         /// <param name="analyticsLabel">Analytics label.</param>
         public static void CheckAnalyticsLabelOrThrow(string analyticsLabel)
         {
-            if (!Regex.IsMatch(analyticsLabel, pattern))
+            if (analyticsLabel.Length > 50)
             {
                 throw new ArgumentException("Analytics label must have format matching'^[a-zA-Z0-9-_.~%]{1,50}$");
+            }
+
+            foreach (var character in analyticsLabel)
+            {
+                if (!alowedChars.Contains(character))
+                {
+                    throw new ArgumentException("Analytics label must have format matching'^[a-zA-Z0-9-_.~%]{1,50}$");
+                }
             }
         }
     }
