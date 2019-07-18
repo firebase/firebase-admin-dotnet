@@ -13,10 +13,7 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
-using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Http;
 using Xunit;
 
 namespace FirebaseAdmin.Tests

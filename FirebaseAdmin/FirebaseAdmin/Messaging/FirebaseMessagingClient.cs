@@ -105,6 +105,7 @@ namespace FirebaseAdmin.Messaging
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                 {
+                    // TODO(hkj): Handle error responses.
                     var error = "Response status code does not indicate success: "
                             + $"{(int)response.StatusCode} ({response.StatusCode})"
                             + $"{Environment.NewLine}{json}";
@@ -116,7 +117,7 @@ namespace FirebaseAdmin.Messaging
             }
             catch (HttpRequestException e)
             {
-                throw new FirebaseException("Error while calling the FCM service.", e);
+                throw e.ToFirebaseException();
             }
         }
 

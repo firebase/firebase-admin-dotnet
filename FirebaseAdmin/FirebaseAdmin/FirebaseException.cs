@@ -22,9 +22,20 @@ namespace FirebaseAdmin
     public sealed class FirebaseException : Exception
     {
         internal FirebaseException(string message)
-        : base(message) { }
+        : base(message) { } // TODO: Remove this constructor
 
         internal FirebaseException(string message, Exception inner)
-        : base(message, inner) { }
+        : base(message, inner) { } // TODO: Remove this constructor
+
+        internal FirebaseException(ErrorCode code, string message, Exception inner = null)
+        : base(message, inner)
+        {
+            this.ErrorCode = code;
+        }
+
+        /// <summary>
+        /// Gets the platform-wide error code associated with this exception.
+        /// </summary>
+        internal ErrorCode ErrorCode { get; private set; } // TODO: Expose this as public
     }
 }
