@@ -1,0 +1,7 @@
+steps:
+- name: 'gcr.io/$PROJECT_ID/windows-builder'
+  args: [
+    '--command', 'powershell.exe -file build.ps1 -sdkVersion ${_SDK_VERSION} -nugetKey ${_NUGET_KEY}' ,
+    '--image', 'projects/$PROJECT_ID/global/images/firebase-windows-dotnet-v1'
+  ]
+timeout: 1200s
