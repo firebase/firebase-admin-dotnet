@@ -52,18 +52,18 @@ namespace FirebaseAdmin
                 return;
             }
 
-            var info = this.ExtractErrorInfo(response, body);
-            var args = new FirebaseExceptionArgs()
-            {
-                Code = info.Code,
-                Message = info.Message,
-                HttpResponse = response,
-                ResponseBody = body,
-            };
+            var args = this.CreateExceptionArgs(response, body);
             throw this.CreateException(args);
         }
 
-        protected virtual ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string body)
+        /// <summary>
+        /// Parses the given HTTP response to extract an error code and message from it.
+        /// </summary>
+        /// <param name="response">HTTP response message to process.</param>
+        /// <param name="body">The response body read from the message.</param>
+        /// <returns>A <see cref="FirebaseExceptionArgs"/> object containing error code and message.
+        /// Both the code and the message should not be null or empty.</returns>
+        protected virtual FirebaseExceptionArgs CreateExceptionArgs(HttpResponseMessage response, string body)
         {
             ErrorCode code;
             if (!HttpErrorCodes.TryGetValue(response.StatusCode, out code))
@@ -74,23 +74,24 @@ namespace FirebaseAdmin
             var message = "Unexpected HTTP response with status: "
                 + $"{(int)response.StatusCode} ({response.StatusCode})"
                 + $"{Environment.NewLine}{body}";
-            return new ErrorInfo()
+            return new FirebaseExceptionArgs()
             {
                 Code = code,
                 Message = message,
+                HttpResponse = response,
+                ResponseBody = body,
             };
         }
 
+        /// <summary>
+        /// Creates a new <see cref="FirebaseException"/> from the specified arguments.
+        /// </summary>
+        /// <param name="args">A <see cref="FirebaseExceptionArgs"/> instance containing error
+        /// code, message and other details.</param>
+        /// <returns>A <see cref="FirebaseException"/> object.</returns>
         protected virtual FirebaseException CreateException(FirebaseExceptionArgs args)
         {
             return new FirebaseException(args.Code, args.Message, response: args.HttpResponse);
-        }
-
-        internal sealed class ErrorInfo
-        {
-            internal ErrorCode Code { get; set; }
-
-            internal string Message { get; set; }
         }
 
         internal sealed class FirebaseExceptionArgs

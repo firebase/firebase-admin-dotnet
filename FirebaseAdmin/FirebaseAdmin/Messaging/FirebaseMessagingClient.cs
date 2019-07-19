@@ -112,7 +112,7 @@ namespace FirebaseAdmin.Messaging
             }
             catch (HttpRequestException e)
             {
-                throw e.ToFirebaseException();
+                throw this.ToFirebaseMessagingException(e);
             }
         }
 
@@ -152,7 +152,7 @@ namespace FirebaseAdmin.Messaging
             }
             catch (HttpRequestException e)
             {
-                throw e.ToFirebaseException();
+                throw this.ToFirebaseMessagingException(e);
             }
         }
 
@@ -193,7 +193,7 @@ namespace FirebaseAdmin.Messaging
                     SendResponse sendResponse;
                     if (error != null)
                     {
-                        sendResponse = SendResponse.FromException(await this.CreateExceptionFor(message));
+                        sendResponse = SendResponse.FromException(await this.CreateException(message));
                     }
                     else if (content != null)
                     {
@@ -234,7 +234,7 @@ namespace FirebaseAdmin.Messaging
             return batch;
         }
 
-        private async Task<FirebaseMessagingException> CreateExceptionFor(HttpResponseMessage response)
+        private async Task<FirebaseMessagingException> CreateException(HttpResponseMessage response)
         {
             var json = await response.Content.ReadAsStringAsync();
             try
@@ -246,6 +246,17 @@ namespace FirebaseAdmin.Messaging
             {
                 return ex;
             }
+        }
+
+        private FirebaseMessagingException ToFirebaseMessagingException(
+            HttpRequestException exception)
+        {
+            var temp = exception.ToFirebaseException();
+            return new FirebaseMessagingException(
+                temp.ErrorCode,
+                temp.Message,
+                inner: temp.InnerException,
+                response: temp.HttpResponse);
         }
 
         /// <summary>

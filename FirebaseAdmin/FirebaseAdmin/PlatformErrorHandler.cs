@@ -19,6 +19,13 @@ using Newtonsoft.Json;
 
 namespace FirebaseAdmin
 {
+    /// <summary>
+    /// Base class for handling HTTP error responses returned by Google Cloud Platform APIs.
+    /// See <a href="https://cloud.google.com/apis/design/errors">Errors</a> for more details on
+    /// how Google Cloud Platform APIs report back error codes and details. If this class fails
+    /// to determine an error code or message from a given API response, it falls back to the
+    /// error handling logic defined in the parent <see cref="HttpErrorHandler"/> class.
+    /// </summary>
     internal class PlatformErrorHandler : HttpErrorHandler
     {
         private static readonly IReadOnlyDictionary<string, ErrorCode> PlatformErrorCodes =
@@ -31,11 +38,11 @@ namespace FirebaseAdmin
                 { "UNAVAILABLE", ErrorCode.Unavailable },
             };
 
-        protected sealed override ErrorInfo ExtractErrorInfo(HttpResponseMessage response, string body)
+        protected sealed override FirebaseExceptionArgs CreateExceptionArgs(HttpResponseMessage response, string body)
         {
             var parsedResponse = this.ParseResponseBody(body);
             var status = parsedResponse.Error?.Status ?? string.Empty;
-            var defaults = base.ExtractErrorInfo(response, body);
+            var defaults = base.CreateExceptionArgs(response, body);
 
             ErrorCode code;
             if (!PlatformErrorCodes.TryGetValue(status, out code))
@@ -49,10 +56,12 @@ namespace FirebaseAdmin
                 message = defaults.Message;
             }
 
-            return new ErrorInfo()
+            return new FirebaseExceptionArgs()
             {
                 Code = code,
                 Message = message,
+                HttpResponse = response,
+                ResponseBody = body,
             };
         }
 

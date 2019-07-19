@@ -15,6 +15,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
@@ -456,6 +457,38 @@ Content-Type: application/json; charset=UTF-8
                 ex.Message);
             Assert.Null(ex.MessagingErrorCode);
             Assert.NotNull(ex.HttpResponse);
+
+            var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
+                handler.LastRequestBody);
+            Assert.Equal("test-topic", req.Message.Topic);
+            Assert.False(req.ValidateOnly);
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
+        public async Task TransportError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Exception = new HttpRequestException("Transport error"),
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var message = new Message()
+            {
+                Topic = "test-topic",
+            };
+
+            var ex = await Assert.ThrowsAsync<FirebaseMessagingException>(
+                async () => await client.SendAsync(message));
+
+            Assert.Equal(ErrorCode.Unknown, ex.ErrorCode);
+            Assert.Equal(
+                "Unknown error while making a remote service call: Transport error",
+                ex.Message);
+            Assert.Null(ex.MessagingErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.Same(handler.Exception, ex.InnerException);
 
             var req = JsonConvert.DeserializeObject<FirebaseMessagingClient.SendRequest>(
                 handler.LastRequestBody);
