@@ -63,7 +63,8 @@ namespace FirebaseAdmin
         /// <param name="body">The response body read from the message.</param>
         /// <returns>A <see cref="FirebaseExceptionArgs"/> object containing error code and message.
         /// Both the code and the message should not be null or empty.</returns>
-        protected virtual FirebaseExceptionArgs CreateExceptionArgs(HttpResponseMessage response, string body)
+        protected virtual FirebaseExceptionArgs CreateExceptionArgs(
+            HttpResponseMessage response, string body)
         {
             ErrorCode code;
             if (!HttpErrorCodes.TryGetValue(response.StatusCode, out code))
@@ -94,7 +95,7 @@ namespace FirebaseAdmin
             return new FirebaseException(args.Code, args.Message, response: args.HttpResponse);
         }
 
-        internal sealed class FirebaseExceptionArgs
+        internal class FirebaseExceptionArgs
         {
             internal ErrorCode Code { get; set; }
 
