@@ -256,7 +256,7 @@ namespace FirebaseAdmin.Auth
             return new UserRecord(result.Users[0]);
         }
 
-        private async Task<ParsedResponseInfo<TResult>> PostAndDeserializeAsync<TResult>(
+        private async Task<AuthHttpUtils.ParsedResponseInfo<TResult>> PostAndDeserializeAsync<TResult>(
             string path, object body, CancellationToken cancellationToken)
         {
             var response = await this.PostAsync(path, body, cancellationToken)
@@ -264,7 +264,7 @@ namespace FirebaseAdmin.Auth
             return response.SafeDeserialize<TResult>();
         }
 
-        private async Task<ResponseInfo> PostAsync(
+        private async Task<AuthHttpUtils.ResponseInfo> PostAsync(
             string path, object body, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage()
@@ -276,26 +276,12 @@ namespace FirebaseAdmin.Auth
             return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task<ResponseInfo> SendAsync(
+        private async Task<AuthHttpUtils.ResponseInfo> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var response = await this.httpClient.SendAsync(request, cancellationToken)
-                    .ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                this.errorHandler.ThrowIfError(response, json);
-
-                return new ResponseInfo()
-                {
-                    HttpResponse = response,
-                    Body = json,
-                };
-            }
-            catch (HttpRequestException e)
-            {
-                throw this.ToFirebaseAuthException(e);
-            }
+            var response = await this.httpClient.SendAndReadAsync(request, cancellationToken);
+            this.errorHandler.ThrowIfError(response.HttpResponse, response.Body);
+            return response;
         }
 
         private FirebaseAuthException ToFirebaseAuthException(
@@ -345,36 +331,6 @@ namespace FirebaseAdmin.Auth
                     { this.Field, new string[] { this.Value } },
                 };
             }
-        }
-
-        private class ResponseInfo
-        {
-            internal HttpResponseMessage HttpResponse { get; set; }
-
-            internal string Body { get; set; }
-
-            internal ParsedResponseInfo<TResult> SafeDeserialize<TResult>()
-            {
-                try
-                {
-                    var parsed = NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(this.Body);
-                    return new ParsedResponseInfo<TResult>()
-                    {
-                        Result = parsed,
-                        HttpResponse = this.HttpResponse,
-                        Body = this.Body,
-                    };
-                }
-                catch (Exception e)
-                {
-                    throw UnexpectedResponseException("Error while parsing Auth service response", e);
-                }
-            }
-        }
-
-        private class ParsedResponseInfo<T> : ResponseInfo
-        {
-            internal T Result { get; set; }
         }
     }
 }
