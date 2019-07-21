@@ -71,6 +71,27 @@ namespace FirebaseAdmin.Auth
             return new FirebaseUserManager(args);
         }
 
+        internal static FirebaseAuthException HandleHttpError(HttpRequestException exception)
+        {
+            var temp = exception.ToFirebaseException();
+            return new FirebaseAuthException(
+                temp.ErrorCode,
+                temp.Message,
+                inner: temp.InnerException,
+                response: temp.HttpResponse);
+        }
+
+        internal static FirebaseAuthException HandleParseError(
+            Exception e, HttpResponseMessage response)
+        {
+            throw new FirebaseAuthException(
+                ErrorCode.Unknown,
+                "Error while parsing Auth service response.",
+                AuthErrorCode.UnexpectedResponse,
+                e,
+                response);
+        }
+
         /// <summary>
         /// Gets the user data corresponding to the given user ID.
         /// </summary>
@@ -256,15 +277,15 @@ namespace FirebaseAdmin.Auth
             return new UserRecord(result.Users[0]);
         }
 
-        private async Task<AuthHttpUtils.ParsedResponseInfo<TResult>> PostAndDeserializeAsync<TResult>(
+        private async Task<Extensions.ParsedResponseInfo<TResult>> PostAndDeserializeAsync<TResult>(
             string path, object body, CancellationToken cancellationToken)
         {
             var response = await this.PostAsync(path, body, cancellationToken)
                 .ConfigureAwait(false);
-            return response.SafeDeserialize<TResult>();
+            return response.SafeDeserialize<TResult>(HandleParseError);
         }
 
-        private async Task<AuthHttpUtils.ResponseInfo> PostAsync(
+        private async Task<Extensions.ResponseInfo> PostAsync(
             string path, object body, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage()
@@ -276,23 +297,13 @@ namespace FirebaseAdmin.Auth
             return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task<AuthHttpUtils.ResponseInfo> SendAsync(
+        private async Task<Extensions.ResponseInfo> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var response = await this.httpClient.SendAndReadAsync(request, cancellationToken);
+            var response = await this.httpClient.SendAndReadAsync(
+                request, cancellationToken, HandleHttpError);
             this.errorHandler.ThrowIfError(response.HttpResponse, response.Body);
             return response;
-        }
-
-        private FirebaseAuthException ToFirebaseAuthException(
-            HttpRequestException exception)
-        {
-            var temp = exception.ToFirebaseException();
-            return new FirebaseAuthException(
-                temp.ErrorCode,
-                temp.Message,
-                inner: temp.InnerException,
-                response: temp.HttpResponse);
         }
 
         /// <summary>
