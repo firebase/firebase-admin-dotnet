@@ -23,5 +23,15 @@ namespace FirebaseAdmin.Auth
         /// The user with the provided uid already exists.
         /// </summary>
         UidAlreadyExists,
+
+        /// <summary>
+        /// Backend API responded with an unexpected message.
+        /// </summary>
+        UnexpectedResponse,
+
+        /// <summary>
+        /// No user record found for the given identifier.
+        /// </summary>
+        UserNotFound,
     }
 }

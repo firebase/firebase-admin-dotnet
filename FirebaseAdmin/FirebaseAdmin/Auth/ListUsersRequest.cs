@@ -36,12 +36,14 @@ namespace FirebaseAdmin.Auth
 
         private readonly string baseUrl;
         private readonly HttpClient httpClient;
+        private readonly AuthErrorHandler errorHandler;
 
         private ListUsersRequest(
             string baseUrl, HttpClient httpClient, ListUsersOptions options)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
+            this.errorHandler = new AuthErrorHandler();
             this.RequestParameters = new Dictionary<string, IParameter>();
             this.SetPageSize(options.PageSize);
             this.SetPageToken(options.PageToken);
@@ -178,7 +180,11 @@ namespace FirebaseAdmin.Auth
             }
             catch (Exception e)
             {
-                throw new FirebaseException("Error while parsing Auth service response", e);
+                throw new FirebaseAuthException(
+                    ErrorCode.Unknown,
+                    "Error while parsing Auth service response",
+                    AuthErrorCode.UnexpectedResponse,
+                    inner: e);
             }
         }
 
@@ -190,19 +196,17 @@ namespace FirebaseAdmin.Auth
                 var response = await this.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = "Response status code does not indicate success: "
-                                + $"{(int)response.StatusCode} ({response.StatusCode})"
-                                + $"{Environment.NewLine}{json}";
-                    throw new FirebaseException(error);
-                }
-
+                this.errorHandler.ThrowIfError(response, json);
                 return json;
             }
             catch (HttpRequestException e)
             {
-                throw new FirebaseException("Error while calling Firebase Auth service", e);
+                var temp = e.ToFirebaseException();
+                throw new FirebaseAuthException(
+                    temp.ErrorCode,
+                    temp.Message,
+                    inner: temp.InnerException,
+                    response: temp.HttpResponse);
             }
         }
 
