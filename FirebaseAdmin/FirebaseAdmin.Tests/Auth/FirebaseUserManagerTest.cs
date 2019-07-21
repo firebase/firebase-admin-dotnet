@@ -171,9 +171,14 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var exception = await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.GetUserAsync("user1"));
+
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
             Assert.Equal("Failed to get user with uid: user1", exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -228,9 +233,14 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var exception = await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.GetUserByEmailAsync("user@example.com"));
+
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
             Assert.Equal("Failed to get user with email: user@example.com", exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -285,9 +295,14 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var exception = await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.GetUserByPhoneNumberAsync("+1234567890"));
+
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
             Assert.Equal("Failed to get user with phone number: +1234567890", exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -641,11 +656,21 @@ namespace FirebaseAdmin.Auth.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
+                Response = "{}",
             };
             var auth = this.CreateFirebaseAuth(handler);
 
             var pagedEnumerable = auth.ListUsersAsync(null);
-            await Assert.ThrowsAsync<FirebaseException>(async () => await pagedEnumerable.First());
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await pagedEnumerable.First());
+
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Null(exception.AuthErrorCode);
+            Assert.Equal(
+                "Unexpected HTTP response with status: 500 (InternalServerError)\n{}",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
 
             Assert.Single(handler.Requests);
             var query = this.ExtractQueryParams(handler.Requests[0]);
@@ -670,7 +695,17 @@ namespace FirebaseAdmin.Auth.Tests
             }
 
             handler.StatusCode = HttpStatusCode.InternalServerError;
-            await Assert.ThrowsAsync<FirebaseException>(async () => await enumerator.MoveNext());
+            handler.Response = "{}";
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await enumerator.MoveNext());
+
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Null(exception.AuthErrorCode);
+            Assert.Equal(
+                "Unexpected HTTP response with status: 500 (InternalServerError)\n{}",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
 
             Assert.Equal(2, handler.Requests.Count);
             var query = this.ExtractQueryParams(handler.Requests[0]);
@@ -907,9 +942,16 @@ namespace FirebaseAdmin.Auth.Tests
                 Response = "{}",
             };
             var auth = this.CreateFirebaseAuth(handler);
-
             var args = new UserRecordArgs();
-            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.CreateUserAsync(args));
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.CreateUserAsync(args));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
+            Assert.Equal("Failed to create new user.", exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -1309,7 +1351,14 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             };
 
-            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.UpdateUserAsync(args));
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.UpdateUserAsync(args));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
+            Assert.Equal("Failed to update user: user1", exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -1325,7 +1374,14 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             };
 
-            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.UpdateUserAsync(args));
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.UpdateUserAsync(args));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
+            Assert.Equal("Failed to update user: user1", exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -1334,6 +1390,7 @@ namespace FirebaseAdmin.Auth.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
+                Response = "{}",
             };
             var auth = this.CreateFirebaseAuth(handler);
             var args = new UserRecordArgs()
@@ -1341,7 +1398,16 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "user1",
             };
 
-            await Assert.ThrowsAsync<FirebaseException>(async () => await auth.UpdateUserAsync(args));
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.UpdateUserAsync(args));
+
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Null(exception.AuthErrorCode);
+            Assert.Equal(
+                "Unexpected HTTP response with status: 500 (InternalServerError)\n{}",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -1361,12 +1427,22 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var handler = new MockMessageHandler()
             {
-                StatusCode = HttpStatusCode.NotFound,
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = @"{
+                    ""error"": {""message"": ""USER_NOT_FOUND""}
+                }",
             };
             var auth = this.CreateFirebaseAuth(handler);
 
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                async () => await auth.DeleteUserAsync("user1"));
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
+            Assert.Equal(
+                "No user record found for the given identifier (USER_NOT_FOUND).",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler)

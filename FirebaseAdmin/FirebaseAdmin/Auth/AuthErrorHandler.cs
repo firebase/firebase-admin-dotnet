@@ -35,6 +35,13 @@ namespace FirebaseAdmin.Auth
                         AuthErrorCode.UidAlreadyExists,
                         "The user with the provided uid already exists")
                 },
+                {
+                    "USER_NOT_FOUND",
+                    new ErrorInfo(
+                        ErrorCode.NotFound,
+                        AuthErrorCode.UserNotFound,
+                        "No user record found for the given identifier")
+                },
             };
 
         protected sealed override FirebaseExceptionArgs CreateExceptionArgs(
