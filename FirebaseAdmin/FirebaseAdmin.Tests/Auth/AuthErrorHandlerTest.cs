@@ -49,8 +49,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new AuthErrorHandler();
-            var error = Assert.Throws<FirebaseAuthException>(() => handler.ThrowIfError(resp, json));
+            var error = Assert.Throws<FirebaseAuthException>(
+                () => AuthErrorHandler.Instance.ThrowIfError(resp, json));
 
             Assert.Equal(expectedCode, error.ErrorCode);
             Assert.Equal(expectedAuthCode, error.AuthErrorCode);
@@ -75,8 +75,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new AuthErrorHandler();
-            var error = Assert.Throws<FirebaseAuthException>(() => handler.ThrowIfError(resp, json));
+            var error = Assert.Throws<FirebaseAuthException>(
+                () => AuthErrorHandler.Instance.ThrowIfError(resp, json));
 
             Assert.Equal(expectedCode, error.ErrorCode);
             Assert.Equal(expectedAuthCode, error.AuthErrorCode);
@@ -99,8 +99,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new AuthErrorHandler();
-            var error = Assert.Throws<FirebaseAuthException>(() => handler.ThrowIfError(resp, json));
+            var error = Assert.Throws<FirebaseAuthException>(
+                () => AuthErrorHandler.Instance.ThrowIfError(resp, json));
 
             Assert.Equal(ErrorCode.Internal, error.ErrorCode);
             Assert.Equal(
@@ -123,8 +123,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new AuthErrorHandler();
-            var error = Assert.Throws<FirebaseAuthException>(() => handler.ThrowIfError(resp, json));
+            var error = Assert.Throws<FirebaseAuthException>(
+                () => AuthErrorHandler.Instance.ThrowIfError(resp, json));
 
             Assert.Equal(ErrorCode.Internal, error.ErrorCode);
             Assert.Equal(
@@ -145,8 +145,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new AuthErrorHandler();
-            var error = Assert.Throws<FirebaseAuthException>(() => handler.ThrowIfError(resp, json));
+            var error = Assert.Throws<FirebaseAuthException>(
+                () => AuthErrorHandler.Instance.ThrowIfError(resp, json));
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
@@ -167,8 +167,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Content = new StringContent(text, Encoding.UTF8, "text/plain"),
             };
 
-            var handler = new AuthErrorHandler();
-            var error = Assert.Throws<FirebaseAuthException>(() => handler.ThrowIfError(resp, text));
+            var error = Assert.Throws<FirebaseAuthException>(
+                () => AuthErrorHandler.Instance.ThrowIfError(resp, text));
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(

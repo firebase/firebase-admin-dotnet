@@ -36,14 +36,12 @@ namespace FirebaseAdmin.Auth
 
         private readonly string baseUrl;
         private readonly ConfigurableHttpClient httpClient;
-        private readonly AuthErrorHandler errorHandler;
 
         private ListUsersRequest(
             string baseUrl, ConfigurableHttpClient httpClient, ListUsersOptions options)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
-            this.errorHandler = new AuthErrorHandler();
             this.RequestParameters = new Dictionary<string, IParameter>();
             this.SetPageSize(options.PageSize);
             this.SetPageToken(options.PageToken);
@@ -175,18 +173,15 @@ namespace FirebaseAdmin.Auth
         {
             var response = await this.SendAsync(request, cancellationToken)
                 .ConfigureAwait(false);
-            return response.SafeDeserialize<DownloadAccountResponse>(
-                FirebaseUserManager.HandleParseError).Result;
+            var parsed = response.SafeDeserialize<DownloadAccountResponse>();
+            return parsed.Result;
         }
 
-        private async Task<Extensions.ResponseInfo> SendAsync(
+        private async Task<HttpExtensions.ResponseInfo> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var response = await this.httpClient.SendAndReadAsync(
-                request, cancellationToken, FirebaseUserManager.HandleHttpError)
+            return await this.httpClient.SendAndReadAsync(request, cancellationToken)
                 .ConfigureAwait(false);
-            this.errorHandler.ThrowIfError(response.HttpResponse, response.Body);
-            return response;
         }
 
         /// <summary>
