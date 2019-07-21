@@ -719,6 +719,33 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task ListUsersNonJsonResponse()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "not json",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var pagedEnumerable = auth.ListUsersAsync(null);
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await pagedEnumerable.First());
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
+            Assert.Equal(
+                "Error while parsing Auth service response.",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.NotNull(exception.InnerException);
+
+            Assert.Single(handler.Requests);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("1000", query["maxResults"]);
+        }
+
+        [Fact]
         public async Task CreateUser()
         {
             var handler = new MockMessageHandler()
