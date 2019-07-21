@@ -228,7 +228,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
         /// the verified and decoded ID token.</returns>
         /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If the ID token fails to verify.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
         /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
         public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken)
         {
@@ -249,7 +249,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
         /// the verified and decoded ID token.</returns>
         /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If the ID token fails to verify.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
         /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>

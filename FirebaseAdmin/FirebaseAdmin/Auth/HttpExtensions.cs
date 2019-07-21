@@ -44,13 +44,22 @@ namespace FirebaseAdmin.Auth
             }
             catch (HttpRequestException e)
             {
-                var temp = e.ToFirebaseException();
-                throw new FirebaseAuthException(
-                    temp.ErrorCode,
-                    temp.Message,
-                    inner: temp.InnerException,
-                    response: temp.HttpResponse);
+                throw e.ToFirebaseAuthException();
             }
+        }
+
+        internal static FirebaseAuthException ToFirebaseAuthException(
+            this HttpRequestException exception,
+            string prefix = "",
+            AuthErrorCode? errorCode = null)
+        {
+            var temp = exception.ToFirebaseException();
+            return new FirebaseAuthException(
+                temp.ErrorCode,
+                $"{prefix}{temp.Message}",
+                errorCode,
+                inner: temp.InnerException,
+                response: temp.HttpResponse);
         }
 
         internal class ResponseInfo

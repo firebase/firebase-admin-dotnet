@@ -20,9 +20,24 @@ namespace FirebaseAdmin.Auth
     public enum AuthErrorCode
     {
         /// <summary>
+        /// Failed to retrieve required public key certificates.
+        /// </summary>
+        CertificateFetchFailed,
+
+        /// <summary>
         /// The user with the provided email already exists.
         /// </summary>
         EmailAlreadyExists,
+
+        /// <summary>
+        /// The specified ID token is expired.
+        /// </summary>
+        ExpiredIdToken,
+
+        /// <summary>
+        /// The specified ID token is invalid.
+        /// </summary>
+        InvalidIdToken,
 
         /// <summary>
         /// The user with the provided phone number already exists.

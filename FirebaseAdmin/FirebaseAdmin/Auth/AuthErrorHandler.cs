@@ -25,7 +25,7 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal sealed class AuthErrorHandler : HttpErrorHandler
     {
-        internal static readonly AuthErrorHandler Instance = new AuthErrorHandler();
+        internal static readonly new AuthErrorHandler Instance = new AuthErrorHandler();
 
         private static readonly IReadOnlyDictionary<string, ErrorInfo> CodeToErrorInfo =
             new Dictionary<string, ErrorInfo>()

@@ -24,6 +24,8 @@ namespace FirebaseAdmin
     /// </summary>
     internal class HttpErrorHandler
     {
+        internal static readonly HttpErrorHandler Instance = new HttpErrorHandler();
+
         private static readonly IReadOnlyDictionary<HttpStatusCode, ErrorCode> HttpErrorCodes =
             new Dictionary<HttpStatusCode, ErrorCode>()
             {

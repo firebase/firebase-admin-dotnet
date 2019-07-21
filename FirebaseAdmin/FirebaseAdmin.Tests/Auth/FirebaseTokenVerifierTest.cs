@@ -20,7 +20,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using FirebaseAdmin.Auth;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
@@ -89,8 +88,10 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task MalformedToken()
         {
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync("not-a-token"));
+
+            this.CheckException(exception, "Incorrect number of segments in ID token.");
         }
 
         [Fact]
@@ -101,8 +102,10 @@ namespace FirebaseAdmin.Auth.Tests
                 { "kid", string.Empty },
             };
             var idToken = await CreateTestTokenAsync(headerOverrides: header);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            this.CheckException(exception, "Firebase ID token has no 'kid' claim.");
         }
 
         [Fact]
@@ -113,8 +116,10 @@ namespace FirebaseAdmin.Auth.Tests
                 { "kid", "incorrect-key-id" },
             };
             var idToken = await CreateTestTokenAsync(headerOverrides: header);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            this.CheckException(exception, "Failed to verify ID token signature.");
         }
 
         [Fact]
@@ -125,8 +130,12 @@ namespace FirebaseAdmin.Auth.Tests
                 { "alg", "HS256" },
             };
             var idToken = await CreateTestTokenAsync(headerOverrides: header);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            var expectedMessage = "Firebase ID token has incorrect algorithm."
+                + " Expected RS256 but got HS256.";
+            this.CheckException(exception, expectedMessage);
         }
 
         [Fact]
@@ -138,11 +147,12 @@ namespace FirebaseAdmin.Auth.Tests
                 { "exp", expiryTime },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            var exception = await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
             var expectedMessage = $"Firebase ID token expired at {expiryTime}. "
                 + $"Expected to be greater than {Clock.UnixTimestamp()}.";
-            Assert.Equal(expectedMessage, exception.Message);
+            this.CheckException(exception, expectedMessage, AuthErrorCode.ExpiredIdToken);
         }
 
         [Fact]
@@ -170,11 +180,11 @@ namespace FirebaseAdmin.Auth.Tests
                 { "iat", issuedAt },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            var exception = await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
-            var expectedMessage = $"Firebase ID token issued at future timestamp {issuedAt}. "
-                + $"Expected to be less than {Clock.UnixTimestamp()}.";
-            Assert.Equal(expectedMessage, exception.Message);
+
+            var expectedMessage = $"Firebase ID token issued at future timestamp {issuedAt}.";
+            this.CheckException(exception, expectedMessage);
         }
 
         [Fact]
@@ -201,8 +211,11 @@ namespace FirebaseAdmin.Auth.Tests
                 { "iss", "wrong-issuer" },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            var expectedMessage = "ID token has incorrect issuer (iss) claim.";
+            this.CheckException(exception, expectedMessage);
         }
 
         [Fact]
@@ -213,8 +226,12 @@ namespace FirebaseAdmin.Auth.Tests
                 { "aud", "wrong-audience" },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            var expectedMessage = "ID token has incorrect audience (aud) claim."
+                + " Expected test-project but got wrong-audience";
+            this.CheckException(exception, expectedMessage);
         }
 
         [Fact]
@@ -225,8 +242,11 @@ namespace FirebaseAdmin.Auth.Tests
                 { "sub", string.Empty },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            var expectedMessage = "Firebase ID token has no or empty subject (sub) claim.";
+            this.CheckException(exception, expectedMessage);
         }
 
         [Fact]
@@ -237,8 +257,12 @@ namespace FirebaseAdmin.Auth.Tests
                 { "sub", new string('a', 129) },
             };
             var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            var expectedMessage = "Firebase ID token has a subject claim longer than"
+                + " 128 characters.";
+            this.CheckException(exception, expectedMessage);
         }
 
         [Fact]
@@ -335,6 +359,18 @@ namespace FirebaseAdmin.Auth.Tests
             var credential = GoogleCredential.FromFile("./resources/service_account.json");
             var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
             return new ServiceAccountSigner(serviceAccount);
+        }
+
+        private void CheckException(
+            FirebaseAuthException exception,
+            string prefix,
+            AuthErrorCode errorCode = AuthErrorCode.InvalidIdToken)
+        {
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.StartsWith(prefix, exception.Message);
+            Assert.Equal(errorCode, exception.AuthErrorCode);
+            Assert.Null(exception.InnerException);
+            Assert.Null(exception.HttpResponse);
         }
     }
 

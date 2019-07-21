@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -79,9 +78,11 @@ namespace FirebaseAdmin.Auth
                         {
                             var response = await httpClient.GetAsync(this.certUrl, cancellationToken)
                                 .ConfigureAwait(false);
-                            response.EnsureSuccessStatusCode();
-                            this.cachedKeys = this.ParseKeys(await response.Content.ReadAsStringAsync()
-                                .ConfigureAwait(false));
+                            var json = await response.Content.ReadAsStringAsync()
+                                .ConfigureAwait(false);
+                            this.ThrowIfError(response, json);
+
+                            this.cachedKeys = this.ParseKeys(response, json);
                             var cacheControl = response.Headers.CacheControl;
                             if (cacheControl?.MaxAge != null)
                             {
@@ -93,7 +94,9 @@ namespace FirebaseAdmin.Auth
                 }
                 catch (HttpRequestException e)
                 {
-                    throw new FirebaseException("Failed to retrieve latest public keys.", e);
+                    throw e.ToFirebaseAuthException(
+                        "Failed to retrieve latest public keys. ",
+                        AuthErrorCode.CertificateFetchFailed);
                 }
                 finally
                 {
@@ -104,15 +107,25 @@ namespace FirebaseAdmin.Auth
             return this.cachedKeys;
         }
 
-        private IReadOnlyList<PublicKey> ParseKeys(string json)
+        private void ThrowIfError(HttpResponseMessage response, string body)
         {
-            var rawKeys = NewtonsoftJsonSerializer.Instance
-                .Deserialize<Dictionary<string, string>>(json);
-            if (rawKeys.Count == 0)
+            try
             {
-                throw new InvalidDataException("No public keys present in the response.");
+                HttpErrorHandler.Instance.ThrowIfError(response, body);
             }
+            catch (FirebaseException ex)
+            {
+                throw new FirebaseAuthException(
+                    ex.ErrorCode,
+                    ex.Message,
+                    AuthErrorCode.CertificateFetchFailed,
+                    response: ex.HttpResponse);
+            }
+        }
 
+        private IReadOnlyList<PublicKey> ParseKeys(HttpResponseMessage response, string json)
+        {
+            var rawKeys = this.SafeDeserialize(response, json);
             var builder = ImmutableList.CreateBuilder<PublicKey>();
             foreach (var entry in rawKeys)
             {
@@ -129,6 +142,37 @@ namespace FirebaseAdmin.Auth
             }
 
             return builder.ToImmutableList();
+        }
+
+        private Dictionary<string, string> SafeDeserialize(
+            HttpResponseMessage response, string json)
+        {
+            Dictionary<string, string> rawKeys;
+            try
+            {
+                rawKeys = NewtonsoftJsonSerializer.Instance
+                    .Deserialize<Dictionary<string, string>>(json);
+            }
+            catch (Exception e)
+            {
+                throw new FirebaseAuthException(
+                    ErrorCode.Unknown,
+                    $"Failed to parse certificate response: {json}.",
+                    AuthErrorCode.CertificateFetchFailed,
+                    inner: e,
+                    response: response);
+            }
+
+            if (rawKeys.Count == 0)
+            {
+                throw new FirebaseAuthException(
+                    ErrorCode.Unknown,
+                    "No public keys present in the response.",
+                    AuthErrorCode.CertificateFetchFailed,
+                    response: response);
+            }
+
+            return rawKeys;
         }
     }
 }
