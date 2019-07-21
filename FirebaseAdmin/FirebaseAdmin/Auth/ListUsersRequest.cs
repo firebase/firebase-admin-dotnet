@@ -70,15 +70,16 @@ namespace FirebaseAdmin.Auth
             };
         }
 
-        public Task<Stream> ExecuteAsStreamAsync()
+        public async Task<Stream> ExecuteAsStreamAsync()
         {
-            return this.ExecuteAsStreamAsync(default);
+            return await this.ExecuteAsStreamAsync(default).ConfigureAwait(false);
         }
 
-        public Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken)
+        public async Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken)
         {
-            var response = this.SendAsync(this.CreateRequest(), cancellationToken);
-            return response.Result.HttpResponse.Content.ReadAsStreamAsync();
+            var response = await this.httpClient.SendAsync(this.CreateRequest(), cancellationToken)
+                .ConfigureAwait(false);
+            return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         }
 
         public Stream ExecuteAsStream()
@@ -86,9 +87,9 @@ namespace FirebaseAdmin.Auth
             return this.ExecuteAsStreamAsync().Result;
         }
 
-        public Task<ExportedUserRecords> ExecuteAsync()
+        public async Task<ExportedUserRecords> ExecuteAsync()
         {
-            return this.ExecuteAsync(default);
+            return await this.ExecuteAsync(default).ConfigureAwait(false);
         }
 
         public async Task<ExportedUserRecords> ExecuteAsync(CancellationToken cancellationToken)
@@ -174,13 +175,15 @@ namespace FirebaseAdmin.Auth
         {
             var response = await this.SendAsync(request, cancellationToken)
                 .ConfigureAwait(false);
-            return response.SafeDeserialize<DownloadAccountResponse>().Result;
+            return response.SafeDeserialize<DownloadAccountResponse>(
+                FirebaseUserManager.HandleParseError).Result;
         }
 
-        private async Task<AuthHttpUtils.ResponseInfo> SendAsync(
+        private async Task<Extensions.ResponseInfo> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var response = await this.httpClient.SendAndReadAsync(request, cancellationToken)
+            var response = await this.httpClient.SendAndReadAsync(
+                request, cancellationToken, FirebaseUserManager.HandleHttpError)
                 .ConfigureAwait(false);
             this.errorHandler.ThrowIfError(response.HttpResponse, response.Body);
             return response;
