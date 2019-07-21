@@ -42,11 +42,6 @@ namespace FirebaseAdmin
                 SocketError.NetworkUnreachable,
             };
 
-        internal delegate FirebaseException HttpErrorHandlerFunc(HttpRequestException e);
-
-        internal delegate FirebaseException ParseErrorHandlerFunc(
-            Exception e, HttpResponseMessage response);
-
         /// <summary>
         /// Extracts and returns the underlying <see cref="ServiceAccountCredential"/> from a
         /// <see cref="GoogleCredential"/>. Returns null if the <c>GoogleCredential</c> is not
@@ -191,65 +186,6 @@ namespace FirebaseAdmin
             }
 
             return new FirebaseException(code, $"{message}: {exception.Message}", exception);
-        }
-
-        internal static async Task<ResponseInfo> SendAndReadAsync(
-            this ConfigurableHttpClient httpClient,
-            HttpRequestMessage request,
-            CancellationToken cancellationToken,
-            HttpErrorHandlerFunc func = null)
-        {
-            try
-            {
-                var response = await httpClient.SendAsync(request, cancellationToken)
-                    .ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-                return new ResponseInfo()
-                {
-                    HttpResponse = response,
-                    Body = json,
-                };
-            }
-            catch (HttpRequestException e)
-            {
-                if (func == null)
-                {
-                    throw e.ToFirebaseException();
-                }
-
-                throw func(e);
-            }
-        }
-
-        internal class ResponseInfo
-        {
-            internal HttpResponseMessage HttpResponse { get; set; }
-
-            internal string Body { get; set; }
-
-            internal ParsedResponseInfo<TResult> SafeDeserialize<TResult>(ParseErrorHandlerFunc func)
-            {
-                try
-                {
-                    var parsed = NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(this.Body);
-                    return new ParsedResponseInfo<TResult>()
-                    {
-                        Result = parsed,
-                        HttpResponse = this.HttpResponse,
-                        Body = this.Body,
-                    };
-                }
-                catch (Exception e)
-                {
-                    throw func(e, this.HttpResponse);
-                }
-            }
-        }
-
-        internal class ParsedResponseInfo<T> : ResponseInfo
-        {
-            internal T Result { get; set; }
         }
     }
 }

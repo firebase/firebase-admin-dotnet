@@ -25,6 +25,8 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal sealed class AuthErrorHandler : HttpErrorHandler
     {
+        internal static readonly AuthErrorHandler Instance = new AuthErrorHandler();
+
         private static readonly IReadOnlyDictionary<string, ErrorInfo> CodeToErrorInfo =
             new Dictionary<string, ErrorInfo>()
             {
@@ -43,6 +45,8 @@ namespace FirebaseAdmin.Auth
                         "No user record found for the given identifier")
                 },
             };
+
+        private AuthErrorHandler() { }
 
         protected sealed override FirebaseExceptionArgs CreateExceptionArgs(
             HttpResponseMessage response, string body)
