@@ -31,11 +31,25 @@ namespace FirebaseAdmin.Auth
             new Dictionary<string, ErrorInfo>()
             {
                 {
+                    "DUPLICATE_EMAIL",
+                    new ErrorInfo(
+                        ErrorCode.AlreadyExists,
+                        AuthErrorCode.EmailAlreadyExists,
+                        "The user with the provided email already exists")
+                },
+                {
                     "DUPLICATE_LOCAL_ID",
                     new ErrorInfo(
                         ErrorCode.AlreadyExists,
                         AuthErrorCode.UidAlreadyExists,
                         "The user with the provided uid already exists")
+                },
+                {
+                    "PHONE_NUMBER_EXISTS",
+                    new ErrorInfo(
+                        ErrorCode.AlreadyExists,
+                        AuthErrorCode.PhoneNumberAlreadyExists,
+                        "The user with the provided phone number already exists")
                 },
                 {
                     "USER_NOT_FOUND",

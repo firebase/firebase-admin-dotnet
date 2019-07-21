@@ -20,6 +20,16 @@ namespace FirebaseAdmin.Auth
     public enum AuthErrorCode
     {
         /// <summary>
+        /// The user with the provided email already exists.
+        /// </summary>
+        EmailAlreadyExists,
+
+        /// <summary>
+        /// The user with the provided phone number already exists.
+        /// </summary>
+        PhoneNumberAlreadyExists,
+
+        /// <summary>
         /// The user with the provided uid already exists.
         /// </summary>
         UidAlreadyExists,
