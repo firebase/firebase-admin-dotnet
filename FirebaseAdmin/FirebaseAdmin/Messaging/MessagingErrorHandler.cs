@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using FirebaseAdmin.Util;
 using Google.Apis.Json;
 using Newtonsoft.Json;
 
@@ -24,8 +26,13 @@ namespace FirebaseAdmin.Messaging
     /// Parses error responses received from the FCM service, and creates instances of
     /// <see cref="FirebaseMessagingException"/>.
     /// </summary>
-    internal sealed class MessagingErrorHandler : PlatformErrorHandler
+    internal sealed class MessagingErrorHandler
+    : PlatformErrorHandler<FirebaseMessagingException>,
+        IHttpRequestExceptionHandler<FirebaseMessagingException>,
+        IDeserializeExceptionHandler<FirebaseMessagingException>
     {
+        internal static readonly MessagingErrorHandler Instance = new MessagingErrorHandler();
+
         private static readonly string MessagingErrorType =
             "type.googleapis.com/google.firebase.fcm.v1.FcmError";
 
@@ -42,7 +49,30 @@ namespace FirebaseAdmin.Messaging
                 { "UNREGISTERED", MessagingErrorCode.Unregistered },
             };
 
-        protected override FirebaseException CreateException(FirebaseExceptionArgs args)
+        private MessagingErrorHandler() { }
+
+        public FirebaseMessagingException HandleHttpRequestException(
+            HttpRequestException exception)
+        {
+            var temp = exception.ToFirebaseException();
+            return new FirebaseMessagingException(
+                temp.ErrorCode,
+                temp.Message,
+                inner: temp.InnerException,
+                response: temp.HttpResponse);
+        }
+
+        public FirebaseMessagingException HandleDeserializeException(
+            Exception exception, ResponseInfo responseInfo)
+        {
+            return new FirebaseMessagingException(
+                ErrorCode.Unknown,
+                $"Error parsing response from FCM: {responseInfo.Body}",
+                inner: exception,
+                response: responseInfo.HttpResponse);
+        }
+
+        protected override FirebaseMessagingException CreateException(FirebaseExceptionArgs args)
         {
             return new FirebaseMessagingException(
                 args.Code,

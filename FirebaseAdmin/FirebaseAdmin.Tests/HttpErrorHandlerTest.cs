@@ -35,6 +35,8 @@ namespace FirebaseAdmin.Tests
                 new object[] { HttpStatusCode.ServiceUnavailable, ErrorCode.Unavailable },
             };
 
+        private static readonly TestHttpErrorHandler ErrorHandler = new TestHttpErrorHandler();
+
         [Theory]
         [MemberData(nameof(HttpErrorCodes))]
         public void KnownHttpStatusCode(HttpStatusCode statusCode, ErrorCode expected)
@@ -46,8 +48,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new HttpErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(expected, error.ErrorCode);
             Assert.Equal(
@@ -68,8 +69,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(text, Encoding.UTF8, "text/plain"),
             };
 
-            var handler = new HttpErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, text));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, text);
 
             Assert.Equal(expected, error.ErrorCode);
             Assert.Equal(
@@ -89,8 +89,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new HttpErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unknown, error.ErrorCode);
             Assert.Equal(
@@ -99,5 +98,13 @@ namespace FirebaseAdmin.Tests
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
         }
-    }
+
+        private class TestHttpErrorHandler : HttpErrorHandler<FirebaseException>
+        {
+            protected override FirebaseException CreateException(FirebaseExceptionArgs args)
+            {
+                return new FirebaseException(args.Code, args.Message, response: args.HttpResponse);
+            }
+        }
+  }
 }

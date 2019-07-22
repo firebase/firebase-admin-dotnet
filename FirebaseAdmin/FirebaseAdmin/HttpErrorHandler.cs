@@ -16,13 +16,15 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using FirebaseAdmin.Util;
 
 namespace FirebaseAdmin
 {
     /// <summary>
     /// Base class for handling HTTP error responses.
     /// </summary>
-    internal class HttpErrorHandler
+    internal abstract class HttpErrorHandler<T> : IHttpErrorResponseHandler<T>
+    where T : FirebaseException
     {
         private static readonly IReadOnlyDictionary<HttpStatusCode, ErrorCode> HttpErrorCodes =
             new Dictionary<HttpStatusCode, ErrorCode>()
@@ -37,23 +39,10 @@ namespace FirebaseAdmin
                 { HttpStatusCode.ServiceUnavailable, ErrorCode.Unavailable },
             };
 
-        /// <summary>
-        /// Parses the given HTTP response and throws a <see cref="FirebaseException"/> if it
-        /// contains an error. Does nothing if the status code of the HTTP response indicates
-        /// success.
-        /// </summary>
-        /// <param name="response">HTTP response message to process.</param>
-        /// <param name="body">The response body read from the message.</param>
-        /// <exception cref="FirebaseException">If the response contains an error.</exception>
-        internal void ThrowIfError(HttpResponseMessage response, string body)
+        public T HandleHttpErrorResponse(HttpResponseMessage response, string body)
         {
-            if (response.IsSuccessStatusCode)
-            {
-                return;
-            }
-
             var args = this.CreateExceptionArgs(response, body);
-            throw this.CreateException(args);
+            return this.CreateException(args);
         }
 
         /// <summary>
@@ -89,10 +78,7 @@ namespace FirebaseAdmin
         /// <param name="args">A <see cref="FirebaseExceptionArgs"/> instance containing error
         /// code, message and other details.</param>
         /// <returns>A <see cref="FirebaseException"/> object.</returns>
-        protected virtual FirebaseException CreateException(FirebaseExceptionArgs args)
-        {
-            return new FirebaseException(args.Code, args.Message, response: args.HttpResponse);
-        }
+        protected abstract T CreateException(FirebaseExceptionArgs args);
 
         internal sealed class FirebaseExceptionArgs
         {

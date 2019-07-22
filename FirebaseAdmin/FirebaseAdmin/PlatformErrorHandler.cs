@@ -24,9 +24,10 @@ namespace FirebaseAdmin
     /// See <a href="https://cloud.google.com/apis/design/errors">Errors</a> for more details on
     /// how Google Cloud Platform APIs report back error codes and details. If this class fails
     /// to determine an error code or message from a given API response, it falls back to the
-    /// error handling logic defined in the parent <see cref="HttpErrorHandler"/> class.
+    /// error handling logic defined in the parent <see cref="HttpErrorHandler{T}"/> class.
     /// </summary>
-    internal class PlatformErrorHandler : HttpErrorHandler
+    internal abstract class PlatformErrorHandler<T> : HttpErrorHandler<T>
+    where T : FirebaseException
     {
         private static readonly IReadOnlyDictionary<string, ErrorCode> PlatformErrorCodes =
             new Dictionary<string, ErrorCode>()
@@ -38,7 +39,8 @@ namespace FirebaseAdmin
                 { "UNAVAILABLE", ErrorCode.Unavailable },
             };
 
-        protected sealed override FirebaseExceptionArgs CreateExceptionArgs(HttpResponseMessage response, string body)
+        protected sealed override FirebaseExceptionArgs CreateExceptionArgs(
+            HttpResponseMessage response, string body)
         {
             var parsedResponse = this.ParseResponseBody(body);
             var status = parsedResponse.Error?.Status ?? string.Empty;
