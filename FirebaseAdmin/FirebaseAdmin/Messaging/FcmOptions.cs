@@ -24,7 +24,7 @@ namespace FirebaseAdmin.Messaging
             {
                 AnalyticsLabel = this.AnalyticsLabel,
             };
-            AnalyticsLabelChecker.CheckAnalyticsLabelOrThrow(this.AnalyticsLabel);
+            AnalyticsLabelChecker.ValidateAnalyticsLabel(copy.AnalyticsLabel);
 
             return copy;
         }
