@@ -97,7 +97,7 @@ namespace FirebaseAdmin.Messaging
                         this.Priority = Messaging.Priority.High;
                         return;
                     default:
-                        throw new FirebaseException(
+                        throw new ArgumentException(
                             $"Invalid priority value: {value}. Only 'high' and 'normal'"
                             + " are allowed.");
                 }

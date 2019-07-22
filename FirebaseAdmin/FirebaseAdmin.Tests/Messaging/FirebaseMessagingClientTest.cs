@@ -34,9 +34,9 @@ namespace FirebaseAdmin.Messaging.Tests
         public void NoProjectId()
         {
             var clientFactory = new HttpClientFactory();
-            Assert.Throws<FirebaseException>(
+            Assert.Throws<ArgumentException>(
                 () => new FirebaseMessagingClient(clientFactory, MockCredential, null));
-            Assert.Throws<FirebaseException>(
+            Assert.Throws<ArgumentException>(
                 () => new FirebaseMessagingClient(clientFactory, MockCredential, string.Empty));
         }
 

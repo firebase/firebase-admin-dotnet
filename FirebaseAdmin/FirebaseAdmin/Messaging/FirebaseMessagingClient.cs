@@ -49,7 +49,7 @@ namespace FirebaseAdmin.Messaging
         {
             if (string.IsNullOrEmpty(projectId))
             {
-                throw new FirebaseException(
+                throw new ArgumentException(
                     "Project ID is required to access messaging service. Use a service account "
                     + "credential or set the project ID explicitly via AppOptions. Alternatively "
                     + "you can set the project ID via the GOOGLE_CLOUD_PROJECT environment "
@@ -83,7 +83,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
