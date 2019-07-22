@@ -83,7 +83,7 @@ namespace FirebaseAdmin.Auth
         {
             return new FirebaseAuthException(
                 ErrorCode.Unknown,
-                $"Error while parsing Auth service response: {responseInfo.Body}",
+                $"Error while parsing Auth service response. {exception.Message}: {responseInfo.Body}",
                 AuthErrorCode.UnexpectedResponse,
                 inner: exception,
                 response: responseInfo.HttpResponse);

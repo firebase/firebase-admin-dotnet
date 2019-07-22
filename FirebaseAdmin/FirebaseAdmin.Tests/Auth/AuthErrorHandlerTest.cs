@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using FirebaseAdmin.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
@@ -189,6 +191,44 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Null(error.AuthErrorCode);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
+        }
+
+        [Fact]
+        public void DeserializeException()
+        {
+            var text = "plain text";
+            var resp = new HttpResponseMessage()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Content = new StringContent(text, Encoding.UTF8, "text/plain"),
+            };
+            var inner = new Exception("Deserialization error");
+
+            var error = AuthErrorHandler.Instance.HandleDeserializeException(
+                inner, new ResponseInfo(resp, text));
+
+            Assert.Equal(ErrorCode.Unknown, error.ErrorCode);
+            Assert.Equal(
+                $"Error while parsing Auth service response. Deserialization error: {text}",
+                error.Message);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, error.AuthErrorCode);
+            Assert.Same(resp, error.HttpResponse);
+            Assert.Same(inner, error.InnerException);
+        }
+
+        [Fact]
+        public void HttpRequestException()
+        {
+            var exception = new HttpRequestException("network error");
+
+            var error = AuthErrorHandler.Instance.HandleHttpRequestException(exception);
+
+            Assert.Equal(ErrorCode.Unknown, error.ErrorCode);
+            Assert.Equal(
+                "Unknown error while making a remote service call: network error", error.Message);
+            Assert.Null(error.AuthErrorCode);
+            Assert.Null(error.HttpResponse);
+            Assert.Same(exception, error.InnerException);
         }
     }
 }
