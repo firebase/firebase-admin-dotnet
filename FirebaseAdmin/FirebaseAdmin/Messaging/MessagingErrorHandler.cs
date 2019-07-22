@@ -67,7 +67,7 @@ namespace FirebaseAdmin.Messaging
         {
             return new FirebaseMessagingException(
                 ErrorCode.Unknown,
-                $"Error parsing response from FCM: {responseInfo.Body}",
+                $"Error parsing response from FCM. {exception.Message}: {responseInfo.Body}",
                 inner: exception,
                 response: responseInfo.HttpResponse);
         }
