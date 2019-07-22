@@ -1701,24 +1701,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     AnalyticsLabel = "label!",
                 },
             };
-            var expected = new JObject()
-            {
-                { "topic", "test-topic" },
-                {
-                    "notification", new JObject()
-                    {
-                        { "title", "title" },
-                        { "body", "body" },
-                    }
-                },
-                {
-                    "fcm_options", new JObject()
-                    {
-                        { "analytics_label", "label" },
-                    }
-                },
-            };
-            Assert.Throws<ArgumentException>(() => this.AssertJsonEquals(expected, message));
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
         }
 
         private void AssertJsonEquals(JObject expected, Message actual)
