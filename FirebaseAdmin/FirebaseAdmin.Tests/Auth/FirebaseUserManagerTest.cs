@@ -734,7 +734,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
             Assert.Equal(
-                "Error while parsing Auth service response.",
+                "Error while parsing Auth service response: not json",
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.NotNull(exception.InnerException);

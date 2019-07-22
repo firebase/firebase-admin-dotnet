@@ -17,9 +17,9 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Api.Gax.Rest;
-using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
@@ -36,7 +36,7 @@ namespace FirebaseAdmin.Auth
     {
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
-        private readonly ConfigurableHttpClient httpClient;
+        private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
 
         internal FirebaseUserManager(FirebaseUserManagerArgs args)
@@ -47,7 +47,15 @@ namespace FirebaseAdmin.Auth
                     "Must initialize FirebaseApp with a project ID to manage users.");
             }
 
-            this.httpClient = args.ClientFactory.CreateAuthorizedHttpClient(args.Credential);
+            this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
+                new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
+                {
+                    HttpClientFactory = args.ClientFactory,
+                    Credential = args.Credential,
+                    ErrorResponseHandler = AuthErrorHandler.Instance,
+                    RequestExceptionHandler = AuthErrorHandler.Instance,
+                    DeserializeExceptionHandler = AuthErrorHandler.Instance,
+                });
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
         }
 
@@ -253,15 +261,7 @@ namespace FirebaseAdmin.Auth
             return new UserRecord(result.Users[0]);
         }
 
-        private async Task<HttpExtensions.ParsedResponseInfo<TResult>> PostAndDeserializeAsync<TResult>(
-            string path, object body, CancellationToken cancellationToken)
-        {
-            var response = await this.PostAsync(path, body, cancellationToken)
-                .ConfigureAwait(false);
-            return response.SafeDeserialize<TResult>();
-        }
-
-        private async Task<HttpExtensions.ResponseInfo> PostAsync(
+        private async Task<DeserializedResponseInfo<TResult>> PostAndDeserializeAsync<TResult>(
             string path, object body, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage()
@@ -270,14 +270,8 @@ namespace FirebaseAdmin.Auth
                 RequestUri = new Uri($"{this.baseUrl}/{path}"),
                 Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
             };
-            return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        }
-
-        private async Task<HttpExtensions.ResponseInfo> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
             return await this.httpClient
-                .SendAndReadAsync(request, cancellationToken)
+                .SendAndDeserializeAsync<TResult>(request, cancellationToken)
                 .ConfigureAwait(false);
         }
 

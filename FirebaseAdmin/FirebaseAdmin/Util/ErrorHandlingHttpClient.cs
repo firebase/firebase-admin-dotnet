@@ -81,12 +81,19 @@ namespace FirebaseAdmin.Util
             }
         }
 
+        internal async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken = default)
+        {
+            return await this.httpClient.SendAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         private async Task<ResponseInfo> SendAndReadAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
             try
             {
-                var response = await this.httpClient.SendAsync(request, cancellationToken)
+                var response = await this.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
                 var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)

@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using FirebaseAdmin.Util;
 using Google.Apis.Json;
 using Newtonsoft.Json;
 
@@ -23,7 +25,10 @@ namespace FirebaseAdmin.Auth
     /// Parses error responses received from the Auth service, and creates instances of
     /// <see cref="FirebaseAuthException"/>.
     /// </summary>
-    internal sealed class AuthErrorHandler : HttpErrorHandler
+    internal sealed class AuthErrorHandler
+    : HttpErrorHandler<FirebaseAuthException>,
+        IHttpRequestExceptionHandler<FirebaseAuthException>,
+        IDeserializeExceptionHandler<FirebaseAuthException>
     {
         internal static readonly AuthErrorHandler Instance = new AuthErrorHandler();
 
@@ -62,6 +67,28 @@ namespace FirebaseAdmin.Auth
 
         private AuthErrorHandler() { }
 
+        public FirebaseAuthException HandleHttpRequestException(
+            HttpRequestException exception)
+        {
+            var temp = exception.ToFirebaseException();
+            return new FirebaseAuthException(
+                temp.ErrorCode,
+                temp.Message,
+                inner: temp.InnerException,
+                response: temp.HttpResponse);
+        }
+
+        public FirebaseAuthException HandleDeserializeException(
+            Exception exception, ResponseInfo responseInfo)
+        {
+            return new FirebaseAuthException(
+                ErrorCode.Unknown,
+                $"Error while parsing Auth service response: {responseInfo.Body}",
+                AuthErrorCode.UnexpectedResponse,
+                inner: exception,
+                response: responseInfo.HttpResponse);
+        }
+
         protected sealed override FirebaseExceptionArgs CreateExceptionArgs(
             HttpResponseMessage response, string body)
         {
@@ -81,7 +108,7 @@ namespace FirebaseAdmin.Auth
             };
         }
 
-        protected override FirebaseException CreateException(FirebaseExceptionArgs args)
+        protected override FirebaseAuthException CreateException(FirebaseExceptionArgs args)
         {
             return new FirebaseAuthException(
                 args.Code,
