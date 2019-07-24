@@ -216,6 +216,24 @@ namespace FirebaseAdmin.Util.Tests
                 () => new ErrorHandlingHttpClient<FirebaseException>(args));
         }
 
+        [Fact]
+        public async Task Dispose()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var httpClient = new ErrorHandlingHttpClient<FirebaseException>(
+                this.CreateArgs(factory));
+
+            httpClient.Dispose();
+
+            await Assert.ThrowsAsync<ObjectDisposedException>(
+                async () => await httpClient.SendAndDeserializeAsync<Dictionary<string, string>>(
+                this.CreateRequest()));
+        }
+
         private ErrorHandlingHttpClientArgs<FirebaseException> CreateArgs(
             HttpClientFactory factory, GoogleCredential credential = null)
         {
