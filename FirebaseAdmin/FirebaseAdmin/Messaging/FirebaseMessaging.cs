@@ -83,7 +83,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         public async Task<string> SendAsync(Message message)
@@ -102,7 +102,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
@@ -127,7 +127,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -153,7 +153,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -173,6 +173,8 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
@@ -186,6 +188,8 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -201,6 +205,8 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
@@ -217,6 +223,8 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
@@ -233,6 +241,8 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
@@ -244,6 +254,8 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -261,6 +273,8 @@ namespace FirebaseAdmin.Messaging
         /// validations, and emulates the send operation. This is a good way to check if a
         /// certain message will be accepted by FCM for delivery.</para>
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
@@ -279,6 +293,8 @@ namespace FirebaseAdmin.Messaging
         /// validations, and emulates the send operation. This is a good way to check if a
         /// certain message will be accepted by FCM for delivery.</para>
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,

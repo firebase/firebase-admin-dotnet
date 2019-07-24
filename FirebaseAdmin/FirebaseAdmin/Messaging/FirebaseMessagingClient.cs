@@ -42,13 +42,14 @@ namespace FirebaseAdmin.Messaging
         private readonly string sendUrl;
         private readonly string restPath;
         private readonly FCMClientService fcmClientService;
+        private readonly HttpErrorHandler errorHandler;
 
         public FirebaseMessagingClient(
             HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
         {
             if (string.IsNullOrEmpty(projectId))
             {
-                throw new FirebaseException(
+                throw new ArgumentException(
                     "Project ID is required to access messaging service. Use a service account "
                     + "credential or set the project ID explicitly via AppOptions. Alternatively "
                     + "you can set the project ID via the GOOGLE_CLOUD_PROJECT environment "
@@ -60,6 +61,7 @@ namespace FirebaseAdmin.Messaging
             this.sendUrl = string.Format(FcmSendUrl, projectId);
             this.restPath = this.sendUrl.Substring(FcmBaseUrl.Length);
             this.fcmClientService = new FCMClientService(this.httpClient);
+            this.errorHandler = new MessagingErrorHandler();
         }
 
         internal static string ClientVersion
@@ -81,7 +83,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -103,21 +105,14 @@ namespace FirebaseAdmin.Messaging
             {
                 var response = await this.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
-                {
-                    // TODO(hkj): Handle error responses.
-                    var error = "Response status code does not indicate success: "
-                            + $"{(int)response.StatusCode} ({response.StatusCode})"
-                            + $"{Environment.NewLine}{json}";
-                    throw new FirebaseException(error);
-                }
+                this.errorHandler.ThrowIfError(response, json);
 
                 var parsed = JsonConvert.DeserializeObject<SingleMessageResponse>(json);
                 return parsed.Name;
             }
             catch (HttpRequestException e)
             {
-                throw e.ToFirebaseException();
+                throw this.ToFirebaseMessagingException(e);
             }
         }
 
@@ -157,7 +152,7 @@ namespace FirebaseAdmin.Messaging
             }
             catch (HttpRequestException e)
             {
-                throw new FirebaseException("Error while calling the FCM service.", e);
+                throw this.ToFirebaseMessagingException(e);
             }
         }
 
@@ -169,11 +164,6 @@ namespace FirebaseAdmin.Messaging
         private static void AddCommonHeaders(HttpRequestMessage request)
         {
             request.Headers.Add("X-Firebase-Client", ClientVersion);
-        }
-
-        private static FirebaseException CreateExceptionFor(RequestError requestError)
-        {
-            return new FirebaseException(requestError.ToString());
         }
 
         private async Task<HttpResponseMessage> SendRequestAsync(object body, CancellationToken cancellationToken)
@@ -198,21 +188,26 @@ namespace FirebaseAdmin.Messaging
             var batch = this.CreateBatchRequest(
                 messages,
                 dryRun,
-                (content, error, index, message) =>
+                async (content, error, index, message) =>
                 {
+                    SendResponse sendResponse;
                     if (error != null)
                     {
-                        responses.Add(SendResponse.FromException(CreateExceptionFor(error)));
+                        sendResponse = SendResponse.FromException(await this.CreateException(message));
                     }
                     else if (content != null)
                     {
-                        responses.Add(SendResponse.FromMessageId(content.Name));
+                        sendResponse = SendResponse.FromMessageId(content.Name);
                     }
                     else
                     {
-                        responses.Add(SendResponse.FromException(new FirebaseException(
-                            $"Unexpected batch response. Response status code was {message.StatusCode}.")));
+                        var exception = new FirebaseMessagingException(
+                            ErrorCode.Unknown,
+                            $"Unexpected batch response. Response status code: {message.StatusCode}.");
+                        sendResponse = SendResponse.FromException(exception);
                     }
+
+                    responses.Add(sendResponse);
                 });
 
             await batch.ExecuteAsync(cancellationToken).ConfigureAwait(false);
@@ -237,6 +232,31 @@ namespace FirebaseAdmin.Messaging
             }
 
             return batch;
+        }
+
+        private async Task<FirebaseMessagingException> CreateException(HttpResponseMessage response)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            try
+            {
+                this.errorHandler.ThrowIfError(response, json);
+                throw new InvalidOperationException("Invalid batch response");
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                return ex;
+            }
+        }
+
+        private FirebaseMessagingException ToFirebaseMessagingException(
+            HttpRequestException exception)
+        {
+            var temp = exception.ToFirebaseException();
+            return new FirebaseMessagingException(
+                temp.ErrorCode,
+                temp.Message,
+                inner: temp.InnerException,
+                response: temp.HttpResponse);
         }
 
         /// <summary>

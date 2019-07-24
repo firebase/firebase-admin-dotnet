@@ -33,9 +33,7 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void FailureResponse()
         {
-            var exception = new FirebaseException(
-                "error-message",
-                null);
+            var exception = new FirebaseMessagingException(ErrorCode.Unknown, "error-message");
             var response = SendResponse.FromException(exception);
 
             Assert.Null(response.MessageId);

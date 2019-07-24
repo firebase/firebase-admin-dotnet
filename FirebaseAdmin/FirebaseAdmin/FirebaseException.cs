@@ -13,13 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Net.Http;
 
 namespace FirebaseAdmin
 {
     /// <summary>
     /// Common error type for all exceptions raised by Firebase APIs.
     /// </summary>
-    public sealed class FirebaseException : Exception
+    public class FirebaseException : Exception
     {
         internal FirebaseException(string message)
         : base(message) { } // TODO: Remove this constructor
@@ -27,15 +28,22 @@ namespace FirebaseAdmin
         internal FirebaseException(string message, Exception inner)
         : base(message, inner) { } // TODO: Remove this constructor
 
-        internal FirebaseException(ErrorCode code, string message, Exception inner = null)
+        internal FirebaseException(
+            ErrorCode code,
+            string message,
+            Exception inner = null,
+            HttpResponseMessage response = null)
         : base(message, inner)
         {
             this.ErrorCode = code;
+            this.HttpResponse = response;
         }
 
         /// <summary>
         /// Gets the platform-wide error code associated with this exception.
         /// </summary>
         internal ErrorCode ErrorCode { get; private set; } // TODO: Expose this as public
+
+        internal HttpResponseMessage HttpResponse { get; private set; }
     }
 }

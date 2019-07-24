@@ -30,6 +30,7 @@ namespace FirebaseAdmin.Tests
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Equal("Test error message", exception.Message);
             Assert.Null(exception.InnerException);
+            Assert.Null(exception.HttpResponse);
         }
 
         [Fact]
@@ -41,6 +42,20 @@ namespace FirebaseAdmin.Tests
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Equal("Test error message", exception.Message);
             Assert.Same(inner, exception.InnerException);
+            Assert.Null(exception.HttpResponse);
+        }
+
+        [Fact]
+        public void HttpResponse()
+        {
+            var inner = new Exception("Inner exception");
+            var resp = new HttpResponseMessage();
+            var exception = new FirebaseException(ErrorCode.Internal, "Test error message", inner, resp);
+
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Equal("Test error message", exception.Message);
+            Assert.Same(inner, exception.InnerException);
+            Assert.Same(resp, exception.HttpResponse);
         }
 
         [Fact]
@@ -54,6 +69,7 @@ namespace FirebaseAdmin.Tests
             Assert.Equal(
                 "Timed out while making an API call: Test error message", exception.Message);
             Assert.Same(httpError, exception.InnerException);
+            Assert.Null(exception.HttpResponse);
         }
 
         [Fact]
@@ -78,6 +94,7 @@ namespace FirebaseAdmin.Tests
                 Assert.Equal(
                     "Failed to establish a connection: Test error message", exception.Message);
                 Assert.Same(httpError, exception.InnerException);
+                Assert.Null(exception.HttpResponse);
             }
         }
 
@@ -92,6 +109,7 @@ namespace FirebaseAdmin.Tests
                 "Unknown error while making a remote service call: Test error message",
                 exception.Message);
             Assert.Same(httpError, exception.InnerException);
+            Assert.Null(exception.HttpResponse);
         }
     }
 }
