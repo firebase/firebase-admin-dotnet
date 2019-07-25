@@ -51,7 +51,7 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var result = await client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" });
 
-            Assert.Equal(1, result.GetSuccessCount());
+            Assert.Equal(1, result.SuccessCount);
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var result = await client.UnsubscribeFromTopicAsync("test-topic", new List<string> { "abc123" });
 
-            Assert.Equal(1, result.GetSuccessCount());
+            Assert.Equal(1, result.SuccessCount);
         }
     }
 }

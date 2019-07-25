@@ -14,8 +14,8 @@ namespace FirebaseAdmin.Tests.Messaging
             var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
             var response = new TopicManagementResponse(jObjects);
 
-            Assert.Equal(0, response.GetFailureCount());
-            Assert.Equal(2, response.GetSuccessCount());
+            Assert.Equal(0, response.FailureCount);
+            Assert.Equal(2, response.SuccessCount);
         }
 
         [Fact]
@@ -25,8 +25,8 @@ namespace FirebaseAdmin.Tests.Messaging
             var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
             var response = new TopicManagementResponse(jObjects);
 
-            Assert.Equal(1, response.GetFailureCount());
-            Assert.Equal(1, response.GetSuccessCount());
+            Assert.Equal(1, response.FailureCount);
+            Assert.Equal(1, response.SuccessCount);
         }
 
         [Fact]
@@ -56,8 +56,8 @@ namespace FirebaseAdmin.Tests.Messaging
             var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
             var response = new TopicManagementResponse(jObjects);
 
-            Assert.Equal(1, response.GetFailureCount());
-            Assert.Equal(0, response.GetSuccessCount());
+            Assert.Equal(1, response.FailureCount);
+            Assert.Equal(0, response.SuccessCount);
         }
 
         [Fact]
@@ -67,8 +67,8 @@ namespace FirebaseAdmin.Tests.Messaging
             var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
             var response = new TopicManagementResponse(jObjects);
 
-            Assert.Equal(0, response.GetFailureCount());
-            Assert.Equal(1, response.GetSuccessCount());
+            Assert.Equal(0, response.FailureCount);
+            Assert.Equal(1, response.SuccessCount);
         }
 
         [Fact]
@@ -78,8 +78,8 @@ namespace FirebaseAdmin.Tests.Messaging
             var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
             var response = new TopicManagementResponse(jObjects);
 
-            Assert.Equal(2, response.GetFailureCount());
-            Assert.Equal(3, response.GetSuccessCount());
+            Assert.Equal(2, response.FailureCount);
+            Assert.Equal(3, response.SuccessCount);
         }
     }
 }
