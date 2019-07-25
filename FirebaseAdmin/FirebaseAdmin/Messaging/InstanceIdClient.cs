@@ -1,6 +1,19 @@
-﻿using System;
+﻿// Copyright 2019, Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -34,7 +47,7 @@ public sealed class InstanceIdClient
     /// Initializes a new instance of the <see cref="InstanceIdClient"/> class.
     /// </summary>
     /// <param name="clientFactory">A default implentation of the HTTP client factory.</param>
-    /// <param name="credential">A GoogleCredential.</param>
+    /// <param name="credential">An instance of the <see cref="GoogleCredential"/> GoogleCredential class.</param>
     /// <param name="projectId">The Project Id for FCM Messaging.</param>
     public InstanceIdClient(HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
     {
@@ -56,7 +69,7 @@ public sealed class InstanceIdClient
     /// <summary>
     /// Index of the registration token to which this error is related to.
     /// </summary>
-    /// <param name="topic">The topic name to subscribe to.</param>
+    /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
     /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
     /// <returns>The response produced by FCM topic management operations.</returns>
     public async Task<TopicManagementResponse> SubscribeToTopic(string topic, List<string> registrationTokens)
@@ -78,7 +91,7 @@ public sealed class InstanceIdClient
     /// <summary>
     /// Index of the registration token to which this error is related to.
     /// </summary>
-    /// <param name="topic">The topic name to unsubscribe from.</param>
+    /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
     /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
     /// <returns>The response produced by FCM topic management operations.</returns>
     public async Task<TopicManagementResponse> UnsubscribeFromTopic(string topic, List<string> registrationTokens)
@@ -99,7 +112,7 @@ public sealed class InstanceIdClient
 
     private async Task<TopicManagementResponse> SendInstanceIdRequest(string topic, List<string> registrationTokens, string path)
     {
-        string url = string.Format("%s/%s", this.iidHost, path);
+        string url = $"{this.iidHost}/{path}";
         var body = new InstanceIdServiceRequest
         {
             Topic = this.GetPrefixedTopic(topic),
@@ -159,6 +172,7 @@ public sealed class InstanceIdClient
         public List<string> RegistrationTokens { get; set; }
     }
 
+    /*
     private class InstanceIdServiceErrorResponse
     {
         [JsonProperty("error")]
@@ -170,4 +184,5 @@ public sealed class InstanceIdClient
         [JsonProperty("results")]
         public List<JObject> Results { get; set; }
     }
+    */
 }
