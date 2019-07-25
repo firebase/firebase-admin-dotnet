@@ -70,7 +70,7 @@ public sealed class InstanceIdClient : IDisposable
     /// </summary>
     /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
     /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
-    /// <returns>The response produced by FCM topic management operations.</returns>
+    /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic subscription operations.</returns>
     public async Task<TopicManagementResponse> SubscribeToTopicAsync(string topic, List<string> registrationTokens)
     {
         try
@@ -92,7 +92,7 @@ public sealed class InstanceIdClient : IDisposable
     /// </summary>
     /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
     /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
-    /// <returns>The response produced by FCM topic management operations.</returns>
+    /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic unsubscription operations.</returns>
     public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(string topic, List<string> registrationTokens)
     {
         try
