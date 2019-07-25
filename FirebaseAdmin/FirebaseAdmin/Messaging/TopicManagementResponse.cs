@@ -38,7 +38,7 @@ public class TopicManagementResponse
         var resultErrors = new List<Error>();
         for (var i = 0; i < results.Count; i++)
         {
-            if (results[i].HasValues)
+            if (results[i].HasValues && results[i].Value<string>("error") != null)
             {
                 resultErrors.Add(new Error(i, results[i].Value<string>("error")));
             }
@@ -55,28 +55,19 @@ public class TopicManagementResponse
     /// Gets the number of registration tokens that were successfully subscribed or unsubscribed.
     /// </summary>
     /// <returns>The number of registration tokens that were successfully subscribed or unsubscribed.</returns>
-    public int GetSuccessCount()
-    {
-        return this.successCount;
-    }
+    public int SuccessCount => this.successCount;
 
     /// <summary>
     /// Gets the number of registration tokens that could not be subscribed or unsubscribed, and resulted in an error.
     /// </summary>
     /// <returns>The number of failures.</returns>
-    public int GetFailureCount()
-    {
-        return this.errors.Count;
-    }
+    public int FailureCount => this.errors.Count;
 
     /// <summary>
     /// Gets a list of errors encountered while executing the topic management operation.
     /// </summary>
     /// <returns>A non-null list.</returns>
-    public IReadOnlyList<Error> GetErrors()
-    {
-        return this.errors;
-    }
+    public IReadOnlyList<Error> Errors => this.errors;
 
     /// <summary>
     /// A topic management error.

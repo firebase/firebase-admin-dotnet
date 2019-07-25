@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FirebaseAdmin.Messaging;
@@ -119,6 +120,22 @@ namespace FirebaseAdmin.IntegrationTests
             Assert.Equal(2, response.FailureCount);
             Assert.NotNull(response.Responses[0].Exception);
             Assert.NotNull(response.Responses[1].Exception);
+        }
+
+        [Fact]
+        public async Task SubscribeToTopic()
+        {
+            var response = await FirebaseMessaging.DefaultInstance.SubscribeToTopicAsync("test-topic", new List<string> { "token1", "token2" });
+            Assert.NotNull(response);
+            Assert.Equal(2, response.FailureCount);
+        }
+
+        [Fact]
+        public async Task UnsubscribeFromTopic()
+        {
+            var response = await FirebaseMessaging.DefaultInstance.UnsubscribeFromTopicAsync("test-topic", new List<string> { "token1", "token2" });
+            Assert.NotNull(response);
+            Assert.Equal(2, response.FailureCount);
         }
     }
 }

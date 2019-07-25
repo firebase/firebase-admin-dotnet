@@ -49,7 +49,7 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var client = new InstanceIdClient(factory, MockCredential, "test-project");
 
-            var result = await client.SubscribeToTopic("test-topic", new List<string> { "abc123" });
+            var result = await client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" });
 
             Assert.Equal(1, result.GetSuccessCount());
         }
@@ -65,7 +65,7 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var client = new InstanceIdClient(factory, MockCredential, "test-project");
 
-            var result = await client.UnsubscribeFromTopic("test-topic", new List<string> { "abc123" });
+            var result = await client.UnsubscribeFromTopicAsync("test-topic", new List<string> { "abc123" });
 
             Assert.Equal(1, result.GetSuccessCount());
         }

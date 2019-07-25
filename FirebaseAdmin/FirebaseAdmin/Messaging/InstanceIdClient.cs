@@ -25,19 +25,18 @@ using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 /// <summary>
 /// A helper class for interacting with the Firebase Instance ID service.Implements the FCM
 /// topic management functionality.
 /// </summary>
-public sealed class InstanceIdClient
+public sealed class InstanceIdClient : IDisposable
 {
-    private readonly string iidHost = "https://iid.googleapis.com";
+    private const string IidHost = "https://iid.googleapis.com";
 
-    private readonly string iidSubscriberPath = "iid/v1:batchAdd";
+    private const string IidSubscriberPath = "iid/v1:batchAdd";
 
-    private readonly string iidUnsubscribePath = "iid/v1:batchRemove";
+    private const string IidUnsubscribePath = "iid/v1:batchRemove";
 
     private readonly ConfigurableHttpClient httpClient;
 
@@ -67,16 +66,16 @@ public sealed class InstanceIdClient
     }
 
     /// <summary>
-    /// Index of the registration token to which this error is related to.
+    /// Subscribes a list of registration tokens to a topic.
     /// </summary>
     /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
     /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
     /// <returns>The response produced by FCM topic management operations.</returns>
-    public async Task<TopicManagementResponse> SubscribeToTopic(string topic, List<string> registrationTokens)
+    public async Task<TopicManagementResponse> SubscribeToTopicAsync(string topic, List<string> registrationTokens)
     {
         try
         {
-            return await this.SendInstanceIdRequest(topic, registrationTokens, this.iidSubscriberPath).ConfigureAwait(false);
+            return await this.SendInstanceIdRequest(topic, registrationTokens, IidSubscriberPath).ConfigureAwait(false);
         }
         catch (HttpRequestException e)
         {
@@ -89,16 +88,16 @@ public sealed class InstanceIdClient
     }
 
     /// <summary>
-    /// Index of the registration token to which this error is related to.
+    /// Unsubscribes a list of registration tokens from a topic.
     /// </summary>
     /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
     /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
     /// <returns>The response produced by FCM topic management operations.</returns>
-    public async Task<TopicManagementResponse> UnsubscribeFromTopic(string topic, List<string> registrationTokens)
+    public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(string topic, List<string> registrationTokens)
     {
         try
         {
-            return await this.SendInstanceIdRequest(topic, registrationTokens, this.iidUnsubscribePath).ConfigureAwait(false);
+            return await this.SendInstanceIdRequest(topic, registrationTokens, IidUnsubscribePath).ConfigureAwait(false);
         }
         catch (HttpRequestException e)
         {
@@ -110,9 +109,17 @@ public sealed class InstanceIdClient
         }
     }
 
+    /// <summary>
+    /// Dispose the HttpClient.
+    /// </summary>
+    public void Dispose()
+    {
+        this.httpClient.Dispose();
+    }
+
     private async Task<TopicManagementResponse> SendInstanceIdRequest(string topic, List<string> registrationTokens, string path)
     {
-        string url = $"{this.iidHost}/{path}";
+        string url = $"{IidHost}/{path}";
         var body = new InstanceIdServiceRequest
         {
             Topic = this.GetPrefixedTopic(topic),
@@ -171,18 +178,4 @@ public sealed class InstanceIdClient
         [JsonProperty("registration_tokens")]
         public List<string> RegistrationTokens { get; set; }
     }
-
-    /*
-    private class InstanceIdServiceErrorResponse
-    {
-        [JsonProperty("error")]
-        public string Error { get; set; }
-    }
-
-    private class InstanceIdServiceResponse
-    {
-        [JsonProperty("results")]
-        public List<JObject> Results { get; set; }
-    }
-    */
 }
