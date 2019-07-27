@@ -128,6 +128,10 @@ namespace FirebaseAdmin.IntegrationTests
             var response = await FirebaseMessaging.DefaultInstance.SubscribeToTopicAsync("test-topic", new List<string> { "token1", "token2" });
             Assert.NotNull(response);
             Assert.Equal(2, response.FailureCount);
+            Assert.Equal("invalid-argument", response.Errors[0].Reason);
+            Assert.Equal(0, response.Errors[0].Index);
+            Assert.Equal("invalid-argument", response.Errors[1].Reason);
+            Assert.Equal(1, response.Errors[1].Index);
         }
 
         [Fact]
@@ -136,6 +140,10 @@ namespace FirebaseAdmin.IntegrationTests
             var response = await FirebaseMessaging.DefaultInstance.UnsubscribeFromTopicAsync("test-topic", new List<string> { "token1", "token2" });
             Assert.NotNull(response);
             Assert.Equal(2, response.FailureCount);
+            Assert.Equal("invalid-argument", response.Errors[0].Reason);
+            Assert.Equal(0, response.Errors[0].Index);
+            Assert.Equal("invalid-argument", response.Errors[1].Reason);
+            Assert.Equal(1, response.Errors[1].Index);
         }
     }
 }
