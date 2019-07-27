@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Xunit;
@@ -13,33 +14,23 @@ namespace FirebaseAdmin.Tests.Messaging
             GoogleCredential.FromAccessToken("test-token");
 
         [Fact]
-        public void InstanceIdClientThrowsOnNoProjectId()
-        {
-            var clientFactory = new HttpClientFactory();
-            Assert.Throws<ArgumentException>(
-                () => new InstanceIdClient(clientFactory, MockCredential, null));
-            Assert.Throws<ArgumentException>(
-                () => new InstanceIdClient(clientFactory, MockCredential, string.Empty));
-        }
-
-        [Fact]
-        public void InstanceIdClientThrowsOnNoCredential()
+        public void NoCredential()
         {
             var clientFactory = new HttpClientFactory();
             Assert.Throws<ArgumentNullException>(
-                () => new InstanceIdClient(clientFactory, null, "test-project"));
+                () => new InstanceIdClient(clientFactory, null));
         }
 
         [Fact]
-        public void InstanceIdClientThrowsOnNoClientFactory()
+        public void NoClientFactory()
         {
             var clientFactory = new HttpClientFactory();
             Assert.Throws<ArgumentNullException>(
-                () => new InstanceIdClient(null, MockCredential, "test-project"));
+                () => new InstanceIdClient(null, MockCredential));
         }
 
         [Fact]
-        public async Task InstanceIdClientSubscribesToTopic()
+        public async Task SubscribeToTopicAsync()
         {
             var handler = new MockMessageHandler()
             {
@@ -47,7 +38,7 @@ namespace FirebaseAdmin.Tests.Messaging
             };
             var factory = new MockHttpClientFactory(handler);
 
-            var client = new InstanceIdClient(factory, MockCredential, "test-project");
+            var client = new InstanceIdClient(factory, MockCredential);
 
             var result = await client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" });
 
@@ -55,7 +46,7 @@ namespace FirebaseAdmin.Tests.Messaging
         }
 
         [Fact]
-        public async Task InstanceIdClientUnsubscribesFromTopic()
+        public async Task UnsubscribeFromTopicAsync()
         {
             var handler = new MockMessageHandler()
             {
@@ -63,7 +54,7 @@ namespace FirebaseAdmin.Tests.Messaging
             };
             var factory = new MockHttpClientFactory(handler);
 
-            var client = new InstanceIdClient(factory, MockCredential, "test-project");
+            var client = new InstanceIdClient(factory, MockCredential);
 
             var result = await client.UnsubscribeFromTopicAsync("test-topic", new List<string> { "abc123" });
 

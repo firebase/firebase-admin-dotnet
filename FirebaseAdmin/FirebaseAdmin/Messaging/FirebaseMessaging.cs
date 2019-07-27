@@ -35,7 +35,7 @@ namespace FirebaseAdmin.Messaging
                     app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
 
             this.instanceIdClient = new InstanceIdClient(
-                    app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
+                    app.Options.HttpClientFactory, app.Options.Credential);
         }
 
         /// <summary>

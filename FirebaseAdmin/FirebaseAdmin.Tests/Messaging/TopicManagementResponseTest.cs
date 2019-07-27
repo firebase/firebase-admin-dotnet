@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
+using FirebaseAdmin.Messaging;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace FirebaseAdmin.Tests.Messaging
@@ -8,78 +8,88 @@ namespace FirebaseAdmin.Tests.Messaging
     public class TopicManagementResponseTest
     {
         [Fact]
-        public void SuccessfulTopicManagementResponse()
+        public void SuccessfulReponse()
         {
-            var json = @"[{}, {}]";
-            var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
-            var response = new TopicManagementResponse(jObjects);
+            var json = @"{""results"": [{}, {}]}";
+            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
+            var response = new TopicManagementResponse(instanceIdServiceResponse);
 
             Assert.Equal(0, response.FailureCount);
             Assert.Equal(2, response.SuccessCount);
         }
 
         [Fact]
-        public void UnsuccessfulTopicManagementResponse()
+        public void UnsuccessfulResponse()
         {
-            var json = @"[{}, {""error"":""NOT_FOUND""}]";
-            var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
-            var response = new TopicManagementResponse(jObjects);
+            var json = @"{""results"": [{}, {""error"":""NOT_FOUND""}]}";
+            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
+            var response = new TopicManagementResponse(instanceIdServiceResponse);
 
             Assert.Equal(1, response.FailureCount);
             Assert.Equal(1, response.SuccessCount);
+            Assert.NotEmpty(response.Errors);
+            Assert.Equal("registration-token-not-registered", response.Errors[0].Reason);
+            Assert.Equal(1, response.Errors[0].Index);
         }
 
         [Fact]
-        public void TopicManagementResponseCannotBeNull()
+        public void NullResponse()
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                List<JObject> jObjects = null;
-                var response = new TopicManagementResponse(jObjects);
+                var response = new TopicManagementResponse(null);
             });
         }
 
         [Fact]
-        public void TopicManagementResponseCannotBeEmptyArray()
+        public void EmptyResponse()
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                List<JObject> jObjects = new List<JObject>();
-                var response = new TopicManagementResponse(jObjects);
+                var instanceIdServiceResponse = new InstanceIdServiceResponse();
+                var response = new TopicManagementResponse(instanceIdServiceResponse);
             });
         }
 
         [Fact]
-        public void TopicManagementResponseHandlesUnknownErrors()
+        public void UnknownError()
         {
-            var json = @"[{""error"":""NOT_A_REAL_ERROR_CODE""}]";
-            var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
-            var response = new TopicManagementResponse(jObjects);
+            var json = @"{""results"": [{""error"":""NOT_A_REAL_ERROR_CODE""}]}";
+            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
+            var response = new TopicManagementResponse(instanceIdServiceResponse);
 
             Assert.Equal(1, response.FailureCount);
             Assert.Equal(0, response.SuccessCount);
+            Assert.NotEmpty(response.Errors);
+            Assert.Equal("unknown-error", response.Errors[0].Reason);
+            Assert.Equal(0, response.Errors[0].Index);
         }
 
         [Fact]
-        public void TopicManagementResponseHandlesUnexpectedResponse()
+        public void UnexpectedResponse()
         {
-            var json = @"[{""unexpected"":""NOT_A_REAL_CODE""}]";
-            var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
-            var response = new TopicManagementResponse(jObjects);
+            var json = @"{""results"": [{""unexpected"":""NOT_A_REAL_CODE""}]}";
+            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
+            var response = new TopicManagementResponse(instanceIdServiceResponse);
 
             Assert.Equal(0, response.FailureCount);
             Assert.Equal(1, response.SuccessCount);
         }
 
         [Fact]
-        public void TopicManagementResponseCountsSuccessAndErrors()
+        public void CountsSuccessAndErrors()
         {
-            var json = @"[{""error"": ""NOT_FOUND""}, {}, {""error"": ""NOT_FOUND""}, {}, {}]";
-            var jObjects = JArray.Parse(json).ToObject<List<JObject>>();
-            var response = new TopicManagementResponse(jObjects);
+            var json = @"{""results"": [{""error"": ""NOT_FOUND""}, {}, {""error"": ""INVALID_ARGUMENT""}, {}, {}]}";
+            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
+            var response = new TopicManagementResponse(instanceIdServiceResponse);
 
             Assert.Equal(2, response.FailureCount);
             Assert.Equal(3, response.SuccessCount);
+            Assert.Equal("registration-token-not-registered", response.Errors[0].Reason);
+            Assert.NotEmpty(response.Errors);
+            Assert.Equal(0, response.Errors[0].Index);
+            Assert.Equal("invalid-argument", response.Errors[1].Reason);
+            Assert.Equal(2, response.Errors[1].Index);
         }
     }
 }
