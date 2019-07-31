@@ -14,7 +14,7 @@ namespace FirebaseAdmin.Tests.Messaging
             var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
             var response = new TopicManagementResponse(instanceIdServiceResponse);
 
-            Assert.Equal(0, response.FailureCount);
+            Assert.Empty(response.Errors);
             Assert.Equal(2, response.SuccessCount);
         }
 
@@ -25,7 +25,7 @@ namespace FirebaseAdmin.Tests.Messaging
             var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
             var response = new TopicManagementResponse(instanceIdServiceResponse);
 
-            Assert.Equal(1, response.FailureCount);
+            Assert.Single(response.Errors);
             Assert.Equal(1, response.SuccessCount);
             Assert.NotEmpty(response.Errors);
             Assert.Equal("registration-token-not-registered", response.Errors[0].Reason);
@@ -37,17 +37,17 @@ namespace FirebaseAdmin.Tests.Messaging
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var response = new TopicManagementResponse(null);
+                new TopicManagementResponse(null);
             });
         }
 
         [Fact]
         public void EmptyResponse()
         {
+            var instanceIdServiceResponse = new InstanceIdServiceResponse();
             Assert.Throws<ArgumentException>(() =>
             {
-                var instanceIdServiceResponse = new InstanceIdServiceResponse();
-                var response = new TopicManagementResponse(instanceIdServiceResponse);
+                new TopicManagementResponse(instanceIdServiceResponse);
             });
         }
 
@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Tests.Messaging
             var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
             var response = new TopicManagementResponse(instanceIdServiceResponse);
 
-            Assert.Equal(1, response.FailureCount);
+            Assert.Empty(response.Errors);
             Assert.Equal(0, response.SuccessCount);
             Assert.NotEmpty(response.Errors);
             Assert.Equal("unknown-error", response.Errors[0].Reason);
@@ -72,7 +72,7 @@ namespace FirebaseAdmin.Tests.Messaging
             var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
             var response = new TopicManagementResponse(instanceIdServiceResponse);
 
-            Assert.Equal(0, response.FailureCount);
+            Assert.Empty(response.Errors);
             Assert.Equal(1, response.SuccessCount);
         }
 

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -87,6 +88,8 @@ namespace FirebaseAdmin.Messaging
 
         private async Task<TopicManagementResponse> SendInstanceIdRequest(string topic, List<string> registrationTokens, string path)
         {
+            this.ValidateRegistrationTokenList(registrationTokens);
+
             string url = $"{IidHost}/{path}";
             var body = new InstanceIdServiceRequest
             {
@@ -129,6 +132,32 @@ namespace FirebaseAdmin.Messaging
                 temp.Message,
                 inner: temp.InnerException,
                 response: temp.HttpResponse);
+        }
+
+        private void ValidateRegistrationTokenList(List<string> registrationTokens)
+        {
+            if (registrationTokens == null)
+            {
+                throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token list must not be null");
+            }
+
+            if (registrationTokens.Count() == 0)
+            {
+                throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token list must not be empty");
+            }
+
+            if (registrationTokens.Count() > 1000)
+            {
+                throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token list must not contain more than 1000 tokens");
+            }
+
+            foreach (var registrationToken in registrationTokens)
+            {
+                if (string.IsNullOrEmpty(registrationToken))
+                {
+                    throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token must not be null");
+                }
+            }
         }
 
         private string GetPrefixedTopic(string topic)
