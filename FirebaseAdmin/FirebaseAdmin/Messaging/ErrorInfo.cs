@@ -7,10 +7,17 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class ErrorInfo
     {
+        private static readonly string UnknownError = "unknown-error";
+
         // Server error codes as defined in https://developers.google.com/instance-id/reference/server
         // TODO: Should we handle other error codes here (e.g. PERMISSION_DENIED)?
-        private static IReadOnlyDictionary<string, string> errorCodes;
-        private readonly string unknownError = "unknown-error";
+        private static readonly IReadOnlyDictionary<string, string> ErrorCodes = new Dictionary<string, string>
+        {
+            { "INVALID_ARGUMENT", "invalid-argument" },
+            { "NOT_FOUND", "registration-token-not-registered" },
+            { "INTERNAL", "internal-error" },
+            { "TOO_MANY_TOPICS", "too-many-topics" },
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ErrorInfo"/> class.
@@ -19,17 +26,9 @@ namespace FirebaseAdmin.Messaging
         /// <param name="reason">Reason for the error.</param>
         public ErrorInfo(int index, string reason)
         {
-            errorCodes = new Dictionary<string, string>
-                {
-                    { "INVALID_ARGUMENT", "invalid-argument" },
-                    { "NOT_FOUND", "registration-token-not-registered" },
-                    { "INTERNAL", "internal-error" },
-                    { "TOO_MANY_TOPICS", "too-many-topics" },
-                };
-
             this.Index = index;
-            this.Reason = errorCodes.ContainsKey(reason)
-              ? errorCodes[reason] : this.unknownError;
+            this.Reason = ErrorCodes.ContainsKey(reason)
+              ? ErrorCodes[reason] : UnknownError;
         }
 
         /// <summary>

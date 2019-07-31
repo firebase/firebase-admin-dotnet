@@ -74,8 +74,14 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var client = new InstanceIdClient(factory, MockCredential);
 
-            await Assert.ThrowsAsync<FirebaseMessagingException>(
+            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" }));
+
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal("Unexpected HTTP response with status: 400 (Bad Request)\nBad Request", exception.Message);
+            Assert.Null(exception.MessagingErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -90,8 +96,14 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var client = new InstanceIdClient(factory, MockCredential);
 
-            await Assert.ThrowsAsync<FirebaseMessagingException>(
+            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" }));
+
+            Assert.Equal(ErrorCode.Unauthenticated, exception.ErrorCode);
+            Assert.Equal("Unexpected HTTP response with status: 401 (Unauthorized)\nUnauthorized", exception.Message);
+            Assert.Null(exception.MessagingErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -106,8 +118,14 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var client = new InstanceIdClient(factory, MockCredential);
 
-            await Assert.ThrowsAsync<FirebaseMessagingException>(
+            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" }));
+
+            Assert.Equal(ErrorCode.PermissionDenied, exception.ErrorCode);
+            Assert.Equal("Unexpected HTTP response with status: 403 (Forbidden)\nForbidden", exception.Message);
+            Assert.Null(exception.MessagingErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -122,8 +140,14 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var client = new InstanceIdClient(factory, MockCredential);
 
-            await Assert.ThrowsAsync<FirebaseMessagingException>(
+            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" }));
+
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal("Unexpected HTTP response with status: 404 (Not Found)\nNot Found", exception.Message);
+            Assert.Null(exception.MessagingErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]
@@ -138,8 +162,14 @@ namespace FirebaseAdmin.Tests.Messaging
 
             var client = new InstanceIdClient(factory, MockCredential);
 
-            await Assert.ThrowsAsync<FirebaseMessagingException>(
+            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync("test-topic", new List<string> { "abc123" }));
+
+            Assert.Equal(ErrorCode.Unavailable, exception.ErrorCode);
+            Assert.Equal("Unexpected HTTP response with status: 503 (Service Unavailable)\nService Unavailable", exception.Message);
+            Assert.Null(exception.MessagingErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
     }
 }

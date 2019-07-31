@@ -118,8 +118,7 @@ namespace FirebaseAdmin.Messaging
                     throw new ArgumentException("unexpected response from topic management service");
                 }
 
-                var results = instanceIdServiceResponse.Results.Select(r => r.Error).ToList();
-                return new TopicManagementResponse(results);
+                return new TopicManagementResponse(instanceIdServiceResponse);
             }
             catch (HttpRequestException e)
             {
@@ -145,24 +144,24 @@ namespace FirebaseAdmin.Messaging
         {
             if (registrationTokens == null)
             {
-                throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token list must not be null");
+                throw new ArgumentNullException("Registration token list must not be null");
             }
 
             if (registrationTokens.Count() == 0)
             {
-                throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token list must not be empty");
+                throw new ArgumentException("Registration token list must not be empty");
             }
 
             if (registrationTokens.Count() > 1000)
             {
-                throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token list must not contain more than 1000 tokens");
+                throw new ArgumentException("Registration token list must not contain more than 1000 tokens");
             }
 
             foreach (var registrationToken in registrationTokens)
             {
                 if (string.IsNullOrEmpty(registrationToken))
                 {
-                    throw new FirebaseMessagingException(ErrorCode.InvalidArgument, "Registration token must not be null");
+                    throw new ArgumentNullException("Registration tokens must not be null");
                 }
             }
         }
@@ -186,24 +185,6 @@ namespace FirebaseAdmin.Messaging
 
             [JsonProperty("registration_tokens")]
             public List<string> RegistrationTokens { get; set; }
-        }
-
-        private class InstanceIdServiceResponse
-        {
-            [JsonProperty("results")]
-            public List<InstanceIdServiceResponseElement> Results { get; private set; }
-
-            public int ErrorCount => Results?.Count(results => results.HasError) ?? 0;
-
-            public int ResultCount => Results?.Count() ?? 0;
-
-            public class InstanceIdServiceResponseElement
-            {
-                [JsonProperty("error")]
-                public string Error { get; private set; }
-
-                public bool HasError => !string.IsNullOrEmpty(Error);
-            }
         }
     }
 }

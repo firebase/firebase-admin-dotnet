@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -26,26 +25,21 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicManagementResponse"/> class.
         /// </summary>
-        /// <param name="topicManagementResults">The results from the response produced by FCM topic management operations.</param>
-        public TopicManagementResponse(List<string> topicManagementResults)
+        /// <param name="instanceIdServiceResponse">The results from the response produced by FCM topic management operations.</param>
+        internal TopicManagementResponse(InstanceIdServiceResponse instanceIdServiceResponse)
         {
-            if (topicManagementResults == null)
+            if (instanceIdServiceResponse == null || instanceIdServiceResponse.ResultCount == 0)
             {
-                throw new ArgumentNullException("Topic management response list is null");
-            }
-
-            if (topicManagementResults.Count() == 0)
-            {
-                throw new ArgumentException("Topic management response list is empty");
+                throw new ArgumentException("unexpected response from topic management service");
             }
 
             var resultErrors = new List<ErrorInfo>();
-            for (var i = 0; i < topicManagementResults.Count(); i++)
+            for (var i = 0; i < instanceIdServiceResponse.Results.Count; i++)
             {
-                var topicManagementResult = topicManagementResults[i];
-                if (!string.IsNullOrEmpty(topicManagementResult))
+                var result = instanceIdServiceResponse.Results[i];
+                if (result.HasError)
                 {
-                    resultErrors.Add(new ErrorInfo(i, topicManagementResult));
+                    resultErrors.Add(new ErrorInfo(i, result.Error));
                 }
                 else
                 {
