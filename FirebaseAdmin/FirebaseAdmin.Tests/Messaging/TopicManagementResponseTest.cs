@@ -45,7 +45,7 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void EmptyResponse()
         {
-            Assert.Throws<ArgumentException>(() =>
+            Assert.Throws<ArgumentNullException>(() =>
             {
                 var instanceIdServiceResponse = new InstanceIdServiceResponse();
                 new TopicManagementResponse(instanceIdServiceResponse);
@@ -53,27 +53,15 @@ namespace FirebaseAdmin.Tests.Messaging
         }
 
         [Fact]
-        public void UnknownError()
+        public void UnregisteredToken()
         {
             var json = @"{""results"": [{}, {""error"":""NOT_FOUND""}]}";
             var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
             var response = new TopicManagementResponse(instanceIdServiceResponse);
 
             Assert.Single(response.Errors);
-            Assert.Equal("unknown-error", response.Errors[0].Reason);
-            Assert.Equal(0, response.Errors[0].Index);
-        }
-
-        [Fact]
-        public void UnexpectedResponse()
-        {
-            var json = @"{""results"": [{""unexpected"":""NOT_A_REAL_CODE""}]}";
-            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-            var response = new TopicManagementResponse(instanceIdServiceResponse);
-
-            Assert.Single(response.Errors);
-            Assert.Equal("unknown-error", response.Errors[0].Reason);
-            Assert.Equal(0, response.SuccessCount);
+            Assert.Equal("registration-token-not-registered", response.Errors[0].Reason);
+            Assert.Equal(1, response.Errors[0].Index);
         }
 
         [Fact]

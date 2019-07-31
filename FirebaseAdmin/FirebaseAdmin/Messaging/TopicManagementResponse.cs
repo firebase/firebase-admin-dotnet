@@ -28,9 +28,14 @@ namespace FirebaseAdmin.Messaging
         /// <param name="instanceIdServiceResponse">The results from the response produced by FCM topic management operations.</param>
         internal TopicManagementResponse(InstanceIdServiceResponse instanceIdServiceResponse)
         {
-            if (instanceIdServiceResponse == null || instanceIdServiceResponse.ResultCount == 0)
+            if (instanceIdServiceResponse == null)
             {
-                throw new ArgumentException("unexpected response from topic management service");
+                throw new ArgumentNullException("Unexpected null response from topic management service");
+            }
+
+            if (instanceIdServiceResponse.ResultCount == 0)
+            {
+                throw new ArgumentNullException("Unexpected empty response from topic management service");
             }
 
             var resultErrors = new List<ErrorInfo>();
