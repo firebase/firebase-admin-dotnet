@@ -26,11 +26,14 @@ namespace FirebaseAdmin.Messaging
     public sealed class FirebaseMessaging : IFirebaseService
     {
         private readonly FirebaseMessagingClient messagingClient;
+        private readonly InstanceIdClient instanceIdClient;
 
         private FirebaseMessaging(FirebaseApp app)
         {
             this.messagingClient = new FirebaseMessagingClient(
-                app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
+                    app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
+            this.instanceIdClient = new InstanceIdClient(
+                    app.Options.HttpClientFactory, app.Options.Credential);
         }
 
         /// <summary>
@@ -310,11 +313,34 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
+        /// Subscribes a list of registration tokens to a topic.
+        /// </summary>
+        /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic subscription operations.</returns>
+        public async Task<TopicManagementResponse> SubscribeToTopicAsync(string topic, List<string> registrationTokens)
+        {
+            return await this.instanceIdClient.SubscribeToTopicAsync(topic, registrationTokens);
+        }
+
+        /// <summary>
+        /// Unsubscribes a list of registration tokens from a topic.
+        /// </summary>
+        /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic unsubscription operations.</returns>
+        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(string topic, List<string> registrationTokens)
+        {
+            return await this.instanceIdClient.UnsubscribeFromTopicAsync(topic, registrationTokens);
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseMessaging"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
         {
             this.messagingClient.Dispose();
+            this.instanceIdClient.Dispose();
         }
     }
 }

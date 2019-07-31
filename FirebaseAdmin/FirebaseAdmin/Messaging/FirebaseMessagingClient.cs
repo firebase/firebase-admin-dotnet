@@ -25,7 +25,6 @@ using Google.Apis.Json;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 using Google.Apis.Util;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {

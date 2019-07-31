@@ -100,7 +100,7 @@ Run the following commands from the command line to get your local environmentse
 ```bash
 $ git clone https://github.com/firebase/firebase-admin-dotnet.git
 $ cd firebase-admin-dotnet/FirebaseAdmin # Change into the FirebaseAdmin solution directory
-$ dotnet restore                         # Install dependencies 
+$ dotnet restore                         # Install dependencies
 ```
 
 ### Running Tests
@@ -118,6 +118,24 @@ To run the unit test suite:
 ```bash
 $ dotnet test FirebaseAdmin.Tests
 ```
+
+To invoke code coverage tools, run the unit tests as follows:
+
+```bash
+$ dotnet test FirebaseAdmin.Tests /p:CollectCoverage=true
+```
+
+The above command calculates and displays a code coverage summary. To produce a more detailed
+code coverage report, you can use a tool like
+[Report Generator](https://github.com/danielpalme/ReportGenerator):
+
+```bash
+$ dotnet test FirebaseAdmin.Tests /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+$ dotnet path/to/ReportGenerator.dll -reports:./FirebaseAdmin.Tests/coverage.opencover.xml -targetdir:./reports
+```
+
+This generates a collection of HTML code coverage reports in a local subdirectory named
+`reports/`.
 
 The integration test suite requires a service account JSON key file, and an API key for a Firebase
 project. Create a new project in the [Firebase console](https://console.firebase.google.com) if
@@ -143,4 +161,3 @@ Here are some highlights of the directory structure and notable source files
   * `FirebaseAdmin.Tests/` - Unit tests directory.
   * `FirebaseAdmin.IntegrationTests/` - Integration tests directory.
   * `FirebaseAdmin.Snippets/` - Example code snippets for the SDK.
-  
