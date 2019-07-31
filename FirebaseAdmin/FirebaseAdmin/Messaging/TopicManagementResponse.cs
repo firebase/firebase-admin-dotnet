@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -22,24 +22,23 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class TopicManagementResponse
     {
+        private IEnumerable<string> topicManagementResults;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicManagementResponse"/> class.
         /// </summary>
-        /// <param name="instanceIdServiceResponse">The results from the response produced by FCM topic management operations.</param>
-        public TopicManagementResponse(InstanceIdServiceResponse instanceIdServiceResponse)
+        /// <param name="topicManagementResults">The results from the response produced by FCM topic management operations.</param>
+        public TopicManagementResponse(List<string> topicManagementResults)
         {
-            if (instanceIdServiceResponse == null || instanceIdServiceResponse.ResultCount == 0)
-            {
-                throw new ArgumentException("unexpected response from topic management service");
-            }
+            this.topicManagementResults = topicManagementResults;
 
-            var resultErrors = new List<Error>();
-            for (var i = 0; i < instanceIdServiceResponse.Results.Count; i++)
+            var resultErrors = new List<ErrorInfo>();
+            for (var i = 0; i < topicManagementResults.Count(); i++)
             {
-                var result = instanceIdServiceResponse.Results[i];
-                if (result.HasError)
+                var topicManagementResult = topicManagementResults[i];
+                if (!string.IsNullOrEmpty(topicManagementResult))
                 {
-                    resultErrors.Add(new Error(i, result.Error));
+                    resultErrors.Add(new ErrorInfo(i, topicManagementResult));
                 }
                 else
                 {
@@ -66,49 +65,6 @@ namespace FirebaseAdmin.Messaging
         /// Gets a list of errors encountered while executing the topic management operation.
         /// </summary>
         /// <returns>A non-null list.</returns>
-        public IReadOnlyList<Error> Errors { get; private set; }
-
-        /// <summary>
-        /// A topic management error.
-        /// </summary>
-        public sealed class Error
-        {
-            // Server error codes as defined in https://developers.google.com/instance-id/reference/server
-            // TODO: Should we handle other error codes here (e.g. PERMISSION_DENIED)?
-            private static IReadOnlyDictionary<string, string> errorCodes;
-            private readonly string unknownError = "unknown-error";
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="Error"/> class.
-            /// </summary>
-            /// <param name="index">Index of the error in the error codes.</param>
-            /// <param name="reason">Reason for the error.</param>
-            public Error(int index, string reason)
-            {
-                errorCodes = new Dictionary<string, string>
-                {
-                    { "INVALID_ARGUMENT", "invalid-argument" },
-                    { "NOT_FOUND", "registration-token-not-registered" },
-                    { "INTERNAL", "internal-error" },
-                    { "TOO_MANY_TOPICS", "too-many-topics" },
-                };
-
-                this.Index = index;
-                this.Reason = errorCodes.ContainsKey(reason)
-                  ? errorCodes[reason] : this.unknownError;
-            }
-
-            /// <summary>
-            /// Gets the registration token to which this error is related to.
-            /// </summary>
-            /// <returns>An index into the original registration token list.</returns>
-            public int Index { get; private set; }
-
-            /// <summary>
-            /// Gets the nature of the error.
-            /// </summary>
-            /// <returns>A non-null, non-empty error message.</returns>
-            public string Reason { get; private set; }
-        }
+        public IReadOnlyList<ErrorInfo> Errors { get; private set; }
     }
 }

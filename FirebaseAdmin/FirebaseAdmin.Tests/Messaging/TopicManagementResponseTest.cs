@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using FirebaseAdmin.Messaging;
 using Newtonsoft.Json;
 using Xunit;
@@ -10,9 +11,8 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void SuccessfulReponse()
         {
-            var json = @"{""results"": [{}, {}]}";
-            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-            var response = new TopicManagementResponse(instanceIdServiceResponse);
+            var topicManagementResults = new List<string> { null };
+            var response = new TopicManagementResponse(topicManagementResults);
 
             Assert.Empty(response.Errors);
             Assert.Equal(2, response.SuccessCount);
@@ -21,9 +21,8 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void UnsuccessfulResponse()
         {
-            var json = @"{""results"": [{}, {""error"":""NOT_FOUND""}]}";
-            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-            var response = new TopicManagementResponse(instanceIdServiceResponse);
+            var topicManagementResults = new List<string> { null, "NOT_FOUND" };
+            var response = new TopicManagementResponse(topicManagementResults);
 
             Assert.Single(response.Errors);
             Assert.Equal(1, response.SuccessCount);
@@ -44,19 +43,17 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void EmptyResponse()
         {
-            var instanceIdServiceResponse = new InstanceIdServiceResponse();
             Assert.Throws<ArgumentException>(() =>
             {
-                new TopicManagementResponse(instanceIdServiceResponse);
+                new TopicManagementResponse(new List<string>());
             });
         }
 
         [Fact]
         public void UnknownError()
         {
-            var json = @"{""results"": [{""error"":""NOT_A_REAL_ERROR_CODE""}]}";
-            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-            var response = new TopicManagementResponse(instanceIdServiceResponse);
+            var topicManagementResults = new List<string> { "NOT_A_REAL_ERROR_CODE" };
+            var response = new TopicManagementResponse(topicManagementResults);
 
             Assert.Empty(response.Errors);
             Assert.Equal(0, response.SuccessCount);
@@ -68,9 +65,8 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void UnexpectedResponse()
         {
-            var json = @"{""results"": [{""unexpected"":""NOT_A_REAL_CODE""}]}";
-            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-            var response = new TopicManagementResponse(instanceIdServiceResponse);
+            var topicManagementResults = new List<string> { "NOT_A_REAL_CODE" };
+            var response = new TopicManagementResponse(topicManagementResults);
 
             Assert.Empty(response.Errors);
             Assert.Equal(1, response.SuccessCount);
@@ -79,9 +75,8 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void CountsSuccessAndErrors()
         {
-            var json = @"{""results"": [{""error"": ""NOT_FOUND""}, {}, {""error"": ""INVALID_ARGUMENT""}, {}, {}]}";
-            var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-            var response = new TopicManagementResponse(instanceIdServiceResponse);
+            var topicManagementResults = new List<string> { "NOT_FOUND", null, "INVALID_ARGUMENT", null, null };
+            var response = new TopicManagementResponse(topicManagementResults);
 
             Assert.Equal(2, response.FailureCount);
             Assert.Equal(3, response.SuccessCount);

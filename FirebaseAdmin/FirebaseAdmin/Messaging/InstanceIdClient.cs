@@ -112,7 +112,14 @@ namespace FirebaseAdmin.Messaging
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 this.errorHandler.ThrowIfError(response, json);
                 var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-                return new TopicManagementResponse(instanceIdServiceResponse);
+
+                if (instanceIdServiceResponse == null || instanceIdServiceResponse.ResultCount == 0)
+                {
+                    throw new ArgumentException("unexpected response from topic management service");
+                }
+
+                var results = instanceIdServiceResponse.Results.Select(r => r.Error).ToList();
+                return new TopicManagementResponse(results);
             }
             catch (HttpRequestException e)
             {
@@ -179,6 +186,24 @@ namespace FirebaseAdmin.Messaging
 
             [JsonProperty("registration_tokens")]
             public List<string> RegistrationTokens { get; set; }
+        }
+
+        private class InstanceIdServiceResponse
+        {
+            [JsonProperty("results")]
+            public List<InstanceIdServiceResponseElement> Results { get; private set; }
+
+            public int ErrorCount => Results?.Count(results => results.HasError) ?? 0;
+
+            public int ResultCount => Results?.Count() ?? 0;
+
+            public class InstanceIdServiceResponseElement
+            {
+                [JsonProperty("error")]
+                public string Error { get; private set; }
+
+                public bool HasError => !string.IsNullOrEmpty(Error);
+            }
         }
     }
 }
