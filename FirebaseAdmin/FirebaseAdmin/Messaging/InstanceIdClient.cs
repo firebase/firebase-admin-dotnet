@@ -112,12 +112,6 @@ namespace FirebaseAdmin.Messaging
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 this.errorHandler.ThrowIfError(response, json);
                 var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-
-                if (instanceIdServiceResponse == null || instanceIdServiceResponse.ResultCount == 0)
-                {
-                    throw new ArgumentException("unexpected response from topic management service");
-                }
-
                 return new TopicManagementResponse(instanceIdServiceResponse);
             }
             catch (HttpRequestException e)
@@ -161,7 +155,7 @@ namespace FirebaseAdmin.Messaging
             {
                 if (string.IsNullOrEmpty(registrationToken))
                 {
-                    throw new ArgumentNullException("Registration tokens must not be null");
+                    throw new ArgumentException("Registration tokens must not be null or empty");
                 }
             }
         }

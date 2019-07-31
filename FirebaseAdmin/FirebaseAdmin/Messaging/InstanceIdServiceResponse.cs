@@ -29,7 +29,7 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// An instance Id response error.
         /// </summary>
-        public class InstanceIdServiceResponseElement
+        internal class InstanceIdServiceResponseElement
         {
             /// <summary>
             /// Gets a value indicating the error in this element of the response array. If this is empty this indicates success.
