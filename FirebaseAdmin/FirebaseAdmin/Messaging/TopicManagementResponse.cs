@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,15 +23,21 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class TopicManagementResponse
     {
-        private IEnumerable<string> topicManagementResults;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicManagementResponse"/> class.
         /// </summary>
         /// <param name="topicManagementResults">The results from the response produced by FCM topic management operations.</param>
         public TopicManagementResponse(List<string> topicManagementResults)
         {
-            this.topicManagementResults = topicManagementResults;
+            if (topicManagementResults == null)
+            {
+                throw new ArgumentNullException("Topic management response list is null");
+            }
+
+            if (topicManagementResults.Count() == 0)
+            {
+                throw new ArgumentException("Topic management response list is empty");
+            }
 
             var resultErrors = new List<ErrorInfo>();
             for (var i = 0; i < topicManagementResults.Count(); i++)

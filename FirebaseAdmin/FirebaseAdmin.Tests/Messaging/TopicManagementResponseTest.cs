@@ -15,7 +15,7 @@ namespace FirebaseAdmin.Tests.Messaging
             var response = new TopicManagementResponse(topicManagementResults);
 
             Assert.Empty(response.Errors);
-            Assert.Equal(2, response.SuccessCount);
+            Assert.Equal(1, response.SuccessCount);
         }
 
         [Fact]
@@ -34,7 +34,7 @@ namespace FirebaseAdmin.Tests.Messaging
         [Fact]
         public void NullResponse()
         {
-            Assert.Throws<ArgumentException>(() =>
+            Assert.Throws<ArgumentNullException>(() =>
             {
                 new TopicManagementResponse(null);
             });
@@ -55,9 +55,7 @@ namespace FirebaseAdmin.Tests.Messaging
             var topicManagementResults = new List<string> { "NOT_A_REAL_ERROR_CODE" };
             var response = new TopicManagementResponse(topicManagementResults);
 
-            Assert.Empty(response.Errors);
-            Assert.Equal(0, response.SuccessCount);
-            Assert.NotEmpty(response.Errors);
+            Assert.Single(response.Errors);
             Assert.Equal("unknown-error", response.Errors[0].Reason);
             Assert.Equal(0, response.Errors[0].Index);
         }
@@ -68,8 +66,9 @@ namespace FirebaseAdmin.Tests.Messaging
             var topicManagementResults = new List<string> { "NOT_A_REAL_CODE" };
             var response = new TopicManagementResponse(topicManagementResults);
 
-            Assert.Empty(response.Errors);
-            Assert.Equal(1, response.SuccessCount);
+            Assert.Single(response.Errors);
+            Assert.Equal("unknown-error", response.Errors[0].Reason);
+            Assert.Equal(0, response.SuccessCount);
         }
 
         [Fact]
