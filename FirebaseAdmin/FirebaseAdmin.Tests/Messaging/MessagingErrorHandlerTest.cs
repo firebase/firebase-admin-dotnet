@@ -50,8 +50,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -82,8 +81,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.PermissionDenied, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -113,8 +111,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.PermissionDenied, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -133,8 +130,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(

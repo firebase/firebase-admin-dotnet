@@ -21,6 +21,8 @@ namespace FirebaseAdmin.Tests
 {
     public class PlatformErrorHandlerTest
     {
+        private static readonly TestPlatformErrorHandler ErrorHandler = new TestPlatformErrorHandler();
+
         [Fact]
         public void PlatformError()
         {
@@ -36,8 +38,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -55,8 +56,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(text, Encoding.UTF8, "text/plain"),
             };
 
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, text));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, text);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
@@ -80,8 +80,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -103,8 +102,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.InvalidArgument, error.ErrorCode);
             Assert.Equal(
@@ -124,8 +122,7 @@ namespace FirebaseAdmin.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new PlatformErrorHandler();
-            var error = Assert.Throws<FirebaseException>(() => handler.ThrowIfError(resp, json));
+            var error = ErrorHandler.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
@@ -133,6 +130,14 @@ namespace FirebaseAdmin.Tests
                 error.Message);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
+        }
+
+        private class TestPlatformErrorHandler : PlatformErrorHandler<FirebaseException>
+        {
+            protected override FirebaseException CreateException(FirebaseExceptionArgs args)
+            {
+                return new FirebaseException(args.Code, args.Message, response: args.HttpResponse);
+            }
         }
     }
 }

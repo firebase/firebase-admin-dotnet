@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Http;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -33,7 +32,6 @@ namespace FirebaseAdmin.Messaging
         {
             this.messagingClient = new FirebaseMessagingClient(
                     app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
-
             this.instanceIdClient = new InstanceIdClient(
                     app.Options.HttpClientFactory, app.Options.Credential);
         }

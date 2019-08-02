@@ -14,11 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
@@ -39,43 +38,54 @@ namespace FirebaseAdmin.Messaging
 
         private const string IidUnsubscribePath = "iid/v1:batchRemove";
 
-        private readonly ConfigurableHttpClient httpClient;
-
-        private readonly HttpErrorHandler errorHandler;
+        private readonly ErrorHandlingHttpClient<FirebaseMessagingException> httpClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InstanceIdClient"/> class.
         /// </summary>
         /// <param name="clientFactory">A default implentation of the HTTP client factory.</param>
-        /// <param name="credential">An instance of the <see cref="GoogleCredential"/> GoogleCredential class.</param>
+        /// <param name="credential">An instance of the <see cref="GoogleCredential"/> class.</param>
         public InstanceIdClient(HttpClientFactory clientFactory, GoogleCredential credential)
         {
-            this.httpClient = clientFactory.ThrowIfNull(nameof(clientFactory))
-                .CreateAuthorizedHttpClient(credential);
-
-            this.errorHandler = new MessagingErrorHandler();
+            this.httpClient = new ErrorHandlingHttpClient<FirebaseMessagingException>(
+                new ErrorHandlingHttpClientArgs<FirebaseMessagingException>()
+                {
+                    HttpClientFactory = clientFactory.ThrowIfNull(nameof(clientFactory)),
+                    Credential = credential.ThrowIfNull(nameof(credential)),
+                    RequestExceptionHandler = MessagingErrorHandler.Instance,
+                    ErrorResponseHandler = MessagingErrorHandler.Instance,
+                    DeserializeExceptionHandler = MessagingErrorHandler.Instance,
+                });
         }
 
         /// <summary>
         /// Subscribes a list of registration tokens to a topic.
         /// </summary>
-        /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the
+        /// topic name provided if absent.</param>
         /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
-        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic subscription operations.</returns>
-        public async Task<TopicManagementResponse> SubscribeToTopicAsync(string topic, List<string> registrationTokens)
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving
+        /// details about the topic subscription operations.</returns>
+        public async Task<TopicManagementResponse> SubscribeToTopicAsync(
+            string topic, List<string> registrationTokens)
         {
-            return await this.SendInstanceIdRequest(topic, registrationTokens, IidSubscriberPath).ConfigureAwait(false);
+            return await this.SendInstanceIdRequest(topic, registrationTokens, IidSubscriberPath)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Unsubscribes a list of registration tokens from a topic.
         /// </summary>
-        /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to
+        /// the topic name provided if absent.</param>
         /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
-        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic unsubscription operations.</returns>
-        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(string topic, List<string> registrationTokens)
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving
+        /// details about the topic unsubscription operations.</returns>
+        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
+            string topic, List<string> registrationTokens)
         {
-            return await this.SendInstanceIdRequest(topic, registrationTokens, IidUnsubscribePath).ConfigureAwait(false);
+            return await this.SendInstanceIdRequest(topic, registrationTokens, IidUnsubscribePath)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -86,7 +96,8 @@ namespace FirebaseAdmin.Messaging
             this.httpClient.Dispose();
         }
 
-        private async Task<TopicManagementResponse> SendInstanceIdRequest(string topic, List<string> registrationTokens, string path)
+        private async Task<TopicManagementResponse> SendInstanceIdRequest(
+            string topic, List<string> registrationTokens, string path)
         {
             this.ValidateRegistrationTokenList(registrationTokens);
 
@@ -106,32 +117,10 @@ namespace FirebaseAdmin.Messaging
 
             request.Headers.Add("access_token_auth", "true");
 
-            try
-            {
-                var response = await this.httpClient.SendAsync(request, default(CancellationToken)).ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                this.errorHandler.ThrowIfError(response, json);
-                var instanceIdServiceResponse = JsonConvert.DeserializeObject<InstanceIdServiceResponse>(json);
-                return new TopicManagementResponse(instanceIdServiceResponse);
-            }
-            catch (HttpRequestException e)
-            {
-                throw this.CreateExceptionFromResponse(e);
-            }
-            catch (IOException)
-            {
-                throw new FirebaseMessagingException(ErrorCode.Internal, "Error while calling IID backend service");
-            }
-        }
-
-        private FirebaseMessagingException CreateExceptionFromResponse(HttpRequestException e)
-        {
-            var temp = e.ToFirebaseException();
-            return new FirebaseMessagingException(
-                temp.ErrorCode,
-                temp.Message,
-                inner: temp.InnerException,
-                response: temp.HttpResponse);
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<InstanceIdServiceResponse>(request)
+                .ConfigureAwait(false);
+            return new TopicManagementResponse(response.Result);
         }
 
         private void ValidateRegistrationTokenList(List<string> registrationTokens)
