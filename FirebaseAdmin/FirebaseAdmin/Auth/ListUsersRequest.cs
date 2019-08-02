@@ -19,6 +19,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Discovery;
 using Google.Apis.Http;
 using Google.Apis.Requests;
@@ -35,10 +36,12 @@ namespace FirebaseAdmin.Auth
         private const int MaxListUsersResults = 1000;
 
         private readonly string baseUrl;
-        private readonly ConfigurableHttpClient httpClient;
+        private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
 
         private ListUsersRequest(
-            string baseUrl, ConfigurableHttpClient httpClient, ListUsersOptions options)
+            string baseUrl,
+            ErrorHandlingHttpClient<FirebaseAuthException> httpClient,
+            ListUsersOptions options)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
@@ -171,17 +174,10 @@ namespace FirebaseAdmin.Auth
         private async Task<DownloadAccountResponse> SendAndDeserializeAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var response = await this.SendAsync(request, cancellationToken)
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<DownloadAccountResponse>(request, cancellationToken)
                 .ConfigureAwait(false);
-            var parsed = response.SafeDeserialize<DownloadAccountResponse>();
-            return parsed.Result;
-        }
-
-        private async Task<HttpExtensions.ResponseInfo> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            return await this.httpClient.SendAndReadAsync(request, cancellationToken)
-                .ConfigureAwait(false);
+            return response.Result;
         }
 
         /// <summary>
@@ -191,11 +187,13 @@ namespace FirebaseAdmin.Auth
         internal sealed class Factory
         {
             private readonly string baseUrl;
-            private readonly ConfigurableHttpClient httpClient;
+            private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
             private readonly ListUsersOptions options;
 
             internal Factory(
-                string baseUrl, ConfigurableHttpClient httpClient, ListUsersOptions options = null)
+                string baseUrl,
+                ErrorHandlingHttpClient<FirebaseAuthException> httpClient,
+                ListUsersOptions options = null)
             {
                 this.baseUrl = baseUrl;
                 this.httpClient = httpClient;

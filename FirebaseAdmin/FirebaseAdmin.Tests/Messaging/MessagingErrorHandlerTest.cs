@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using FirebaseAdmin.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Messaging.Tests
@@ -50,8 +52,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -82,8 +83,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.PermissionDenied, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -113,8 +113,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.PermissionDenied, error.ErrorCode);
             Assert.Equal("Test error message", error.Message);
@@ -133,8 +132,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
 
-            var handler = new MessagingErrorHandler();
-            var error = Assert.Throws<FirebaseMessagingException>(() => handler.ThrowIfError(resp, json));
+            var error = MessagingErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
@@ -143,6 +141,44 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Null(error.MessagingErrorCode);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
+        }
+
+        [Fact]
+        public void DeserializeException()
+        {
+            var text = "plain text";
+            var resp = new HttpResponseMessage()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Content = new StringContent(text, Encoding.UTF8, "text/plain"),
+            };
+            var inner = new Exception("Deserialization error");
+
+            var error = MessagingErrorHandler.Instance.HandleDeserializeException(
+                inner, new ResponseInfo(resp, text));
+
+            Assert.Equal(ErrorCode.Unknown, error.ErrorCode);
+            Assert.Equal(
+                $"Error parsing response from FCM. Deserialization error: {text}",
+                error.Message);
+            Assert.Null(error.MessagingErrorCode);
+            Assert.Same(resp, error.HttpResponse);
+            Assert.Same(inner, error.InnerException);
+        }
+
+        [Fact]
+        public void HttpRequestException()
+        {
+            var exception = new HttpRequestException("network error");
+
+            var error = MessagingErrorHandler.Instance.HandleHttpRequestException(exception);
+
+            Assert.Equal(ErrorCode.Unknown, error.ErrorCode);
+            Assert.Equal(
+                "Unknown error while making a remote service call: network error", error.Message);
+            Assert.Null(error.MessagingErrorCode);
+            Assert.Null(error.HttpResponse);
+            Assert.Same(exception, error.InnerException);
         }
     }
 }

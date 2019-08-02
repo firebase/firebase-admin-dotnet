@@ -12,30 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Net.Http;
+using Google.Apis.Util;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Util
 {
     /// <summary>
-    /// Exception type raised by Firebase Auth APIs.
+    /// HTTP response and the body string read from it.
     /// </summary>
-    public sealed class FirebaseAuthException : FirebaseException
+    internal class ResponseInfo
     {
-        internal FirebaseAuthException(
-          ErrorCode code,
-          string message,
-          AuthErrorCode? fcmCode = null,
-          Exception inner = null,
-          HttpResponseMessage response = null)
-        : base(code, message, inner, response)
+        internal ResponseInfo(HttpResponseMessage response, string body)
         {
-            this.AuthErrorCode = fcmCode;
+            this.HttpResponse = response.ThrowIfNull(nameof(response));
+            this.Body = body.ThrowIfNull(nameof(body));
         }
 
-        /// <summary>
-        /// Gets the Firease Auth error code associated with this exception. May be null.
-        /// </summary>
-        public AuthErrorCode? AuthErrorCode { get; private set; }
+        internal ResponseInfo(ResponseInfo other)
+        : this(other.HttpResponse, other.Body) { }
+
+        internal HttpResponseMessage HttpResponse { get; private set; }
+
+        internal string Body { get; private set; }
     }
 }

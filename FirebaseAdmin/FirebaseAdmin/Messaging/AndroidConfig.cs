@@ -67,6 +67,12 @@ namespace FirebaseAdmin.Messaging
         public AndroidNotification Notification { get; set; }
 
         /// <summary>
+        /// Gets or sets the FCM options to be included in the message.
+        /// </summary>
+        [JsonProperty("fcm_options")]
+        public AndroidFcmOptions FcmOptions { get; set; }
+
+        /// <summary>
         /// Gets or sets the string representation of <see cref="Priority"/> as accepted by the FCM
         /// backend service.
         /// </summary>
@@ -97,7 +103,7 @@ namespace FirebaseAdmin.Messaging
                         this.Priority = Messaging.Priority.High;
                         return;
                     default:
-                        throw new FirebaseException(
+                        throw new ArgumentException(
                             $"Invalid priority value: {value}. Only 'high' and 'normal'"
                             + " are allowed.");
                 }
@@ -159,6 +165,7 @@ namespace FirebaseAdmin.Messaging
                 TimeToLive = this.TimeToLive,
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data?.Copy(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             var totalSeconds = copy.TimeToLive?.TotalSeconds ?? 0;
             if (totalSeconds < 0)

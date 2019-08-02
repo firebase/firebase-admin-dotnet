@@ -12,30 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Net.Http;
-
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Util
 {
     /// <summary>
-    /// Exception type raised by Firebase Auth APIs.
+    /// An interface for deserializing string payloads read from HTTP response.
     /// </summary>
-    public sealed class FirebaseAuthException : FirebaseException
+    internal interface IHttpResponseDeserializer
     {
-        internal FirebaseAuthException(
-          ErrorCode code,
-          string message,
-          AuthErrorCode? fcmCode = null,
-          Exception inner = null,
-          HttpResponseMessage response = null)
-        : base(code, message, inner, response)
-        {
-            this.AuthErrorCode = fcmCode;
-        }
-
         /// <summary>
-        /// Gets the Firease Auth error code associated with this exception. May be null.
+        /// Deserializes an HTTP response payload into the specified type.
         /// </summary>
-        public AuthErrorCode? AuthErrorCode { get; private set; }
+        /// <returns>The deserialized object instance.</returns>
+        /// <param name="body">The response payload to deserialize.</param>
+        /// <typeparam name="T">Type to deserialize the response into.</typeparam>
+        T Deserialize<T>(string body);
     }
 }

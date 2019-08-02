@@ -18,13 +18,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 using Google.Apis.Util;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -38,30 +38,39 @@ namespace FirebaseAdmin.Messaging
         private const string FcmSendUrl = FcmBaseUrl + "/v1/projects/{0}/messages:send";
         private const string FcmBatchUrl = FcmBaseUrl + "/batch";
 
-        private readonly ConfigurableHttpClient httpClient;
+        private readonly ErrorHandlingHttpClient<FirebaseMessagingException> httpClient;
         private readonly string sendUrl;
         private readonly string restPath;
         private readonly FCMClientService fcmClientService;
-        private readonly HttpErrorHandler errorHandler;
 
         public FirebaseMessagingClient(
             HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
         {
             if (string.IsNullOrEmpty(projectId))
             {
-                throw new FirebaseException(
+                throw new ArgumentException(
                     "Project ID is required to access messaging service. Use a service account "
                     + "credential or set the project ID explicitly via AppOptions. Alternatively "
                     + "you can set the project ID via the GOOGLE_CLOUD_PROJECT environment "
                     + "variable.");
             }
 
-            this.httpClient = clientFactory.ThrowIfNull(nameof(clientFactory))
-                .CreateAuthorizedHttpClient(credential);
+            this.httpClient = new ErrorHandlingHttpClient<FirebaseMessagingException>(
+                new ErrorHandlingHttpClientArgs<FirebaseMessagingException>()
+                {
+                    HttpClientFactory = clientFactory.ThrowIfNull(nameof(clientFactory)),
+                    Credential = credential.ThrowIfNull(nameof(credential)),
+                    RequestExceptionHandler = MessagingErrorHandler.Instance,
+                    ErrorResponseHandler = MessagingErrorHandler.Instance,
+                    DeserializeExceptionHandler = MessagingErrorHandler.Instance,
+                });
+            this.fcmClientService = new FCMClientService(new BaseClientService.Initializer()
+            {
+                HttpClientFactory = clientFactory,
+                HttpClientInitializer = credential,
+            });
             this.sendUrl = string.Format(FcmSendUrl, projectId);
             this.restPath = this.sendUrl.Substring(FcmBaseUrl.Length);
-            this.fcmClientService = new FCMClientService(this.httpClient);
-            this.errorHandler = new MessagingErrorHandler();
         }
 
         internal static string ClientVersion
@@ -83,7 +92,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -96,24 +105,24 @@ namespace FirebaseAdmin.Messaging
             bool dryRun = false,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var request = new SendRequest()
+            var body = new SendRequest()
             {
                 Message = message.ThrowIfNull(nameof(message)).CopyAndValidate(),
                 ValidateOnly = dryRun,
             };
-            try
-            {
-                var response = await this.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                this.errorHandler.ThrowIfError(response, json);
 
-                var parsed = JsonConvert.DeserializeObject<SingleMessageResponse>(json);
-                return parsed.Name;
-            }
-            catch (HttpRequestException e)
+            var request = new HttpRequestMessage()
             {
-                throw this.ToFirebaseMessagingException(e);
-            }
+                Method = HttpMethod.Post,
+                RequestUri = new Uri(this.sendUrl),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
+            };
+            AddCommonHeaders(request);
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<SingleMessageResponse>(request, cancellationToken)
+                .ConfigureAwait(false);
+
+            return response.Result.Name;
         }
 
         /// <summary>
@@ -152,30 +161,19 @@ namespace FirebaseAdmin.Messaging
             }
             catch (HttpRequestException e)
             {
-                throw this.ToFirebaseMessagingException(e);
+                throw MessagingErrorHandler.Instance.HandleHttpRequestException(e);
             }
         }
 
         public void Dispose()
         {
             this.httpClient.Dispose();
+            this.fcmClientService.Dispose();
         }
 
         private static void AddCommonHeaders(HttpRequestMessage request)
         {
             request.Headers.Add("X-Firebase-Client", ClientVersion);
-        }
-
-        private async Task<HttpResponseMessage> SendRequestAsync(object body, CancellationToken cancellationToken)
-        {
-            var request = new HttpRequestMessage()
-            {
-                Method = HttpMethod.Post,
-                RequestUri = new Uri(this.sendUrl),
-                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
-            };
-            AddCommonHeaders(request);
-            return await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<BatchResponse> SendBatchRequestAsync(
@@ -236,27 +234,9 @@ namespace FirebaseAdmin.Messaging
 
         private async Task<FirebaseMessagingException> CreateException(HttpResponseMessage response)
         {
-            var json = await response.Content.ReadAsStringAsync();
-            try
-            {
-                this.errorHandler.ThrowIfError(response, json);
-                throw new InvalidOperationException("Invalid batch response");
-            }
-            catch (FirebaseMessagingException ex)
-            {
-                return ex;
-            }
-        }
-
-        private FirebaseMessagingException ToFirebaseMessagingException(
-            HttpRequestException exception)
-        {
-            var temp = exception.ToFirebaseException();
-            return new FirebaseMessagingException(
-                temp.ErrorCode,
-                temp.Message,
-                inner: temp.InnerException,
-                response: temp.HttpResponse);
+            var json = await response.Content.ReadAsStringAsync()
+                .ConfigureAwait(false);
+            return MessagingErrorHandler.Instance.HandleHttpErrorResponse(response, json);
         }
 
         /// <summary>
@@ -284,10 +264,8 @@ namespace FirebaseAdmin.Messaging
 
         private sealed class FCMClientService : BaseClientService
         {
-            public FCMClientService(ConfigurableHttpClient httpClient)
-                : base(new Initializer { HttpClientFactory = new CannedHttpClientFactory(httpClient) })
-            {
-            }
+            public FCMClientService(Initializer initializer)
+            : base(initializer) { }
 
             public override string Name => "FCM";
 
@@ -298,28 +276,13 @@ namespace FirebaseAdmin.Messaging
             public override IList<string> Features => null;
         }
 
-        private sealed class CannedHttpClientFactory : IHttpClientFactory
-        {
-            private readonly ConfigurableHttpClient httpClient;
-
-            public CannedHttpClientFactory(ConfigurableHttpClient httpClient)
-            {
-                this.httpClient = httpClient;
-            }
-
-            public ConfigurableHttpClient CreateHttpClient(CreateHttpClientArgs args)
-            {
-                return this.httpClient;
-            }
-        }
-
         private sealed class FCMClientServiceRequest : ClientServiceRequest<string>
         {
             private readonly string restPath;
             private readonly SendRequest body;
 
             public FCMClientServiceRequest(FCMClientService clientService, string restPath, SendRequest body)
-                : base(clientService)
+            : base(clientService)
             {
                 this.restPath = restPath;
                 this.body = body;

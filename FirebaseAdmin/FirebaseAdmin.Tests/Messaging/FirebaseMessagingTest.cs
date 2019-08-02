@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
@@ -116,6 +117,56 @@ namespace FirebaseAdmin.Messaging.Tests
             await Assert.ThrowsAsync<OperationCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
+        }
+
+        [Fact]
+        public async Task SubscribeWithClientFactory()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""results"":[{}]}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+
+            var app = FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromAccessToken("test-token"),
+                HttpClientFactory = factory,
+                ProjectId = "test-project",
+            });
+            FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
+            Assert.NotNull(messaging);
+            Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
+
+            var response = await messaging.SubscribeToTopicAsync("test-topic", new List<string> { "test-token" });
+            Assert.Equal(0, response.FailureCount);
+            Assert.Equal(1, response.SuccessCount);
+            app.Delete();
+        }
+
+        [Fact]
+        public async Task UnsubscribeWithClientFactory()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""results"":[{}]}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+
+            var app = FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromAccessToken("test-token"),
+                HttpClientFactory = factory,
+                ProjectId = "test-project",
+            });
+            FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
+            Assert.NotNull(messaging);
+            Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
+
+            var response = await messaging.UnsubscribeFromTopicAsync("test-topic", new List<string> { "test-token" });
+            Assert.Equal(0, response.FailureCount);
+            Assert.Equal(1, response.SuccessCount);
+            app.Delete();
         }
 
         public void Dispose()

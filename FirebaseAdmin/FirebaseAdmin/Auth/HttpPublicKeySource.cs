@@ -20,8 +20,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Http;
-using Google.Apis.Json;
 using Google.Apis.Util;
 
 #if NETSTANDARD1_5 || NETSTANDARD2_0
@@ -74,16 +74,19 @@ namespace FirebaseAdmin.Auth
                     var now = this.clock.UtcNow;
                     if (this.cachedKeys == null || now >= this.expirationTime)
                     {
-                        using (var httpClient = this.clientFactory.CreateDefaultHttpClient())
+                        using (var httpClient = this.CreateHttpClient())
                         {
-                            var response = await httpClient.GetAsync(this.certUrl, cancellationToken)
+                            var request = new HttpRequestMessage()
+                            {
+                                Method = HttpMethod.Get,
+                                RequestUri = new Uri(this.certUrl),
+                            };
+                            var response = await httpClient
+                                .SendAndDeserializeAsync<Dictionary<string, string>>(request, cancellationToken)
                                 .ConfigureAwait(false);
-                            var json = await response.Content.ReadAsStringAsync()
-                                .ConfigureAwait(false);
-                            this.ThrowIfError(response, json);
 
-                            this.cachedKeys = this.ParseKeys(response, json);
-                            var cacheControl = response.Headers.CacheControl;
+                            this.cachedKeys = this.ParseKeys(response);
+                            var cacheControl = response.HttpResponse.Headers.CacheControl;
                             if (cacheControl?.MaxAge != null)
                             {
                                 this.expirationTime = now.Add(cacheControl.MaxAge.Value)
@@ -91,12 +94,6 @@ namespace FirebaseAdmin.Auth
                             }
                         }
                     }
-                }
-                catch (HttpRequestException e)
-                {
-                    throw e.ToFirebaseAuthException(
-                        "Failed to retrieve latest public keys. ",
-                        AuthErrorCode.CertificateFetchFailed);
                 }
                 finally
                 {
@@ -107,27 +104,31 @@ namespace FirebaseAdmin.Auth
             return this.cachedKeys;
         }
 
-        private void ThrowIfError(HttpResponseMessage response, string body)
+        private ErrorHandlingHttpClient<FirebaseAuthException> CreateHttpClient()
         {
-            try
-            {
-                HttpErrorHandler.Instance.ThrowIfError(response, body);
-            }
-            catch (FirebaseException ex)
-            {
-                throw new FirebaseAuthException(
-                    ex.ErrorCode,
-                    ex.Message,
-                    AuthErrorCode.CertificateFetchFailed,
-                    response: ex.HttpResponse);
-            }
+            return new ErrorHandlingHttpClient<FirebaseAuthException>(
+                new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
+                {
+                    HttpClientFactory = this.clientFactory,
+                    ErrorResponseHandler = HttpKeySourceErrorHandler.Instance,
+                    RequestExceptionHandler = HttpKeySourceErrorHandler.Instance,
+                    DeserializeExceptionHandler = HttpKeySourceErrorHandler.Instance,
+                });
         }
 
-        private IReadOnlyList<PublicKey> ParseKeys(HttpResponseMessage response, string json)
+        private IReadOnlyList<PublicKey> ParseKeys(DeserializedResponseInfo<Dictionary<string, string>> response)
         {
-            var rawKeys = this.SafeDeserialize(response, json);
+            if (response.Result.Count == 0)
+            {
+                throw new FirebaseAuthException(
+                    ErrorCode.Unknown,
+                    "No public keys present in the response.",
+                    AuthErrorCode.CertificateFetchFailed,
+                    response: response.HttpResponse);
+            }
+
             var builder = ImmutableList.CreateBuilder<PublicKey>();
-            foreach (var entry in rawKeys)
+            foreach (var entry in response.Result)
             {
                 var x509cert = new X509Certificate2(Encoding.UTF8.GetBytes(entry.Value));
                 RSAKey rsa;
@@ -144,35 +145,45 @@ namespace FirebaseAdmin.Auth
             return builder.ToImmutableList();
         }
 
-        private Dictionary<string, string> SafeDeserialize(
-            HttpResponseMessage response, string json)
+        private class HttpKeySourceErrorHandler
+        : HttpErrorHandler<FirebaseAuthException>,
+            IHttpRequestExceptionHandler<FirebaseAuthException>,
+            IDeserializeExceptionHandler<FirebaseAuthException>
         {
-            Dictionary<string, string> rawKeys;
-            try
+            internal static readonly HttpKeySourceErrorHandler Instance = new HttpKeySourceErrorHandler();
+
+            private HttpKeySourceErrorHandler() { }
+
+            public FirebaseAuthException HandleHttpRequestException(HttpRequestException exception)
             {
-                rawKeys = NewtonsoftJsonSerializer.Instance
-                    .Deserialize<Dictionary<string, string>>(json);
-            }
-            catch (Exception e)
-            {
-                throw new FirebaseAuthException(
-                    ErrorCode.Unknown,
-                    $"Failed to parse certificate response: {json}.",
+                var temp = exception.ToFirebaseException();
+                return new FirebaseAuthException(
+                    temp.ErrorCode,
+                    $"Failed to retrieve latest public keys. {temp.Message}",
                     AuthErrorCode.CertificateFetchFailed,
-                    inner: e,
-                    response: response);
+                    inner: temp.InnerException,
+                    response: temp.HttpResponse);
             }
 
-            if (rawKeys.Count == 0)
+            public FirebaseAuthException HandleDeserializeException(
+                Exception exception, ResponseInfo responseInfo)
             {
-                throw new FirebaseAuthException(
+                return new FirebaseAuthException(
                     ErrorCode.Unknown,
-                    "No public keys present in the response.",
+                    $"Failed to parse certificate response: {responseInfo.Body}.",
                     AuthErrorCode.CertificateFetchFailed,
-                    response: response);
+                    inner: exception,
+                    response: responseInfo.HttpResponse);
             }
 
-            return rawKeys;
+            protected override FirebaseAuthException CreateException(FirebaseExceptionArgs args)
+            {
+                return new FirebaseAuthException(
+                    args.Code,
+                    args.Message,
+                    AuthErrorCode.CertificateFetchFailed,
+                    response: args.HttpResponse);
+            }
         }
     }
 }
