@@ -34,8 +34,6 @@ namespace FirebaseAdmin.Auth.Tests
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
-        private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
-
         private static readonly string CreateUserResponse = @"{""localId"": ""user1""}";
         private static readonly string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
         private static readonly IList<string> ListUsersResponse = new List<string>()
