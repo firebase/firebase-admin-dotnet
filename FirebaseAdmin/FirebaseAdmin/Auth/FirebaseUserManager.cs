@@ -34,6 +34,10 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal class FirebaseUserManager : IDisposable
     {
+        internal const string ClientVersionHeader = "X-Client-Version";
+
+        internal static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
+
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
         private readonly ConfigurableHttpClient httpClient;
@@ -265,6 +269,7 @@ namespace FirebaseAdmin.Auth
         private async Task<string> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            request.Headers.Add(ClientVersionHeader, ClientVersion);
             try
             {
                 var response = await this.httpClient.SendAsync(request, cancellationToken)
