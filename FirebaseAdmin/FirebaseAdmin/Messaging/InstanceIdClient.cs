@@ -126,18 +126,18 @@ namespace FirebaseAdmin.Messaging
         {
             if (registrationTokens == null)
             {
-                throw new ArgumentNullException("Registration tokens list must not be null");
+                throw new ArgumentNullException("Registration token list must not be null");
             }
 
             var count = registrationTokens.Count;
             if (count == 0)
             {
-                throw new ArgumentException("Registration tokens list must not be empty");
+                throw new ArgumentException("Registration token list must not be empty");
             }
 
             if (count > 1000)
             {
-                throw new ArgumentException("Registration tokens list must not contain more than 1000 tokens");
+                throw new ArgumentException("Registration token list must not contain more than 1000 tokens");
             }
 
             foreach (var registrationToken in registrationTokens)
