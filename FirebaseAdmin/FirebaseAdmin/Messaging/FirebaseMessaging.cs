@@ -315,23 +315,25 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Subscribes a list of registration tokens to a topic.
         /// </summary>
-        /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
         /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
+        /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
         /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic subscription operations.</returns>
-        public async Task<TopicManagementResponse> SubscribeToTopicAsync(string topic, List<string> registrationTokens)
+        public async Task<TopicManagementResponse> SubscribeToTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic)
         {
-            return await this.instanceIdClient.SubscribeToTopicAsync(topic, registrationTokens);
+            return await this.instanceIdClient.SubscribeToTopicAsync(registrationTokens, topic);
         }
 
         /// <summary>
         /// Unsubscribes a list of registration tokens from a topic.
         /// </summary>
-        /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
         /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
+        /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
         /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic unsubscription operations.</returns>
-        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(string topic, List<string> registrationTokens)
+        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic)
         {
-            return await this.instanceIdClient.UnsubscribeFromTopicAsync(topic, registrationTokens);
+            return await this.instanceIdClient.UnsubscribeFromTopicAsync(registrationTokens, topic);
         }
 
         /// <summary>

@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
@@ -61,30 +60,30 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Subscribes a list of registration tokens to a topic.
         /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
         /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the
         /// topic name provided if absent.</param>
-        /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
         /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving
         /// details about the topic subscription operations.</returns>
         public async Task<TopicManagementResponse> SubscribeToTopicAsync(
-            string topic, List<string> registrationTokens)
+            IReadOnlyList<string> registrationTokens, string topic)
         {
-            return await this.SendInstanceIdRequest(topic, registrationTokens, IidSubscriberPath)
+            return await this.SendInstanceIdRequest(registrationTokens, topic, IidSubscriberPath)
                 .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Unsubscribes a list of registration tokens from a topic.
         /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
         /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to
         /// the topic name provided if absent.</param>
-        /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
         /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving
         /// details about the topic unsubscription operations.</returns>
         public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
-            string topic, List<string> registrationTokens)
+            IReadOnlyList<string> registrationTokens, string topic)
         {
-            return await this.SendInstanceIdRequest(topic, registrationTokens, IidUnsubscribePath)
+            return await this.SendInstanceIdRequest(registrationTokens, topic, IidUnsubscribePath)
                 .ConfigureAwait(false);
         }
 
@@ -97,7 +96,7 @@ namespace FirebaseAdmin.Messaging
         }
 
         private async Task<TopicManagementResponse> SendInstanceIdRequest(
-            string topic, List<string> registrationTokens, string path)
+            IReadOnlyList<string> registrationTokens, string topic, string path)
         {
             this.ValidateRegistrationTokenList(registrationTokens);
 
@@ -123,19 +122,20 @@ namespace FirebaseAdmin.Messaging
             return new TopicManagementResponse(response.Result);
         }
 
-        private void ValidateRegistrationTokenList(List<string> registrationTokens)
+        private void ValidateRegistrationTokenList(IReadOnlyList<string> registrationTokens)
         {
             if (registrationTokens == null)
             {
                 throw new ArgumentNullException("Registration token list must not be null");
             }
 
-            if (registrationTokens.Count() == 0)
+            var count = registrationTokens.Count;
+            if (count == 0)
             {
                 throw new ArgumentException("Registration token list must not be empty");
             }
 
-            if (registrationTokens.Count() > 1000)
+            if (count > 1000)
             {
                 throw new ArgumentException("Registration token list must not contain more than 1000 tokens");
             }
@@ -167,7 +167,7 @@ namespace FirebaseAdmin.Messaging
             public string Topic { get; set; }
 
             [JsonProperty("registration_tokens")]
-            public List<string> RegistrationTokens { get; set; }
+            public IEnumerable<string> RegistrationTokens { get; set; }
         }
     }
 }
