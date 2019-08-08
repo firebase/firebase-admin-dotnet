@@ -274,6 +274,7 @@ namespace FirebaseAdmin.Auth
                 RequestUri = new Uri($"{this.baseUrl}/{path}"),
                 Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
             };
+            request.Headers.Add(ClientVersionHeader, ClientVersion);
             return await this.httpClient
                 .SendAndDeserializeAsync<TResult>(request, cancellationToken)
                 .ConfigureAwait(false);
