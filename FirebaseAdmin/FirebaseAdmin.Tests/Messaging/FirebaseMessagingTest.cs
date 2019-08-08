@@ -138,7 +138,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
 
-            var response = await messaging.SubscribeToTopicAsync("test-topic", new List<string> { "test-token" });
+            var response = await messaging.SubscribeToTopicAsync(new List<string> { "test-token" }, "test-topic");
             Assert.Equal(0, response.FailureCount);
             Assert.Equal(1, response.SuccessCount);
             app.Delete();
@@ -163,7 +163,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
 
-            var response = await messaging.UnsubscribeFromTopicAsync("test-topic", new List<string> { "test-token" });
+            var response = await messaging.UnsubscribeFromTopicAsync(new List<string> { "test-token" }, "test-topic");
             Assert.Equal(0, response.FailureCount);
             Assert.Equal(1, response.SuccessCount);
             app.Delete();

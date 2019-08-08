@@ -6,7 +6,8 @@ namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// Response from an operation that subscribes or unsubscribes registration tokens to a topic.
-    /// See <see cref="FirebaseMessaging.SubscribeToTopicAsync(string, List{string})"/> and <see cref="FirebaseMessaging.UnsubscribeFromTopicAsync(string, List{string})"/>.
+    /// See <see cref="FirebaseMessaging.SubscribeToTopicAsync(IReadOnlyList{string}, string)"/> and
+    /// <see cref="FirebaseMessaging.UnsubscribeFromTopicAsync(IReadOnlyList{string}, string)"/>.
     /// </summary>
     internal class InstanceIdServiceResponse
     {
