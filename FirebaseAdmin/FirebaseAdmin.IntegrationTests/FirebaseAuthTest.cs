@@ -118,8 +118,10 @@ namespace FirebaseAdmin.IntegrationTests
         {
             var customClaims = new Dictionary<string, object>();
 
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("non.existing", customClaims));
+
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
         }
 
         [Fact]
@@ -150,8 +152,10 @@ namespace FirebaseAdmin.IntegrationTests
                 Assert.False(user.Disabled);
 
                 // Cannot recreate the same user.
-                await Assert.ThrowsAsync<FirebaseException>(
+                var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                     async () => await FirebaseAuth.DefaultInstance.CreateUserAsync(args));
+
+                Assert.Equal(AuthErrorCode.UidAlreadyExists, exception.AuthErrorCode);
             }
             finally
             {
@@ -247,23 +251,29 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 // Delete user
                 await FirebaseAuth.DefaultInstance.DeleteUserAsync(uid);
-                await Assert.ThrowsAsync<FirebaseException>(
+                var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                     async () => await FirebaseAuth.DefaultInstance.GetUserAsync(uid));
+
+                Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
             }
         }
 
         [Fact]
         public async Task GetUserNonExistingUid()
         {
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await FirebaseAuth.DefaultInstance.GetUserAsync("non.existing"));
+
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
         }
 
         [Fact]
         public async Task GetUserNonExistingEmail()
         {
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await FirebaseAuth.DefaultInstance.GetUserByEmailAsync("non.existing@definitely.non.existing"));
+
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
         }
 
         [Fact]
@@ -273,15 +283,20 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 Uid = "non.existing",
             };
-            await Assert.ThrowsAsync<FirebaseException>(
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await FirebaseAuth.DefaultInstance.UpdateUserAsync(args));
+
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
         }
 
         [Fact]
         public async Task DeleteUserNonExistingUid()
         {
-            await Assert.ThrowsAsync<FirebaseException>(
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await FirebaseAuth.DefaultInstance.DeleteUserAsync("non.existing"));
+
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
         }
 
         [Fact]

@@ -269,7 +269,7 @@ namespace FirebaseAdmin.Auth
         /// the newly created user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating the user account.</exception>
         public async Task<UserRecord> CreateUserAsync(UserRecordArgs args)
         {
             return await this.CreateUserAsync(args, default(CancellationToken))
@@ -286,7 +286,7 @@ namespace FirebaseAdmin.Auth
         /// the newly created user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating the user account.</exception>
         public async Task<UserRecord> CreateUserAsync(
             UserRecordArgs args, CancellationToken cancellationToken)
         {
@@ -304,7 +304,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// a user with the specified user ID.</returns>
         /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified user ID.</exception>
         public async Task<UserRecord> GetUserAsync(string uid)
         {
             return await this.GetUserAsync(uid, default(CancellationToken))
@@ -321,7 +321,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// a user with the specified user ID.</returns>
         /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If a user cannot be found with the specified user ID.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified user ID.</exception>
         public async Task<UserRecord> GetUserAsync(
             string uid, CancellationToken cancellationToken)
         {
@@ -339,7 +339,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// a user with the specified email.</returns>
         /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If a user cannot be found with the specified email.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified email.</exception>
         public async Task<UserRecord> GetUserByEmailAsync(string email)
         {
             return await this.GetUserByEmailAsync(email, default(CancellationToken))
@@ -356,7 +356,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// a user with the specified email.</returns>
         /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If a user cannot be found with the specified email.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified email.</exception>
         public async Task<UserRecord> GetUserByEmailAsync(
             string email, CancellationToken cancellationToken)
         {
@@ -374,7 +374,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// a user with the specified phone number.</returns>
         /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If a user cannot be found with the specified phone number.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified phone number.</exception>
         public async Task<UserRecord> GetUserByPhoneNumberAsync(string phoneNumber)
         {
             return await this.GetUserByPhoneNumberAsync(phoneNumber, default(CancellationToken))
@@ -391,7 +391,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="UserRecord"/> representing
         /// a user with the specified phone number.</returns>
         /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If a user cannot be found with the specified phone number.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified phone number.</exception>
         public async Task<UserRecord> GetUserByPhoneNumberAsync(
             string phoneNumber, CancellationToken cancellationToken)
         {
@@ -410,7 +410,7 @@ namespace FirebaseAdmin.Auth
         /// the updated user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while updating the user account.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while updating the user account.</exception>
         public async Task<UserRecord> UpdateUserAsync(UserRecordArgs args)
         {
             return await this.UpdateUserAsync(args, default(CancellationToken))
@@ -428,7 +428,7 @@ namespace FirebaseAdmin.Auth
         /// the updated user account.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
         /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while updating the user account.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while updating the user account.</exception>
         public async Task<UserRecord> UpdateUserAsync(
             UserRecordArgs args, CancellationToken cancellationToken)
         {
@@ -445,7 +445,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="uid">A user ID string.</param>
         /// <returns>A task that completes when the user account has been deleted.</returns>
         /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while deleting the user.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while deleting the user.</exception>
         public async Task DeleteUserAsync(string uid)
         {
             await this.DeleteUserAsync(uid, default(CancellationToken))
@@ -460,7 +460,7 @@ namespace FirebaseAdmin.Auth
         /// operation.</param>
         /// <returns>A task that completes when the user account has been deleted.</returns>
         /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while deleting the user.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while deleting the user.</exception>
         public async Task DeleteUserAsync(string uid, CancellationToken cancellationToken)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
@@ -478,6 +478,7 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
         /// characters.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
         /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
         /// or longer than 128 characters.
         /// </param>
@@ -500,6 +501,7 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
         /// characters.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
         /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
         /// or longer than 128 characters.
         /// </param>

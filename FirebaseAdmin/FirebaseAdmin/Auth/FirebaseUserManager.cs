@@ -17,9 +17,9 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Api.Gax.Rest;
-using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
@@ -40,7 +40,7 @@ namespace FirebaseAdmin.Auth
 
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
-        private readonly ConfigurableHttpClient httpClient;
+        private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
 
         internal FirebaseUserManager(FirebaseUserManagerArgs args)
@@ -51,7 +51,15 @@ namespace FirebaseAdmin.Auth
                     "Must initialize FirebaseApp with a project ID to manage users.");
             }
 
-            this.httpClient = args.ClientFactory.CreateAuthorizedHttpClient(args.Credential);
+            this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
+                new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
+                {
+                    HttpClientFactory = args.ClientFactory,
+                    Credential = args.Credential,
+                    ErrorResponseHandler = AuthErrorHandler.Instance,
+                    RequestExceptionHandler = AuthErrorHandler.Instance,
+                    DeserializeExceptionHandler = AuthErrorHandler.Instance,
+                });
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
         }
 
@@ -156,7 +164,8 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Create a new user account.
         /// </summary>
-        /// <exception cref="FirebaseException">If an error occurs while creating the user account.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating the user
+        /// account.</exception>
         /// <param name="args">The data to create the user account with.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -167,10 +176,11 @@ namespace FirebaseAdmin.Auth
             var payload = args.ThrowIfNull(nameof(args)).ToCreateUserRequest();
             var response = await this.PostAndDeserializeAsync<JObject>(
                 "accounts", payload, cancellationToken).ConfigureAwait(false);
-            var uid = response["localId"];
+            var uid = response.Result["localId"];
             if (uid == null)
             {
-                throw new FirebaseException("Failed to create new user.");
+                throw UnexpectedResponseException(
+                    "Failed to create new user.", resp: response.HttpResponse);
             }
 
             return uid.Value<string>();
@@ -179,7 +189,8 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Update an existing user.
         /// </summary>
-        /// <exception cref="FirebaseException">If the server responds that cannot update the user.</exception>
+        /// <exception cref="FirebaseAuthException">If the server responds that cannot update the
+        /// user.</exception>
         /// <param name="args">The user account data to be updated.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -189,9 +200,10 @@ namespace FirebaseAdmin.Auth
             var payload = args.ToUpdateUserRequest();
             var response = await this.PostAndDeserializeAsync<JObject>(
                 "accounts:update", payload, cancellationToken).ConfigureAwait(false);
-            if (payload.Uid != (string)response["localId"])
+            if (payload.Uid != (string)response.Result["localId"])
             {
-                throw new FirebaseException($"Failed to update user: {payload.Uid}");
+                throw UnexpectedResponseException(
+                    $"Failed to update user: {payload.Uid}", resp: response.HttpResponse);
             }
 
             return payload.Uid;
@@ -217,44 +229,43 @@ namespace FirebaseAdmin.Auth
             };
             var response = await this.PostAndDeserializeAsync<JObject>(
                 "accounts:delete", payload, cancellationToken).ConfigureAwait(false);
-            if (response == null || (string)response["kind"] == null)
+            if (response.Result == null || (string)response.Result["kind"] == null)
             {
-                throw new FirebaseException($"Failed to delete user: {uid}");
+                throw UnexpectedResponseException(
+                    $"Failed to delete user: {uid}", resp: response.HttpResponse);
             }
         }
 
-        private async Task<UserRecord> GetUserAsync(UserQuery query, CancellationToken cancellationToken)
+        private static FirebaseAuthException UnexpectedResponseException(
+            string message, Exception inner = null, HttpResponseMessage resp = null)
+        {
+            throw new FirebaseAuthException(
+                ErrorCode.Unknown,
+                message,
+                AuthErrorCode.UnexpectedResponse,
+                inner: inner,
+                response: resp);
+        }
+
+        private async Task<UserRecord> GetUserAsync(
+            UserQuery query, CancellationToken cancellationToken)
         {
             var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
                 "accounts:lookup", query.Build(), cancellationToken).ConfigureAwait(false);
-            if (response == null || response.Users == null || response.Users.Count == 0)
+            var result = response.Result;
+            if (result == null || result.Users == null || result.Users.Count == 0)
             {
-                throw new FirebaseException($"Failed to get user with {query.Description}");
+                throw new FirebaseAuthException(
+                    ErrorCode.NotFound,
+                    $"Failed to get user with {query.Description}",
+                    AuthErrorCode.UserNotFound,
+                    response: response.HttpResponse);
             }
 
-            return new UserRecord(response.Users[0]);
+            return new UserRecord(result.Users[0]);
         }
 
-        private async Task<TResult> PostAndDeserializeAsync<TResult>(
-            string path, object body, CancellationToken cancellationToken)
-        {
-            var json = await this.PostAsync(path, body, cancellationToken).ConfigureAwait(false);
-            return this.SafeDeserialize<TResult>(json);
-        }
-
-        private TResult SafeDeserialize<TResult>(string json)
-        {
-            try
-            {
-                return NewtonsoftJsonSerializer.Instance.Deserialize<TResult>(json);
-            }
-            catch (Exception e)
-            {
-                throw new FirebaseException("Error while parsing Auth service response", e);
-            }
-        }
-
-        private async Task<string> PostAsync(
+        private async Task<DeserializedResponseInfo<TResult>> PostAndDeserializeAsync<TResult>(
             string path, object body, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage()
@@ -263,32 +274,10 @@ namespace FirebaseAdmin.Auth
                 RequestUri = new Uri($"{this.baseUrl}/{path}"),
                 Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
             };
-            return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        }
-
-        private async Task<string> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
             request.Headers.Add(ClientVersionHeader, ClientVersion);
-            try
-            {
-                var response = await this.httpClient.SendAsync(request, cancellationToken)
-                    .ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = "Response status code does not indicate success: "
-                            + $"{(int)response.StatusCode} ({response.StatusCode})"
-                            + $"{Environment.NewLine}{json}";
-                    throw new FirebaseException(error);
-                }
-
-                return json;
-            }
-            catch (HttpRequestException e)
-            {
-                throw new FirebaseException("Error while calling Firebase Auth service", e);
-            }
+            return await this.httpClient
+                .SendAndDeserializeAsync<TResult>(request, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>

@@ -19,8 +19,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Discovery;
-using Google.Apis.Json;
+using Google.Apis.Http;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 
@@ -35,10 +36,12 @@ namespace FirebaseAdmin.Auth
         private const int MaxListUsersResults = 1000;
 
         private readonly string baseUrl;
-        private readonly HttpClient httpClient;
+        private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
 
         private ListUsersRequest(
-            string baseUrl, HttpClient httpClient, ListUsersOptions options)
+            string baseUrl,
+            ErrorHandlingHttpClient<FirebaseAuthException> httpClient,
+            ListUsersOptions options)
         {
             this.baseUrl = baseUrl;
             this.httpClient = httpClient;
@@ -70,15 +73,16 @@ namespace FirebaseAdmin.Auth
             return request;
         }
 
-        public Task<Stream> ExecuteAsStreamAsync()
+        public async Task<Stream> ExecuteAsStreamAsync()
         {
-            return this.ExecuteAsStreamAsync(default);
+            return await this.ExecuteAsStreamAsync(default).ConfigureAwait(false);
         }
 
-        public Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken)
+        public async Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken)
         {
-            var response = this.SendAsync(this.CreateRequest(), cancellationToken);
-            return response.Result.Content.ReadAsStreamAsync();
+            var response = await this.httpClient.SendAsync(this.CreateRequest(), cancellationToken)
+                .ConfigureAwait(false);
+            return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         }
 
         public Stream ExecuteAsStream()
@@ -86,9 +90,9 @@ namespace FirebaseAdmin.Auth
             return this.ExecuteAsStreamAsync().Result;
         }
 
-        public Task<ExportedUserRecords> ExecuteAsync()
+        public async Task<ExportedUserRecords> ExecuteAsync()
         {
-            return this.ExecuteAsync(default);
+            return await this.ExecuteAsync(default).ConfigureAwait(false);
         }
 
         public async Task<ExportedUserRecords> ExecuteAsync(CancellationToken cancellationToken)
@@ -172,47 +176,10 @@ namespace FirebaseAdmin.Auth
         private async Task<DownloadAccountResponse> SendAndDeserializeAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var json = await this.SendAndReadAsync(request, cancellationToken)
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<DownloadAccountResponse>(request, cancellationToken)
                 .ConfigureAwait(false);
-            try
-            {
-                return NewtonsoftJsonSerializer.Instance.Deserialize<DownloadAccountResponse>(json);
-            }
-            catch (Exception e)
-            {
-                throw new FirebaseException("Error while parsing Auth service response", e);
-            }
-        }
-
-        private async Task<string> SendAndReadAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var response = await this.SendAsync(request, cancellationToken)
-                    .ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = "Response status code does not indicate success: "
-                                + $"{(int)response.StatusCode} ({response.StatusCode})"
-                                + $"{Environment.NewLine}{json}";
-                    throw new FirebaseException(error);
-                }
-
-                return json;
-            }
-            catch (HttpRequestException e)
-            {
-                throw new FirebaseException("Error while calling Firebase Auth service", e);
-            }
-        }
-
-        private async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            return await this.httpClient.SendAsync(request, cancellationToken)
-                .ConfigureAwait(false);
+            return response.Result;
         }
 
         /// <summary>
@@ -222,11 +189,13 @@ namespace FirebaseAdmin.Auth
         internal sealed class Factory
         {
             private readonly string baseUrl;
-            private readonly HttpClient httpClient;
+            private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
             private readonly ListUsersOptions options;
 
             internal Factory(
-                string baseUrl, HttpClient httpClient, ListUsersOptions options = null)
+                string baseUrl,
+                ErrorHandlingHttpClient<FirebaseAuthException> httpClient,
+                ListUsersOptions options = null)
             {
                 this.baseUrl = baseUrl;
                 this.httpClient = httpClient;
