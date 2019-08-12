@@ -64,11 +64,13 @@ namespace FirebaseAdmin.Auth
         {
             var queryParameters = string.Join("&", this.RequestParameters.Select(
                 kvp => $"{kvp.Key}={kvp.Value.DefaultValue}"));
-            return new HttpRequestMessage()
+            var request = new HttpRequestMessage()
             {
                 Method = System.Net.Http.HttpMethod.Get,
                 RequestUri = new Uri($"{this.baseUrl}/{this.RestPath}?{queryParameters}"),
             };
+            request.Headers.Add(FirebaseUserManager.ClientVersionHeader, FirebaseUserManager.ClientVersion);
+            return request;
         }
 
         public async Task<Stream> ExecuteAsStreamAsync()

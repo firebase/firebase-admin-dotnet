@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
@@ -81,6 +82,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
             Assert.Equal(new JArray("user1"), request["localId"]);
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -160,6 +162,8 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.NotNull(metadata);
             Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(100), metadata.CreationTimestamp);
             Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(150), metadata.LastSignInTimestamp);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -222,6 +226,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
             Assert.Equal(new JArray("user@example.com"), request["email"]);
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -284,6 +289,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
             Assert.Equal(new JArray("+1234567890"), request["phoneNumber"]);
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -355,6 +361,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, query.Count);
             Assert.Equal("1000", query["maxResults"]);
             Assert.Equal("token", query["nextPageToken"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -392,6 +401,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, query.Count);
             Assert.Equal("1000", query["maxResults"]);
             Assert.Equal("token", query["nextPageToken"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -431,6 +443,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, query.Count);
             Assert.Equal("3", query["maxResults"]);
             Assert.Equal("token", query["nextPageToken"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -466,6 +481,9 @@ namespace FirebaseAdmin.Auth.Tests
             query = this.ExtractQueryParams(handler.Requests[1]);
             Assert.Single(query);
             Assert.Equal("3", query["maxResults"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -511,6 +529,9 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Assert.Equal($"user{i + 1}", users[i].Uid);
             }
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -536,6 +557,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, query.Count);
             Assert.Equal("7", query["maxResults"]);
             Assert.Equal("token", query["nextPageToken"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -577,6 +601,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, query.Count);
             Assert.Equal("1000", query["maxResults"]);
             Assert.Equal("token", query["nextPageToken"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -760,6 +787,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, handler.Requests.Count);
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
             Assert.Empty(request);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -793,6 +823,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("secret", request["password"]);
             Assert.Equal("+1234567890", request["phoneNumber"]);
             Assert.Equal("https://example.com/user.png", request["photoUrl"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -821,6 +854,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, request.Count);
             Assert.False((bool)request["disabled"]);
             Assert.False((bool)request["emailVerified"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -1025,6 +1061,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.True((bool)claims["admin"]);
             Assert.Equal(4L, claims["level"]);
             Assert.Equal("gold", claims["package"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -1048,6 +1087,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["emailVerified"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -1074,6 +1116,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(
                 new JArray() { "DISPLAY_NAME", "PHOTO_URL" },
                 request["deleteAttribute"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -1099,6 +1144,9 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(
                 new JArray() { "phone" },
                 request["deleteProvider"]);
+
+            this.AssertClientVersion(handler.Requests[0].Headers);
+            this.AssertClientVersion(handler.Requests[1].Headers);
         }
 
         [Fact]
@@ -1122,6 +1170,8 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.True((bool)claims["admin"]);
             Assert.Equal(4L, claims["level"]);
             Assert.Equal("gold", claims["package"]);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -1135,6 +1185,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             await auth.SetCustomUserClaimsAsync("user1", customClaims);
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -1148,6 +1199,8 @@ namespace FirebaseAdmin.Auth.Tests
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal("{}", request["customAttributes"]);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -1161,6 +1214,8 @@ namespace FirebaseAdmin.Auth.Tests
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal("{}", request["customAttributes"]);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -1447,6 +1502,7 @@ namespace FirebaseAdmin.Auth.Tests
             var auth = this.CreateFirebaseAuth(handler);
 
             await auth.DeleteUserAsync("user1");
+            this.AssertClientVersion(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -1492,6 +1548,13 @@ namespace FirebaseAdmin.Auth.Tests
         {
             return req.Url.Query.Substring(1).Split('&').ToDictionary(
                 entry => entry.Split('=')[0], entry => entry.Split('=')[1]);
+        }
+
+        private void AssertClientVersion(HttpRequestHeaders header)
+        {
+            Assert.Equal(
+                FirebaseUserManager.ClientVersion,
+                header.GetValues(FirebaseUserManager.ClientVersionHeader).First());
         }
     }
 }
