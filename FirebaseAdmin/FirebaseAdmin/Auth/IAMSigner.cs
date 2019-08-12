@@ -13,14 +13,13 @@
 // limitations under the License.
 
 using System;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
-using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth
 {
@@ -38,14 +37,21 @@ namespace FirebaseAdmin.Auth
             "https://iam.googleapis.com/v1/projects/-/serviceAccounts/{0}:signBlob";
 
         private const string MetadataServerUrl =
-            "http://metadata/computeMetadata/v1/instance/service-accounts/default/email";
+            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email";
 
-        private readonly ConfigurableHttpClient httpClient;
+        private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly Lazy<Task<string>> keyId;
 
         public IAMSigner(HttpClientFactory clientFactory, GoogleCredential credential)
         {
-            this.httpClient = clientFactory.CreateAuthorizedHttpClient(credential);
+            this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
+                new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
+                {
+                    HttpClientFactory = clientFactory,
+                    ErrorResponseHandler = IAMSignerErrorHandler.Instance,
+                    RequestExceptionHandler = AuthErrorHandler.Instance,
+                    DeserializeExceptionHandler = AuthErrorHandler.Instance,
+                });
             this.keyId = new Lazy<Task<string>>(
                 async () => await DiscoverServiceAccountIdAsync(clientFactory)
                     .ConfigureAwait(false), true);
@@ -55,25 +61,21 @@ namespace FirebaseAdmin.Auth
             byte[] data, CancellationToken cancellationToken = default(CancellationToken))
         {
             var keyId = await this.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
-            var url = string.Format(SignBlobUrl, keyId);
-            var request = new SignBlobRequest
+            var body = new SignBlobRequest
             {
                 BytesToSign = Convert.ToBase64String(data),
             };
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri(string.Format(SignBlobUrl, keyId)),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
+            };
 
-            try
-            {
-                var response = await this.httpClient.PostJsonAsync(url, request, cancellationToken)
-                    .ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                this.ThrowIfError(response, json);
-                var parsed = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobResponse>(json);
-                return Convert.FromBase64String(parsed.Signature);
-            }
-            catch (HttpRequestException e)
-            {
-                throw new FirebaseException("Error while calling the IAM service.", e);
-            }
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<SignBlobResponse>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return Convert.FromBase64String(response.Result.Signature);
         }
 
         public virtual async Task<string> GetKeyIdAsync(
@@ -85,7 +87,8 @@ namespace FirebaseAdmin.Auth
             }
             catch (Exception e)
             {
-                throw new FirebaseException(
+                // Invalid configuration or environment error.
+                throw new InvalidOperationException(
                     "Failed to determine service account ID. Make sure to initialize the SDK "
                         + "with service account credentials or specify a service account "
                         + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
@@ -105,36 +108,10 @@ namespace FirebaseAdmin.Auth
             using (var client = clientFactory.CreateDefaultHttpClient())
             {
                 client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
-                return await client.GetStringAsync(MetadataServerUrl).ConfigureAwait(false);
+                var resp = await client.GetAsync(MetadataServerUrl).ConfigureAwait(false);
+                resp.EnsureSuccessStatusCode();
+                return await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
-        }
-
-        private void ThrowIfError(HttpResponseMessage response, string content)
-        {
-            if (response.IsSuccessStatusCode)
-            {
-                return;
-            }
-
-            string error = null;
-            try
-            {
-                var result = NewtonsoftJsonSerializer.Instance.Deserialize<SignBlobError>(content);
-                error = result?.Error.Message;
-            }
-            catch (Exception)
-            {
-                // Ignore any errors encountered while parsing the originl error.
-            }
-
-            if (string.IsNullOrEmpty(error))
-            {
-                error = "Response status code does not indicate success: "
-                    + $"{(int)response.StatusCode} ({response.StatusCode})"
-                    + $"{Environment.NewLine}{content}";
-            }
-
-            throw new FirebaseException(error);
         }
 
         /// <summary>
@@ -155,22 +132,16 @@ namespace FirebaseAdmin.Auth
             public string Signature { get; set; }
         }
 
-        /// <summary>
-        /// Represents an error response sent by the remote IAM service.
-        /// </summary>
-        private class SignBlobError
+        private class IAMSignerErrorHandler : PlatformErrorHandler<FirebaseAuthException>
         {
-            [Newtonsoft.Json.JsonProperty("error")]
-            public SignBlobErrorDetail Error { get; set; }
-        }
+            internal static readonly IAMSignerErrorHandler Instance = new IAMSignerErrorHandler();
 
-        /// <summary>
-        /// Represents the error details embedded in an IAM error response.
-        /// </summary>
-        private class SignBlobErrorDetail
-        {
-            [Newtonsoft.Json.JsonProperty("message")]
-            public string Message { get; set; }
+            private IAMSignerErrorHandler() { }
+
+            protected override FirebaseAuthException CreateException(FirebaseExceptionArgs args)
+            {
+                return new FirebaseAuthException(args.Code, args.Message, response: args.HttpResponse);
+            }
         }
     }
 }

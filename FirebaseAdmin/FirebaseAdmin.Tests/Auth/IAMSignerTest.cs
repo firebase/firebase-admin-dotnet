@@ -15,13 +15,10 @@
 using System;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Http;
 using Google.Apis.Json;
 using Xunit;
 
@@ -69,12 +66,23 @@ namespace FirebaseAdmin.Auth.Tests
                 };
             var factory = new MockHttpClientFactory(handler);
             var signer = new IAMSigner(factory, GoogleCredential.FromAccessToken("token"));
-            await Assert.ThrowsAsync<FirebaseException>(
+            var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
+                + "with service account credentials or specify a service account "
+                + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
+                + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
+                + "more details on creating custom tokens.";
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await signer.GetKeyIdAsync());
             Assert.Equal(1, handler.Calls);
-            await Assert.ThrowsAsync<FirebaseException>(
+            Assert.Equal(errorMessage, ex.Message);
+            Assert.IsType<HttpRequestException>(ex.InnerException);
+
+            ex = await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await signer.GetKeyIdAsync());
             Assert.Equal(1, handler.Calls);
+            Assert.Equal(errorMessage, ex.Message);
+            Assert.IsType<HttpRequestException>(ex.InnerException);
         }
     }
 
@@ -117,9 +125,37 @@ namespace FirebaseAdmin.Auth.Tests
                 factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
-            var ex = await Assert.ThrowsAsync<FirebaseException>(
+            var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await signer.SignDataAsync(data));
+
+            Assert.Equal(ErrorCode.Internal, ex.ErrorCode);
             Assert.Equal("test reason", ex.Message);
+            Assert.Null(ex.AuthErrorCode);
+            Assert.NotNull(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+        }
+
+        [Fact]
+        public async Task WelformedSignErrorWithCode()
+        {
+            var handler = new MockMessageHandler()
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    Response = @"{""error"": {""message"": ""test reason"", ""status"": ""UNAVAILABLE""}}",
+                };
+            var factory = new MockHttpClientFactory(handler);
+            var signer = new FixedAccountIAMSigner(
+                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
+            byte[] data = Encoding.UTF8.GetBytes("Hello world");
+            var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await signer.SignDataAsync(data));
+
+            Assert.Equal(ErrorCode.Unavailable, ex.ErrorCode);
+            Assert.Equal("test reason", ex.Message);
+            Assert.Null(ex.AuthErrorCode);
+            Assert.NotNull(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
         }
 
         [Fact]
@@ -135,9 +171,16 @@ namespace FirebaseAdmin.Auth.Tests
                 factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
-            var ex = await Assert.ThrowsAsync<FirebaseException>(
+            var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await signer.SignDataAsync(data));
-            Assert.Contains("not json", ex.Message);
+
+            Assert.Equal(ErrorCode.Internal, ex.ErrorCode);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 500 (InternalServerError)\nnot json",
+                ex.Message);
+            Assert.Null(ex.AuthErrorCode);
+            Assert.NotNull(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
         }
     }
 }
