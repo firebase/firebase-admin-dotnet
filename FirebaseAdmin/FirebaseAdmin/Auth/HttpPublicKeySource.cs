@@ -15,14 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Http;
-using Google.Apis.Json;
 using Google.Apis.Util;
 
 #if NETSTANDARD1_5 || NETSTANDARD2_0
@@ -75,14 +74,19 @@ namespace FirebaseAdmin.Auth
                     var now = this.clock.UtcNow;
                     if (this.cachedKeys == null || now >= this.expirationTime)
                     {
-                        using (var httpClient = this.clientFactory.CreateDefaultHttpClient())
+                        using (var httpClient = this.CreateHttpClient())
                         {
-                            var response = await httpClient.GetAsync(this.certUrl, cancellationToken)
+                            var request = new HttpRequestMessage()
+                            {
+                                Method = HttpMethod.Get,
+                                RequestUri = new Uri(this.certUrl),
+                            };
+                            var response = await httpClient
+                                .SendAndDeserializeAsync<Dictionary<string, string>>(request, cancellationToken)
                                 .ConfigureAwait(false);
-                            response.EnsureSuccessStatusCode();
-                            this.cachedKeys = this.ParseKeys(await response.Content.ReadAsStringAsync()
-                                .ConfigureAwait(false));
-                            var cacheControl = response.Headers.CacheControl;
+
+                            this.cachedKeys = this.ParseKeys(response);
+                            var cacheControl = response.HttpResponse.Headers.CacheControl;
                             if (cacheControl?.MaxAge != null)
                             {
                                 this.expirationTime = now.Add(cacheControl.MaxAge.Value)
@@ -90,10 +94,6 @@ namespace FirebaseAdmin.Auth
                             }
                         }
                     }
-                }
-                catch (HttpRequestException e)
-                {
-                    throw new FirebaseException("Failed to retrieve latest public keys.", e);
                 }
                 finally
                 {
@@ -104,17 +104,31 @@ namespace FirebaseAdmin.Auth
             return this.cachedKeys;
         }
 
-        private IReadOnlyList<PublicKey> ParseKeys(string json)
+        private ErrorHandlingHttpClient<FirebaseAuthException> CreateHttpClient()
         {
-            var rawKeys = NewtonsoftJsonSerializer.Instance
-                .Deserialize<Dictionary<string, string>>(json);
-            if (rawKeys.Count == 0)
+            return new ErrorHandlingHttpClient<FirebaseAuthException>(
+                new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
+                {
+                    HttpClientFactory = this.clientFactory,
+                    ErrorResponseHandler = HttpKeySourceErrorHandler.Instance,
+                    RequestExceptionHandler = HttpKeySourceErrorHandler.Instance,
+                    DeserializeExceptionHandler = HttpKeySourceErrorHandler.Instance,
+                });
+        }
+
+        private IReadOnlyList<PublicKey> ParseKeys(DeserializedResponseInfo<Dictionary<string, string>> response)
+        {
+            if (response.Result.Count == 0)
             {
-                throw new InvalidDataException("No public keys present in the response.");
+                throw new FirebaseAuthException(
+                    ErrorCode.Unknown,
+                    "No public keys present in the response.",
+                    AuthErrorCode.CertificateFetchFailed,
+                    response: response.HttpResponse);
             }
 
             var builder = ImmutableList.CreateBuilder<PublicKey>();
-            foreach (var entry in rawKeys)
+            foreach (var entry in response.Result)
             {
                 var x509cert = new X509Certificate2(Encoding.UTF8.GetBytes(entry.Value));
                 RSAKey rsa;
@@ -129,6 +143,47 @@ namespace FirebaseAdmin.Auth
             }
 
             return builder.ToImmutableList();
+        }
+
+        private class HttpKeySourceErrorHandler
+        : HttpErrorHandler<FirebaseAuthException>,
+            IHttpRequestExceptionHandler<FirebaseAuthException>,
+            IDeserializeExceptionHandler<FirebaseAuthException>
+        {
+            internal static readonly HttpKeySourceErrorHandler Instance = new HttpKeySourceErrorHandler();
+
+            private HttpKeySourceErrorHandler() { }
+
+            public FirebaseAuthException HandleHttpRequestException(HttpRequestException exception)
+            {
+                var temp = exception.ToFirebaseException();
+                return new FirebaseAuthException(
+                    temp.ErrorCode,
+                    $"Failed to retrieve latest public keys. {temp.Message}",
+                    AuthErrorCode.CertificateFetchFailed,
+                    inner: temp.InnerException,
+                    response: temp.HttpResponse);
+            }
+
+            public FirebaseAuthException HandleDeserializeException(
+                Exception exception, ResponseInfo responseInfo)
+            {
+                return new FirebaseAuthException(
+                    ErrorCode.Unknown,
+                    $"Failed to parse certificate response: {responseInfo.Body}.",
+                    AuthErrorCode.CertificateFetchFailed,
+                    inner: exception,
+                    response: responseInfo.HttpResponse);
+            }
+
+            protected override FirebaseAuthException CreateException(FirebaseExceptionArgs args)
+            {
+                return new FirebaseAuthException(
+                    args.Code,
+                    args.Message,
+                    AuthErrorCode.CertificateFetchFailed,
+                    response: args.HttpResponse);
+            }
         }
     }
 }

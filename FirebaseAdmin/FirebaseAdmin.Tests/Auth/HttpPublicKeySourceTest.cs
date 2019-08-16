@@ -18,7 +18,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using FirebaseAdmin.Auth;
 using FirebaseAdmin.Tests;
 using Xunit;
 
@@ -111,8 +110,93 @@ namespace FirebaseAdmin.Auth.Tests
             var clientFactory = new MockHttpClientFactory(handler);
             var keyManager = new HttpPublicKeySource(
                 "https://example.com/certs", clock, clientFactory);
-            await Assert.ThrowsAsync<FirebaseException>(
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await keyManager.GetPublicKeysAsync());
+
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Equal(
+                "Unexpected HTTP response with status: 500 (InternalServerError)\ntest error",
+                exception.Message);
+            Assert.Equal(AuthErrorCode.CertificateFetchFailed, exception.AuthErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
+        public async Task NetworkError()
+        {
+            var clock = new MockClock();
+            var handler = new MockMessageHandler()
+            {
+                Exception = new HttpRequestException("Network error"),
+            };
+            var clientFactory = new MockHttpClientFactory(handler);
+            var keyManager = new HttpPublicKeySource(
+                "https://example.com/certs", clock, clientFactory);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await keyManager.GetPublicKeysAsync());
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(
+                "Failed to retrieve latest public keys. Unknown error while making a remote "
+                    + "service call: Network error",
+                exception.Message);
+            Assert.Equal(AuthErrorCode.CertificateFetchFailed, exception.AuthErrorCode);
+            Assert.Null(exception.HttpResponse);
+            Assert.Same(handler.Exception, exception.InnerException);
+
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
+        public async Task EmptyResponse()
+        {
+            var clock = new MockClock();
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var clientFactory = new MockHttpClientFactory(handler);
+            var keyManager = new HttpPublicKeySource(
+                "https://example.com/certs", clock, clientFactory);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await keyManager.GetPublicKeysAsync());
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal("No public keys present in the response.", exception.Message);
+            Assert.Equal(AuthErrorCode.CertificateFetchFailed, exception.AuthErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
+        public async Task MalformedResponse()
+        {
+            var clock = new MockClock();
+            var handler = new MockMessageHandler()
+            {
+                Response = "not json",
+            };
+            var clientFactory = new MockHttpClientFactory(handler);
+            var keyManager = new HttpPublicKeySource(
+                "https://example.com/certs", clock, clientFactory);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await keyManager.GetPublicKeysAsync());
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal("Failed to parse certificate response: not json.", exception.Message);
+            Assert.Equal(AuthErrorCode.CertificateFetchFailed, exception.AuthErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.NotNull(exception.InnerException);
+
             Assert.Equal(1, handler.Calls);
         }
     }
