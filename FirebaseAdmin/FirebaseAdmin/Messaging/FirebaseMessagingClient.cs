@@ -174,6 +174,7 @@ namespace FirebaseAdmin.Messaging
         private static void AddCommonHeaders(HttpRequestMessage request)
         {
             request.Headers.Add("X-Firebase-Client", ClientVersion);
+            request.Headers.Add("X-GOOG-API-FORMAT-VERSION", "2");
         }
 
         private async Task<BatchResponse> SendBatchRequestAsync(

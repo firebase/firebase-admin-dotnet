@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth.OAuth2;
@@ -29,6 +30,12 @@ namespace FirebaseAdmin.Messaging.Tests
     {
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
+
+        private static readonly string VersionHeader =
+            $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
+
+        private static readonly string ApiFormatHeader =
+            "X-GOOG-API-FORMAT-VERSION: 2";
 
         [Fact]
         public void NoProjectId()
@@ -80,8 +87,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
-            var versionHeader = handler.LastRequestHeaders.GetValues("X-Firebase-Client").First();
-            Assert.Equal(FirebaseMessagingClient.ClientVersion, versionHeader);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -108,8 +114,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.True(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
-            var versionHeader = handler.LastRequestHeaders.GetValues("X-Firebase-Client").First();
-            Assert.Equal(FirebaseMessagingClient.ClientVersion, versionHeader);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -172,8 +177,9 @@ Vary: Referer
             Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
             Assert.Equal("projects/fir-adminintegrationtests/messages/5903525881088369386", response.Responses[1].MessageId);
             Assert.Equal(1, handler.Calls);
-            var versionHeader = $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
-            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, versionHeader));
+
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, VersionHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, ApiFormatHeader));
         }
 
         [Fact]
@@ -254,8 +260,8 @@ Vary: Referer
             Assert.NotNull(exception.HttpResponse);
 
             Assert.Equal(1, handler.Calls);
-            var versionHeader = $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
-            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, versionHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, VersionHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, ApiFormatHeader));
         }
 
         [Fact]
@@ -327,8 +333,8 @@ Content-Type: application/json; charset=UTF-8
             Assert.NotNull(exception.HttpResponse);
 
             Assert.Equal(1, handler.Calls);
-            var versionHeader = $"X-Firebase-Client: {FirebaseMessagingClient.ClientVersion}";
-            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, versionHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, VersionHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, ApiFormatHeader));
         }
 
         [Fact]
@@ -495,6 +501,15 @@ Content-Type: application/json; charset=UTF-8
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
+        }
+
+        private void CheckHeaders(HttpRequestHeaders header)
+        {
+            var versionHeader = header.GetValues("X-Firebase-Client").First();
+            Assert.Equal(FirebaseMessagingClient.ClientVersion, versionHeader);
+
+            var apiFormatHeader = header.GetValues("X-GOOG-API-FORMAT-VERSION").First();
+            Assert.Equal("2", apiFormatHeader);
         }
 
         private int CountLinesWithPrefix(string body, string linePrefix)
