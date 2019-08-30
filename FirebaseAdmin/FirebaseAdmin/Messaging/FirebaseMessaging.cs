@@ -90,7 +90,8 @@ namespace FirebaseAdmin.Messaging
         /// <param name="message">The message to be sent. Must not be null.</param>
         public async Task<string> SendAsync(Message message)
         {
-            return await this.SendAsync(message, false);
+            return await this.SendAsync(message, false)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -111,7 +112,8 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         public async Task<string> SendAsync(Message message, CancellationToken cancellationToken)
         {
-            return await this.SendAsync(message, false, cancellationToken);
+            return await this.SendAsync(message, false, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -137,7 +139,8 @@ namespace FirebaseAdmin.Messaging
         /// but it will not be delivered to any actual recipients.</param>
         public async Task<string> SendAsync(Message message, bool dryRun)
         {
-            return await this.SendAsync(message, dryRun, default(CancellationToken));
+            return await this.SendAsync(message, dryRun, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -182,7 +185,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages)
         {
-            return await this.SendAllAsync(messages, false);
+            return await this.SendAllAsync(messages, false)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -199,7 +203,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
         {
-            return await this.SendAllAsync(messages, false, cancellationToken);
+            return await this.SendAllAsync(messages, false, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -217,7 +222,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun)
         {
-            return await this.SendAllAsync(messages, dryRun, default);
+            return await this.SendAllAsync(messages, dryRun, default)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -237,7 +243,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
         {
-            return await this.messagingClient.SendAllAsync(messages, dryRun, cancellationToken);
+            return await this.messagingClient.SendAllAsync(messages, dryRun, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -250,7 +257,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message)
         {
-            return await this.SendMulticastAsync(message, false);
+            return await this.SendMulticastAsync(message, false)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -265,7 +273,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, CancellationToken cancellationToken)
         {
-            return await this.SendMulticastAsync(message, false, cancellationToken);
+            return await this.SendMulticastAsync(message, false, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -285,7 +294,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, bool dryRun)
         {
-            return await this.SendMulticastAsync(message, dryRun, default);
+            return await this.SendMulticastAsync(message, dryRun, default)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -309,7 +319,8 @@ namespace FirebaseAdmin.Messaging
             MulticastMessage message, bool dryRun, CancellationToken cancellationToken)
         {
             return await this.SendAllAsync(
-                message.GetMessageList(), dryRun, cancellationToken).ConfigureAwait(false);
+                message.GetMessageList(), dryRun, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -321,7 +332,8 @@ namespace FirebaseAdmin.Messaging
         public async Task<TopicManagementResponse> SubscribeToTopicAsync(
             IReadOnlyList<string> registrationTokens, string topic)
         {
-            return await this.instanceIdClient.SubscribeToTopicAsync(registrationTokens, topic);
+            return await this.instanceIdClient.SubscribeToTopicAsync(registrationTokens, topic)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -333,7 +345,8 @@ namespace FirebaseAdmin.Messaging
         public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
             IReadOnlyList<string> registrationTokens, string topic)
         {
-            return await this.instanceIdClient.UnsubscribeFromTopicAsync(registrationTokens, topic);
+            return await this.instanceIdClient.UnsubscribeFromTopicAsync(registrationTokens, topic)
+                .ConfigureAwait(false);
         }
 
         /// <summary>

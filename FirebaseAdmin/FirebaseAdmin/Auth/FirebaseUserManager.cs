@@ -101,7 +101,8 @@ namespace FirebaseAdmin.Auth
                 Value = uid,
                 Label = "uid",
             };
-            return await this.GetUserAsync(query, cancellationToken);
+            return await this.GetUserAsync(query, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -124,7 +125,8 @@ namespace FirebaseAdmin.Auth
                 Field = "email",
                 Value = email,
             };
-            return await this.GetUserAsync(query, cancellationToken);
+            return await this.GetUserAsync(query, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -148,7 +150,8 @@ namespace FirebaseAdmin.Auth
                 Value = phoneNumber,
                 Label = "phone number",
             };
-            return await this.GetUserAsync(query, cancellationToken);
+            return await this.GetUserAsync(query, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(

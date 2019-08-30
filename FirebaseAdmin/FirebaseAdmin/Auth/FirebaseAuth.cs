@@ -112,7 +112,8 @@ namespace FirebaseAdmin.Auth
         /// 128 characters.</param>
         public async Task<string> CreateCustomTokenAsync(string uid)
         {
-            return await this.CreateCustomTokenAsync(uid, default(CancellationToken));
+            return await this.CreateCustomTokenAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -151,7 +152,8 @@ namespace FirebaseAdmin.Auth
         public async Task<string> CreateCustomTokenAsync(
             string uid, CancellationToken cancellationToken)
         {
-            return await this.CreateCustomTokenAsync(uid, null, cancellationToken);
+            return await this.CreateCustomTokenAsync(uid, null, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -178,7 +180,8 @@ namespace FirebaseAdmin.Auth
         public async Task<string> CreateCustomTokenAsync(
             string uid, IDictionary<string, object> developerClaims)
         {
-            return await this.CreateCustomTokenAsync(uid, developerClaims, default(CancellationToken));
+            return await this.CreateCustomTokenAsync(uid, developerClaims, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -232,7 +235,8 @@ namespace FirebaseAdmin.Auth
         /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
         public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken)
         {
-            return await this.VerifyIdTokenAsync(idToken, default(CancellationToken));
+            return await this.VerifyIdTokenAsync(idToken, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
