@@ -157,7 +157,8 @@ namespace FirebaseAdmin.Messaging
 
             try
             {
-                return await this.SendBatchRequestAsync(copyOfMessages, dryRun, cancellationToken);
+                return await this.SendBatchRequestAsync(copyOfMessages, dryRun, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (HttpRequestException e)
             {
@@ -192,7 +193,7 @@ namespace FirebaseAdmin.Messaging
                     SendResponse sendResponse;
                     if (error != null)
                     {
-                        sendResponse = SendResponse.FromException(await this.CreateException(message));
+                        sendResponse = SendResponse.FromException(await this.CreateException(message).ConfigureAwait(false));
                     }
                     else if (content != null)
                     {
