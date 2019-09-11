@@ -22,12 +22,6 @@ namespace FirebaseAdmin
     /// </summary>
     public class FirebaseException : Exception
     {
-        internal FirebaseException(string message)
-        : base(message) { } // TODO: Remove this constructor
-
-        internal FirebaseException(string message, Exception inner)
-        : base(message, inner) { } // TODO: Remove this constructor
-
         internal FirebaseException(
             ErrorCode code,
             string message,
@@ -42,8 +36,12 @@ namespace FirebaseAdmin
         /// <summary>
         /// Gets the platform-wide error code associated with this exception.
         /// </summary>
-        internal ErrorCode ErrorCode { get; private set; } // TODO: Expose this as public
+        public ErrorCode ErrorCode { get; private set; }
 
-        internal HttpResponseMessage HttpResponse { get; private set; }
+        /// <summary>
+        /// Gets the HTTP response that resulted in this exception. Null, if the exception was not
+        /// caused by an HTTP error response.
+        /// </summary>
+        public HttpResponseMessage HttpResponse { get; private set; }
     }
 }

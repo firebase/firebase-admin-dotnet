@@ -105,7 +105,9 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a Firebase custom token.</returns>
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating a custom
+        /// <exception cref="InvalidOperationException">If no service account can be discovered
+        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
         /// token.</exception>
         /// <param name="uid">The UID to store in the token. This identifies the user to other
         /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
@@ -142,7 +144,9 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a Firebase custom token.</returns>
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating a custom
+        /// <exception cref="InvalidOperationException">If no service account can be discovered
+        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
         /// token.</exception>
         /// <param name="uid">The UID to store in the token. This identifies the user to other
         /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
@@ -169,7 +173,9 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters. Or, if <paramref name="developerClaims"/> contains any standard
         /// JWT claims.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating a custom
+        /// <exception cref="InvalidOperationException">If no service account can be discovered
+        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
         /// token.</exception>
         /// <param name="uid">The UID to store in the token. This identifies the user to other
         /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
@@ -197,7 +203,9 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters. Or, if <paramref name="developerClaims"/> contains any standard
         /// JWT claims.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while creating a custom
+        /// <exception cref="InvalidOperationException">If no service account can be discovered
+        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
         /// token.</exception>
         /// <param name="uid">The UID to store in the token. This identifies the user to other
         /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
