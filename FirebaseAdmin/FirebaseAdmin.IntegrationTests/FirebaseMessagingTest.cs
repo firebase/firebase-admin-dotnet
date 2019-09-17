@@ -38,6 +38,7 @@ namespace FirebaseAdmin.IntegrationTests
                 {
                     Title = "Title",
                     Body = "Body",
+                    ImageUrl = "https://example.com/image.png",
                 },
                 Android = new AndroidConfig()
                 {
@@ -61,6 +62,7 @@ namespace FirebaseAdmin.IntegrationTests
                 {
                     Title = "Title",
                     Body = "Body",
+                    ImageUrl = "https://example.com/image.png",
                 },
                 Android = new AndroidConfig()
                 {

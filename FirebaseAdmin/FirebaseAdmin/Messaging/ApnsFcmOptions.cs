@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using FirebaseAdmin.Messaging.Util;
 using Newtonsoft.Json;
 
@@ -29,6 +30,12 @@ namespace FirebaseAdmin.Messaging
         public string AnalyticsLabel { get; set; }
 
         /// <summary>
+        /// Gets or sets the URL of the image to be displayed in the notification.
+        /// </summary>
+        [JsonProperty("image")]
+        public string ImageUrl { get; set; }
+
+        /// <summary>
         /// Copies this FCM options, and validates the content of it to ensure that it can
         /// be serialized into the JSON format expected by the FCM service.
         /// </summary>
@@ -37,8 +44,14 @@ namespace FirebaseAdmin.Messaging
             var copy = new ApnsFcmOptions()
             {
                 AnalyticsLabel = this.AnalyticsLabel,
+                ImageUrl = this.ImageUrl,
             };
             AnalyticsLabelChecker.ValidateAnalyticsLabel(copy.AnalyticsLabel);
+
+            if (copy.ImageUrl != null && !Uri.IsWellFormedUriString(copy.ImageUrl, UriKind.Absolute))
+            {
+                throw new ArgumentException($"Malformed image URL string: {copy.ImageUrl}.");
+            }
 
             return copy;
         }
