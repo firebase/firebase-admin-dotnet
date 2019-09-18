@@ -67,6 +67,12 @@ namespace FirebaseAdmin.Messaging
         public string Tag { get; set; }
 
         /// <summary>
+        /// Gets or sets the URL of the image to be displayed in the notification.
+        /// </summary>
+        [JsonProperty("image")]
+        public string ImageUrl { get; set; }
+
+        /// <summary>
         /// Gets or sets the action associated with a user click on the notification. If specified,
         /// an activity with a matching Intent Filter is launched when a user clicks on the
         /// notification.
@@ -126,6 +132,7 @@ namespace FirebaseAdmin.Messaging
                 Color = this.Color,
                 Sound = this.Sound,
                 Tag = this.Tag,
+                ImageUrl = this.ImageUrl,
                 ClickAction = this.ClickAction,
                 TitleLocKey = this.TitleLocKey,
                 TitleLocArgs = this.TitleLocArgs?.ToList(),
@@ -146,6 +153,11 @@ namespace FirebaseAdmin.Messaging
             if (copy.BodyLocArgs?.Any() == true && string.IsNullOrEmpty(copy.BodyLocKey))
             {
                 throw new ArgumentException("BodyLocKey is required when specifying BodyLocArgs.");
+            }
+
+            if (copy.ImageUrl != null && !Uri.IsWellFormedUriString(copy.ImageUrl, UriKind.Absolute))
+            {
+                throw new ArgumentException($"Malformed image URL string: {copy.ImageUrl}.");
             }
 
             return copy;
