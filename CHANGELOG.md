@@ -2,6 +2,10 @@
 
 -
 
+# v1.9.0
+
+-
+
 # v1.8.0
 
 - [added] Added `FirebaseMessagingException` class and improved FCM error
