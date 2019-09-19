@@ -21,13 +21,29 @@ using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Http;
-using Google.Apis.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Util.Tests
 {
-    public class FirebaseBackOffHandlerTest
+    public class RetryHttpClientInitializerTest
     {
+        [Fact]
+        public async Task RetryDisabledByDefault()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Response = @"{""foo"": ""bar""}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var httpClient = factory.CreateHttpClient(new CreateHttpClientArgs());
+
+            var response = await httpClient.SendAsync(CreateRequest());
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+            Assert.Equal(1, handler.Calls);
+        }
+
         [Fact]
         public async Task RetryOnHttp503()
         {
@@ -36,10 +52,11 @@ namespace FirebaseAdmin.Util.Tests
                 StatusCode = HttpStatusCode.ServiceUnavailable,
                 Response = @"{""foo"": ""bar""}",
             };
-            var backOffHandler = new WaitDisabledFirebaseBackOffHandler();
-            var httpClient = this.CreateAuthorizedHttpClient(handler, backOffHandler);
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            var httpClient = CreateHttpClient(handler, options);
 
-            var response = await httpClient.SendAsync(this.CreateRequest());
+            var response = await httpClient.SendAsync(CreateRequest());
 
             Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
             Assert.Equal(5, handler.Calls);
@@ -50,7 +67,53 @@ namespace FirebaseAdmin.Util.Tests
                 TimeSpan.FromSeconds(4),
                 TimeSpan.FromSeconds(8),
             };
-            Assert.Equal(expected, backOffHandler.WaitTimes);
+            Assert.Equal(expected, waiter.WaitTimes);
+        }
+
+        [Fact]
+        public async Task NoRetryOnHttp500ByDefault()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = @"{""foo"": ""bar""}",
+            };
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            var httpClient = CreateHttpClient(handler, options);
+
+            var response = await httpClient.SendAsync(CreateRequest());
+
+            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
+        public async Task RetryOnHttp500WhenRequested()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = @"{""foo"": ""bar""}",
+            };
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            options.HandleUnsuccessfulResponseFunc =
+                (resp) => resp.StatusCode == HttpStatusCode.InternalServerError;
+            var httpClient = CreateHttpClient(handler, options);
+
+            var response = await httpClient.SendAsync(CreateRequest());
+
+            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            Assert.Equal(5, handler.Calls);
+            var expected = new List<TimeSpan>()
+            {
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(4),
+                TimeSpan.FromSeconds(8),
+            };
+            Assert.Equal(expected, waiter.WaitTimes);
         }
 
         [Fact]
@@ -65,10 +128,11 @@ namespace FirebaseAdmin.Util.Tests
                 },
                 Response = @"{""foo"": ""bar""}",
             };
-            var backOffHandler = new WaitDisabledFirebaseBackOffHandler();
-            var httpClient = this.CreateAuthorizedHttpClient(handler, backOffHandler);
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            var httpClient = CreateHttpClient(handler, options);
 
-            var response = await httpClient.SendAsync(this.CreateRequest());
+            var response = await httpClient.SendAsync(CreateRequest());
 
             Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
             Assert.Equal(5, handler.Calls);
@@ -79,7 +143,7 @@ namespace FirebaseAdmin.Util.Tests
               TimeSpan.FromSeconds(3),
               TimeSpan.FromSeconds(3),
             };
-            Assert.Equal(expected, backOffHandler.WaitTimes);
+            Assert.Equal(expected, waiter.WaitTimes);
         }
 
         [Fact]
@@ -96,15 +160,17 @@ namespace FirebaseAdmin.Util.Tests
                 },
                 Response = @"{""foo"": ""bar""}",
             };
-            var backOffHandler = new WaitDisabledFirebaseBackOffHandler(clock);
-            var httpClient = this.CreateAuthorizedHttpClient(handler, backOffHandler);
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            options.Clock = clock;
+            var httpClient = CreateHttpClient(handler, options);
 
-            var response = await httpClient.SendAsync(this.CreateRequest());
+            var response = await httpClient.SendAsync(CreateRequest());
 
             Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
             Assert.Equal(5, handler.Calls);
-            Assert.Equal(4, backOffHandler.WaitTimes.Count);
-            foreach (var timespan in backOffHandler.WaitTimes)
+            Assert.Equal(4, waiter.WaitTimes.Count);
+            foreach (var timespan in waiter.WaitTimes)
             {
                 Assert.True(timespan.TotalSeconds > 3.0 && timespan.TotalSeconds <= 4.0);
             }
@@ -122,10 +188,11 @@ namespace FirebaseAdmin.Util.Tests
                 },
                 Response = @"{""foo"": ""bar""}",
             };
-            var backOffHandler = new WaitDisabledFirebaseBackOffHandler();
-            var httpClient = this.CreateAuthorizedHttpClient(handler, backOffHandler);
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            var httpClient = CreateHttpClient(handler, options);
 
-            var response = await httpClient.SendAsync(this.CreateRequest());
+            var response = await httpClient.SendAsync(CreateRequest());
 
             Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
             Assert.Equal(1, handler.Calls);
@@ -138,11 +205,12 @@ namespace FirebaseAdmin.Util.Tests
             {
                 Exception = new Exception("transport error"),
             };
-            var backOffHandler = new WaitDisabledFirebaseBackOffHandler();
-            var httpClient = this.CreateAuthorizedHttpClient(handler, backOffHandler);
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            var httpClient = CreateHttpClient(handler, options);
 
             var ex = await Assert.ThrowsAsync<Exception>(
-              async () => await httpClient.SendAsync(this.CreateRequest()));
+              async () => await httpClient.SendAsync(CreateRequest()));
             Assert.Equal("transport error", ex.Message);
             Assert.Equal(5, handler.Calls);
             var expected = new List<TimeSpan>()
@@ -152,20 +220,27 @@ namespace FirebaseAdmin.Util.Tests
               TimeSpan.FromSeconds(4),
               TimeSpan.FromSeconds(8),
             };
-            Assert.Equal(expected, backOffHandler.WaitTimes);
+            Assert.Equal(expected, waiter.WaitTimes);
         }
 
-        private ConfigurableHttpClient CreateAuthorizedHttpClient(
-          MockMessageHandler handler, FirebaseBackOffHandler backOffHandler)
+        private static RetryOptions CreateRetryOptions(IWaiter waiter)
+        {
+            var copy = RetryOptions.Default;
+            copy.Waiter = waiter;
+            return copy;
+        }
+
+        private static ConfigurableHttpClient CreateHttpClient(
+          MockMessageHandler handler, RetryOptions options)
         {
             var args = new CreateHttpClientArgs();
-            var factory = new RetryHttpClientFactoryDecorator(
-                new MockHttpClientFactory(handler),
-                () => backOffHandler);
+            args.Initializers.Add(new RetryHttpClientInitializer(options));
+
+            var factory = new MockHttpClientFactory(handler);
             return factory.CreateHttpClient(args);
         }
 
-        private HttpRequestMessage CreateRequest()
+        private static HttpRequestMessage CreateRequest()
         {
             return new HttpRequestMessage()
             {
@@ -174,22 +249,19 @@ namespace FirebaseAdmin.Util.Tests
             };
         }
 
-        private class WaitDisabledFirebaseBackOffHandler : FirebaseBackOffHandler
+        internal sealed class MockWaiter : IWaiter
         {
             private readonly List<TimeSpan> waitTimes = new List<TimeSpan>();
-
-            internal WaitDisabledFirebaseBackOffHandler(IClock clock = null)
-            : base(clock: clock) { }
 
             internal IReadOnlyList<TimeSpan> WaitTimes
             {
                 get => this.waitTimes;
             }
 
-            protected override async Task Wait(TimeSpan ts, CancellationToken cancellationToken)
+            public Task Wait(TimeSpan ts, CancellationToken cancellationToken)
             {
                 this.waitTimes.Add(ts);
-                await base.Wait(TimeSpan.Zero, cancellationToken);
+                return Task.CompletedTask;
             }
         }
     }

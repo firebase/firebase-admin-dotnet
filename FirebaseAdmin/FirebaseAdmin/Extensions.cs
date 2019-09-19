@@ -76,23 +76,6 @@ namespace FirebaseAdmin
         }
 
         /// <summary>
-        /// Creates an authenticated <see cref="ConfigurableHttpClient"/> from the
-        /// factory.
-        /// </summary>
-        /// <returns>An HTTP client that can be used to OAuth2 authorized requests.</returns>
-        /// <param name="clientFactory">The <see cref="HttpClientFactory"/> used to create
-        /// the HTTP client.</param>
-        /// <param name="credential">The Google credential that will be used to authenticate
-        /// outgoing HTTP requests.</param>
-        public static ConfigurableHttpClient CreateAuthorizedHttpClient(
-            this HttpClientFactory clientFactory, GoogleCredential credential)
-        {
-            var args = new CreateHttpClientArgs();
-            args.Initializers.Add(credential.ThrowIfNull(nameof(credential)));
-            return clientFactory.CreateHttpClient(args);
-        }
-
-        /// <summary>
         /// Makes a JSON POST request using the given parameters.
         /// </summary>
         /// <returns>An <see cref="HttpRequestMessage"/> representing the response to the

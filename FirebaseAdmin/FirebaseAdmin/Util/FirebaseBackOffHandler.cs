@@ -14,35 +14,30 @@
 
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Http;
 using Google.Apis.Util;
 
 namespace FirebaseAdmin.Util
 {
-    internal class FirebaseBackOffHandler : BackOffHandler
+    internal sealed class FirebaseBackOffHandler : BackOffHandler
     {
-        internal const int MaxRetries = 4;
-        private const int MaxTimeSpanSeconds = 30;
-
         private readonly IClock clock;
+        private readonly IWaiter waiter;
 
-        internal FirebaseBackOffHandler(Initializer initializer = null, IClock clock = null)
-        : base(initializer ?? CreateDefaultInitializer())
+        internal FirebaseBackOffHandler(RetryOptions retryOptions)
+        : base(retryOptions.CreateInitializer())
         {
-            this.clock = clock ?? SystemClock.Default;
+            this.clock = retryOptions.Clock ?? SystemClock.Default;
+            this.waiter = retryOptions.Waiter;
         }
 
         public override async Task<bool> HandleResponseAsync(HandleUnsuccessfulResponseArgs args)
         {
             // if the func returns true try to handle this current failed try
-            if (this.HandleUnsuccessfulResponseFunc != null && this.HandleUnsuccessfulResponseFunc(args.Response))
+            if (this.IsRetryEligible(args))
             {
-                if (!args.SupportsRetry || this.BackOff.MaxNumOfRetries < args.CurrentFailedTry)
-                {
-                    return false;
-                }
-
                 var delay = this.GetDelayFromResponse(args.Response);
                 if (delay > this.MaxTimeSpan)
                 {
@@ -58,13 +53,24 @@ namespace FirebaseAdmin.Util
             return await base.HandleResponseAsync(args).ConfigureAwait(false);
         }
 
-        private static Initializer CreateDefaultInitializer()
+        protected override async Task Wait(TimeSpan ts, CancellationToken cancellationToken)
         {
-            var backOff = new ExponentialBackOff(TimeSpan.Zero, MaxRetries);
-            return new BackOffHandler.Initializer(backOff)
+            if (this.waiter != null)
             {
-                MaxTimeSpan = TimeSpan.FromSeconds(MaxTimeSpanSeconds),
-            };
+                await this.waiter.Wait(ts, cancellationToken);
+            }
+            else
+            {
+                await base.Wait(ts, cancellationToken);
+            }
+        }
+
+        private bool IsRetryEligible(HandleUnsuccessfulResponseArgs args)
+        {
+            return this.HandleUnsuccessfulResponseFunc != null &&
+                this.HandleUnsuccessfulResponseFunc(args.Response) &&
+                args.SupportsRetry &&
+                args.CurrentFailedTry <= this.BackOff.MaxNumOfRetries;
         }
 
         private TimeSpan GetDelayFromResponse(HttpResponseMessage response)
