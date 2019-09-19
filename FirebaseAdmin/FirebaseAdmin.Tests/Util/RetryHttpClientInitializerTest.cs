@@ -33,7 +33,7 @@ namespace FirebaseAdmin.Util.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.ServiceUnavailable,
-                Response = @"{""foo"": ""bar""}",
+                Response = "{}",
             };
             var factory = new MockHttpClientFactory(handler);
             var httpClient = factory.CreateHttpClient(new CreateHttpClientArgs());
@@ -50,7 +50,7 @@ namespace FirebaseAdmin.Util.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.ServiceUnavailable,
-                Response = @"{""foo"": ""bar""}",
+                Response = "{}",
             };
             var waiter = new MockWaiter();
             var options = CreateRetryOptions(waiter);
@@ -71,12 +71,31 @@ namespace FirebaseAdmin.Util.Tests
         }
 
         [Fact]
+        public async Task RetryOnUnsuccessfulResponseDisabled()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Response = "{}",
+            };
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            options.HandleUnsuccessfulResponseFunc = null;
+            var httpClient = CreateHttpClient(handler, options);
+
+            var response = await httpClient.SendAsync(CreateRequest());
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
         public async Task NoRetryOnHttp500ByDefault()
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
-                Response = @"{""foo"": ""bar""}",
+                Response = "{}",
             };
             var waiter = new MockWaiter();
             var options = CreateRetryOptions(waiter);
@@ -94,7 +113,7 @@ namespace FirebaseAdmin.Util.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
-                Response = @"{""foo"": ""bar""}",
+                Response = "{}",
             };
             var waiter = new MockWaiter();
             var options = CreateRetryOptions(waiter);
@@ -126,7 +145,7 @@ namespace FirebaseAdmin.Util.Tests
                 {
                     headers.RetryAfter = RetryConditionHeaderValue.Parse("3");
                 },
-                Response = @"{""foo"": ""bar""}",
+                Response = "{}",
             };
             var waiter = new MockWaiter();
             var options = CreateRetryOptions(waiter);
@@ -158,7 +177,7 @@ namespace FirebaseAdmin.Util.Tests
                 {
                     headers.RetryAfter = RetryConditionHeaderValue.Parse(timestamp);
                 },
-                Response = @"{""foo"": ""bar""}",
+                Response = "{}",
             };
             var waiter = new MockWaiter();
             var options = CreateRetryOptions(waiter);
@@ -172,6 +191,8 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Equal(4, waiter.WaitTimes.Count);
             foreach (var timespan in waiter.WaitTimes)
             {
+                // Due to the date format used in HTTP headers, the milliseconds precision gets
+                // lost. Therefore the actual delay is going to be a value between 3 and 4 seconds.
                 Assert.True(timespan.TotalSeconds > 3.0 && timespan.TotalSeconds <= 4.0);
             }
         }
@@ -186,7 +207,7 @@ namespace FirebaseAdmin.Util.Tests
                 {
                     headers.RetryAfter = RetryConditionHeaderValue.Parse("300");
                 },
-                Response = @"{""foo"": ""bar""}",
+                Response = "{}",
             };
             var waiter = new MockWaiter();
             var options = CreateRetryOptions(waiter);
@@ -221,6 +242,24 @@ namespace FirebaseAdmin.Util.Tests
               TimeSpan.FromSeconds(8),
             };
             Assert.Equal(expected, waiter.WaitTimes);
+        }
+
+        [Fact]
+        public async Task RetryOnExceptionDisabled()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Exception = new Exception("transport error"),
+            };
+            var waiter = new MockWaiter();
+            var options = CreateRetryOptions(waiter);
+            options.HandleExceptionFunc = null;
+            var httpClient = CreateHttpClient(handler, options);
+
+            var ex = await Assert.ThrowsAsync<Exception>(
+              async () => await httpClient.SendAsync(CreateRequest()));
+            Assert.Equal("transport error", ex.Message);
+            Assert.Equal(1, handler.Calls);
         }
 
         private static RetryOptions CreateRetryOptions(IWaiter waiter)

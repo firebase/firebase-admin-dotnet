@@ -21,6 +21,12 @@ using Google.Apis.Util;
 
 namespace FirebaseAdmin.Util
 {
+    /// <summary>
+    /// A <see cref="BackOffHandler"/> that retries failing HTTP requests with exponential back-off
+    /// If an HTTP error response contains the "Retry-After" header, the delay indicated in the
+    /// header takes precedence over exponential back-off. If the delay indicated in the header
+    /// is longer than <see cref="BackOffHandler.MaxTimeSpan"/>, no retries are performed.
+    /// </summary>
     internal sealed class FirebaseBackOffHandler : BackOffHandler
     {
         private readonly IClock clock;
@@ -39,6 +45,10 @@ namespace FirebaseAdmin.Util
             if (this.IsRetryEligible(args))
             {
                 var delay = this.GetDelayFromResponse(args.Response);
+
+                // Retry-After header can specify very long delay intervals (e.g. 24 hours). If we
+                // cannot wait that long, we should not perform any retries at all. In general it
+                // is not correct to retry earlier than what the server has recommended to us.
                 if (delay > this.MaxTimeSpan)
                 {
                     return false;

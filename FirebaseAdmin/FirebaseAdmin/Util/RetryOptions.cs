@@ -19,20 +19,11 @@ using Google.Apis.Util;
 
 namespace FirebaseAdmin.Util
 {
+    /// <summary>
+    /// Options for customizing how failing HTTP requests should be retried.
+    /// </summary>
     internal sealed class RetryOptions
     {
-        public int MaxRetries { get; set; }
-
-        public TimeSpan MaxTimeSpan { get; set; }
-
-        public Func<HttpResponseMessage, bool> HandleUnsuccessfulResponseFunc { get; set; }
-
-        public Func<Exception, bool> HandleExceptionFunc { get; set; }
-
-        public IWaiter Waiter { get; set; }
-
-        public IClock Clock { get; set; }
-
         internal static RetryOptions Default
         {
             get
@@ -52,6 +43,41 @@ namespace FirebaseAdmin.Util
                 };
             }
         }
+
+        /// <summary>
+        /// Gets or sets the maximum number of retry attempts.
+        /// </summary>
+        internal int MaxRetries { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum time span for wait for a retry.
+        /// </summary>
+        internal TimeSpan MaxTimeSpan { get; set; }
+
+        /// <summary>
+        /// Gets or sets the function that determines which HTTP responses should be retried.
+        /// If not specified, unsuccessful responses are not retried.
+        /// </summary>
+        internal Func<HttpResponseMessage, bool> HandleUnsuccessfulResponseFunc { get; set; }
+
+        /// <summary>
+        /// Gets or sets the function that determines which exceptions should be retried.
+        /// If not specified, exceptions are not retried.
+        /// </summary>
+        internal Func<Exception, bool> HandleExceptionFunc { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IWaiter"/> that determines how delay operations are
+        /// performed. Useful for testing. If not specified, implements delays via the Task
+        /// API.
+        /// </summary>
+        internal IWaiter Waiter { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IClock"/> that is used to determine current system time.
+        /// This is used when comparing timestamps sent in the "Retry-After" header.
+        /// </summary>
+        internal IClock Clock { get; set; }
 
         internal BackOffHandler.Initializer CreateInitializer()
         {

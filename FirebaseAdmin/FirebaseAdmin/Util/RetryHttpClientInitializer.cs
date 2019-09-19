@@ -17,6 +17,13 @@ using Google.Apis.Util;
 
 namespace FirebaseAdmin.Util
 {
+    /// <summary>
+    /// An HTTP client initializer that configures clients to retry HTTP failing requests on
+    /// low-level exceptions and unsuccessful HTTP responses. Retry conditions and other parameters
+    /// are configured via <see cref="RetryOptions"/>. Repeated retry attempts on the same
+    /// request are delayed with exponential backoff. Retries due to unsuccessful responses
+    /// that contain the "Retry-After" header are delayed according to the header value.
+    /// </summary>
     internal sealed class RetryHttpClientInitializer : IConfigurableHttpClientInitializer
     {
         private readonly RetryOptions retryOptions;
