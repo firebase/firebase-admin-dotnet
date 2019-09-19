@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Google.Apis.Http;
+using Google.Apis.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Util.Tests
@@ -44,10 +45,10 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Equal(5, handler.Calls);
             var expected = new List<TimeSpan>()
             {
-              TimeSpan.FromSeconds(1),
-              TimeSpan.FromSeconds(2),
-              TimeSpan.FromSeconds(4),
-              TimeSpan.FromSeconds(8),
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(4),
+                TimeSpan.FromSeconds(8),
             };
             Assert.Equal(expected, backOffHandler.WaitTimes);
         }
@@ -79,6 +80,34 @@ namespace FirebaseAdmin.Util.Tests
               TimeSpan.FromSeconds(3),
             };
             Assert.Equal(expected, backOffHandler.WaitTimes);
+        }
+
+        [Fact]
+        public async Task RetryAfterTimestamp()
+        {
+            var clock = new MockClock();
+            var timestamp = clock.UtcNow.AddSeconds(4).ToString("r");
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                ApplyHeaders = (headers, contentHeaders) =>
+                {
+                    headers.RetryAfter = RetryConditionHeaderValue.Parse(timestamp);
+                },
+                Response = @"{""foo"": ""bar""}",
+            };
+            var backOffHandler = new WaitDisabledFirebaseBackOffHandler(clock);
+            var httpClient = this.CreateAuthorizedHttpClient(handler, backOffHandler);
+
+            var response = await httpClient.SendAsync(this.CreateRequest());
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+            Assert.Equal(5, handler.Calls);
+            Assert.Equal(4, backOffHandler.WaitTimes.Count);
+            foreach (var timespan in backOffHandler.WaitTimes)
+            {
+                Assert.True(timespan.TotalSeconds > 3.0 && timespan.TotalSeconds <= 4.0);
+            }
         }
 
         [Fact]
@@ -127,16 +156,13 @@ namespace FirebaseAdmin.Util.Tests
         }
 
         private ConfigurableHttpClient CreateAuthorizedHttpClient(
-          MockMessageHandler handler, BackOffHandler backOffHandler)
+          MockMessageHandler handler, FirebaseBackOffHandler backOffHandler)
         {
             var args = new CreateHttpClientArgs();
-            args.Initializers.Add(new ExponentialBackOffInitializer(
-              ExponentialBackOffPolicy.Exception | ExponentialBackOffPolicy.UnsuccessfulResponse503,
-              () => backOffHandler));
-            var factory = new MockHttpClientFactory(handler);
-            var client = factory.CreateHttpClient(args);
-            client.MessageHandler.NumTries = 5;
-            return client;
+            var factory = new RetryHttpClientFactoryDecorator(
+                new MockHttpClientFactory(handler),
+                () => backOffHandler);
+            return factory.CreateHttpClient(args);
         }
 
         private HttpRequestMessage CreateRequest()
@@ -152,8 +178,8 @@ namespace FirebaseAdmin.Util.Tests
         {
             private readonly List<TimeSpan> waitTimes = new List<TimeSpan>();
 
-            internal WaitDisabledFirebaseBackOffHandler()
-            : base() { }
+            internal WaitDisabledFirebaseBackOffHandler(IClock clock = null)
+            : base(clock: clock) { }
 
             internal IReadOnlyList<TimeSpan> WaitTimes
             {
@@ -164,19 +190,6 @@ namespace FirebaseAdmin.Util.Tests
             {
                 this.waitTimes.Add(ts);
                 await base.Wait(TimeSpan.Zero, cancellationToken);
-            }
-        }
-
-        private class RetryHttpClientFactory : IHttpClientFactory
-        {
-            private readonly HttpClientFactory factory = new HttpClientFactory();
-            private readonly IConfigurableHttpClientInitializer initializer;
-
-            public ConfigurableHttpClient CreateHttpClient(CreateHttpClientArgs args)
-            {
-                var client = this.factory.CreateHttpClient(args);
-                initializer.Initialize(client);
-                return client;
             }
         }
     }
