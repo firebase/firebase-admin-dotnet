@@ -226,7 +226,7 @@ namespace FirebaseAdmin.Util.Tests
             };
             var factory = new MockHttpClientFactory(handler);
             var args = this.CreateArgs(factory);
-            args.RetryOptions = this.CreateRetryOptions();
+            args.RetryOptions = this.RetryOptionsWithoutBackOff();
             var httpClient = new ErrorHandlingHttpClient<FirebaseException>(args);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
@@ -249,7 +249,7 @@ namespace FirebaseAdmin.Util.Tests
             };
             var factory = new MockHttpClientFactory(handler);
             var args = this.CreateArgs(factory);
-            args.RetryOptions = this.CreateRetryOptions();
+            args.RetryOptions = this.RetryOptionsWithoutBackOff();
             var httpClient = new ErrorHandlingHttpClient<FirebaseException>(args);
 
             var exception = await Assert.ThrowsAsync<FirebaseException>(
@@ -303,11 +303,11 @@ namespace FirebaseAdmin.Util.Tests
             };
         }
 
-        private RetryOptions CreateRetryOptions()
+        private RetryOptions RetryOptionsWithoutBackOff()
         {
-            var retryOptions = RetryOptions.Default;
-            retryOptions.Waiter = new RetryHttpClientInitializerTest.MockWaiter();
-            return retryOptions;
+            var copy = RetryOptions.Default;
+            copy.BackOffFactor = 0;
+            return copy;
         }
 
         private class TestHttpErrorResponseHandler : IHttpErrorResponseHandler<FirebaseException>

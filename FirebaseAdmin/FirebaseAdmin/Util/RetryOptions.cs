@@ -15,7 +15,6 @@
 using System;
 using System.Net.Http;
 using Google.Apis.Http;
-using Google.Apis.Util;
 
 namespace FirebaseAdmin.Util
 {
@@ -32,6 +31,7 @@ namespace FirebaseAdmin.Util
                 {
                     MaxRetries = 4,
                     MaxTimeSpan = TimeSpan.FromSeconds(30),
+                    BackOffFactor = 1.0,
 
                     // Retry on all exceptions except TaskCancelledException and
                     // OperationCancelledException.
@@ -55,6 +55,11 @@ namespace FirebaseAdmin.Util
         internal TimeSpan MaxTimeSpan { get; set; }
 
         /// <summary>
+        /// Gets or sets the multiplication factor for the exponential back-off algorithm.
+        /// </summary>
+        internal double BackOffFactor { get; set; }
+
+        /// <summary>
         /// Gets or sets the function that determines which HTTP responses should be retried.
         /// If not specified, unsuccessful responses are not retried.
         /// </summary>
@@ -65,29 +70,5 @@ namespace FirebaseAdmin.Util
         /// If not specified, exceptions are not retried.
         /// </summary>
         internal Func<Exception, bool> HandleExceptionFunc { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IWaiter"/> that determines how delay operations are
-        /// performed. Useful for testing. If not specified, implements delays via the Task
-        /// API.
-        /// </summary>
-        internal IWaiter Waiter { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IClock"/> that is used to determine current system time.
-        /// This is used when comparing timestamps sent in the "Retry-After" header.
-        /// </summary>
-        internal IClock Clock { get; set; }
-
-        internal BackOffHandler.Initializer CreateInitializer()
-        {
-            var backOff = new ExponentialBackOff(TimeSpan.Zero, this.MaxRetries);
-            return new BackOffHandler.Initializer(backOff)
-            {
-                MaxTimeSpan = this.MaxTimeSpan,
-                HandleExceptionFunc = this.HandleExceptionFunc,
-                HandleUnsuccessfulResponseFunc = this.HandleUnsuccessfulResponseFunc,
-            };
-        }
     }
 }
