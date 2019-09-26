@@ -324,8 +324,15 @@ namespace FirebaseAdmin.IntegrationTests
                     if (users.Contains(uid) && !listedUsers.Contains(uid))
                     {
                         listedUsers.Add(uid);
-                        Assert.NotNull(enumerator.Current.PasswordHash);
-                        Assert.NotNull(enumerator.Current.PasswordSalt);
+                        var errMsgTemplate = "Missing {0} field. A common cause would be "
+                            + "forgetting to add the 'Firebase Authentication Admin' permission. "
+                            + "See instructions in CONTRIBUTING.md";
+                        AssertWithMessage.NotNull(
+                            enumerator.Current.PasswordHash,
+                            errMsgTemplate.Format("PasswordHash"));
+                        AssertWithMessage.NotNull(
+                            enumerator.Current.PasswordSalt,
+                            errMsgTemplate.Format("PasswordSalt"));
                     }
                 }
 
@@ -406,6 +413,20 @@ namespace FirebaseAdmin.IntegrationTests
                 Email = email,
                 PhoneNumber = phone,
             };
+        }
+    }
+
+    /**
+     * Additional Xunit style asserts that allow specifying an error message upon failure.
+     */
+    internal class AssertWithMessage
+    {
+        internal static void NotNull(object obj, string msg)
+        {
+            if (obj == null)
+            {
+                throw new Xunit.Sdk.XunitException("Assert.NotNull() Failure: " + msg);
+            }
         }
     }
 }

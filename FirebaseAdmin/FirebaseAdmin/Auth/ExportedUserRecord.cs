@@ -20,10 +20,16 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class ExportedUserRecord : UserRecord
     {
+        private static readonly string B64Redacted =
+            System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("REDACTED"));
+
         internal ExportedUserRecord(GetAccountInfoResponse.User user)
             : base(user)
         {
-            this.PasswordHash = user.PasswordHash;
+            // If the password hash is redacted (probably due to missing permissions) then clear it
+            // out, similar to how the salt is returned. (Otherwise, it *looks* like a b64-encoded
+            // hash is present, which is confusing.)
+            this.PasswordHash = user.PasswordHash == B64Redacted ? null : user.PasswordHash;
             this.PasswordSalt = user.PasswordSalt;
         }
 

@@ -151,5 +151,18 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(100), metadata.CreationTimestamp);
             Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(150), metadata.LastSignInTimestamp);
         }
+
+        [Fact]
+        public void RedactedPasswordCleared()
+        {
+            var user = new ExportedUserRecord(new GetAccountInfoResponse.User()
+            {
+                UserId = "user1",
+                PasswordHash = System.Convert.ToBase64String(
+                        System.Text.Encoding.UTF8.GetBytes("REDACTED")),
+            });
+
+            Assert.Null(user.PasswordHash);
+        }
     }
 }
