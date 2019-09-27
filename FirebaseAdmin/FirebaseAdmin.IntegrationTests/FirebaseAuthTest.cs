@@ -329,10 +329,10 @@ namespace FirebaseAdmin.IntegrationTests
                             + "See instructions in CONTRIBUTING.md";
                         AssertWithMessage.NotNull(
                             enumerator.Current.PasswordHash,
-                            errMsgTemplate.Format("PasswordHash"));
+                            string.Format(errMsgTemplate, "PasswordHash"));
                         AssertWithMessage.NotNull(
                             enumerator.Current.PasswordSalt,
-                            errMsgTemplate.Format("PasswordSalt"));
+                            string.Format(errMsgTemplate, "PasswordSalt"));
                     }
                 }
 
