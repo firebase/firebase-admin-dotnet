@@ -144,8 +144,16 @@ test suite makes a large number of writes to the Firebase realtime database. Dow
 account key file from the "Settings > Service Accounts" page of the project, and copy it to
 `FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_cert.json`. Also obtain the
 API key for the same project from "Settings > General", and save it to
-`FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_apikey.txt`. Finally, to run
-the integration test suite:
+`FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_apikey.txt`.
+
+You'll also need to grant your service account the 'Firebase Authentication Admin' role. This is
+required to ensure that exported user records contain the password hashes of the user accounts:
+1. Go to [Google Cloud Platform Console / IAM & admin](https://console.cloud.google.com/iam-admin).
+2. Find your service account in the list, and click the 'pencil' icon to edit it's permissions.
+3. Click 'ADD ANOTHER ROLE' and choose 'Firebase Authentication Admin'.
+4. Click 'SAVE'.
+
+Finally, to run the integration test suite:
 
 ```bash
 $ dotnet test FirebaseAdmin.IntegrationTests
