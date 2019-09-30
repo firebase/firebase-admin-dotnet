@@ -372,6 +372,20 @@ namespace FirebaseAdmin.IntegrationTests
         }
     }
 
+    /**
+     * Additional Xunit style asserts that allow specifying an error message upon failure.
+     */
+    internal static class AssertWithMessage
+    {
+        internal static void NotNull(object obj, string msg)
+        {
+            if (obj == null)
+            {
+                throw new Xunit.Sdk.XunitException("Assert.NotNull() Failure: " + msg);
+            }
+        }
+    }
+
     internal class SignInRequest
     {
         [Newtonsoft.Json.JsonProperty("token")]
@@ -413,20 +427,6 @@ namespace FirebaseAdmin.IntegrationTests
                 Email = email,
                 PhoneNumber = phone,
             };
-        }
-    }
-
-    /**
-     * Additional Xunit style asserts that allow specifying an error message upon failure.
-     */
-    internal class AssertWithMessage
-    {
-        internal static void NotNull(object obj, string msg)
-        {
-            if (obj == null)
-            {
-                throw new Xunit.Sdk.XunitException("Assert.NotNull() Failure: " + msg);
-            }
         }
     }
 }

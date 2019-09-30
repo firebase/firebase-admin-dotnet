@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Text;
+
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
@@ -21,7 +24,7 @@ namespace FirebaseAdmin.Auth
     public sealed class ExportedUserRecord : UserRecord
     {
         private static readonly string B64Redacted =
-            System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("REDACTED"));
+            Convert.ToBase64String(Encoding.UTF8.GetBytes("REDACTED"));
 
         internal ExportedUserRecord(GetAccountInfoResponse.User user)
             : base(user)

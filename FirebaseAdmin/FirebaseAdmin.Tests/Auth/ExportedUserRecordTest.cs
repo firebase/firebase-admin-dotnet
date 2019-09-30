@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
@@ -158,8 +159,7 @@ namespace FirebaseAdmin.Auth.Tests
             var user = new ExportedUserRecord(new GetAccountInfoResponse.User()
             {
                 UserId = "user1",
-                PasswordHash = System.Convert.ToBase64String(
-                        System.Text.Encoding.UTF8.GetBytes("REDACTED")),
+                PasswordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes("REDACTED")),
             });
 
             Assert.Null(user.PasswordHash);
