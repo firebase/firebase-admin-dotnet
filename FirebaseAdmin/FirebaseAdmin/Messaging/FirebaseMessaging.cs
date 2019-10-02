@@ -30,10 +30,8 @@ namespace FirebaseAdmin.Messaging
 
         private FirebaseMessaging(FirebaseApp app)
         {
-            this.messagingClient = new FirebaseMessagingClient(
-                    app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
-            this.instanceIdClient = new InstanceIdClient(
-                    app.Options.HttpClientFactory, app.Options.Credential);
+            this.messagingClient = FirebaseMessagingClient.Create(app);
+            this.instanceIdClient = InstanceIdClient.Create(app);
         }
 
         /// <summary>

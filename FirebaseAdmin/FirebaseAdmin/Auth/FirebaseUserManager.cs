@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Api.Gax.Rest;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
@@ -43,7 +45,7 @@ namespace FirebaseAdmin.Auth
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
 
-        internal FirebaseUserManager(FirebaseUserManagerArgs args)
+        internal FirebaseUserManager(Args args)
         {
             if (string.IsNullOrEmpty(args.ProjectId))
             {
@@ -59,6 +61,7 @@ namespace FirebaseAdmin.Auth
                     ErrorResponseHandler = AuthErrorHandler.Instance,
                     RequestExceptionHandler = AuthErrorHandler.Instance,
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
+                    RetryOptions = args.RetryOptions,
                 });
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
         }
@@ -70,11 +73,12 @@ namespace FirebaseAdmin.Auth
 
         internal static FirebaseUserManager Create(FirebaseApp app)
         {
-            var args = new FirebaseUserManagerArgs
+            var args = new Args
             {
                 ClientFactory = app.Options.HttpClientFactory,
                 Credential = app.Options.Credential,
                 ProjectId = app.GetProjectId(),
+                RetryOptions = RetryOptions.Default,
             };
 
             return new FirebaseUserManager(args);
@@ -281,6 +285,17 @@ namespace FirebaseAdmin.Auth
             return await this.httpClient
                 .SendAndDeserializeAsync<TResult>(request, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        internal sealed class Args
+        {
+            internal HttpClientFactory ClientFactory { get; set; }
+
+            internal GoogleCredential Credential { get; set; }
+
+            internal string ProjectId { get; set; }
+
+            internal RetryOptions RetryOptions { get; set; }
         }
 
         /// <summary>

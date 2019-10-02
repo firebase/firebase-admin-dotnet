@@ -44,7 +44,9 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         /// <param name="clientFactory">A default implentation of the HTTP client factory.</param>
         /// <param name="credential">An instance of the <see cref="GoogleCredential"/> class.</param>
-        public InstanceIdClient(HttpClientFactory clientFactory, GoogleCredential credential)
+        /// <param name="retryOptions">An instance of the <see cref="RetryOptions"/> class.</param>
+        internal InstanceIdClient(
+            HttpClientFactory clientFactory, GoogleCredential credential, RetryOptions retryOptions = null)
         {
             this.httpClient = new ErrorHandlingHttpClient<FirebaseMessagingException>(
                 new ErrorHandlingHttpClientArgs<FirebaseMessagingException>()
@@ -54,6 +56,7 @@ namespace FirebaseAdmin.Messaging
                     RequestExceptionHandler = MessagingErrorHandler.Instance,
                     ErrorResponseHandler = MessagingErrorHandler.Instance,
                     DeserializeExceptionHandler = MessagingErrorHandler.Instance,
+                    RetryOptions = retryOptions,
                 });
         }
 
@@ -93,6 +96,14 @@ namespace FirebaseAdmin.Messaging
         public void Dispose()
         {
             this.httpClient.Dispose();
+        }
+
+        internal static InstanceIdClient Create(FirebaseApp app)
+        {
+            return new InstanceIdClient(
+                app.Options.HttpClientFactory,
+                app.Options.Credential,
+                RetryOptions.Default);
         }
 
         private async Task<TopicManagementResponse> SendInstanceIdRequest(

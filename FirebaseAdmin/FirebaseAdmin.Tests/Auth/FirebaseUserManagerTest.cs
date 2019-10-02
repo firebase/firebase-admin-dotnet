@@ -1530,7 +1530,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler)
         {
-            var userManager = new FirebaseUserManager(new FirebaseUserManagerArgs
+            var userManager = new FirebaseUserManager(new FirebaseUserManager.Args
             {
                 Credential = MockCredential,
                 ProjectId = MockProjectId,

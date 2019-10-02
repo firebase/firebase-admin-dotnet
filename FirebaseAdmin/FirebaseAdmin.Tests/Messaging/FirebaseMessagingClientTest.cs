@@ -40,27 +40,42 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void NoProjectId()
         {
-            var clientFactory = new HttpClientFactory();
-            Assert.Throws<ArgumentException>(
-                () => new FirebaseMessagingClient(clientFactory, MockCredential, null));
-            Assert.Throws<ArgumentException>(
-                () => new FirebaseMessagingClient(clientFactory, MockCredential, string.Empty));
+            var args = new FirebaseMessagingClient.Args()
+            {
+                ClientFactory = new HttpClientFactory(),
+                Credential = null,
+            };
+
+            args.ProjectId = null;
+            Assert.Throws<ArgumentException>(() => new FirebaseMessagingClient(args));
+
+            args.ProjectId = string.Empty;
+            Assert.Throws<ArgumentException>(() => new FirebaseMessagingClient(args));
         }
 
         [Fact]
         public void NoCredential()
         {
-            var clientFactory = new HttpClientFactory();
-            Assert.Throws<ArgumentNullException>(
-                () => new FirebaseMessagingClient(clientFactory, null, "test-project"));
+            var args = new FirebaseMessagingClient.Args()
+            {
+                ClientFactory = new HttpClientFactory(),
+                Credential = null,
+                ProjectId = "test-project",
+            };
+            Assert.Throws<ArgumentNullException>(() => new FirebaseMessagingClient(args));
         }
 
         [Fact]
         public void NoClientFactory()
         {
             var clientFactory = new HttpClientFactory();
-            Assert.Throws<ArgumentNullException>(
-                () => new FirebaseMessagingClient(null, MockCredential, "test-project"));
+            var args = new FirebaseMessagingClient.Args()
+            {
+                ClientFactory = null,
+                Credential = MockCredential,
+                ProjectId = "test-project",
+            };
+            Assert.Throws<ArgumentNullException>(() => new FirebaseMessagingClient(args));
         }
 
         [Fact]
@@ -74,7 +89,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -101,7 +116,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -161,7 +176,7 @@ Vary: Referer
                 },
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
                 Token = "test-token1",
@@ -236,7 +251,7 @@ Vary: Referer
                 },
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
                 Token = "test-token1",
@@ -309,7 +324,12 @@ Content-Type: application/json; charset=UTF-8
                 },
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = new FirebaseMessagingClient(new FirebaseMessagingClient.Args()
+            {
+                ClientFactory = factory,
+                Credential = MockCredential,
+                ProjectId = "test-project",
+            });
             var message1 = new Message()
             {
                 Token = "test-token1",
@@ -341,7 +361,7 @@ Content-Type: application/json; charset=UTF-8
         public async Task SendAllAsyncNullList()
         {
             var factory = new MockHttpClientFactory(new MockMessageHandler());
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
 
             await Assert.ThrowsAsync<ArgumentNullException>(() => client.SendAllAsync(null));
         }
@@ -350,7 +370,7 @@ Content-Type: application/json; charset=UTF-8
         public async Task SendAllAsyncWithNoMessages()
         {
             var factory = new MockHttpClientFactory(new MockMessageHandler());
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             await Assert.ThrowsAsync<ArgumentException>(() => client.SendAllAsync(Enumerable.Empty<Message>()));
         }
 
@@ -358,7 +378,7 @@ Content-Type: application/json; charset=UTF-8
         public async Task SendAllAsyncWithTooManyMessages()
         {
             var factory = new MockHttpClientFactory(new MockMessageHandler());
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var messages = Enumerable.Range(0, 101).Select(_ => new Message { Topic = "test-topic" });
             await Assert.ThrowsAsync<ArgumentException>(() => client.SendAllAsync(messages));
         }
@@ -383,7 +403,7 @@ Content-Type: application/json; charset=UTF-8
                 }",
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -418,7 +438,7 @@ Content-Type: application/json; charset=UTF-8
                 }",
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -448,7 +468,7 @@ Content-Type: application/json; charset=UTF-8
                 Response = "not json",
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -479,7 +499,7 @@ Content-Type: application/json; charset=UTF-8
                 Exception = new HttpRequestException("Transport error"),
             };
             var factory = new MockHttpClientFactory(handler);
-            var client = new FirebaseMessagingClient(factory, MockCredential, "test-project");
+            var client = this.CreateMessagingClient(factory);
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -501,6 +521,16 @@ Content-Type: application/json; charset=UTF-8
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
             Assert.Equal(1, handler.Calls);
+        }
+
+        private FirebaseMessagingClient CreateMessagingClient(HttpClientFactory factory)
+        {
+            return new FirebaseMessagingClient(new FirebaseMessagingClient.Args()
+            {
+                ClientFactory = factory,
+                Credential = MockCredential,
+                ProjectId = "test-project",
+            });
         }
 
         private void CheckHeaders(HttpRequestHeaders header)

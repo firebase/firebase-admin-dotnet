@@ -51,6 +51,7 @@ namespace FirebaseAdmin.Auth
                     ErrorResponseHandler = IAMSignerErrorHandler.Instance,
                     RequestExceptionHandler = AuthErrorHandler.Instance,
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
+                    RetryOptions = RetryOptions.Default,
                 });
             this.keyId = new Lazy<Task<string>>(
                 async () => await DiscoverServiceAccountIdAsync(clientFactory)
