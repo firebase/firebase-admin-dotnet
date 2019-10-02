@@ -16,12 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Http;
 using Google.Apis.Util;
 
 [assembly: InternalsVisibleToAttribute("FirebaseAdmin.Tests,PublicKey=" +
@@ -85,13 +82,12 @@ namespace FirebaseAdmin.Auth
             {
                 // If no service account ID is specified, attempt to discover one and invoke the
                 // IAM service with it.
-                signer = new IAMSigner(app.Options.HttpClientFactory, app.Options.Credential);
+                signer = IAMSigner.Create(app);
             }
             else
             {
                 // If a service account ID is specified, invoke the IAM service with it.
-                signer = new FixedAccountIAMSigner(
-                    app.Options.HttpClientFactory, app.Options.Credential, app.Options.ServiceAccountId);
+                signer = FixedAccountIAMSigner.Create(app);
             }
 
             return new FirebaseTokenFactory(signer, SystemClock.Default);

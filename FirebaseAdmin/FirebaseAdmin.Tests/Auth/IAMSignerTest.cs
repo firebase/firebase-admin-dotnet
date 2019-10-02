@@ -18,7 +18,9 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using Google.Apis.Json;
 using Xunit;
 
@@ -100,8 +102,7 @@ namespace FirebaseAdmin.Auth.Tests
                         },
                 };
             var factory = new MockHttpClientFactory(handler);
-            var signer = new FixedAccountIAMSigner(
-                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             byte[] signature = await signer.SignDataAsync(data);
@@ -121,8 +122,7 @@ namespace FirebaseAdmin.Auth.Tests
                     Response = @"{""error"": {""message"": ""test reason""}}",
                 };
             var factory = new MockHttpClientFactory(handler);
-            var signer = new FixedAccountIAMSigner(
-                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
@@ -144,8 +144,7 @@ namespace FirebaseAdmin.Auth.Tests
                     Response = @"{""error"": {""message"": ""test reason"", ""status"": ""UNAVAILABLE""}}",
                 };
             var factory = new MockHttpClientFactory(handler);
-            var signer = new FixedAccountIAMSigner(
-                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
@@ -167,8 +166,7 @@ namespace FirebaseAdmin.Auth.Tests
                     Response = "not json",
                 };
             var factory = new MockHttpClientFactory(handler);
-            var signer = new FixedAccountIAMSigner(
-                factory, GoogleCredential.FromAccessToken("token"), "test-service-account");
+            var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
@@ -181,6 +179,59 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Null(ex.AuthErrorCode);
             Assert.NotNull(ex.HttpResponse);
             Assert.Null(ex.InnerException);
+        }
+
+        [Fact]
+        public async Task Unavailable()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Response = @"{""error"": {""message"": ""test reason""}}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var signer = this.CreateFixedAccountIAMSigner(factory);
+            byte[] data = Encoding.UTF8.GetBytes("Hello world");
+            var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await signer.SignDataAsync(data));
+
+            Assert.Equal(ErrorCode.Unavailable, ex.ErrorCode);
+            Assert.Equal("test reason", ex.Message);
+            Assert.Null(ex.AuthErrorCode);
+            Assert.NotNull(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(5, handler.Calls);
+        }
+
+        [Fact]
+        public async Task TransportError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Exception = new HttpRequestException("Transport error"),
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var signer = this.CreateFixedAccountIAMSigner(factory);
+            byte[] data = Encoding.UTF8.GetBytes("Hello world");
+            var ex = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await signer.SignDataAsync(data));
+
+            Assert.Equal(ErrorCode.Unknown, ex.ErrorCode);
+            Assert.Null(ex.AuthErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.NotNull(ex.InnerException);
+            Assert.Equal(5, handler.Calls);
+        }
+
+        private FixedAccountIAMSigner CreateFixedAccountIAMSigner(HttpClientFactory factory)
+        {
+            return new FixedAccountIAMSigner(new FixedAccountIAMSigner.Args()
+            {
+                ClientFactory = factory,
+                Credential = GoogleCredential.FromAccessToken("token"),
+                KeyId = "test-service-account",
+                RetryOptions = RetryOptions.NoBackOff,
+            });
         }
     }
 }

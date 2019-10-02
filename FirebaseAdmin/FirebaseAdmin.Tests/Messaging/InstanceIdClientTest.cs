@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Messaging;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Xunit;
@@ -160,7 +162,7 @@ namespace FirebaseAdmin.Tests.Messaging
             };
             var factory = new MockHttpClientFactory(handler);
 
-            var client = new InstanceIdClient(factory, MockCredential);
+            var client = new InstanceIdClient(factory, MockCredential, RetryOptions.NoBackOff);
 
             var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
@@ -170,6 +172,28 @@ namespace FirebaseAdmin.Tests.Messaging
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
+            Assert.Equal(5, handler.Calls);
+        }
+
+        [Fact]
+        public async Task TransportError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Exception = new HttpRequestException("Transport error"),
+            };
+            var factory = new MockHttpClientFactory(handler);
+
+            var client = new InstanceIdClient(factory, MockCredential, RetryOptions.NoBackOff);
+
+            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
+               () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Null(exception.MessagingErrorCode);
+            Assert.Null(exception.HttpResponse);
+            Assert.NotNull(exception.InnerException);
+            Assert.Equal(5, handler.Calls);
         }
     }
 }

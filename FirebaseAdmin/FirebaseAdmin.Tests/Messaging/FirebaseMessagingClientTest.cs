@@ -19,6 +19,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Newtonsoft.Json;
@@ -492,6 +493,32 @@ Content-Type: application/json; charset=UTF-8
         }
 
         [Fact]
+        public async Task Unavailable()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Response = "ServiceUnavailable",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+            var message = new Message()
+            {
+                Topic = "test-topic",
+            };
+
+            var ex = await Assert.ThrowsAsync<FirebaseMessagingException>(
+                async () => await client.SendAsync(message));
+
+            Assert.Equal(ErrorCode.Unavailable, ex.ErrorCode);
+            Assert.Equal("Unexpected HTTP response with status: 503 (ServiceUnavailable)\nServiceUnavailable", ex.Message);
+            Assert.Null(ex.MessagingErrorCode);
+            Assert.NotNull(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(5, handler.Calls);
+        }
+
+        [Fact]
         public async Task TransportError()
         {
             var handler = new MockMessageHandler()
@@ -520,7 +547,7 @@ Content-Type: application/json; charset=UTF-8
                 handler.LastRequestBody);
             Assert.Equal("test-topic", req.Message.Topic);
             Assert.False(req.ValidateOnly);
-            Assert.Equal(1, handler.Calls);
+            Assert.Equal(5, handler.Calls);
         }
 
         private FirebaseMessagingClient CreateMessagingClient(HttpClientFactory factory)
@@ -530,6 +557,7 @@ Content-Type: application/json; charset=UTF-8
                 ClientFactory = factory,
                 Credential = MockCredential,
                 ProjectId = "test-project",
+                RetryOptions = RetryOptions.NoBackOff,
             });
         }
 
