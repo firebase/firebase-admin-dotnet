@@ -16,6 +16,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
 
@@ -40,17 +41,7 @@ namespace FirebaseAdmin.Util
 
         internal ErrorHandlingHttpClient(ErrorHandlingHttpClientArgs<T> args)
         {
-            var credential = args.Credential;
-            var clientFactory = args.HttpClientFactory.ThrowIfNull(nameof(args.HttpClientFactory));
-            if (credential != null)
-            {
-                this.httpClient = clientFactory.CreateAuthorizedHttpClient(credential);
-            }
-            else
-            {
-                this.httpClient = clientFactory.CreateDefaultHttpClient();
-            }
-
+            this.httpClient = CreateHttpClient(args);
             this.deserializer = args.Deserializer ?? JsonResponseDeserializer.Instance;
             this.errorResponseHandler = args.ErrorResponseHandler.ThrowIfNull(
                 nameof(args.ErrorResponseHandler));
@@ -86,6 +77,25 @@ namespace FirebaseAdmin.Util
         {
             return await this.httpClient.SendAsync(request, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        private static HttpClient CreateHttpClient(ErrorHandlingHttpClientArgs<T> args)
+        {
+            var clientArgs = new CreateHttpClientArgs();
+            var credential = args.Credential;
+            if (credential != null)
+            {
+                clientArgs.Initializers.Add(credential);
+            }
+
+            var retry = args.RetryOptions;
+            if (retry != null)
+            {
+                clientArgs.Initializers.Add(new RetryHttpClientInitializer(retry));
+            }
+
+            var clientFactory = args.HttpClientFactory.ThrowIfNull(nameof(args.HttpClientFactory));
+            return clientFactory.CreateHttpClient(clientArgs);
         }
 
         private async Task<ResponseInfo> SendAndReadAsync(

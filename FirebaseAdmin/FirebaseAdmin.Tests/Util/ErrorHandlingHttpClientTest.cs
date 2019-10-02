@@ -217,6 +217,53 @@ namespace FirebaseAdmin.Util.Tests
         }
 
         [Fact]
+        public async Task RetryOnErrorResponse()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Response = "{}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var args = this.CreateArgs(factory);
+            args.RetryOptions = this.RetryOptionsWithoutBackOff();
+            var httpClient = new ErrorHandlingHttpClient<FirebaseException>(args);
+
+            var exception = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await httpClient.SendAndDeserializeAsync<Dictionary<string, string>>(
+                    this.CreateRequest()));
+
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Equal("Example error message: {}", exception.Message);
+            Assert.Null(exception.InnerException);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Equal(5, handler.Calls);
+        }
+
+        [Fact]
+        public async Task RetryOnNetworkError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Exception = new HttpRequestException("Low-level network error"),
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var args = this.CreateArgs(factory);
+            args.RetryOptions = this.RetryOptionsWithoutBackOff();
+            var httpClient = new ErrorHandlingHttpClient<FirebaseException>(args);
+
+            var exception = await Assert.ThrowsAsync<FirebaseException>(
+                async () => await httpClient.SendAndDeserializeAsync<Dictionary<string, string>>(
+                    this.CreateRequest()));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal("Network error", exception.Message);
+            Assert.Same(handler.Exception, exception.InnerException);
+            Assert.Null(exception.HttpResponse);
+            Assert.Equal(5, handler.Calls);
+        }
+
+        [Fact]
         public async Task Dispose()
         {
             var handler = new MockMessageHandler()
@@ -254,6 +301,13 @@ namespace FirebaseAdmin.Util.Tests
                 Method = HttpMethod.Get,
                 RequestUri = new Uri("https://firebase.google.com"),
             };
+        }
+
+        private RetryOptions RetryOptionsWithoutBackOff()
+        {
+            var copy = RetryOptions.Default;
+            copy.BackOffFactor = 0;
+            return copy;
         }
 
         private class TestHttpErrorResponseHandler : IHttpErrorResponseHandler<FirebaseException>

@@ -36,5 +36,7 @@ namespace FirebaseAdmin.Util
         internal IHttpRequestExceptionHandler<T> RequestExceptionHandler { get; set; }
 
         internal IDeserializeExceptionHandler<T> DeserializeExceptionHandler { get; set; }
+
+        internal RetryOptions RetryOptions { get; set; }
     }
 }
