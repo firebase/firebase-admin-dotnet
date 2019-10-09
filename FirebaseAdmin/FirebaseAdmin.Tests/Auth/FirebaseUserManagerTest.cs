@@ -20,6 +20,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
@@ -1528,13 +1529,53 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Null(exception.InnerException);
         }
 
+        [Fact]
+        public async Task ServiceUnvailable()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Response = "{}",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.GetUserAsync("user1"));
+
+            Assert.Equal(ErrorCode.Unavailable, exception.ErrorCode);
+            Assert.Null(exception.AuthErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+            Assert.Equal(5, handler.Calls);
+        }
+
+        [Fact]
+        public async Task TransportError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Exception = new HttpRequestException("Transport error"),
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.GetUserAsync("user1"));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Null(exception.AuthErrorCode);
+            Assert.Null(exception.HttpResponse);
+            Assert.NotNull(exception.InnerException);
+            Assert.Equal(5, handler.Calls);
+        }
+
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler)
         {
-            var userManager = new FirebaseUserManager(new FirebaseUserManagerArgs
+            var userManager = new FirebaseUserManager(new FirebaseUserManager.Args
             {
                 Credential = MockCredential,
                 ProjectId = MockProjectId,
                 ClientFactory = new MockHttpClientFactory(handler),
+                RetryOptions = RetryOptions.NoBackOff,
             });
             return new FirebaseAuth(new FirebaseAuth.FirebaseAuthArgs()
             {

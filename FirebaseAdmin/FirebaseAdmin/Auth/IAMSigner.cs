@@ -42,7 +42,8 @@ namespace FirebaseAdmin.Auth
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly Lazy<Task<string>> keyId;
 
-        public IAMSigner(HttpClientFactory clientFactory, GoogleCredential credential)
+        public IAMSigner(
+            HttpClientFactory clientFactory, GoogleCredential credential, RetryOptions retryOptions = null)
         {
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
@@ -51,6 +52,7 @@ namespace FirebaseAdmin.Auth
                     ErrorResponseHandler = IAMSignerErrorHandler.Instance,
                     RequestExceptionHandler = AuthErrorHandler.Instance,
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
+                    RetryOptions = retryOptions,
                 });
             this.keyId = new Lazy<Task<string>>(
                 async () => await DiscoverServiceAccountIdAsync(clientFactory)
@@ -100,6 +102,12 @@ namespace FirebaseAdmin.Auth
         public void Dispose()
         {
             this.httpClient.Dispose();
+        }
+
+        internal static IAMSigner Create(FirebaseApp app)
+        {
+            return new IAMSigner(
+                app.Options.HttpClientFactory, app.Options.Credential, RetryOptions.Default);
         }
 
         private static async Task<string> DiscoverServiceAccountIdAsync(

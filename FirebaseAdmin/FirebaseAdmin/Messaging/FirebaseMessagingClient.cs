@@ -43,10 +43,9 @@ namespace FirebaseAdmin.Messaging
         private readonly string restPath;
         private readonly FCMClientService fcmClientService;
 
-        public FirebaseMessagingClient(
-            HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
+        internal FirebaseMessagingClient(Args args)
         {
-            if (string.IsNullOrEmpty(projectId))
+            if (string.IsNullOrEmpty(args.ProjectId))
             {
                 throw new ArgumentException(
                     "Project ID is required to access messaging service. Use a service account "
@@ -58,18 +57,19 @@ namespace FirebaseAdmin.Messaging
             this.httpClient = new ErrorHandlingHttpClient<FirebaseMessagingException>(
                 new ErrorHandlingHttpClientArgs<FirebaseMessagingException>()
                 {
-                    HttpClientFactory = clientFactory.ThrowIfNull(nameof(clientFactory)),
-                    Credential = credential.ThrowIfNull(nameof(credential)),
+                    HttpClientFactory = args.ClientFactory.ThrowIfNull(nameof(args.ClientFactory)),
+                    Credential = args.Credential.ThrowIfNull(nameof(args.Credential)),
                     RequestExceptionHandler = MessagingErrorHandler.Instance,
                     ErrorResponseHandler = MessagingErrorHandler.Instance,
                     DeserializeExceptionHandler = MessagingErrorHandler.Instance,
+                    RetryOptions = args.RetryOptions,
                 });
             this.fcmClientService = new FCMClientService(new BaseClientService.Initializer()
             {
-                HttpClientFactory = clientFactory,
-                HttpClientInitializer = credential,
+                HttpClientFactory = args.ClientFactory,
+                HttpClientInitializer = args.Credential,
             });
-            this.sendUrl = string.Format(FcmSendUrl, projectId);
+            this.sendUrl = string.Format(FcmSendUrl, args.ProjectId);
             this.restPath = this.sendUrl.Substring(FcmBaseUrl.Length);
         }
 
@@ -172,6 +172,19 @@ namespace FirebaseAdmin.Messaging
             this.fcmClientService.Dispose();
         }
 
+        internal static FirebaseMessagingClient Create(FirebaseApp app)
+        {
+            var args = new Args
+            {
+                ClientFactory = app.Options.HttpClientFactory,
+                Credential = app.Options.Credential,
+                ProjectId = app.GetProjectId(),
+                RetryOptions = RetryOptions.Default,
+            };
+
+            return new FirebaseMessagingClient(args);
+        }
+
         private static void AddCommonHeaders(HttpRequestMessage request)
         {
             request.Headers.Add("X-Firebase-Client", ClientVersion);
@@ -262,6 +275,17 @@ namespace FirebaseAdmin.Messaging
         {
             [Newtonsoft.Json.JsonProperty("name")]
             public string Name { get; set; }
+        }
+
+        internal sealed class Args
+        {
+            internal HttpClientFactory ClientFactory { get; set; }
+
+            internal GoogleCredential Credential { get; set; }
+
+            internal string ProjectId { get; set; }
+
+            internal RetryOptions RetryOptions { get; set; }
         }
 
         private sealed class FCMClientService : BaseClientService

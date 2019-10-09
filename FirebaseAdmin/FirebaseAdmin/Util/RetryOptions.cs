@@ -23,6 +23,10 @@ namespace FirebaseAdmin.Util
     /// </summary>
     internal sealed class RetryOptions
     {
+        /// <summary>
+        /// Gets the default retry configuration for HTTP calls. Default configuration retries
+        /// HTTP 503 errors and other transport errors up to 4 times with exponential back-off.
+        /// </summary>
         internal static RetryOptions Default
         {
             get
@@ -41,6 +45,19 @@ namespace FirebaseAdmin.Util
                     HandleUnsuccessfulResponseFunc =
                         BackOffHandler.Initializer.DefaultHandleUnsuccessfulResponseFunc,
                 };
+            }
+        }
+
+        /// <summary>
+        /// Gets the default retry configuration with back-off disabled. Useful for testing.
+        /// </summary>
+        internal static RetryOptions NoBackOff
+        {
+            get
+            {
+                var options = Default;
+                options.BackOffFactor = 0;
+                return options;
             }
         }
 
