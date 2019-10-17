@@ -33,9 +33,9 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var bytes = Encoding.UTF8.GetBytes("signature");
             var handler = new MockMessageHandler()
-                {
-                    Response = "discovered-service-account",
-                };
+            {
+                Response = "discovered-service-account",
+            };
             var factory = new MockHttpClientFactory(handler);
             var signer = new IAMSigner(factory, GoogleCredential.FromAccessToken("token"));
             Assert.Equal("discovered-service-account", await signer.GetKeyIdAsync());
@@ -56,6 +56,7 @@ namespace FirebaseAdmin.Auth.Tests
                 handler.LastRequestBody);
             Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
             Assert.Equal(2, handler.Calls);
+            Assert.Equal("Bearer token", handler.LastRequestHeaders.Authorization?.ToString());
         }
 
         [Fact]
