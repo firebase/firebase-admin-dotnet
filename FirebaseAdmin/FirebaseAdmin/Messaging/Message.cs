@@ -15,8 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Google.Apis.Json;
-using Google.Apis.Util;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
@@ -81,6 +79,12 @@ namespace FirebaseAdmin.Messaging
         public ApnsConfig Apns { get; set; }
 
         /// <summary>
+        /// Gets or sets the FCM options to be included in the message.
+        /// </summary>
+        [JsonProperty("fcm_options")]
+        public FcmOptions FcmOptions { get; set; }
+
+        /// <summary>
         /// Gets or sets the formatted representation of the <see cref="Topic"/>. Removes the
         /// <c>/topics/</c> prefix if present. This is what's ultimately sent to the FCM
         /// service.
@@ -119,6 +123,7 @@ namespace FirebaseAdmin.Messaging
                 Topic = this.Topic,
                 Condition = this.Condition,
                 Data = this.Data?.Copy(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             var list = new List<string>()
             {

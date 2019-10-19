@@ -20,8 +20,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using FirebaseAdmin.Auth;
-using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -114,8 +112,15 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task CreateCustomTokenInvalidCredential()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            await Assert.ThrowsAsync<FirebaseException>(
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1"));
+
+            var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
+                + "with service account credentials or specify a service account "
+                + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
+                + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
+                + "more details on creating custom tokens.";
+            Assert.Equal(errorMessage, ex.Message);
         }
 
         [Fact]

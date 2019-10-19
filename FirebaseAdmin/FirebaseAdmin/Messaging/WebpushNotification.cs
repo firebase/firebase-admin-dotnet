@@ -23,8 +23,8 @@ namespace FirebaseAdmin.Messaging
     /// <summary>
     /// Represents the Webpush-specific notification options that can be included in a
     /// <see cref="Message"/>. Supports most standard options defined in the
-    /// <see href="https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification">
-    /// Web Notification specification</see>.
+    /// <a href="https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification">
+    /// Web Notification specification</a>.
     /// </summary>
     public sealed class WebpushNotification
     {
@@ -164,7 +164,7 @@ namespace FirebaseAdmin.Messaging
                         this.Direction = Messaging.Direction.RightToLeft;
                         return;
                     default:
-                        throw new FirebaseException(
+                        throw new ArgumentException(
                             $"Invalid direction value: {value}. Only 'auto', 'rtl' and 'ltr' "
                             + "are allowed.");
                 }

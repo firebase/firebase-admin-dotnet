@@ -111,7 +111,7 @@ namespace FirebaseAdmin.Auth
             string[] segments = token.Split('.');
             if (segments.Length != 3)
             {
-                throw new FirebaseException($"Incorrect number of segments in ${this.shortName}.");
+                throw this.CreateException($"Incorrect number of segments in {this.shortName}.");
             }
 
             var header = JwtUtils.Decode<JsonWebSignature.Header>(segments[0]);
@@ -122,6 +122,7 @@ namespace FirebaseAdmin.Auth
                 + $"{this.shortName}.";
             var issuer = this.issuer + this.ProjectId;
             string error = null;
+            var errorCode = AuthErrorCode.InvalidIdToken;
             var currentTimeInSeconds = this.clock.UnixTimestamp();
 
             if (string.IsNullOrEmpty(header.KeyId))
@@ -166,6 +167,7 @@ namespace FirebaseAdmin.Auth
             {
                 error = $"Firebase {this.shortName} expired at {payload.ExpirationTimeSeconds}. "
                     + $"Expected to be greater than {currentTimeInSeconds}.";
+                errorCode = AuthErrorCode.ExpiredIdToken;
             }
             else if (string.IsNullOrEmpty(payload.Subject))
             {
@@ -178,7 +180,7 @@ namespace FirebaseAdmin.Auth
 
             if (error != null)
             {
-                throw new FirebaseException(error);
+                throw this.CreateException(error, errorCode);
             }
 
             await this.VerifySignatureAsync(segments, header.KeyId, cancellationToken)
@@ -233,8 +235,14 @@ namespace FirebaseAdmin.Auth
             );
             if (!verified)
             {
-                throw new FirebaseException($"Failed to verify {this.shortName} signature.");
+                throw this.CreateException($"Failed to verify {this.shortName} signature.");
             }
+        }
+
+        private FirebaseAuthException CreateException(
+            string message, AuthErrorCode errorCode = AuthErrorCode.InvalidIdToken)
+        {
+            return new FirebaseAuthException(ErrorCode.InvalidArgument, message, errorCode);
         }
     }
 }

@@ -2,6 +2,41 @@
 
 -
 
+# v1.9.1
+
+-
+
+# v1.9.0
+
+-
+
+# v1.8.0
+
+- [added] Added `FirebaseMessagingException` class and improved FCM error
+  handling logic.
+
+# v1.7.0
+
+- [added] Implemented the `ListUsersAsync()` API.
+- [added] Implemented the `UpdateUserAsync()` API.
+- [added] Implemented the `CreateUserAsync()` and `UserRecordArgs` APIs.
+
+# v1.6.0
+
+- [added] `WebpushFcmOptions` added to the `WebpushConfig` class.
+- [added] Implemented the `GetUserByEmailAsync()` and `GetUserByPhoneNumberAsync()`
+  APIs in the `FirebaseAuth` class.
+
+# v1.5.0
+
+- [added] Implemented the `GetUserAsync()` API in the `FirebaseAuth` class.
+- [added] Implemented the `DeleteUserAsync()` API in the `FirebaseAuth` class.
+
+# v1.4.0
+
+- [added] `AppOptions` now supports setting an `HttpClientFactory`, which
+  is useful when deploying the SDK behind a proxy server.
+
 # v1.3.0
 
 - [added] Implemented the `SendAllAsync()` and `SendMulticastAsync()` APIs in

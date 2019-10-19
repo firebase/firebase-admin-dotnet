@@ -14,9 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Google.Apis.Json;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -24,101 +22,137 @@ namespace FirebaseAdmin.Auth
     /// Contains metadata associated with a Firebase user account. Instances
     /// of this class are immutable and thread safe.
     /// </summary>
-    internal class UserRecord
+    public class UserRecord : IUserInfo
     {
-        private string uid;
-        private IReadOnlyDictionary<string, object> customClaims;
+        internal static readonly DateTime UnixEpoch = new DateTime(
+            1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public UserRecord(string uid)
+        private const string DefaultProviderId = "firebase";
+
+        private readonly long validSinceTimestampInSeconds;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the
+        /// <see cref="GetAccountInfoResponse.User"/> class.
+        /// </summary>
+        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy the user's data
+        /// from.</param>
+        internal UserRecord(GetAccountInfoResponse.User user)
         {
-            this.Uid = uid;
+            if (user == null)
+            {
+                throw new ArgumentException("User object must not be null or empty.");
+            }
+            else if (string.IsNullOrEmpty(user.UserId))
+            {
+                throw new ArgumentException("User ID must not be null or empty.");
+            }
+
+            this.Uid = user.UserId;
+            this.Email = user.Email;
+            this.PhoneNumber = user.PhoneNumber;
+            this.EmailVerified = user.EmailVerified;
+            this.DisplayName = user.DisplayName;
+            this.PhotoUrl = user.PhotoUrl;
+            this.Disabled = user.Disabled;
+
+            if (user.Providers == null || user.Providers.Count == 0)
+            {
+                this.ProviderData = new IUserInfo[0];
+            }
+            else
+            {
+                var count = user.Providers.Count;
+                this.ProviderData = new IUserInfo[count];
+                for (int i = 0; i < count; i++)
+                {
+                    this.ProviderData[i] = new ProviderUserInfo(user.Providers[i]);
+                }
+            }
+
+            this.validSinceTimestampInSeconds = user.ValidSince;
+            this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
+            this.CustomClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
         }
 
         /// <summary>
         /// Gets the user ID of this user.
         /// </summary>
-        [JsonProperty("localId")]
-        public string Uid
+        public string Uid { get; }
+
+        /// <summary>
+        /// Gets the user's display name, if available. Otherwise null.
+        /// </summary>
+        public string DisplayName { get; }
+
+        /// <summary>
+        /// Gets the user's email address, if available. Otherwise null.
+        /// </summary>
+        public string Email { get; }
+
+        /// <summary>
+        /// Gets the user's phone number, if available. Otherwise null.
+        /// </summary>
+        public string PhoneNumber { get; }
+
+        /// <summary>
+        /// Gets the user's photo URL, if available. Otherwise null.
+        /// </summary>
+        public string PhotoUrl { get; }
+
+        /// <summary>
+        /// Gets the ID of the identity provider. This returns the constant value <c>firebase</c>.
+        /// </summary>
+        public string ProviderId => UserRecord.DefaultProviderId;
+
+        /// <summary>
+        /// Gets a value indicating whether the user's email address is verified or not.
+        /// </summary>
+        public bool EmailVerified { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the user account is disabled or not.
+        /// </summary>
+        public bool Disabled { get; }
+
+        /// <summary>
+        /// Gets a non-null array of provider data for this user. Possibly empty.
+        /// </summary>
+        public IUserInfo[] ProviderData { get; }
+
+        /// <summary>
+        /// Gets a timestamp that indicates the earliest point in time at which a valid ID token
+        /// could have been issued to this user. Tokens issued prior to this timestamp are
+        /// considered invalid.
+        /// </summary>
+        public DateTime TokensValidAfterTimestamp
         {
-            get => this.uid;
-            private set
+            get
             {
-                CheckUid(value);
-                this.uid = value;
+                return UnixEpoch.AddSeconds(this.validSinceTimestampInSeconds);
             }
         }
 
         /// <summary>
-        /// Gets or sets the custom claims set on this user.
+        /// Gets additional user metadata. This is guaranteed not to be null.
         /// </summary>
-        [JsonIgnore]
-        public IReadOnlyDictionary<string, object> CustomClaims
-        {
-            get => this.customClaims;
-            set
-            {
-                CheckCustomClaims(value);
-                this.customClaims = value;
-            }
-        }
-
-        [JsonProperty("customAttributes")]
-        internal string CustomClaimsString => SerializeClaims(CustomClaims);
+        public UserMetadata UserMetaData { get; }
 
         /// <summary>
-        /// Checks if the given user ID is valid.
+        /// Gets the custom claims set on this user, as a non-null dictionary. Possibly empty.
         /// </summary>
-        /// <param name="uid">The user ID. Must not be null or longer than
-        /// 128 characters.</param>
-        public static void CheckUid(string uid)
+        public IReadOnlyDictionary<string, object> CustomClaims { get; }
+
+        private static IReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
         {
-            if (string.IsNullOrEmpty(uid))
+            if (string.IsNullOrEmpty(customClaims))
             {
-                throw new ArgumentException("uid must not be null or empty");
+                return new Dictionary<string, object>();
             }
-            else if (uid.Length > 128)
+            else
             {
-                throw new ArgumentException("uid must not be longer than 128 characters");
+                return NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(customClaims);
             }
-        }
-
-        /// <summary>
-        /// Checks if the given set of custom claims are valid.
-        /// </summary>
-        /// <param name="customClaims">The custom claims. Claim names must
-        /// not be null or empty and must not be reserved and the serialized
-        /// claims have to be less than 1000 bytes.</param>
-        internal static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
-        {
-            if (customClaims == null)
-            {
-                return;
-            }
-
-            foreach (var key in customClaims.Keys)
-            {
-                if (string.IsNullOrEmpty(key))
-                {
-                    throw new ArgumentException("Claim names must not be null or empty");
-                }
-
-                if (FirebaseTokenFactory.ReservedClaims.Contains(key))
-                {
-                    throw new ArgumentException($"Claim {key} is reserved and cannot be set");
-                }
-            }
-
-            var customClaimsString = SerializeClaims(customClaims);
-            var byteCount = Encoding.Unicode.GetByteCount(customClaimsString);
-            if (byteCount > 1000)
-            {
-                throw new ArgumentException($"Claims have to be not greater than 1000 bytes when serialized");
-            }
-        }
-
-        private static string SerializeClaims(IReadOnlyDictionary<string, object> claims)
-        {
-            return NewtonsoftJsonSerializer.Instance.Serialize(claims);
         }
     }
 }

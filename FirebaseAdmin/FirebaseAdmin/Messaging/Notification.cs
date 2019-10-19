@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
@@ -34,16 +35,30 @@ namespace FirebaseAdmin.Messaging
         public string Body { get; set; }
 
         /// <summary>
-        /// Copies this notification. There is nothing to be validated in this class, but we use
-        /// the same method name as in other classes in this namespace.
+        /// Gets or sets the URL of the image to be displayed in the notification.
+        /// </summary>
+        [JsonProperty("image")]
+        public string ImageUrl { get; set; }
+
+        /// <summary>
+        /// Copies this notification, and validates the content of it to ensure that it can
+        /// be serialized into the JSON format expected by the FCM service.
         /// </summary>
         internal Notification CopyAndValidate()
         {
-            return new Notification()
+            var copy = new Notification()
             {
                 Title = this.Title,
                 Body = this.Body,
+                ImageUrl = this.ImageUrl,
             };
+
+            if (copy.ImageUrl != null && !Uri.IsWellFormedUriString(copy.ImageUrl, UriKind.Absolute))
+            {
+                throw new ArgumentException($"Malformed image URL string: {copy.ImageUrl}.");
+            }
+
+            return copy;
         }
     }
 }

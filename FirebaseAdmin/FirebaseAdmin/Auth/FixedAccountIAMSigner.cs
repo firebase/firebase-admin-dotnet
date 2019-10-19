@@ -14,6 +14,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Util;
@@ -29,17 +30,40 @@ namespace FirebaseAdmin.Auth
     {
         private readonly string keyId;
 
-        public FixedAccountIAMSigner(
-            HttpClientFactory clientFactory, GoogleCredential credential, string keyId)
-            : base(clientFactory, credential)
+        public FixedAccountIAMSigner(Args args)
+        : base(args.ClientFactory, args.Credential, args.RetryOptions)
         {
-            this.keyId = keyId.ThrowIfNullOrEmpty(nameof(keyId));
+            this.keyId = args.KeyId.ThrowIfNullOrEmpty(nameof(args.KeyId));
         }
 
         public override Task<string> GetKeyIdAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
             return Task.FromResult(this.keyId);
+        }
+
+        internal static new FixedAccountIAMSigner Create(FirebaseApp app)
+        {
+            var args = new FixedAccountIAMSigner.Args()
+            {
+                ClientFactory = app.Options.HttpClientFactory,
+                Credential = app.Options.Credential,
+                KeyId = app.Options.ServiceAccountId,
+                RetryOptions = RetryOptions.Default,
+            };
+
+            return new FixedAccountIAMSigner(args);
+        }
+
+        internal class Args
+        {
+            internal HttpClientFactory ClientFactory { get; set; }
+
+            internal GoogleCredential Credential { get; set; }
+
+            internal string KeyId { get; set; }
+
+            internal RetryOptions RetryOptions { get; set; }
         }
     }
 }

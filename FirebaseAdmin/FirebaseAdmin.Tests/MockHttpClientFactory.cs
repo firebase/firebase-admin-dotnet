@@ -12,17 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Google.Apis.Auth.OAuth2;
+using System.Net.Http;
 using Google.Apis.Http;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Tests
 {
-    internal sealed class FirebaseUserManagerArgs
+    internal sealed class MockHttpClientFactory : HttpClientFactory
     {
-        public HttpClientFactory ClientFactory { get; set; }
+        private readonly HttpMessageHandler handler;
 
-        public GoogleCredential Credential { get; set; }
+        public MockHttpClientFactory(HttpMessageHandler handler)
+        {
+            this.handler = handler;
+        }
 
-        public string ProjectId { get; set; }
+        protected override HttpMessageHandler CreateHandler(CreateHttpClientArgs args)
+        {
+            return this.handler;
+        }
     }
 }

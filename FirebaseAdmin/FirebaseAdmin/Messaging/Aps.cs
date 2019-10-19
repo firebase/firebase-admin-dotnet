@@ -21,8 +21,8 @@ using Newtonsoft.Json;
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Represents the <see href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html">
-    /// aps dictionary</see> that is part of every APNs message.
+    /// Represents the <a href="https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html">
+    /// aps dictionary</a> that is part of every APNs message.
     /// </summary>
     public sealed class Aps
     {

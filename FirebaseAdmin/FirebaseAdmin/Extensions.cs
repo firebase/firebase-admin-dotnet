@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +32,16 @@ namespace FirebaseAdmin
     /// </summary>
     internal static class Extensions
     {
+        private static readonly IReadOnlyList<SocketError> NetworkAvailabilityErrors =
+            new List<SocketError>()
+            {
+                SocketError.HostDown,
+                SocketError.HostNotFound,
+                SocketError.HostUnreachable,
+                SocketError.NetworkDown,
+                SocketError.NetworkUnreachable,
+            };
+
         /// <summary>
         /// Extracts and returns the underlying <see cref="ServiceAccountCredential"/> from a
         /// <see cref="GoogleCredential"/>. Returns null if the <c>GoogleCredential</c> is not
@@ -61,23 +73,6 @@ namespace FirebaseAdmin
             this HttpClientFactory clientFactory)
         {
             return clientFactory.CreateHttpClient(new CreateHttpClientArgs());
-        }
-
-        /// <summary>
-        /// Creates an authenticated <see cref="ConfigurableHttpClient"/> from the
-        /// factory.
-        /// </summary>
-        /// <returns>An HTTP client that can be used to OAuth2 authorized requests.</returns>
-        /// <param name="clientFactory">The <see cref="HttpClientFactory"/> used to create
-        /// the HTTP client.</param>
-        /// <param name="credential">The Google credential that will be used to authenticate
-        /// outgoing HTTP requests.</param>
-        public static ConfigurableHttpClient CreateAuthorizedHttpClient(
-            this HttpClientFactory clientFactory, GoogleCredential credential)
-        {
-            var args = new CreateHttpClientArgs();
-            args.Initializers.Add(credential.ThrowIfNull(nameof(credential)));
-            return clientFactory.CreateHttpClient(args);
         }
 
         /// <summary>
@@ -152,6 +147,28 @@ namespace FirebaseAdmin
             }
 
             return copy;
+        }
+
+        public static FirebaseException ToFirebaseException(this HttpRequestException exception)
+        {
+            ErrorCode code = ErrorCode.Unknown;
+            string message = "Unknown error while making a remote service call";
+            if (exception.InnerException is SocketException)
+            {
+                var socketException = (SocketException)exception.InnerException;
+                if (socketException.SocketErrorCode == SocketError.TimedOut)
+                {
+                    code = ErrorCode.DeadlineExceeded;
+                    message = "Timed out while making an API call";
+                }
+                else if (NetworkAvailabilityErrors.Contains(socketException.SocketErrorCode))
+                {
+                    code = ErrorCode.Unavailable;
+                    message = "Failed to establish a connection";
+                }
+            }
+
+            return new FirebaseException(code, $"{message}: {exception.Message}", exception);
         }
     }
 }

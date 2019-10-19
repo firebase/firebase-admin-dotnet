@@ -27,7 +27,7 @@ namespace FirebaseAdmin.Messaging
             this.MessageId = messageId;
         }
 
-        private SendResponse(FirebaseException exception)
+        private SendResponse(FirebaseMessagingException exception)
         {
             this.Exception = exception;
         }
@@ -40,7 +40,7 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Gets an exception if the send operation failed. Otherwise returns null.
         /// </summary>
-        public FirebaseException Exception { get; }
+        public FirebaseMessagingException Exception { get; }
 
         /// <summary>
         /// Gets a value indicating whether the send operation was successful or not. When this property
@@ -60,7 +60,7 @@ namespace FirebaseAdmin.Messaging
             return new SendResponse(messageId);
         }
 
-        internal static SendResponse FromException(FirebaseException exception)
+        internal static SendResponse FromException(FirebaseMessagingException exception)
         {
             if (exception == null)
             {
