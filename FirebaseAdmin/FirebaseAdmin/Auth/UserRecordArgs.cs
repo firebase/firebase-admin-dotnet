@@ -99,7 +99,17 @@ namespace FirebaseAdmin.Auth
             set => this.customClaims = this.Wrap(value);
         }
 
-        internal static string CheckUid(string uid, bool required = false)
+        internal CreateUserRequest ToCreateUserRequest()
+        {
+            return new CreateUserRequest(this);
+        }
+
+        internal UpdateUserRequest ToUpdateUserRequest()
+        {
+            return new UpdateUserRequest(this);
+        }
+
+        private static string CheckUid(string uid, bool required = false)
         {
             if (uid == null)
             {
@@ -120,7 +130,7 @@ namespace FirebaseAdmin.Auth
             return uid;
         }
 
-        internal static string CheckEmail(string email)
+        private static string CheckEmail(string email)
         {
             if (email != null)
             {
@@ -137,7 +147,7 @@ namespace FirebaseAdmin.Auth
             return email;
         }
 
-        internal static string CheckPhoneNumber(string phoneNumber)
+        private static string CheckPhoneNumber(string phoneNumber)
         {
             if (phoneNumber != null)
             {
@@ -155,7 +165,7 @@ namespace FirebaseAdmin.Auth
             return phoneNumber;
         }
 
-        internal static string CheckPhotoUrl(string photoUrl)
+        private static string CheckPhotoUrl(string photoUrl)
         {
             if (photoUrl != null)
             {
@@ -170,16 +180,6 @@ namespace FirebaseAdmin.Auth
             }
 
             return photoUrl;
-        }
-
-        internal CreateUserRequest ToCreateUserRequest()
-        {
-            return new CreateUserRequest(this);
-        }
-
-        internal UpdateUserRequest ToUpdateUserRequest()
-        {
-            return new UpdateUserRequest(this);
         }
 
         private static string CheckPassword(string password)
