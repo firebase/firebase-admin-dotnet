@@ -52,6 +52,9 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         public class Builder
         {
+            private readonly List<IUserInfo> userProviders = new List<IUserInfo>();
+            private readonly IDictionary<string, object> customClaims = new Dictionary<string, object>();
+
             private string uid;
             private string email;
             private bool? emailVerified;
@@ -62,9 +65,6 @@ namespace FirebaseAdmin.Auth
             private UserMetadata userMetadata;
             private string passwordHash;
             private string passwordSalt;
-
-            private List<IUserInfo> userProviders = new List<IUserInfo>();
-            private IDictionary<string, object> customClaims = new Dictionary<string, object>();
 
             /// <summary>
             /// Sets a user ID for the user.
@@ -238,9 +238,16 @@ namespace FirebaseAdmin.Auth
                 IDictionary<string, object> properties = new Dictionary<string, object>();
 
                 // perhaps use UserRecordArgs property checks here?
+                UserRecordArgs.CheckUid(this.uid);
                 properties.Add("localId", this.uid);
+
+                UserRecordArgs.CheckEmail(this.email);
                 properties.Add("email", this.email);
+
+                UserRecordArgs.CheckPhotoUrl(this.photoUrl);
                 properties.Add("photoUrl", this.photoUrl);
+
+                UserRecordArgs.CheckPhoneNumber(this.phoneNumber);
                 properties.Add("phoneNumber", this.phoneNumber);
 
                 if (!string.IsNullOrEmpty(this.displayName))
