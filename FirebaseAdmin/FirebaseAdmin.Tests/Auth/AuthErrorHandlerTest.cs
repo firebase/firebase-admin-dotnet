@@ -121,7 +121,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(ErrorCode.Internal, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 500 (InternalServerError)\n{json}",
+                $"Unexpected HTTP response with status: 500 (InternalServerError){Environment.NewLine}{json}",
                 error.Message);
             Assert.Null(error.AuthErrorCode);
             Assert.Same(resp, error.HttpResponse);
@@ -144,7 +144,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(ErrorCode.Internal, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 500 (InternalServerError)\n{json}",
+                $"Unexpected HTTP response with status: 500 (InternalServerError){Environment.NewLine}{json}",
                 error.Message);
             Assert.Null(error.AuthErrorCode);
             Assert.Same(resp, error.HttpResponse);
@@ -165,7 +165,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{}",
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}{{}}",
                 error.Message);
             Assert.Null(error.AuthErrorCode);
             Assert.Same(resp, error.HttpResponse);
@@ -186,7 +186,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{text}",
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}{text}",
                 error.Message);
             Assert.Null(error.AuthErrorCode);
             Assert.Same(resp, error.HttpResponse);

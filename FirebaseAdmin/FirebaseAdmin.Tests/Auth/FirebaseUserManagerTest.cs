@@ -695,7 +695,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Null(exception.AuthErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 500 (InternalServerError)\n{}",
+                $"Unexpected HTTP response with status: 500 (InternalServerError){Environment.NewLine}{{}}",
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
@@ -730,7 +730,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Null(exception.AuthErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 500 (InternalServerError)\n{}",
+                $"Unexpected HTTP response with status: 500 (InternalServerError){Environment.NewLine}{{}}",
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
@@ -1487,7 +1487,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Null(exception.AuthErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 500 (InternalServerError)\n{}",
+                $"Unexpected HTTP response with status: 500 (InternalServerError){Environment.NewLine}{{}}",
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -126,7 +127,7 @@ namespace FirebaseAdmin.Tests
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{}",
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}{{}}",
                 error.Message);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);

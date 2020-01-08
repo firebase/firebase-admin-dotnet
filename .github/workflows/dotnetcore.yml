@@ -27,15 +27,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.2.108
     - name: Build with dotnet
+      env:
+        DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
       run: |
         dotnet build FirebaseAdmin/FirebaseAdmin
         dotnet build FirebaseAdmin/FirebaseAdmin.Snippets
         dotnet build FirebaseAdmin/FirebaseAdmin.IntegrationTests
     - name: Run unit tests
+      env:
+        DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
       run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
-        
+

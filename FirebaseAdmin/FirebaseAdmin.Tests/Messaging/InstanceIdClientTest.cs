@@ -80,7 +80,9 @@ namespace FirebaseAdmin.Tests.Messaging
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
 
             Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
-            Assert.Equal("Unexpected HTTP response with status: 400 (BadRequest)\nBadRequest", exception.Message);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 400 (BadRequest){Environment.NewLine}BadRequest",
+                exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
@@ -102,7 +104,9 @@ namespace FirebaseAdmin.Tests.Messaging
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
 
             Assert.Equal(ErrorCode.Unauthenticated, exception.ErrorCode);
-            Assert.Equal("Unexpected HTTP response with status: 401 (Unauthorized)\nUnauthorized", exception.Message);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 401 (Unauthorized){Environment.NewLine}Unauthorized",
+                exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
@@ -124,7 +128,9 @@ namespace FirebaseAdmin.Tests.Messaging
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
 
             Assert.Equal(ErrorCode.PermissionDenied, exception.ErrorCode);
-            Assert.Equal("Unexpected HTTP response with status: 403 (Forbidden)\nForbidden", exception.Message);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 403 (Forbidden){Environment.NewLine}Forbidden",
+                exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
@@ -146,7 +152,9 @@ namespace FirebaseAdmin.Tests.Messaging
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
 
             Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
-            Assert.Equal("Unexpected HTTP response with status: 404 (NotFound)\nNotFound", exception.Message);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 404 (NotFound){Environment.NewLine}NotFound",
+                exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
@@ -168,7 +176,9 @@ namespace FirebaseAdmin.Tests.Messaging
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
 
             Assert.Equal(ErrorCode.Unavailable, exception.ErrorCode);
-            Assert.Equal("Unexpected HTTP response with status: 503 (ServiceUnavailable)\nServiceUnavailable", exception.Message);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}ServiceUnavailable",
+                exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
