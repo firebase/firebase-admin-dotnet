@@ -61,7 +61,7 @@ namespace FirebaseAdmin.Tests
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{text}",
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}{text}",
                 error.Message);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
@@ -107,7 +107,7 @@ namespace FirebaseAdmin.Tests
 
             Assert.Equal(ErrorCode.InvalidArgument, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{json}",
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}{json}",
                 error.Message);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
