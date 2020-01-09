@@ -1,0 +1,33 @@
+name: .NET Continuous Integration
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v1
+
+    - name: Setup .NET Core
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.2.108
+
+    - name: Build with dotnet
+      run: |
+        dotnet build FirebaseAdmin/FirebaseAdmin
+        dotnet build FirebaseAdmin/FirebaseAdmin.Snippets
+        dotnet build FirebaseAdmin/FirebaseAdmin.IntegrationTests
+
+    - name: Run unit tests
+      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
+      env:
+        DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
