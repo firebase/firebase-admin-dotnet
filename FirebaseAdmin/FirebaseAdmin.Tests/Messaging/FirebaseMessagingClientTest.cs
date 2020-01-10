@@ -480,7 +480,7 @@ Content-Type: application/json; charset=UTF-8
 
             Assert.Equal(ErrorCode.Internal, ex.ErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 500 (InternalServerError)\nnot json",
+                $"Unexpected HTTP response with status: 500 (InternalServerError){Environment.NewLine}not json",
                 ex.Message);
             Assert.Null(ex.MessagingErrorCode);
             Assert.NotNull(ex.HttpResponse);
@@ -511,7 +511,9 @@ Content-Type: application/json; charset=UTF-8
                 async () => await client.SendAsync(message));
 
             Assert.Equal(ErrorCode.Unavailable, ex.ErrorCode);
-            Assert.Equal("Unexpected HTTP response with status: 503 (ServiceUnavailable)\nServiceUnavailable", ex.Message);
+            Assert.Equal(
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}ServiceUnavailable",
+                ex.Message);
             Assert.Null(ex.MessagingErrorCode);
             Assert.NotNull(ex.HttpResponse);
             Assert.Null(ex.InnerException);

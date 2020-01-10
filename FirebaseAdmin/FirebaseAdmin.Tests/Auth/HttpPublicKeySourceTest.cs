@@ -116,7 +116,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 500 (InternalServerError)\ntest error",
+                $"Unexpected HTTP response with status: 500 (InternalServerError){Environment.NewLine}test error",
                 exception.Message);
             Assert.Equal(AuthErrorCode.CertificateFetchFailed, exception.AuthErrorCode);
             Assert.NotNull(exception.HttpResponse);

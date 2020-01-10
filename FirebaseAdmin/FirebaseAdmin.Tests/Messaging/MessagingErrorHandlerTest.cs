@@ -136,7 +136,7 @@ namespace FirebaseAdmin.Messaging.Tests
 
             Assert.Equal(ErrorCode.Unavailable, error.ErrorCode);
             Assert.Equal(
-                "Unexpected HTTP response with status: 503 (ServiceUnavailable)\n{}",
+                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}{{}}",
                 error.Message);
             Assert.Null(error.MessagingErrorCode);
             Assert.Same(resp, error.HttpResponse);

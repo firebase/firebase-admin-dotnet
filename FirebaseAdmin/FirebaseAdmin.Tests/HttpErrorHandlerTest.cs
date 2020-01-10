@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -52,7 +53,7 @@ namespace FirebaseAdmin.Tests
 
             Assert.Equal(expected, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: {(int)statusCode} ({statusCode})\n{json}",
+                $"Unexpected HTTP response with status: {(int)statusCode} ({statusCode}){Environment.NewLine}{json}",
                 error.Message);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
@@ -73,7 +74,7 @@ namespace FirebaseAdmin.Tests
 
             Assert.Equal(expected, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: {(int)statusCode} ({statusCode})\n{text}",
+                $"Unexpected HTTP response with status: {(int)statusCode} ({statusCode}){Environment.NewLine}{text}",
                 error.Message);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
@@ -93,7 +94,7 @@ namespace FirebaseAdmin.Tests
 
             Assert.Equal(ErrorCode.Unknown, error.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 405 (MethodNotAllowed)\n{json}",
+                $"Unexpected HTTP response with status: 405 (MethodNotAllowed){Environment.NewLine}{json}",
                 error.Message);
             Assert.Same(resp, error.HttpResponse);
             Assert.Null(error.InnerException);
