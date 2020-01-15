@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/firebase/firebase-admin-dotnet/workflows/Continuous%20Integration/badge.svg)](https://github.com/firebase/firebase-admin-dotnet/actions)
+
 # Firebase Admin .NET SDK
 
 ## Table of Contents
