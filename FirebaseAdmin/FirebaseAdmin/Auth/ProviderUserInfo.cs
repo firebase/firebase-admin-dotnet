@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using FirebaseAdmin.Auth.Users;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -37,40 +38,60 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ProviderUserInfo"/> class.
+        /// </summary>
+        /// <param name="args">Arguments that describe the new provider user info.</param>
+        internal ProviderUserInfo(ProviderUserInfoArgs args)
+        {
+            this.Uid = args.Uid;
+            this.DisplayName = args.DisplayName;
+            this.Email = args.Email;
+            this.PhoneNumber = args.PhoneNumber;
+            this.PhotoUrl = args.PhotoUrl;
+            this.ProviderId = args.ProviderId;
+        }
+
+        /// <summary>
         /// Gets the user's unique ID assigned by the identity provider.
         /// </summary>
         /// <returns>a user ID string.</returns>
-        public string Uid { get; private set; }
+        [JsonProperty(PropertyName = "rawId")]
+        public string Uid { get; }
 
         /// <summary>
         /// Gets the user's display name, if available.
         /// </summary>
         /// <returns>a display name string or null.</returns>
-        public string DisplayName { get; private set; }
+        [JsonProperty(PropertyName = "displayName")]
+        public string DisplayName { get; }
 
         /// <summary>
         /// Gets the user's email address, if available.
         /// </summary>
         /// <returns>an email address string or null.</returns>
-        public string Email { get; private set; }
+        [JsonProperty(PropertyName = "email")]
+        public string Email { get; }
 
         /// <summary>
-        /// Gets the user's phone number.
+        /// Gets the user's phone number, if available.
         /// </summary>
         /// <returns>a phone number string or null.</returns>
-        public string PhoneNumber { get; private set; }
+        [JsonProperty(PropertyName = "phoneNumber")]
+        public string PhoneNumber { get; }
 
         /// <summary>
         /// Gets the user's photo URL, if available.
         /// </summary>
         /// <returns>a URL string or null.</returns>
-        public string PhotoUrl { get; private set; }
+        [JsonProperty(PropertyName = "photoUrl")]
+        public string PhotoUrl { get; }
 
         /// <summary>
         /// Gets the ID of the identity provider. This can be a short domain name (e.g. google.com) or
         /// the identifier of an OpenID identity provider.
         /// </summary>
         /// <returns>an ID string that uniquely identifies the identity provider.</returns>
-        public string ProviderId { get; private set; }
+        [JsonProperty(PropertyName = "providerId")]
+        public string ProviderId { get; }
     }
 }
