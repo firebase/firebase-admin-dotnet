@@ -66,7 +66,7 @@ namespace FirebaseAdmin.Auth
                 this.ProviderData = new IUserInfo[count];
                 for (int i = 0; i < count; i++)
                 {
-                    this.ProviderData[i] = new ProviderUserInfo(user.Providers[i]);
+                    this.ProviderData[i] = ProviderUserInfo.Create(user.Providers[i]);
                 }
             }
 

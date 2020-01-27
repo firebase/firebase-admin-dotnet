@@ -196,8 +196,9 @@ namespace FirebaseAdmin.IntegrationTests
                 Assert.Empty(user.ProviderData);
                 Assert.Empty(user.CustomClaims);
 
-                // Update user
+                // Update user with new properties as well as a provider to link to the user
                 var randomUser = RandomUser.Create();
+
                 var updateArgs = new UserRecordArgs()
                 {
                     Uid = uid,
@@ -207,6 +208,7 @@ namespace FirebaseAdmin.IntegrationTests
                     PhotoUrl = "https://example.com/photo.png",
                     EmailVerified = true,
                     Password = "secret",
+                    ProviderToLink = randomUser.ProviderUser,
                 };
                 user = await FirebaseAuth.DefaultInstance.UpdateUserAsync(updateArgs);
                 Assert.Equal(uid, user.Uid);
@@ -218,12 +220,48 @@ namespace FirebaseAdmin.IntegrationTests
                 Assert.False(user.Disabled);
                 Assert.NotNull(user.UserMetaData.CreationTimestamp);
                 Assert.Null(user.UserMetaData.LastSignInTimestamp);
-                Assert.Equal(2, user.ProviderData.Length);
+                Assert.Equal(3, user.ProviderData.Length);
+                var providerIds = new HashSet<string>();
+                foreach (ProviderUserInfo providerData in user.ProviderData)
+                {
+                    providerIds.Add(providerData.ProviderId);
+                }
+
+                Assert.Equal(providerIds, new HashSet<string>() { "phone", "password", "google.com" });
                 Assert.Empty(user.CustomClaims);
 
                 // Get user by email
                 user = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(randomUser.Email);
                 Assert.Equal(uid, user.Uid);
+
+                // Delete the linked provider and phone number
+                var unlinkArgs = new UserRecordArgs()
+                {
+                    Uid = uid,
+                    DisplayName = "Updated Name",
+                    Email = randomUser.Email,
+                    PhoneNumber = null,
+                    PhotoUrl = "https://example.com/photo.png",
+                    EmailVerified = true,
+                    Password = "secret",
+                    ProvidersToDelete = new List<string>()
+                    {
+                       randomUser.ProviderUser.ProviderId,
+                    },
+                };
+                user = await FirebaseAuth.DefaultInstance.UpdateUserAsync(unlinkArgs);
+                Assert.Equal(uid, user.Uid);
+                Assert.Equal(randomUser.Email, user.Email);
+                Assert.Null(user.PhoneNumber);
+                Assert.Equal("Updated Name", user.DisplayName);
+                Assert.Equal("https://example.com/photo.png", user.PhotoUrl);
+                Assert.True(user.EmailVerified);
+                Assert.False(user.Disabled);
+                Assert.NotNull(user.UserMetaData.CreationTimestamp);
+                Assert.Null(user.UserMetaData.LastSignInTimestamp);
+                Assert.Single(user.ProviderData);
+                Assert.Equal("password", user.ProviderData.First().ProviderId);
+                Assert.Empty(user.CustomClaims);
 
                 // Disable user and remove properties
                 var disableArgs = new UserRecordArgs()
@@ -245,6 +283,7 @@ namespace FirebaseAdmin.IntegrationTests
                 Assert.NotNull(user.UserMetaData.CreationTimestamp);
                 Assert.Null(user.UserMetaData.LastSignInTimestamp);
                 Assert.Single(user.ProviderData);
+                Assert.Equal("password", user.ProviderData.First().ProviderId);
                 Assert.Empty(user.CustomClaims);
             }
             finally
@@ -409,6 +448,8 @@ namespace FirebaseAdmin.IntegrationTests
 
         internal string PhoneNumber { get; private set; }
 
+        internal ProviderUserInfo ProviderUser { get; private set; }
+
         internal static RandomUser Create()
         {
             var uid = Guid.NewGuid().ToString().Replace("-", string.Empty);
@@ -421,11 +462,18 @@ namespace FirebaseAdmin.IntegrationTests
                 phone += rand.Next(10);
             }
 
+            var providerUser = new ProviderUserInfo()
+            {
+                Uid = "google_" + uid,
+                ProviderId = "google.com",
+            };
+
             return new RandomUser()
             {
                 Uid = uid,
                 Email = email,
                 PhoneNumber = phone,
+                ProviderUser = providerUser,
             };
         }
     }
