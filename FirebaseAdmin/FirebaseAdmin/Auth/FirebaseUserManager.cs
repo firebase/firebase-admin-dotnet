@@ -102,8 +102,8 @@ namespace FirebaseAdmin.Auth
             var query = new UserQuery()
             {
                 Field = "localId",
-                Value = uid,
-                Label = "uid",
+                Value = new string[] { uid },
+                Description = "uid: " + uid,
             };
             return await this.GetUserAsync(query, cancellationToken)
                 .ConfigureAwait(false);
@@ -127,7 +127,56 @@ namespace FirebaseAdmin.Auth
             var query = new UserQuery()
             {
                 Field = "email",
-                Value = email,
+                Value = new string[] { email },
+                Description = "email: " + email,
+            };
+            return await this.GetUserAsync(query, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets the user data corresponding to the given provider user identifer.
+        /// </summary>
+        /// <param name="providerId">Identifier for the given provider, for example,
+        /// "google.com" for the Google provider.</param>
+        /// <param name="providerUid">The user identifier with the given provider.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A record of user with the queried provider user identifier if one exists.</returns>
+        internal async Task<UserRecord> GetUserByProviderUidAsync(
+            string providerId, string providerUid, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrEmpty(providerId))
+            {
+                throw new ArgumentException("providerId cannot be null or empty.");
+            }
+
+            if (string.IsNullOrEmpty(providerUid))
+            {
+                throw new ArgumentException("providerUid cannot be null or empty.");
+            }
+
+            if (providerId.Equals("phone"))
+            {
+                return await this.GetUserByPhoneNumberAsync(providerUid, cancellationToken);
+            }
+
+            if (providerId.Equals("email"))
+            {
+                return await this.GetUserByEmailAsync(providerUid, cancellationToken);
+            }
+
+            var federatedUserId = new Dictionary<string, object>()
+            {
+                { "rawId", providerUid },
+                { "providerId", providerId },
+            };
+
+            var query = new UserQuery()
+            {
+                Field = "federatedUserId",
+                Value = new Dictionary<string, object>[] { federatedUserId },
+                Description = "providerId: " + providerId + ", providerUid: " + providerUid,
             };
             return await this.GetUserAsync(query, cancellationToken)
                 .ConfigureAwait(false);
@@ -151,8 +200,8 @@ namespace FirebaseAdmin.Auth
             var query = new UserQuery()
             {
                 Field = "phoneNumber",
-                Value = phoneNumber,
-                Label = "phone number",
+                Value = new string[] { phoneNumber },
+                Description = "phone number: " + phoneNumber,
             };
             return await this.GetUserAsync(query, cancellationToken)
                 .ConfigureAwait(false);
@@ -301,37 +350,23 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Represents a query that can be executed against the Firebase Auth service to retrieve user records.
         /// A query mainly consists of a <see cref="UserQuery.Field"/> and a <see cref="UserQuery.Value"/> (e.g.
-        /// <c>Field = localId</c> and <c>Value = alice</c>). Additionally, a query may also specify a more
-        /// human-readable <see cref="UserQuery.Label"/> for the field, which will appear on any error messages
+        /// <c>Field = localId</c> and <c>Value = alice</c>). Additionally, a query also specifies a more
+        /// human-readable <see cref="UserQuery.Description"/> for the key-value, which will appear on any error messages
         /// produced by the query.
         /// </summary>
         private class UserQuery
         {
             internal string Field { get; set; }
 
-            internal string Value { get; set; }
+            internal object Value { get; set; }
 
-            internal string Label { get; set; }
-
-            internal string Description
-            {
-                get
-                {
-                    var label = this.Label;
-                    if (string.IsNullOrEmpty(label))
-                    {
-                        label = this.Field;
-                    }
-
-                    return $"{label}: {this.Value}";
-                }
-            }
+            internal string Description { get; set; }
 
             internal Dictionary<string, object> Build()
             {
                 return new Dictionary<string, object>()
                 {
-                    { this.Field, new string[] { this.Value } },
+                    { this.Field, this.Value },
                 };
             }
         }

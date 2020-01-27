@@ -327,6 +327,112 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task GetUserByProviderUid()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = GetUserResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var userRecord = await auth.GetUserByProviderUidAsync("google.com", "google_uid");
+
+            Assert.Equal("user1", userRecord.Uid);
+            Assert.Null(userRecord.DisplayName);
+            Assert.Null(userRecord.Email);
+            Assert.Null(userRecord.PhoneNumber);
+            Assert.Null(userRecord.PhotoUrl);
+            Assert.Equal("firebase", userRecord.ProviderId);
+            Assert.False(userRecord.Disabled);
+            Assert.False(userRecord.EmailVerified);
+            Assert.Equal(UserRecord.UnixEpoch, userRecord.TokensValidAfterTimestamp);
+            Assert.Empty(userRecord.CustomClaims);
+            Assert.Empty(userRecord.ProviderData);
+            Assert.Null(userRecord.UserMetaData.CreationTimestamp);
+            Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
+            JObject expectedFederatedUserId = new JObject();
+            expectedFederatedUserId.Add("rawId", "google_uid");
+            expectedFederatedUserId.Add("providerId", "google.com");
+            Assert.Equal(new JArray(expectedFederatedUserId), request["federatedUserId"]);
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task GetUserByProviderUidWithPhoneProvider()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = GetUserResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var userRecord = await auth.GetUserByProviderUidAsync("phone", "+1234567890");
+
+            Assert.Equal("user1", userRecord.Uid);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
+            Assert.Equal(new JArray("+1234567890"), request["phoneNumber"]);
+            Assert.False(request.ContainsKey("federatedUserId"));
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task GetUserByProviderUidWithEmailProvider()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = GetUserResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var userRecord = await auth.GetUserByProviderUidAsync("email", "user@example.com");
+
+            Assert.Equal("user1", userRecord.Uid);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
+            Assert.Equal(new JArray("user@example.com"), request["email"]);
+            Assert.False(request.ContainsKey("federatedUserId"));
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task GetUserByProviderUidUserNotFound()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""users"": []}",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.GetUserByProviderUidAsync("google.com", "google_uid"));
+
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
+            Assert.Equal("Failed to get user with providerId: google.com, providerUid: google_uid", exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public async Task GetUserByProviderUidNull()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByProviderUidAsync("google.com", null));
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByProviderUidAsync(null, "google_uid"));
+       }
+
+        [Fact]
+        public async Task GetUserByProviderUidEmpty()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByProviderUidAsync("google.com", string.Empty));
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByProviderUidAsync(string.Empty, "google_uid"));
+       }
+
+        [Fact]
         public async Task ListUsers()
         {
             var handler = new MockMessageHandler()

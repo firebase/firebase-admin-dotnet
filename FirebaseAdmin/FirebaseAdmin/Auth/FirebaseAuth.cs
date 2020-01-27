@@ -414,6 +414,49 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="providerId"/> and <paramref name="providerUid"/>.
+        /// </summary>
+        /// <param name="providerId">Identifier for the given provider, for example,
+        /// "google.com" for the Google provider.</param>
+        /// <param name="providerUid">The user identifier with the given provider.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified provider user identifier.</returns>
+        /// <exception cref="ArgumentException">If the provider identifier is null or empty,
+        /// or if the provider user identifier is empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified
+        /// provider user identifier.</exception>
+        public async Task<UserRecord> GetUserByProviderUidAsync(string providerId, string providerUid)
+        {
+            return await this.GetUserByProviderUidAsync(providerId, providerUid, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="providerId"/> and <paramref name="providerUid"/>.
+        /// </summary>
+        /// <param name="providerId">Identifier for the given provider, for example,
+        /// "google.com" for the Google provider.</param>
+        /// <param name="providerUid">The user identifier with the given provider.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified provider user identifier.</returns>
+        /// <exception cref="ArgumentException">If the provider identifier is null or empty,
+        /// or if the provider user identifier is empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified
+        /// provider user identifier.</exception>
+        public async Task<UserRecord> GetUserByProviderUidAsync(
+            string providerId, string providerUid, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.GetUserByProviderUidAsync(providerId, providerUid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
         /// </summary>
