@@ -41,6 +41,12 @@ namespace FirebaseAdmin.Auth.Tests
                 },
                 new object[]
                 {
+                    "EMAIL_EXISTS",
+                    ErrorCode.AlreadyExists,
+                    AuthErrorCode.EmailAlreadyExists,
+                },
+                new object[]
+                {
                     "PHONE_NUMBER_EXISTS",
                     ErrorCode.AlreadyExists,
                     AuthErrorCode.PhoneNumberAlreadyExists,

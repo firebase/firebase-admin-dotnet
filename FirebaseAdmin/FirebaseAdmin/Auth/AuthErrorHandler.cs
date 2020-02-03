@@ -50,6 +50,13 @@ namespace FirebaseAdmin.Auth
                         "The user with the provided uid already exists")
                 },
                 {
+                    "EMAIL_EXISTS",
+                    new ErrorInfo(
+                        ErrorCode.AlreadyExists,
+                        AuthErrorCode.EmailAlreadyExists,
+                        "The user with the provided email already exists")
+                },
+                {
                     "PHONE_NUMBER_EXISTS",
                     new ErrorInfo(
                         ErrorCode.AlreadyExists,
