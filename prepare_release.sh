@@ -128,20 +128,13 @@ if [[ $(git status --porcelain) ]]; then
 fi
 
 
-##################################
-#  UPDATE VERSION AND CHANGELOG  #
-##################################
+####################
+#  UPDATE VERSION  #
+####################
 
 HOST=$(uname)
-echo "[INFO] Updating FirebaseAdmin.csproj and CHANGELOG.md"
+echo "[INFO] Updating FirebaseAdmin.csproj"
 sed -i -e "s/<Version>$CUR_VERSION<\/Version>/<Version>$VERSION<\/Version>/" "${PROJECT_FILE}"
-
-awk '
-BEGIN { print "# Unreleased\n\n-\n\n# v'${VERSION}'" }
-/^# Unreleased$/ { next }
-{ print }
-' CHANGELOG.md > TEMP_CHANGELOG.md
-mv TEMP_CHANGELOG.md CHANGELOG.md
 
 
 ##################
