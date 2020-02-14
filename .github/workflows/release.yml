@@ -1,0 +1,71 @@
+# Copyright 2020 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Release Candidate
+
+on:
+  # Only run the workflow when a PR is updated or when a developer explicitly requests
+  # a build by sending a 'firebase_build' event.
+  pull_request:
+    types: [opened, synchronize, closed]
+
+  repository_dispatch:
+    types:
+      - firebase_build
+
+jobs:
+  stage_release:
+    # To publish a release, merge the release PR with the label 'release:publish'.
+    # To stage a release without publishing it, send a 'firebase_build' event or apply
+    # the 'release:stage' label to a PR.
+    if: github.event.action == 'firebase_build' ||
+      contains(github.event.pull_request.labels.*.name, 'release:stage') ||
+      (github.event.pull_request.merged &&
+        contains(github.event.pull_request.labels.*.name, 'release:publish'))
+
+    runs-on: windows-latest
+
+    # When manually triggering the build, the requester can specify a target branch or a tag
+    # via the 'ref' client parameter.
+    steps:
+    - name: Checkout source for staging
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.client_payload.ref || github.ref }}
+
+    - name: Build with dotnet
+      run: |
+        dotnet build FirebaseAdmin/FirebaseAdmin
+        dotnet build FirebaseAdmin/FirebaseAdmin.Snippets
+        dotnet build FirebaseAdmin/FirebaseAdmin.IntegrationTests
+
+    - name: Run unit tests
+      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
+
+    - name: Run integration tests
+      run: ./.github/scripts/run_integration_tests.sh
+      env:
+        FIREBASE_SERVICE_ACCT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCT_KEY }}
+        FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+
+    - name: Package release artifacts
+      run: dotnet pack -c Release FirebaseAdmin/FirebaseAdmin
+
+    # Attach the packaged artifacts to the workflow output. These can be manually
+    # downloaded for later inspection if necessary.
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: Release
+        path: FirebaseAdmin/FirebaseAdmin/bin/Release
