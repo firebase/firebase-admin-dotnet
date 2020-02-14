@@ -49,10 +49,7 @@ jobs:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
     - name: Build with dotnet
-      run: |
-        dotnet build FirebaseAdmin/FirebaseAdmin
-        dotnet build FirebaseAdmin/FirebaseAdmin.Snippets
-        dotnet build FirebaseAdmin/FirebaseAdmin.IntegrationTests
+      run: dotnet build FirebaseAdmin/FirebaseAdmin
 
     - name: Run unit tests
       run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
