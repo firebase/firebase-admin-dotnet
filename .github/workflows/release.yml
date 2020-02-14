@@ -36,6 +36,10 @@ jobs:
 
     runs-on: windows-latest
 
+    env:
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
     # When manually triggering the build, the requester can specify a target branch or a tag
     # via the 'ref' client parameter.
     steps:
@@ -54,7 +58,7 @@ jobs:
       run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
 
     - name: Run integration tests
-      run: ./.github/scripts/run_integration_tests.sh
+      run: ./.github/scripts/run_integration_tests
       env:
         FIREBASE_SERVICE_ACCT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCT_KEY }}
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
