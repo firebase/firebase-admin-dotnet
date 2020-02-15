@@ -97,20 +97,40 @@ namespace FirebaseAdmin.IntegrationTests
         [Fact]
         public async Task SetCustomUserClaims()
         {
+            var user = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs());
             var customClaims = new Dictionary<string, object>()
             {
                 { "admin", true },
             };
 
-            await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("testuser", customClaims);
+            try
+            {
+                await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(user.Uid, customClaims);
+                user = await FirebaseAuth.DefaultInstance.GetUserAsync(user.Uid);
+                Assert.True((bool)user.CustomClaims["admin"]);
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(user.Uid);
+            }
         }
 
         [Fact]
         public async Task SetCustomUserClaimsWithEmptyClaims()
         {
+            var user = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs());
             var customClaims = new Dictionary<string, object>();
 
-            await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("testuser", customClaims);
+            try
+            {
+                await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(user.Uid, customClaims);
+                user = await FirebaseAuth.DefaultInstance.GetUserAsync(user.Uid);
+                Assert.Empty(user.CustomClaims);
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(user.Uid);
+            }
         }
 
         [Fact]
