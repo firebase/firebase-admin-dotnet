@@ -34,6 +34,7 @@ jobs:
       (github.event.pull_request.merged &&
         contains(github.event.pull_request.labels.*.name, 'release:publish'))
 
+    # Build and package artifacts on Windows.
     runs-on: windows-latest
 
     env:
@@ -70,3 +71,75 @@ jobs:
       with:
         name: Release
         path: FirebaseAdmin/FirebaseAdmin/bin/Release
+
+  publish_release:
+    needs: stage_release
+
+    # Check whether the release should be published. We publish only when the trigger PR is
+    #   1. merged
+    #   2. to the master branch
+    #   3. with the label 'release:publish', and
+    #   4. the title prefix '[chore] Release '.
+    if: github.event.pull_request.merged &&
+      github.ref == 'master' &&
+      contains(github.event.pull_request.labels.*.name, 'release:publish') &&
+      startsWith(github.event.pull_request.title, '[chore] Release ')
+
+    # Use Linux for this phase, so we can reuse the same helper scripts as other Admin SDK
+    # repositories.
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source for publish
+      uses: actions/checkout@v2
+
+    # Download the artifacts created by the stage_release job.
+    - name: Download release candidates
+      uses: actions/download-artifact@v1
+      with:
+        name: Release
+
+    - name: Setup .NET Core
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.2.108
+
+    - name: Publish preflight check
+      id: preflight
+      run: ./.github/scripts/publish_preflight_check.sh
+
+    # We pull this action from a custom fork of a contributor until
+    # https://github.com/actions/create-release/pull/32 is merged. Also note that v1 of
+    # this action does not support the "body" parameter.
+    - name: Create release tag
+      uses: fleskesvor/create-release@1a72e235c178bf2ae6c51a8ae36febc24568c5fe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.preflight.outputs.version }}
+        release_name: Firebase Admin .NET SDK ${{ steps.preflight.outputs.version }}
+        body: ${{ steps.preflight.outputs.changelog }}
+        draft: false
+        prerelease: false
+
+    - name: Publish to Nuget
+      run: ./.github/scripts/publish_package.sh
+      env:
+        NUGET_KEY: ${{ secrets.NUGET_KEY }}
+        VERSION: ${{ steps.preflight.outputs.version }}
+
+    # Post to Twitter if explicitly opted-in by adding the label 'release:tweet'.
+    - name: Post to Twitter
+      if: success() &&
+        contains(github.event.pull_request.labels.*.name, 'release:tweet')
+      uses: firebase/firebase-admin-node/.github/actions/send-tweet@master
+      with:
+        status: >
+          ${{ steps.preflight.outputs.version }} of @Firebase Admin .NET SDK is avaialble.
+          https://github.com/firebase/firebase-admin-dotnet/releases/tag/${{ steps.preflight.outputs.version }}
+        consumer-key: ${{ secrets.TWITTER_CONSUMER_KEY }}
+        consumer-secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+        access-token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+        access-token-secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+      continue-on-error: true
