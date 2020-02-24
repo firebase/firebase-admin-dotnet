@@ -42,6 +42,9 @@ namespace FirebaseAdmin.Auth
 
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
+        /** Maximum allowed number of users to batch get at one time. */
+        private const int MaxGetAccountsBatchSize = 100;
+
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
 
@@ -156,6 +159,33 @@ namespace FirebaseAdmin.Auth
             };
             return await this.GetUserAsync(query, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        internal async Task<GetAccountInfoResponse> GetAccountInfoByIdentifiersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers, CancellationToken cancellationToken)
+        {
+            if (identifiers.Count == 0)
+            {
+                return new GetAccountInfoResponse();
+            }
+
+            if (identifiers.Count > MaxGetAccountsBatchSize)
+            {
+                throw new ArgumentException(
+                        "`identifier` parameter must have <= " + MaxGetAccountsBatchSize
+                        + " entries.");
+            }
+
+            var query = new GetAccountInfoRequest();
+            foreach (var id in identifiers)
+            {
+                id.Populate(query);
+            }
+
+            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
+                "accounts:lookup", query.Build(), cancellationToken).ConfigureAwait(false);
+
+            return response.Result;
         }
 
         internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(

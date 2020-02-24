@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Api.Gax;
@@ -414,6 +415,77 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets the user data corresponding to the specified identifiers.
+        /// <para>
+        /// There are no ordering guarantees; in particular, the nth entry in the users result list
+        /// is not guaranteed to correspond to the nth entry in the input parameters list.
+        /// </para>
+        /// <para>
+        /// A maximum of 100 identifiers may be supplied. If more than 100 identifiers are specified,
+        /// this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// </summary>
+        /// <param name="identifiers">The identifiers used to indicate which user records should be
+        /// returned. Must have 100 entries or fewer.</param>
+        /// <returns>A {@code Task} that resolves to the corresponding user records.</returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 100 identifiers are specified.</exception>
+        public async Task<GetUsersResult> GetUsersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers)
+        {
+            return await this.GetUsersAsync(identifiers, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets the user data corresponding to the specified identifiers.
+        /// <para>
+        /// There are no ordering guarantees; in particular, the nth entry in the users result list
+        /// is not guaranteed to correspond to the nth entry in the input parameters list.
+        /// </para>
+        /// <para>
+        /// A maximum of 100 identifiers may be supplied. If more than 100 identifiers are specified,
+        /// this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// </summary>
+        /// <param name="identifiers">The identifiers used to indicate which user records should be
+        /// returned. Must have 100 entries or fewer.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A {@code Task} that resolves to the corresponding user records.</returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 100 identifiers are specified.</exception>
+        public async Task<GetUsersResult> GetUsersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            GetAccountInfoResponse response = await userManager.GetAccountInfoByIdentifiersAsync(identifiers, cancellationToken)
+                .ConfigureAwait(false);
+
+            IEnumerable<UserRecord> userRecords;
+            if (response.Users != null)
+            {
+                userRecords = response.Users.Select(user => new UserRecord(user));
+            }
+            else
+            {
+                userRecords = new List<UserRecord>();
+            }
+
+            IList<UserIdentifier> notFound = new List<UserIdentifier>();
+            foreach (var id in identifiers)
+            {
+                if (!this.IsUserFound(id, userRecords))
+                {
+                    notFound.Add(id);
+                }
+            }
+
+            return new GetUsersResult { Users = userRecords, NotFound = notFound };
+        }
+
+        /// <summary>
         /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
         /// </summary>
@@ -576,6 +648,19 @@ namespace FirebaseAdmin.Auth
 
                 return func();
             }
+        }
+
+        private bool IsUserFound(UserIdentifier id, IEnumerable<UserRecord> userRecords)
+        {
+            foreach (var userRecord in userRecords)
+            {
+                if (id.Matches(userRecord))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         internal sealed class FirebaseAuthArgs

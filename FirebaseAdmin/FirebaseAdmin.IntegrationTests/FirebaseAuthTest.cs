@@ -345,6 +345,29 @@ namespace FirebaseAdmin.IntegrationTests
             }
         }
 
+        private static async Task<UserRecord> NewUserWithParams()
+        {
+            return await NewUserWithParams(FirebaseAuth.DefaultInstance);
+        }
+
+        private static async Task<UserRecord> NewUserWithParams(FirebaseAuth auth)
+        {
+            // TODO(rsgowman): This function could be used throughout this file
+            // (similar to the other ports).
+            RandomUser randomUser = RandomUser.Create();
+            var args = new UserRecordArgs()
+            {
+                Uid = randomUser.Uid,
+                Email = randomUser.Email,
+                PhoneNumber = randomUser.PhoneNumber,
+                DisplayName = "Random User",
+                PhotoUrl = "https://example.com/photo.png",
+                Password = "password",
+            };
+
+            return await auth.CreateUserAsync(args);
+        }
+
         private static async Task<string> SignInWithCustomTokenAsync(string customToken)
         {
             var rb = new Google.Apis.Requests.RequestBuilder()
@@ -368,6 +391,126 @@ namespace FirebaseAdmin.IntegrationTests
                 var json = await response.Content.ReadAsStringAsync();
                 var parsed = jsonSerializer.Deserialize<SignInResponse>(json);
                 return parsed.IdToken;
+            }
+        }
+
+        public class GetUsersFixture : IDisposable
+        {
+            public GetUsersFixture()
+            {
+                FirebaseApp masterApp = IntegrationTestUtils.EnsureDefaultApp();
+                this.Auth = FirebaseAuth.GetAuth(masterApp);
+
+                this.TestUser1 = NewUserWithParams(this.Auth).Result;
+                this.TestUser2 = NewUserWithParams(this.Auth).Result;
+                this.TestUser3 = NewUserWithParams(this.Auth).Result;
+
+                // The C# port doesn't support importing users, so unlike the other ports, there's
+                // no way to create a user with a linked federated provider.
+                // TODO(rsgowman): Once either FirebaseAuth.ImportUser() exists (or the UpdateUser()
+                // method supports ProviderToLink (#143)), then use it here and
+                // adjust the VariousIdentifiers() test below.
+            }
+
+            public FirebaseAuth Auth { get; }
+
+            public UserRecord TestUser1 { get; }
+
+            public UserRecord TestUser2 { get; }
+
+            public UserRecord TestUser3 { get; }
+
+            public void Dispose()
+            {
+                // TODO(rsgowman): deleteUsers (plural) would make more sense here, but it's
+                // currently rate limited to 1qps. When/if that's relaxed, change this to just
+                // delete them all at once.
+                this.Auth.DeleteUserAsync(this.TestUser1.Uid).Wait();
+                this.Auth.DeleteUserAsync(this.TestUser2.Uid).Wait();
+                this.Auth.DeleteUserAsync(this.TestUser3.Uid).Wait();
+            }
+        }
+
+        public class GetUsers : IClassFixture<GetUsersFixture>
+        {
+            private FirebaseAuth auth;
+            private UserRecord testUser1;
+            private UserRecord testUser2;
+            private UserRecord testUser3;
+
+            public GetUsers(GetUsersFixture fixture)
+            {
+                this.auth = fixture.Auth;
+                this.testUser1 = fixture.TestUser1;
+                this.testUser2 = fixture.TestUser2;
+                this.testUser3 = fixture.TestUser3;
+            }
+
+            [Fact]
+            public async void VariousIdentifiers()
+            {
+                var getUsersResult = await this.auth.GetUsersAsync(new List<UserIdentifier>()
+                {
+                    new UidIdentifier(this.testUser1.Uid),
+                    new EmailIdentifier(this.testUser2.Email),
+                    new PhoneIdentifier(this.testUser3.PhoneNumber),
+                    // TODO(rsgowman): Once we're able to create a user with a
+                    // provider, do so above and fetch the user like this:
+                    // new ProviderIdentifier("google.com", "google_" + importUserUid),
+                });
+
+                var uids = getUsersResult.Users.Select(userRecord => userRecord.Uid);
+                var expectedUids = new List<string>() { this.testUser1.Uid, this.testUser2.Uid, this.testUser3.Uid };
+                Assert.True(expectedUids.All(expectedUid => uids.Contains(expectedUid)));
+                Assert.Empty(getUsersResult.NotFound);
+            }
+
+            [Fact]
+            public async void IgnoresNonExistingUsers()
+            {
+                var doesntExistId = new UidIdentifier("uid_that_doesnt_exist");
+                var getUsersResult = await this.auth.GetUsersAsync(new List<UserIdentifier>()
+                {
+                    new UidIdentifier(this.testUser1.Uid),
+                    doesntExistId,
+                    new UidIdentifier(this.testUser3.Uid),
+                });
+
+                var uids = getUsersResult.Users.Select(userRecord => userRecord.Uid);
+                var expectedUids = new List<string>() { this.testUser1.Uid, this.testUser3.Uid };
+                Assert.True(expectedUids.All(expectedUid => uids.Contains(expectedUid)));
+                Assert.Single(getUsersResult.NotFound);
+                Assert.Equal(doesntExistId, getUsersResult.NotFound.First());
+            }
+
+            [Fact]
+            public async void OnlyNonExistingUsers()
+            {
+                var doesntExistId = new UidIdentifier("uid_that_doesnt_exist");
+                var getUsersResult = await this.auth.GetUsersAsync(new List<UserIdentifier>()
+                {
+                    doesntExistId,
+                });
+
+                Assert.Empty(getUsersResult.Users);
+                Assert.Single(getUsersResult.NotFound);
+                Assert.Equal(doesntExistId, getUsersResult.NotFound.First());
+            }
+
+            [Fact]
+            public async void DedupsDuplicateUsers()
+            {
+                var getUsersResult = await this.auth.GetUsersAsync(new List<UserIdentifier>()
+                {
+                    new UidIdentifier(this.testUser1.Uid),
+                    new UidIdentifier(this.testUser1.Uid),
+                });
+
+                var uids = getUsersResult.Users.Select(userRecord => userRecord.Uid);
+                var expectedUids = new List<string>() { this.testUser3.Uid };
+                Assert.Single(getUsersResult.Users);
+                Assert.Equal(this.testUser1.Uid, getUsersResult.Users.First().Uid);
+                Assert.Empty(getUsersResult.NotFound);
             }
         }
     }
