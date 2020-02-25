@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
@@ -334,6 +335,76 @@ namespace FirebaseAdmin.IntegrationTests
         }
 
         [Fact]
+        public async Task DeleteUsers()
+        {
+            UserRecord user1 = await NewUserWithParams();
+            UserRecord user2 = await NewUserWithParams();
+            UserRecord user3 = await NewUserWithParams();
+
+            DeleteUsersResult deleteUsersResult = await this.SlowDeleteUsersAsync(
+                new List<string> { user1.Uid, user2.Uid, user3.Uid });
+
+            Assert.Equal(3, deleteUsersResult.SuccessCount);
+            Assert.Equal(0, deleteUsersResult.FailureCount);
+            Assert.Empty(deleteUsersResult.Errors);
+
+            GetUsersResult getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
+                new List<UserIdentifier>
+                {
+                    new UidIdentifier(user1.Uid),
+                    new UidIdentifier(user2.Uid),
+                    new UidIdentifier(user3.Uid),
+                });
+
+            Assert.Empty(getUsersResult.Users);
+            Assert.Equal(3, getUsersResult.NotFound.Count());
+        }
+
+        [Fact]
+        public async Task DeleteExistingAndNonExistingUsers()
+        {
+            UserRecord user1 = await NewUserWithParams();
+
+            DeleteUsersResult deleteUsersResult = await this.SlowDeleteUsersAsync(
+                new List<string> { user1.Uid, "uid-that-doesnt-exist" });
+
+            Assert.Equal(2, deleteUsersResult.SuccessCount);
+            Assert.Equal(0, deleteUsersResult.FailureCount);
+            Assert.Empty(deleteUsersResult.Errors);
+
+            GetUsersResult getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
+                new List<UserIdentifier>
+                {
+                    new UidIdentifier(user1.Uid),
+                    new UidIdentifier("uid-that-doesnt-exist"),
+                });
+
+            Assert.Empty(getUsersResult.Users);
+            Assert.Equal(2, getUsersResult.NotFound.Count());
+        }
+
+        [Fact]
+        public async Task DeleteUsersIsIdempotent()
+        {
+            UserRecord user1 = await NewUserWithParams();
+
+            DeleteUsersResult result = await this.SlowDeleteUsersAsync(
+                new List<string> { user1.Uid });
+
+            Assert.Equal(1, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
+
+            // Delete the user again, ensuring that everything still counts as a success.
+            result = await this.SlowDeleteUsersAsync(
+                new List<string> { user1.Uid });
+
+            Assert.Equal(1, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
         public async Task ListUsers()
         {
             var users = new List<string>();
@@ -453,6 +524,17 @@ namespace FirebaseAdmin.IntegrationTests
                 var parsed = jsonSerializer.Deserialize<VerifyPasswordResponse>(json);
                 return parsed.IdToken;
             }
+        }
+
+        /**
+         * The {@code batchDelete} endpoint is currently rate limited to 1qps. Use this test helper
+         * to ensure you don't run into quota exceeded errors.
+         */
+        // TODO(rsgowman): When/if the rate limit is relaxed, eliminate this helper.
+        private Task<DeleteUsersResult> SlowDeleteUsersAsync(IReadOnlyList<string> uids)
+        {
+            Thread.Sleep(millisecondsTimeout: 1000);
+            return FirebaseAuth.DefaultInstance.DeleteUsersAsync(uids);
         }
 
         public class GetUsersFixture : IDisposable

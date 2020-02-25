@@ -554,6 +554,70 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Deletes the users specified by the given identifiers.
+        /// <para>
+        /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
+        /// Non-existing users will be considered to be successfully deleted, and will therefore be
+        /// counted in the DeleteUserResult.SuccessCount value.
+        /// </para>
+        /// <para>
+        /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are
+        /// specified, this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// <para>
+        /// This API is currently rate limited at the server to 1 QPS. If you exceed this, you may
+        /// get a quota exceeded error. Therefore, if you want to delete more than 1000 users, you
+        /// may need to add a delay to ensure you don't go over this limit.
+        /// </para>
+        /// </summary>
+        /// <param name="uids">The uids of the users to be deleted. Must have 1000 or fewer entries.
+        /// </param>
+        /// <returns>A {@code Task} that resolves to the total number of successful/failed
+        /// deletions, as well as the array of errors that correspond to the failed deletions.
+        /// </returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 1000 identifiers are specified.</exception>
+        public async Task<DeleteUsersResult> DeleteUsersAsync(IReadOnlyList<string> uids)
+        {
+            return await this.DeleteUsersAsync(uids, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the users specified by the given identifiers.
+        /// <para>
+        /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
+        /// Non-existing users will be considered to be successfully deleted, and will therefore be
+        /// counted in the DeleteUserResult.SuccessCount value.
+        /// </para>
+        /// <para>
+        /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are
+        /// specified, this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// <para>
+        /// This API is currently rate limited at the server to 1 QPS. If you exceed this, you may
+        /// get a quota exceeded error. Therefore, if you want to delete more than 1000 users, you
+        /// may need to add a delay to ensure you don't go over this limit.
+        /// </para>
+        /// </summary>
+        /// <param name="uids">The uids of the users to be deleted. Must have 1000 or fewer entries.
+        /// </param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A {@code Task} that resolves to the total number of successful/failed
+        /// deletions, as well as the array of errors that correspond to the failed deletions.
+        /// </returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 1000 identifiers are specified.</exception>
+        public async Task<DeleteUsersResult> DeleteUsersAsync(IReadOnlyList<string> uids, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.DeleteUsersAsync(uids, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Sets the specified custom claims on an existing user account. A null claims value
         /// removes any claims currently set on the user account. The claims must serialize into
         /// a valid JSON string. The serialized claims must not be larger than 1000 characters.

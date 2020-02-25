@@ -1657,6 +1657,82 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task DeleteUsersExceeds1000()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var uids = new List<string>();
+            for (int i = 0; i < 1001; i++)
+            {
+                uids.Add("id" + i);
+            }
+
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.DeleteUsersAsync(uids));
+        }
+
+        [Fact]
+        public async Task DeleteUsersInvalidId()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var uids = new List<string>() { "too long " + new string('.', 128) };
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.DeleteUsersAsync(uids));
+        }
+
+        [Fact]
+        public async Task DeleteUsersIndexesErrorsCorrectly()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>()
+                {
+                    @"{
+                        'errors': [{
+                            'index': 0,
+                            'localId': 'uid1',
+                            'message': 'NOT_DISABLED : Disable the account before batch deletion.'
+                        }, {
+                            'index': 2,
+                            'localId': 'uid3',
+                            'message': 'something awful'
+                        }]
+                    }".Replace("'", "\""),
+                },
+            };
+
+            var auth = this.CreateFirebaseAuth(handler);
+            var deleteUsersResult = await auth.DeleteUsersAsync(
+                    new List<string> { "uid1", "uid2", "uid3", "uid4" });
+
+            Assert.Equal(2, deleteUsersResult.SuccessCount);
+            Assert.Equal(2, deleteUsersResult.FailureCount);
+            Assert.Equal(2, deleteUsersResult.Errors.Count);
+            Assert.Equal(0, deleteUsersResult.Errors[0].Index);
+            Assert.Equal(
+                    "NOT_DISABLED : Disable the account before batch deletion.",
+                    deleteUsersResult.Errors[0].Reason);
+            Assert.Equal(2, deleteUsersResult.Errors[1].Index);
+            Assert.Equal("something awful", deleteUsersResult.Errors[1].Reason);
+        }
+
+        [Fact]
+        public async Task DeleteUsersSuccess()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { "{}" },
+            };
+
+            var auth = this.CreateFirebaseAuth(handler);
+            DeleteUsersResult result = await auth.DeleteUsersAsync(
+                    new List<string> { "uid1", "uid2", "uid3" });
+
+            Assert.Equal(3, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
         public async Task ServiceUnvailable()
         {
             var handler = new MockMessageHandler()

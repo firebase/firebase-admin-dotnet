@@ -45,6 +45,9 @@ namespace FirebaseAdmin.Auth
         /** Maximum allowed number of users to batch get at one time. */
         private const int MaxGetAccountsBatchSize = 100;
 
+        /** Maximum allowed number of users to batch delete at one time. */
+        private const int MaxDeleteAccountsBatchSize = 1000;
+
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
 
@@ -271,6 +274,32 @@ namespace FirebaseAdmin.Auth
                 throw UnexpectedResponseException(
                     $"Failed to delete user: {uid}", resp: response.HttpResponse);
             }
+        }
+
+        internal async Task<DeleteUsersResult> DeleteUsersAsync(
+            IReadOnlyList<string> uids, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (uids.Count > MaxDeleteAccountsBatchSize)
+            {
+                throw new ArgumentException(
+                        "`uids` parameter must have <= " + MaxDeleteAccountsBatchSize
+                        + " entries.");
+            }
+
+            foreach (string uid in uids)
+            {
+                UserRecordArgs.CheckUid(uid, required: true);
+            }
+
+            var payload = new Dictionary<string, object>()
+            {
+                { "localIds", uids },
+                { "force", true },
+            };
+            var response = await this.PostAndDeserializeAsync<BatchDeleteResponse>(
+                "accounts:batchDelete", payload, cancellationToken).ConfigureAwait(false);
+
+            return new DeleteUsersResult(uids.Count, response.Result);
         }
 
         private static FirebaseAuthException UnexpectedResponseException(
