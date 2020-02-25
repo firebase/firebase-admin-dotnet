@@ -71,7 +71,18 @@ namespace FirebaseAdmin.Auth
             }
 
             this.validSinceTimestampInSeconds = user.ValidSince;
-            this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
+
+            // newtonsoft's json deserializer will convert an iso8601 format
+            // string to a (non-null) DateTime, returning 0001-01-01 if it's not
+            // present in the proto. We'll compare against the epoch and only
+            // use the deserialized value if it's bigger.
+            DateTime? lastRefreshAt = null;
+            if (user.LastRefreshAt > UnixEpoch)
+            {
+                lastRefreshAt = user.LastRefreshAt;
+            }
+
+            this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt, lastRefreshAt);
             this.CustomClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
         }
 

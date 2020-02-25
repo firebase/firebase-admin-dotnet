@@ -30,6 +30,9 @@ namespace FirebaseAdmin.IntegrationTests
         private const string VerifyCustomTokenUrl =
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyCustomToken";
 
+        private const string VerifyPasswordUrl =
+            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword";
+
         public FirebaseAuthTest()
         {
             IntegrationTestUtils.EnsureDefaultApp();
@@ -277,6 +280,37 @@ namespace FirebaseAdmin.IntegrationTests
         }
 
         [Fact]
+        public async Task LastRefreshTime()
+        {
+            var newUserRecord = await NewUserWithParams();
+            try
+            {
+                // New users should not have a LastRefreshTimestamp set.
+                Assert.Null(newUserRecord.UserMetaData.LastRefreshTimestamp);
+
+                // Login to cause the LastRefreshTimestamp to be set.
+                await SignInWithPassword(newUserRecord.Email, "password");
+
+                var userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(newUserRecord.Uid);
+
+                // Ensure the LastRefreshTimstamp is approximately "now" (with a tollerance of 10 minutes).
+                var now = DateTime.UtcNow;
+                int tolleranceMinutes = 10;
+                var minTime = now.AddMinutes(-tolleranceMinutes);
+                var maxTime = now.AddMinutes(tolleranceMinutes);
+                Assert.NotNull(userRecord.UserMetaData.LastRefreshTimestamp);
+                Assert.InRange(
+                        userRecord.UserMetaData.LastRefreshTimestamp.Value,
+                        minTime,
+                        maxTime);
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(newUserRecord.Uid);
+            }
+        }
+
+        [Fact]
         public async Task UpdateUserNonExistingUid()
         {
             var args = new UserRecordArgs()
@@ -390,6 +424,33 @@ namespace FirebaseAdmin.IntegrationTests
                 response.EnsureSuccessStatusCode();
                 var json = await response.Content.ReadAsStringAsync();
                 var parsed = jsonSerializer.Deserialize<SignInResponse>(json);
+                return parsed.IdToken;
+            }
+        }
+
+        private static async Task<string> SignInWithPassword(string email, string password)
+        {
+            var rb = new Google.Apis.Requests.RequestBuilder()
+            {
+                Method = Google.Apis.Http.HttpConsts.Post,
+                BaseUri = new Uri(VerifyPasswordUrl),
+            };
+            rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
+            var request = rb.CreateRequest();
+            var jsonSerializer = Google.Apis.Json.NewtonsoftJsonSerializer.Instance;
+            var payload = jsonSerializer.Serialize(new VerifyPasswordRequest
+            {
+                Email = email,
+                Password = password,
+                ReturnSecureToken = true,
+            });
+            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+            using (var client = new HttpClient())
+            {
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                var json = await response.Content.ReadAsStringAsync();
+                var parsed = jsonSerializer.Deserialize<VerifyPasswordResponse>(json);
                 return parsed.IdToken;
             }
         }
@@ -539,6 +600,24 @@ namespace FirebaseAdmin.IntegrationTests
     }
 
     internal class SignInResponse
+    {
+        [Newtonsoft.Json.JsonProperty("idToken")]
+        public string IdToken { get; set; }
+    }
+
+    internal class VerifyPasswordRequest
+    {
+        [Newtonsoft.Json.JsonProperty("email")]
+        public string Email { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("password")]
+        public string Password { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("returnSecureToken")]
+        public bool ReturnSecureToken { get; set; }
+    }
+
+    internal class VerifyPasswordResponse
     {
         [Newtonsoft.Json.JsonProperty("idToken")]
         public string IdToken { get; set; }
