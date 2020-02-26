@@ -366,8 +366,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             var getUsersResult = await auth.GetUsersAsync(notFoundIds);
             Assert.Empty(getUsersResult.Users);
-            Assert.Single(getUsersResult.NotFound);
-            Assert.Equal(notFoundIds[0], getUsersResult.NotFound.First());
+            Assert.Same(notFoundIds[0], getUsersResult.NotFound.Single());
         }
 
         [Fact]

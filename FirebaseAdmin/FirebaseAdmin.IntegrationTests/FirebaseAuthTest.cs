@@ -283,14 +283,14 @@ namespace FirebaseAdmin.IntegrationTests
         [Fact]
         public async Task LastRefreshTime()
         {
-            var newUserRecord = await NewUserWithParams();
+            var newUserRecord = await NewUserWithParamsAsync();
             try
             {
                 // New users should not have a LastRefreshTimestamp set.
                 Assert.Null(newUserRecord.UserMetaData.LastRefreshTimestamp);
 
                 // Login to cause the LastRefreshTimestamp to be set.
-                await SignInWithPassword(newUserRecord.Email, "password");
+                await SignInWithPasswordAsync(newUserRecord.Email, "password");
 
                 var userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(newUserRecord.Uid);
 
@@ -337,9 +337,9 @@ namespace FirebaseAdmin.IntegrationTests
         [Fact]
         public async Task DeleteUsers()
         {
-            UserRecord user1 = await NewUserWithParams();
-            UserRecord user2 = await NewUserWithParams();
-            UserRecord user3 = await NewUserWithParams();
+            UserRecord user1 = await NewUserWithParamsAsync();
+            UserRecord user2 = await NewUserWithParamsAsync();
+            UserRecord user3 = await NewUserWithParamsAsync();
 
             DeleteUsersResult deleteUsersResult = await this.SlowDeleteUsersAsync(
                 new List<string> { user1.Uid, user2.Uid, user3.Uid });
@@ -363,7 +363,7 @@ namespace FirebaseAdmin.IntegrationTests
         [Fact]
         public async Task DeleteExistingAndNonExistingUsers()
         {
-            UserRecord user1 = await NewUserWithParams();
+            UserRecord user1 = await NewUserWithParamsAsync();
 
             DeleteUsersResult deleteUsersResult = await this.SlowDeleteUsersAsync(
                 new List<string> { user1.Uid, "uid-that-doesnt-exist" });
@@ -386,7 +386,7 @@ namespace FirebaseAdmin.IntegrationTests
         [Fact]
         public async Task DeleteUsersIsIdempotent()
         {
-            UserRecord user1 = await NewUserWithParams();
+            UserRecord user1 = await NewUserWithParamsAsync();
 
             DeleteUsersResult result = await this.SlowDeleteUsersAsync(
                 new List<string> { user1.Uid });
@@ -450,12 +450,7 @@ namespace FirebaseAdmin.IntegrationTests
             }
         }
 
-        private static async Task<UserRecord> NewUserWithParams()
-        {
-            return await NewUserWithParams(FirebaseAuth.DefaultInstance);
-        }
-
-        private static async Task<UserRecord> NewUserWithParams(FirebaseAuth auth)
+        private static async Task<UserRecord> NewUserWithParamsAsync()
         {
             // TODO(rsgowman): This function could be used throughout this file
             // (similar to the other ports).
@@ -470,7 +465,7 @@ namespace FirebaseAdmin.IntegrationTests
                 Password = "password",
             };
 
-            return await auth.CreateUserAsync(args);
+            return await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
         }
 
         private static async Task<string> SignInWithCustomTokenAsync(string customToken)
@@ -499,7 +494,7 @@ namespace FirebaseAdmin.IntegrationTests
             }
         }
 
-        private static async Task<string> SignInWithPassword(string email, string password)
+        private static async Task<string> SignInWithPasswordAsync(string email, string password)
         {
             var rb = new Google.Apis.Requests.RequestBuilder()
             {
@@ -531,22 +526,21 @@ namespace FirebaseAdmin.IntegrationTests
          * to ensure you don't run into quota exceeded errors.
          */
         // TODO(rsgowman): When/if the rate limit is relaxed, eliminate this helper.
-        private Task<DeleteUsersResult> SlowDeleteUsersAsync(IReadOnlyList<string> uids)
+        private async Task<DeleteUsersResult> SlowDeleteUsersAsync(IReadOnlyList<string> uids)
         {
-            Thread.Sleep(millisecondsTimeout: 1000);
-            return FirebaseAuth.DefaultInstance.DeleteUsersAsync(uids);
+            await Task.Delay(millisecondsDelay: 1000);
+            return await FirebaseAuth.DefaultInstance.DeleteUsersAsync(uids);
         }
 
         public class GetUsersFixture : IDisposable
         {
             public GetUsersFixture()
             {
-                FirebaseApp masterApp = IntegrationTestUtils.EnsureDefaultApp();
-                this.Auth = FirebaseAuth.GetAuth(masterApp);
+                IntegrationTestUtils.EnsureDefaultApp();
 
-                this.TestUser1 = NewUserWithParams(this.Auth).Result;
-                this.TestUser2 = NewUserWithParams(this.Auth).Result;
-                this.TestUser3 = NewUserWithParams(this.Auth).Result;
+                this.TestUser1 = NewUserWithParamsAsync().Result;
+                this.TestUser2 = NewUserWithParamsAsync().Result;
+                this.TestUser3 = NewUserWithParamsAsync().Result;
 
                 // The C# port doesn't support importing users, so unlike the other ports, there's
                 // no way to create a user with a linked federated provider.
@@ -554,8 +548,6 @@ namespace FirebaseAdmin.IntegrationTests
                 // method supports ProviderToLink (#143)), then use it here and
                 // adjust the VariousIdentifiers() test below.
             }
-
-            public FirebaseAuth Auth { get; }
 
             public UserRecord TestUser1 { get; }
 
@@ -568,9 +560,10 @@ namespace FirebaseAdmin.IntegrationTests
                 // TODO(rsgowman): deleteUsers (plural) would make more sense here, but it's
                 // currently rate limited to 1qps. When/if that's relaxed, change this to just
                 // delete them all at once.
-                this.Auth.DeleteUserAsync(this.TestUser1.Uid).Wait();
-                this.Auth.DeleteUserAsync(this.TestUser2.Uid).Wait();
-                this.Auth.DeleteUserAsync(this.TestUser3.Uid).Wait();
+                var auth = FirebaseAuth.DefaultInstance;
+                auth.DeleteUserAsync(this.TestUser1.Uid).Wait();
+                auth.DeleteUserAsync(this.TestUser2.Uid).Wait();
+                auth.DeleteUserAsync(this.TestUser3.Uid).Wait();
             }
         }
 
@@ -583,7 +576,7 @@ namespace FirebaseAdmin.IntegrationTests
 
             public GetUsers(GetUsersFixture fixture)
             {
-                this.auth = fixture.Auth;
+                this.auth = FirebaseAuth.DefaultInstance;
                 this.testUser1 = fixture.TestUser1;
                 this.testUser2 = fixture.TestUser2;
                 this.testUser3 = fixture.TestUser3;
@@ -622,8 +615,7 @@ namespace FirebaseAdmin.IntegrationTests
                 var uids = getUsersResult.Users.Select(userRecord => userRecord.Uid);
                 var expectedUids = new List<string>() { this.testUser1.Uid, this.testUser3.Uid };
                 Assert.True(expectedUids.All(expectedUid => uids.Contains(expectedUid)));
-                Assert.Single(getUsersResult.NotFound);
-                Assert.Equal(doesntExistId, getUsersResult.NotFound.First());
+                Assert.Equal(doesntExistId, getUsersResult.NotFound.Single());
             }
 
             [Fact]
@@ -636,8 +628,7 @@ namespace FirebaseAdmin.IntegrationTests
                 });
 
                 Assert.Empty(getUsersResult.Users);
-                Assert.Single(getUsersResult.NotFound);
-                Assert.Equal(doesntExistId, getUsersResult.NotFound.First());
+                Assert.Equal(doesntExistId, getUsersResult.NotFound.Single());
             }
 
             [Fact]
@@ -651,8 +642,7 @@ namespace FirebaseAdmin.IntegrationTests
 
                 var uids = getUsersResult.Users.Select(userRecord => userRecord.Uid);
                 var expectedUids = new List<string>() { this.testUser3.Uid };
-                Assert.Single(getUsersResult.Users);
-                Assert.Equal(this.testUser1.Uid, getUsersResult.Users.First().Uid);
+                Assert.Equal(this.testUser1.Uid, getUsersResult.Users.Single().Uid);
                 Assert.Empty(getUsersResult.NotFound);
             }
         }

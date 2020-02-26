@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Linq;
+
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
@@ -49,15 +51,8 @@ namespace FirebaseAdmin.Auth
 
         internal override bool Matches(UserRecord userRecord)
         {
-            foreach (IUserInfo userInfo in userRecord.ProviderData)
-            {
-                if (this.providerId == userInfo.ProviderId && this.providerUid == userInfo.Uid)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return userRecord.ProviderData.Any(
+                userInfo => this.providerId == userInfo.ProviderId && this.providerUid == userInfo.Uid);
         }
     }
 }

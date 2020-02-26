@@ -22,48 +22,28 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     internal sealed class GetAccountInfoRequest
     {
-        private IList<string> uids = null;
-        private IList<string> emails = null;
-        private IList<string> phoneNumbers = null;
-        private IList<FederatedUserId> federatedUserIds = null;
+        private IList<string> uids = new List<string>();
+        private IList<string> emails = new List<string>();
+        private IList<string> phoneNumbers = new List<string>();
+        private IList<FederatedUserId> federatedUserIds = new List<FederatedUserId>();
 
         public void AddUid(string uid)
         {
-            if (this.uids == null)
-            {
-                this.uids = new List<string>();
-            }
-
             this.uids.Add(uid);
         }
 
         public void AddEmail(string email)
         {
-            if (this.emails == null)
-            {
-                this.emails = new List<string>();
-            }
-
             this.emails.Add(email);
         }
 
         public void AddPhoneNumber(string phoneNumber)
         {
-            if (this.phoneNumbers == null)
-            {
-                this.phoneNumbers = new List<string>();
-            }
-
             this.phoneNumbers.Add(phoneNumber);
         }
 
         public void AddFederatedUserId(string providerId, string providerUid)
         {
-            if (this.federatedUserIds == null)
-            {
-                this.federatedUserIds = new List<FederatedUserId>();
-            }
-
             this.federatedUserIds.Add(new FederatedUserId { ProviderId = providerId, RawId = providerUid });
         }
 
@@ -71,22 +51,22 @@ namespace FirebaseAdmin.Auth
         {
             var result = new Dictionary<string, object>();
 
-            if (this.uids != null)
+            if (this.uids.Any())
             {
                 result.Add("localId", this.uids);
             }
 
-            if (this.emails != null)
+            if (this.emails.Any())
             {
                 result.Add("email", this.emails);
             }
 
-            if (this.phoneNumbers != null)
+            if (this.phoneNumbers.Any())
             {
                 result.Add("phoneNumber", this.phoneNumbers);
             }
 
-            if (this.federatedUserIds != null)
+            if (this.federatedUserIds.Any())
             {
                 result.Add(
                     "federatedUserId",

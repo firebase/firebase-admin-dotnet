@@ -175,8 +175,7 @@ namespace FirebaseAdmin.Auth
             if (identifiers.Count > MaxGetAccountsBatchSize)
             {
                 throw new ArgumentException(
-                        "`identifier` parameter must have <= " + MaxGetAccountsBatchSize
-                        + " entries.");
+                        $"`identifier` parameter must have <= {MaxGetAccountsBatchSize} entries.");
             }
 
             var query = new GetAccountInfoRequest();

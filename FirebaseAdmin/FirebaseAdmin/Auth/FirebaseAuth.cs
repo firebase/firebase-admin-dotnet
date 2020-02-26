@@ -463,26 +463,7 @@ namespace FirebaseAdmin.Auth
             GetAccountInfoResponse response = await userManager.GetAccountInfoByIdentifiersAsync(identifiers, cancellationToken)
                 .ConfigureAwait(false);
 
-            IEnumerable<UserRecord> userRecords;
-            if (response.Users != null)
-            {
-                userRecords = response.Users.Select(user => new UserRecord(user));
-            }
-            else
-            {
-                userRecords = new List<UserRecord>();
-            }
-
-            IList<UserIdentifier> notFound = new List<UserIdentifier>();
-            foreach (var id in identifiers)
-            {
-                if (!this.IsUserFound(id, userRecords))
-                {
-                    notFound.Add(id);
-                }
-            }
-
-            return new GetUsersResult { Users = userRecords, NotFound = notFound };
+            return new GetUsersResult(response, identifiers);
         }
 
         /// <summary>
@@ -712,19 +693,6 @@ namespace FirebaseAdmin.Auth
 
                 return func();
             }
-        }
-
-        private bool IsUserFound(UserIdentifier id, IEnumerable<UserRecord> userRecords)
-        {
-            foreach (var userRecord in userRecords)
-            {
-                if (id.Matches(userRecord))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         internal sealed class FirebaseAuthArgs

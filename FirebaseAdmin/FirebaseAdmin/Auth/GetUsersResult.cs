@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FirebaseAdmin.Auth
 {
@@ -21,15 +22,34 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class GetUsersResult
     {
+        internal GetUsersResult(GetAccountInfoResponse resp, IReadOnlyCollection<UserIdentifier> identifiers)
+        {
+            if (resp.Users != null)
+            {
+                this.Users = resp.Users.Select(user => new UserRecord(user));
+            }
+            else
+            {
+                this.Users = new List<UserRecord>();
+            }
+
+            this.NotFound = identifiers.Where(id => !this.IsUserFound(id, this.Users));
+        }
+
         /// <summary>
         /// Gets user records corresponding to the set of users that were requested. Only
         /// users that were found are listed here. The result set is unordered.
         /// </summary>
-        public IEnumerable<UserRecord> Users { get; internal set; }
+        public IEnumerable<UserRecord> Users { get; }
 
         /// <summary>
         /// Gets the set of identifiers that were requested, but not found.
         /// </summary>
-        public IEnumerable<UserIdentifier> NotFound { get; internal set; }
+        public IEnumerable<UserIdentifier> NotFound { get; }
+
+        private bool IsUserFound(UserIdentifier id, IEnumerable<UserRecord> userRecords)
+        {
+            return userRecords.Any(userRecord => id.Matches(userRecord));
+        }
     }
 }
