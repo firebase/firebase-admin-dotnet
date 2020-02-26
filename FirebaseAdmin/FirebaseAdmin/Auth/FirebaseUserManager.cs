@@ -42,6 +42,8 @@ namespace FirebaseAdmin.Auth
 
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
+        private const string IdTooklitTenantUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}/tenants/{1}";
+
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
 
@@ -63,7 +65,7 @@ namespace FirebaseAdmin.Auth
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
                     RetryOptions = args.RetryOptions,
                 });
-            this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
+            this.baseUrl = string.Format(args.TenantId != null ? IdTooklitTenantUrl : IdTooklitUrl, args.ProjectId, args.TenantId);
         }
 
         public void Dispose()
@@ -71,7 +73,7 @@ namespace FirebaseAdmin.Auth
             this.httpClient.Dispose();
         }
 
-        internal static FirebaseUserManager Create(FirebaseApp app)
+        internal static FirebaseUserManager Create(FirebaseApp app, string tenantId)
         {
             var args = new Args
             {
@@ -79,6 +81,7 @@ namespace FirebaseAdmin.Auth
                 Credential = app.Options.Credential,
                 ProjectId = app.GetProjectId(),
                 RetryOptions = RetryOptions.Default,
+                TenantId = tenantId,
             };
 
             return new FirebaseUserManager(args);
@@ -294,6 +297,8 @@ namespace FirebaseAdmin.Auth
             internal GoogleCredential Credential { get; set; }
 
             internal string ProjectId { get; set; }
+
+            internal string TenantId { get; set; }
 
             internal RetryOptions RetryOptions { get; set; }
         }

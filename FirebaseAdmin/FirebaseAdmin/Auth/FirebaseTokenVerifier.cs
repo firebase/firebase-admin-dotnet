@@ -57,6 +57,7 @@ namespace FirebaseAdmin.Auth
         internal FirebaseTokenVerifier(FirebaseTokenVerifierArgs args)
         {
             this.ProjectId = args.ProjectId.ThrowIfNullOrEmpty(nameof(args.ProjectId));
+            this.TenantId = args.TenantId;
             this.shortName = args.ShortName.ThrowIfNullOrEmpty(nameof(args.ShortName));
             this.operation = args.Operation.ThrowIfNullOrEmpty(nameof(args.Operation));
             this.url = args.Url.ThrowIfNullOrEmpty(nameof(args.Url));
@@ -75,7 +76,9 @@ namespace FirebaseAdmin.Auth
 
         public string ProjectId { get; }
 
-        internal static FirebaseTokenVerifier CreateIDTokenVerifier(FirebaseApp app)
+        public string TenantId { get; }
+
+        internal static FirebaseTokenVerifier CreateIDTokenVerifier(FirebaseApp app, string tenantId = null)
         {
             var projectId = app.GetProjectId();
             if (string.IsNullOrEmpty(projectId))
@@ -89,6 +92,7 @@ namespace FirebaseAdmin.Auth
             var args = new FirebaseTokenVerifierArgs()
             {
                 ProjectId = projectId,
+                TenantId = tenantId,
                 ShortName = "ID token",
                 Operation = "VerifyIdTokenAsync()",
                 Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
@@ -151,6 +155,13 @@ namespace FirebaseAdmin.Auth
             {
                 error = $"{this.shortName} has incorrect audience (aud) claim. Expected {this.ProjectId} "
                     + $"but got {payload.Audience}. {projectIdMessage} {verifyTokenMessage}";
+            }
+            else if (this.TenantId != payload.Firebase?.TenantId)
+            {
+                var expectedTenantId = this.TenantId == null ? "null" : this.TenantId;
+                var actualTenantId = payload.Firebase?.TenantId == null ? "null" : payload.Firebase.TenantId;
+                error = $"{this.shortName} has incorrect tenant ID (firebase.tenant) claim. Expected {expectedTenantId} "
+                    + $"but got {actualTenantId}. {verifyTokenMessage}";
             }
             else if (payload.Issuer != issuer)
             {

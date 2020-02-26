@@ -36,5 +36,14 @@ namespace FirebaseAdmin.Auth
 
         [JsonIgnore]
         public IReadOnlyDictionary<string, object> Claims { get; set; }
+
+        [JsonProperty("firebase")]
+        internal FirebaseClaims Firebase { get; set; }
+
+        internal sealed class FirebaseClaims
+        {
+            [JsonProperty("tenant")]
+            public string TenantId { get; set; }
+        }
     }
 }

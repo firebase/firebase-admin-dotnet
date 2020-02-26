@@ -20,6 +20,8 @@ namespace FirebaseAdmin.Auth
     {
         public string ProjectId { get; set; }
 
+        public string TenantId { get; set; }
+
         public string ShortName { get; set; }
 
         public string Operation { get; set; }

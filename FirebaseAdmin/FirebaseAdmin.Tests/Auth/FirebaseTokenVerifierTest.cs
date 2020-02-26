@@ -40,15 +40,28 @@ namespace FirebaseAdmin.Auth.Tests
 
         private static readonly FirebaseTokenVerifier TokenVerifier = new FirebaseTokenVerifier(
             new FirebaseTokenVerifierArgs()
-        {
-            ProjectId = "test-project",
-            ShortName = "ID token",
-            Operation = "VerifyIdTokenAsync()",
-            Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
-            Issuer = "https://securetoken.google.com/",
-            Clock = Clock,
-            PublicKeySource = KeySource,
-        });
+            {
+                ProjectId = "test-project",
+                ShortName = "ID token",
+                Operation = "VerifyIdTokenAsync()",
+                Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
+                Issuer = "https://securetoken.google.com/",
+                Clock = Clock,
+                PublicKeySource = KeySource,
+            });
+
+        private static readonly FirebaseTokenVerifier TenantTokenVerifier = new FirebaseTokenVerifier(
+            new FirebaseTokenVerifierArgs()
+            {
+                ProjectId = "test-project",
+                ShortName = "ID token",
+                Operation = "VerifyIdTokenAsync()",
+                Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
+                Issuer = "https://securetoken.google.com/",
+                Clock = Clock,
+                PublicKeySource = KeySource,
+                TenantId = "test-01abc",
+            });
 
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
@@ -74,6 +87,31 @@ namespace FirebaseAdmin.Auth.Tests
             object value;
             Assert.True(decoded.Claims.TryGetValue("foo", out value));
             Assert.Equal("bar", value);
+        }
+
+        [Fact]
+        public async Task ValidTenantToken()
+        {
+            var payload = new Dictionary<string, object>()
+            {
+                { "firebase", new { tenant = "test-01abc" } },
+            };
+            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var decoded = await TenantTokenVerifier.VerifyTokenAsync(idToken);
+            Assert.Equal("test-01abc", ((Newtonsoft.Json.Linq.JObject)decoded.Claims["firebase"]).GetValue("tenant").ToString());
+        }
+
+        [Fact]
+        public async Task InvalidTenantToken()
+        {
+            var idToken = await CreateTestTokenAsync(payloadOverrides: new Dictionary<string, object>()
+            {
+                { "firebase", new { tenant = "test-01abc" } },
+            });
+            await Assert.ThrowsAsync<FirebaseAuthException>(async () => await TokenVerifier.VerifyTokenAsync(idToken));
+
+            idToken = await CreateTestTokenAsync(payloadOverrides: new Dictionary<string, object>());
+            await Assert.ThrowsAsync<FirebaseAuthException>(async () => await TenantTokenVerifier.VerifyTokenAsync(idToken));
         }
 
         [Fact]

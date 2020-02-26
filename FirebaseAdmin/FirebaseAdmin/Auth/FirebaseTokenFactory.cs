@@ -61,14 +61,16 @@ namespace FirebaseAdmin.Auth
 
         private readonly ISigner signer;
         private readonly IClock clock;
+        private readonly string tenantId;
 
-        public FirebaseTokenFactory(ISigner signer, IClock clock)
+        public FirebaseTokenFactory(ISigner signer, IClock clock, string tenantId = null)
         {
             this.signer = signer.ThrowIfNull(nameof(signer));
             this.clock = clock.ThrowIfNull(nameof(clock));
+            this.tenantId = tenantId;
         }
 
-        public static FirebaseTokenFactory Create(FirebaseApp app)
+        public static FirebaseTokenFactory Create(FirebaseApp app, string tenantId)
         {
             ISigner signer = null;
             var serviceAccount = app.Options.Credential.ToServiceAccountCredential();
@@ -90,7 +92,7 @@ namespace FirebaseAdmin.Auth
                 signer = FixedAccountIAMSigner.Create(app);
             }
 
-            return new FirebaseTokenFactory(signer, SystemClock.Default);
+            return new FirebaseTokenFactory(signer, SystemClock.Default, tenantId);
         }
 
         public async Task<string> CreateCustomTokenAsync(
@@ -135,6 +137,7 @@ namespace FirebaseAdmin.Auth
                 Audience = FirebaseAudience,
                 IssuedAtTimeSeconds = issued,
                 ExpirationTimeSeconds = issued + TokenDurationSeconds,
+                TenantId = this.tenantId,
             };
 
             if (developerClaims != null && developerClaims.Count > 0)
@@ -155,6 +158,9 @@ namespace FirebaseAdmin.Auth
         {
             [Newtonsoft.Json.JsonPropertyAttribute("uid")]
             public string Uid { get; set; }
+
+            [Newtonsoft.Json.JsonPropertyAttribute("tenant_id")]
+            public string TenantId { get; set; }
 
             [Newtonsoft.Json.JsonPropertyAttribute("claims")]
             public IDictionary<string, object> Claims { get; set; }

@@ -36,7 +36,16 @@ namespace FirebaseAdmin.Auth.Tests
             var clock = new MockClock();
             var factory = new FirebaseTokenFactory(new MockSigner(), clock);
             var token = await factory.CreateCustomTokenAsync("user1");
-            VerifyCustomToken(token, "user1", null);
+            VerifyCustomToken(token, "user1", null, null);
+        }
+
+        [Fact]
+        public async Task CreateCustomTenantToken()
+        {
+            var clock = new MockClock();
+            var factory = new FirebaseTokenFactory(new MockSigner(), clock, "test-01abc");
+            var token = await factory.CreateCustomTokenAsync("user1");
+            VerifyCustomToken(token, "user1", null, "test-01abc");
         }
 
         [Fact]
@@ -46,7 +55,7 @@ namespace FirebaseAdmin.Auth.Tests
             var factory = new FirebaseTokenFactory(new MockSigner(), clock);
             var token = await factory.CreateCustomTokenAsync(
                 "user1", new Dictionary<string, object>());
-            VerifyCustomToken(token, "user1", null);
+            VerifyCustomToken(token, "user1", null, null);
         }
 
         [Fact]
@@ -61,7 +70,7 @@ namespace FirebaseAdmin.Auth.Tests
                 { "magicNumber", 42L },
             };
             var token = await factory.CreateCustomTokenAsync("user2", developerClaims);
-            VerifyCustomToken(token, "user2", developerClaims);
+            VerifyCustomToken(token, "user2", developerClaims, null);
         }
 
         [Fact]
@@ -92,7 +101,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         private static void VerifyCustomToken(
-            string token, string uid, Dictionary<string, object> claims)
+            string token, string uid, Dictionary<string, object> claims, string tenantId)
         {
             string[] segments = token.Split(".");
             Assert.Equal(3, segments.Length);
@@ -108,6 +117,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(MockSigner.KeyIdString, payload.Subject);
             Assert.Equal(uid, payload.Uid);
             Assert.Equal(FirebaseTokenFactory.FirebaseAudience, payload.Audience);
+            Assert.Equal(tenantId, payload.TenantId);
             if (claims == null)
             {
                 Assert.Null(payload.Claims);

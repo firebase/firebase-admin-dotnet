@@ -39,6 +39,7 @@ namespace FirebaseAdmin.Auth
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
             this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
             this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
+            this.TenantId = args.TenantId;
         }
 
         /// <summary>
@@ -60,22 +61,34 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets the tenant ID for this auth instance.
+        /// </summary>
+        public string TenantId { get; }
+
+        /// <summary>
         /// Returns the auth instance for the specified app.
         /// </summary>
         /// <returns>The <see cref="FirebaseAuth"/> instance associated with the specified
         /// app.</returns>
         /// <exception cref="System.ArgumentNullException">If the app argument is null.</exception>
+        /// <exception cref="System.ArgumentException">If the tenantId argument is invalid.</exception>
         /// <param name="app">An app instance.</param>
-        public static FirebaseAuth GetAuth(FirebaseApp app)
+        /// <param name="tenantId">The tenant ID to manage (optional).</param>
+        public static FirebaseAuth GetAuth(FirebaseApp app, string tenantId = null)
         {
             if (app == null)
             {
                 throw new ArgumentNullException("App argument must not be null.");
             }
 
-            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
+            if (tenantId != null && !System.Text.RegularExpressions.Regex.IsMatch(tenantId, "^[a-zA-Z0-9-]+$"))
             {
-                return new FirebaseAuth(FirebaseAuthArgs.Create(app));
+                throw new ArgumentException("The tenant ID must be null or a valid non-empty string.", "tenantId");
+            }
+
+            return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name + tenantId, () =>
+            {
+                return new FirebaseAuth(FirebaseAuthArgs.Create(app, tenantId));
             });
         }
 
@@ -586,16 +599,19 @@ namespace FirebaseAdmin.Auth
 
             internal Lazy<FirebaseUserManager> UserManager { get; set; }
 
-            internal static FirebaseAuthArgs Create(FirebaseApp app)
+            internal string TenantId { get; set; }
+
+            internal static FirebaseAuthArgs Create(FirebaseApp app, string tenantId)
             {
                 return new FirebaseAuthArgs()
                 {
                     TokenFactory = new Lazy<FirebaseTokenFactory>(
-                        () => FirebaseTokenFactory.Create(app), true),
+                        () => FirebaseTokenFactory.Create(app, tenantId), true),
                     IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
-                        () => FirebaseTokenVerifier.CreateIDTokenVerifier(app), true),
+                        () => FirebaseTokenVerifier.CreateIDTokenVerifier(app, tenantId), true),
                     UserManager = new Lazy<FirebaseUserManager>(
-                        () => FirebaseUserManager.Create(app), true),
+                        () => FirebaseUserManager.Create(app, tenantId), true),
+                    TenantId = tenantId,
                 };
             }
         }
