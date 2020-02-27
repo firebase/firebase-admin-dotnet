@@ -35,6 +35,8 @@ namespace FirebaseAdmin.Auth.Tests
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
+        private static readonly FirebaseApp App = FirebaseApp.Create(new AppOptions() { Credential = MockCredential }, nameof(FirebaseUserManagerTest));
+
         private static readonly string CreateUserResponse = @"{""localId"": ""user1""}";
         private static readonly string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
         private static readonly IList<string> ListUsersResponse = new List<string>()
@@ -1570,11 +1572,6 @@ namespace FirebaseAdmin.Auth.Tests
 
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler)
         {
-            if (FirebaseApp.DefaultInstance == null)
-            {
-                FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            }
-
             var userManager = new FirebaseUserManager(new FirebaseUserManager.Args
             {
                 Credential = MockCredential,
@@ -1587,7 +1584,7 @@ namespace FirebaseAdmin.Auth.Tests
                 UserManager = new Lazy<FirebaseUserManager>(userManager),
                 TokenFactory = new Lazy<FirebaseTokenFactory>(),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
-                TenantManager = new Lazy<FirebaseAuthTenantManager>(new FirebaseAuthTenantManager(FirebaseApp.DefaultInstance)),
+                TenantManager = new Lazy<TenantManager>(new TenantManager(App)),
             });
         }
 
