@@ -1570,6 +1570,11 @@ namespace FirebaseAdmin.Auth.Tests
 
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler)
         {
+            if (FirebaseApp.DefaultInstance == null)
+            {
+                FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+            }
+
             var userManager = new FirebaseUserManager(new FirebaseUserManager.Args
             {
                 Credential = MockCredential,
@@ -1582,6 +1587,7 @@ namespace FirebaseAdmin.Auth.Tests
                 UserManager = new Lazy<FirebaseUserManager>(userManager),
                 TokenFactory = new Lazy<FirebaseTokenFactory>(),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
+                TenantManager = new Lazy<FirebaseAuthTenantManager>(new FirebaseAuthTenantManager(FirebaseApp.DefaultInstance)),
             });
         }
 
