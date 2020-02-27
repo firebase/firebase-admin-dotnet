@@ -22,18 +22,18 @@ using Google.Apis.Util;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// See <see cref="FirebaseAuth"/> and <see cref="FirebaseTenantAwareAuth"/>.
+    /// See <see cref="FirebaseAuth"/> and <see cref="TenantAwareFirebaseAuth"/>.
     /// </summary>
-    public abstract class BaseAuth : IFirebaseService
+    public abstract class AbstractFirebaseAuth : IFirebaseService
     {
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
-        private readonly Lazy<FirebaseAuthTenantManager> tenantManager;
+        private readonly Lazy<TenantManager> tenantManager;
         private readonly object authLock = new object();
         private bool deleted;
 
-        internal BaseAuth(FirebaseAuthArgs args)
+        internal AbstractFirebaseAuth(FirebaseAuthArgs args)
         {
             args.ThrowIfNull(nameof(args));
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
@@ -44,9 +44,9 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the current instance's <see cref="FirebaseAuthTenantManager"/>.
+        /// Gets the current instance's <see cref="TenantManager"/>.
         /// </summary>
-        public FirebaseAuthTenantManager TenantManager => this.IfNotDeleted(() => this.tenantManager.Value);
+        public TenantManager TenantManager => this.IfNotDeleted(() => this.tenantManager.Value);
 
         /// <summary>
         /// Gets the tenant ID for this auth instance.
@@ -560,7 +560,7 @@ namespace FirebaseAdmin.Auth
 
             internal Lazy<FirebaseUserManager> UserManager { get; set; }
 
-            internal Lazy<FirebaseAuthTenantManager> TenantManager { get; set; }
+            internal Lazy<TenantManager> TenantManager { get; set; }
 
             internal string TenantId { get; set; }
 
@@ -574,10 +574,10 @@ namespace FirebaseAdmin.Auth
                         () => FirebaseTokenVerifier.CreateIDTokenVerifier(app, tenantId), true),
                     UserManager = new Lazy<FirebaseUserManager>(
                         () => FirebaseUserManager.Create(app, tenantId), true),
-                    TenantManager = new Lazy<FirebaseAuthTenantManager>(
-                        () => app.GetOrInit<FirebaseAuthTenantManager>(nameof(FirebaseAuthTenantManager), () =>
+                    TenantManager = new Lazy<TenantManager>(
+                        () => app.GetOrInit<TenantManager>(nameof(TenantManager), () =>
                         {
-                            return new FirebaseAuthTenantManager(app);
+                            return new TenantManager(app);
                         }), true),
                     TenantId = tenantId,
                 };

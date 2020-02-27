@@ -20,7 +20,7 @@ namespace FirebaseAdmin.Auth
     /// This is the entry point to all server-side Firebase Authentication operations. You can
     /// get an instance of this class via <c>FirebaseAuth.DefaultInstance</c>.
     /// </summary>
-    public sealed class FirebaseAuth : BaseAuth
+    public sealed class FirebaseAuth : AbstractFirebaseAuth
     {
         internal FirebaseAuth(FirebaseAuthArgs args)
             : base(args)

@@ -20,9 +20,9 @@ namespace FirebaseAdmin.Auth
     /// The tenant aware <see cref="FirebaseAuth"/> class. You can
     /// get an instance of this class via <c>FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant</c>.
     /// </summary>
-    public sealed class FirebaseTenantAwareAuth : BaseAuth
+    public sealed class TenantAwareFirebaseAuth : AbstractFirebaseAuth
     {
-        internal FirebaseTenantAwareAuth(FirebaseAuthArgs args)
+        internal TenantAwareFirebaseAuth(FirebaseAuthArgs args)
             : base(args)
         {
         }

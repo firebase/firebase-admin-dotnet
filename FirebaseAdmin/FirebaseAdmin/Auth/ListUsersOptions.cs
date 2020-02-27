@@ -15,7 +15,7 @@
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Options for the <see cref="BaseAuth.ListUsersAsync(ListUsersOptions)"/> API.
+    /// Options for the <see cref="AbstractFirebaseAuth.ListUsersAsync(ListUsersOptions)"/> API.
     /// </summary>
     public sealed class ListUsersOptions
     {

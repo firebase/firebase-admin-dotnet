@@ -21,11 +21,11 @@ namespace FirebaseAdmin.Auth
     /// The tenant aware <see cref="FirebaseAuth"/> class. You can
     /// get an instance of this class via <c>FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant(tenantId)</c>.
     /// </summary>
-    public sealed class FirebaseAuthTenantManager : IFirebaseService
+    public sealed class TenantManager : IFirebaseService
     {
         private readonly FirebaseApp app;
 
-        internal FirebaseAuthTenantManager(FirebaseApp app)
+        internal TenantManager(FirebaseApp app)
         {
             this.app = app.ThrowIfNull(nameof(app));
         }
@@ -33,20 +33,20 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Returns the auth instance for the specified app tenant.
         /// </summary>
-        /// <returns>The <see cref="FirebaseTenantAwareAuth"/> instance associated with the specified
+        /// <returns>The <see cref="TenantAwareFirebaseAuth"/> instance associated with the specified
         /// app tenant.</returns>
         /// <exception cref="System.ArgumentException">If the tenantId argument is invalid.</exception>
         /// <param name="tenantId">The tenant ID to manage.</param>
-        public FirebaseTenantAwareAuth AuthForTenant(string tenantId)
+        public TenantAwareFirebaseAuth AuthForTenant(string tenantId)
         {
             if (tenantId != null && !System.Text.RegularExpressions.Regex.IsMatch(tenantId, "^[a-zA-Z0-9-]+$"))
             {
                 throw new ArgumentException("The tenant ID must be a valid non-empty string.", "tenantId");
             }
 
-            return this.app.GetOrInit<FirebaseTenantAwareAuth>(nameof(FirebaseTenantAwareAuth) + tenantId, () =>
+            return this.app.GetOrInit<TenantAwareFirebaseAuth>(nameof(TenantAwareFirebaseAuth) + tenantId, () =>
             {
-                return new FirebaseTenantAwareAuth(BaseAuth.FirebaseAuthArgs.Create(this.app, tenantId));
+                return new TenantAwareFirebaseAuth(AbstractFirebaseAuth.FirebaseAuthArgs.Create(this.app, tenantId));
             });
         }
 
