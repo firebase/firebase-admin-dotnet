@@ -54,7 +54,7 @@ namespace FirebaseAdmin.Messaging
                     HttpClientFactory = clientFactory.ThrowIfNull(nameof(clientFactory)),
                     Credential = credential.ThrowIfNull(nameof(credential)),
                     RequestExceptionHandler = MessagingErrorHandler.Instance,
-                    ErrorResponseHandler = MessagingErrorHandler.Instance,
+                    ErrorResponseHandler = InstanceIdErrorHandler.Instance,
                     DeserializeExceptionHandler = MessagingErrorHandler.Instance,
                     RetryOptions = retryOptions,
                 });
@@ -180,5 +180,48 @@ namespace FirebaseAdmin.Messaging
             [JsonProperty("registration_tokens")]
             public IEnumerable<string> RegistrationTokens { get; set; }
         }
-    }
+
+        private class InstanceIdServiceError
+        {
+            [JsonProperty("error")]
+            public string ErrorCode { get; set; }
+        }
+
+        private class InstanceIdErrorHandler : HttpErrorHandler<FirebaseMessagingException>
+        {
+            internal static readonly InstanceIdErrorHandler Instance = new InstanceIdErrorHandler();
+
+            private InstanceIdErrorHandler() { }
+
+            protected override FirebaseMessagingException CreateException(FirebaseExceptionArgs args)
+            {
+                var errorCode = this.GetErrorCode(args.ResponseBody);
+                var message = args.Message;
+                if (!string.IsNullOrEmpty(errorCode))
+                {
+                    message = $"Error while calling the IID service: {errorCode}";
+                }
+
+                return new FirebaseMessagingException(
+                    args.Code,
+                    message,
+                    null,
+                    response: args.HttpResponse);
+            }
+
+            private string GetErrorCode(string response)
+            {
+                try
+                {
+                    var iidError = NewtonsoftJsonSerializer.Instance.Deserialize<InstanceIdServiceError>(
+                        response);
+                    return iidError.ErrorCode;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+  }
 }
