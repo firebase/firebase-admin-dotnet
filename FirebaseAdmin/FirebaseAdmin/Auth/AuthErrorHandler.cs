@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using FirebaseAdmin.Util;
 using Google.Apis.Json;
@@ -32,6 +33,10 @@ namespace FirebaseAdmin.Auth
     {
         internal static readonly AuthErrorHandler Instance = new AuthErrorHandler();
 
+        [SuppressMessage(
+            "StyleCop.CSharp.ReadabilityRules",
+            "SA1118:ParameterMustNotSpanMultipleLines",
+            Justification = "Long inlined message text.")]
         private static readonly IReadOnlyDictionary<string, ErrorInfo> CodeToErrorInfo =
             new Dictionary<string, ErrorInfo>()
             {
@@ -55,6 +60,16 @@ namespace FirebaseAdmin.Auth
                         ErrorCode.AlreadyExists,
                         AuthErrorCode.EmailAlreadyExists,
                         "The user with the provided email already exists")
+                },
+                {
+                    "INSUFFICIENT_PERMISSION",
+                    new ErrorInfo(
+                        ErrorCode.PermissionDenied,
+                        AuthErrorCode.InsufficientPermission,
+                        "The credential used to initialize the SDK has insufficient permissions "
+                        + "to perform the requested operation. See "
+                        + "https://firebase.google.com/docs/admin/setup for details on how to "
+                        + "initialize the Admin SDK with appropriate permissions")
                 },
                 {
                     "PHONE_NUMBER_EXISTS",

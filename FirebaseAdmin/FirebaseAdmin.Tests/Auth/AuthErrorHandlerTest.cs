@@ -47,6 +47,12 @@ namespace FirebaseAdmin.Auth.Tests
                 },
                 new object[]
                 {
+                    "INSUFFICIENT_PERMISSION",
+                    ErrorCode.PermissionDenied,
+                    AuthErrorCode.InsufficientPermission,
+                },
+                new object[]
+                {
                     "PHONE_NUMBER_EXISTS",
                     ErrorCode.AlreadyExists,
                     AuthErrorCode.PhoneNumberAlreadyExists,

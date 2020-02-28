@@ -35,6 +35,11 @@ namespace FirebaseAdmin.Auth
         ExpiredIdToken,
 
         /// <summary>
+        /// The credential used to initialize the SDK lacks required permissions.
+        /// </summary>
+        InsufficientPermission,
+
+        /// <summary>
         /// The specified ID token is invalid.
         /// </summary>
         InvalidIdToken,
