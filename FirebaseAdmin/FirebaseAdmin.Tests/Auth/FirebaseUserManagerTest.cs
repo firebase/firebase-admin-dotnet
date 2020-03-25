@@ -30,13 +30,65 @@ namespace FirebaseAdmin.Auth.Tests
 {
     public class FirebaseUserManagerTest
     {
+        public static readonly IEnumerable<object[]> InvalidActionCodeSettings =
+            new List<object[]>()
+            {
+                new object[] { new ActionCodeSettings() },
+                new object[] { new ActionCodeSettings() { Url = string.Empty } },
+                new object[] { new ActionCodeSettings() { Url = "not a url" } },
+                new object[]
+                {
+                    new ActionCodeSettings()
+                    {
+                        Url = "https://example.dynamic.link",
+                        AndroidInstallApp = true,
+                    },
+                },
+                new object[]
+                {
+                    new ActionCodeSettings()
+                    {
+                        Url = "https://example.dynamic.link",
+                        DynamicLinkDomain = string.Empty,
+                    },
+                },
+                new object[]
+                {
+                    new ActionCodeSettings()
+                    {
+                        Url = "https://example.dynamic.link",
+                        AndroidMinimumVersion = string.Empty,
+                    },
+                },
+                new object[]
+                {
+                    new ActionCodeSettings()
+                    {
+                        Url = "https://example.dynamic.link",
+                        AndroidPackageName = string.Empty,
+                    },
+                },
+                new object[]
+                {
+                    new ActionCodeSettings()
+                    {
+                        Url = "https://example.dynamic.link",
+                        IosBundleId = string.Empty,
+                    },
+                },
+            };
+
         private const string MockProjectId = "project1";
+        private const string CreateUserResponse = @"{""localId"": ""user1""}";
+        private const string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
+
+        private const string GenerateEmailLinkResponse = @"{
+            ""oobLink"": ""https://mock-oob-link.for.auth.tests""
+        }";
 
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
-        private static readonly string CreateUserResponse = @"{""localId"": ""user1""}";
-        private static readonly string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
         private static readonly IList<string> ListUsersResponse = new List<string>()
         {
             @"{
@@ -54,6 +106,17 @@ namespace FirebaseAdmin.Auth.Tests
                     {""localId"": ""user6""}
                 ]
             }",
+        };
+
+        private static readonly ActionCodeSettings ActionCodeSettings = new ActionCodeSettings()
+        {
+            Url = "https://example.dynamic.link",
+            HandleCodeInApp = true,
+            DynamicLinkDomain = "custom.page.link",
+            IosBundleId = "com.example.ios",
+            AndroidPackageName = "com.example.android",
+            AndroidMinimumVersion = "6",
+            AndroidInstallApp = true,
         };
 
         [Fact]
@@ -1524,6 +1587,92 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
             Assert.Equal(
                 "No user record found for the given identifier (USER_NOT_FOUND).",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public void GenerateActionLinkNoEmail()
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GeneratePasswordResetLinkAsync(null));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GeneratePasswordResetLinkAsync(string.Empty));
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidActionCodeSettings))]
+        public void GenerateActionLinkInvalidSettings(ActionCodeSettings settings)
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+            var email = "user@example.com";
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GeneratePasswordResetLinkAsync(email, settings));
+        }
+
+        [Fact]
+        public async Task GeneratePasswordResetLink()
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var link = await auth.GeneratePasswordResetLinkAsync("user@example.com");
+
+            Assert.Equal("https://mock-oob-link.for.auth.tests", link);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
+            Assert.Equal(3, request.Count);
+            Assert.Equal("user@example.com", request["email"]);
+            Assert.Equal("PASSWORD_RESET", request["requestType"]);
+            Assert.True((bool)request["returnOobLink"]);
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task GeneratePasswordResetLinkWithSettings()
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var link = await auth.GeneratePasswordResetLinkAsync("user@example.com", ActionCodeSettings);
+
+            Assert.Equal("https://mock-oob-link.for.auth.tests", link);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
+            Assert.Equal(10, request.Count);
+            Assert.Equal("user@example.com", request["email"]);
+            Assert.Equal("PASSWORD_RESET", request["requestType"]);
+            Assert.True((bool)request["returnOobLink"]);
+
+            Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
+            Assert.True((bool)request["canHandleCodeInApp"]);
+            Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+            Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
+            Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
+            Assert.Equal(ActionCodeSettings.AndroidMinimumVersion, request["androidMinimumVersion"]);
+            Assert.True((bool)request["androidInstallApp"]);
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task GeneratePasswordResetLinkUnexpectedResponse()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.GeneratePasswordResetLinkAsync("user@example.com"));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
+            Assert.Equal(
+                $"Failed to generate email action link for: user@example.com",
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);

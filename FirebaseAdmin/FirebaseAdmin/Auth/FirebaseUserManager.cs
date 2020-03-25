@@ -24,6 +24,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth
@@ -241,6 +242,22 @@ namespace FirebaseAdmin.Auth
                 throw UnexpectedResponseException(
                     $"Failed to delete user: {uid}", resp: response.HttpResponse);
             }
+        }
+
+        internal async Task<string> GenerateEmailActionLinkAsync(
+            EmailActionLinkRequest request,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                "accounts:sendOobCode", request, cancellationToken).ConfigureAwait(false);
+            if (response.Result == null || (string)response.Result["oobLink"] == null)
+            {
+                throw UnexpectedResponseException(
+                    $"Failed to generate email action link for: {request.Email}",
+                    resp: response.HttpResponse);
+            }
+
+            return (string)response.Result["oobLink"];
         }
 
         private static FirebaseAuthException UnexpectedResponseException(
