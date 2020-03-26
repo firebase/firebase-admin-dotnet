@@ -17,25 +17,19 @@ using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
-    internal class EmailActionLinkRequest
+    internal sealed class EmailActionLinkRequest
     {
-        internal EmailActionLinkRequest(
-            string email, Type type, ActionCodeSettings settings)
+        private const string PasswordReset = "PASSWORD_RESET";
+
+        private EmailActionLinkRequest(string type, string email, ActionCodeSettings settings)
         {
             if (string.IsNullOrEmpty(email))
             {
                 throw new ArgumentException("Email cannot be null or empty.");
             }
 
-            if (type == Type.EmailSignIn && settings == null)
-            {
-                throw new ArgumentException(
-                    "ActionCodeSettings must be specified when generating sign-in links.");
-            }
-
+            this.RequestType = type;
             this.Email = email;
-            this.ReturnOobLink = true;
-            this.RequestType = TypeToString(type);
             if (settings != null)
             {
                 this.Url = settings.Url;
@@ -50,13 +44,6 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        internal enum Type
-        {
-            VerifyEmail,
-            EmailSignIn,
-            PasswordReset,
-        }
-
         [JsonProperty("email")]
         internal string Email { get; }
 
@@ -64,7 +51,7 @@ namespace FirebaseAdmin.Auth
         internal string RequestType { get; }
 
         [JsonProperty("returnOobLink")]
-        internal bool ReturnOobLink { get; }
+        internal bool ReturnOobLink { get => true; }
 
         [JsonProperty("continueUrl")]
         internal string Url { get; }
@@ -87,20 +74,10 @@ namespace FirebaseAdmin.Auth
         [JsonProperty("androidInstallApp")]
         internal bool? AndroidInstallApp { get; }
 
-        private static string TypeToString(Type type)
+        internal static EmailActionLinkRequest PasswordResetLinkRequest(
+            string email, ActionCodeSettings settings)
         {
-            if (type == Type.PasswordReset)
-            {
-                return "PASSWORD_RESET";
-            }
-            else if (type == Type.VerifyEmail)
-            {
-                return "VERIFY_EMAIL";
-            }
-            else
-            {
-                return "EMAIL_SIGNIN";
-            }
+            return new EmailActionLinkRequest(PasswordReset, email, settings);
         }
 
         private void ValidateSettings()

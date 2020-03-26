@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
@@ -125,7 +124,8 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal("https://mock-oob-link.for.auth.tests", link);
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
+                handler.LastRequestBody);
             Assert.Equal(3, request.Count);
             Assert.Equal("user@example.com", request["email"]);
             Assert.Equal("PASSWORD_RESET", request["requestType"]);
@@ -139,11 +139,13 @@ namespace FirebaseAdmin.Auth.Tests
             var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var link = await auth.GeneratePasswordResetLinkAsync("user@example.com", ActionCodeSettings);
+            var link = await auth.GeneratePasswordResetLinkAsync(
+                "user@example.com", ActionCodeSettings);
 
             Assert.Equal("https://mock-oob-link.for.auth.tests", link);
 
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(handler.LastRequestBody);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
+                handler.LastRequestBody);
             Assert.Equal(10, request.Count);
             Assert.Equal("user@example.com", request["email"]);
             Assert.Equal("PASSWORD_RESET", request["requestType"]);
@@ -154,7 +156,8 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
             Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
             Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
-            Assert.Equal(ActionCodeSettings.AndroidMinimumVersion, request["androidMinimumVersion"]);
+            Assert.Equal(
+                ActionCodeSettings.AndroidMinimumVersion, request["androidMinimumVersion"]);
             Assert.True((bool)request["androidInstallApp"]);
             this.AssertRequest(handler.Requests[0]);
         }

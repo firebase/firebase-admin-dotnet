@@ -598,8 +598,7 @@ namespace FirebaseAdmin.Auth
             string email, ActionCodeSettings settings, CancellationToken cancellationToken)
         {
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
-            var request = new EmailActionLinkRequest(
-                email, EmailActionLinkRequest.Type.PasswordReset, settings);
+            var request = EmailActionLinkRequest.PasswordResetLinkRequest(email, settings);
             return await userManager.GenerateEmailActionLinkAsync(request, cancellationToken)
                 .ConfigureAwait(false);
         }
