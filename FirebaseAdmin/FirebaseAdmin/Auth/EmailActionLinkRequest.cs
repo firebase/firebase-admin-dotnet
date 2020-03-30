@@ -19,6 +19,7 @@ namespace FirebaseAdmin.Auth
 {
     internal sealed class EmailActionLinkRequest
     {
+        private const string VerifyEmail = "VERIFY_EMAIL";
         private const string PasswordReset = "PASSWORD_RESET";
 
         private EmailActionLinkRequest(string type, string email, ActionCodeSettings settings)
@@ -73,6 +74,12 @@ namespace FirebaseAdmin.Auth
 
         [JsonProperty("androidInstallApp")]
         internal bool? AndroidInstallApp { get; }
+
+        internal static EmailActionLinkRequest EmailVerificationLinkRequest(
+            string email, ActionCodeSettings settings)
+        {
+            return new EmailActionLinkRequest(VerifyEmail, email, settings);
+        }
 
         internal static EmailActionLinkRequest PasswordResetLinkRequest(
             string email, ActionCodeSettings settings)
