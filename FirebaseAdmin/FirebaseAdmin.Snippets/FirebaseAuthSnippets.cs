@@ -85,6 +85,15 @@ namespace FirebaseAdmin.Snippets
             // [END get_user_by_phone]
         }
 
+        internal static async Task GetUserByProviderUidAsync()
+        {
+            // [START get_user_by_federated_id]
+            UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByProviderUidAsync("google.com", "google_uid1234");
+            // See the UserRecord reference doc for the contents of userRecord.
+            Console.WriteLine($"Successfully fetched user data: {userRecord.Uid}");
+            // [END get_user_by_federated_id]
+        }
+
         internal static async Task CreateUserAsync()
         {
             // [START create_user]
@@ -137,6 +146,40 @@ namespace FirebaseAdmin.Snippets
             // See the UserRecord reference doc for the contents of userRecord.
             Console.WriteLine($"Successfully updated user: {userRecord.Uid}");
             // [END update_user]
+        }
+
+        internal static async Task UpdateUserFederatedAsync(string uid)
+        {
+            // [START update_user_link_federated]
+            // Link the user with a federated identity provider (like Google).
+            UserRecordArgs args = new UserRecordArgs()
+            {
+                Uid = uid,
+                ProviderToLink = new ProviderUserInfo()
+                {
+                    ProviderId = "google.com",
+                    Uid = "google_uid1234",
+                },
+            };
+            UserRecord userRecord = await FirebaseAuth.DefaultInstance.UpdateUserAsync(args);
+            // See the UserRecord reference doc for the contents of userRecord.
+            Console.WriteLine($"Successfully updated user: {userRecord.Uid}");
+            // [END update_user_link_federated]
+
+            // [START update_user_unlink_federated]
+            // Unlink the user from a federated identity provider (like Google).
+            UserRecordArgs args = new UserRecordArgs()
+            {
+                Uid = uid,
+                ProvidersToDelete = new List<string>()
+                {
+                    "google.com",
+                },
+            };
+            UserRecord userRecord = await FirebaseAuth.DefaultInstance.UpdateUserAsync(args);
+            // See the UserRecord reference doc for the contents of userRecord.
+            Console.WriteLine($"Successfully updated user: {userRecord.Uid}");
+            // [END update_user_unlink_federated]
         }
 
         internal static async Task DeleteUserAsync(string uid)
