@@ -105,6 +105,11 @@ namespace FirebaseAdmin.Auth.Tests
                 async () => await auth.GeneratePasswordResetLinkAsync(null));
             Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(string.Empty));
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GenerateSignInWithEmailLinkAsync(null, ActionCodeSettings));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GenerateSignInWithEmailLinkAsync(string.Empty, ActionCodeSettings));
         }
 
         [Theory]
@@ -120,6 +125,9 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(email, settings));
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GenerateSignInWithEmailLinkAsync(email, settings));
         }
 
         [Fact]
@@ -244,6 +252,65 @@ namespace FirebaseAdmin.Auth.Tests
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.GeneratePasswordResetLinkAsync("user@example.com"));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
+            Assert.Equal(
+                $"Failed to generate email action link for: user@example.com",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public void SignInWithEmailLinkNoSettings()
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+            var email = "user@example.com";
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GenerateSignInWithEmailLinkAsync(email, null));
+        }
+
+        [Fact]
+        public async Task SignInWithEmailLink()
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var link = await auth.GenerateSignInWithEmailLinkAsync(
+                "user@example.com", ActionCodeSettings);
+
+            Assert.Equal("https://mock-oob-link.for.auth.tests", link);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
+                handler.LastRequestBody);
+            Assert.Equal(10, request.Count);
+            Assert.Equal("user@example.com", request["email"]);
+            Assert.Equal("EMAIL_SIGNIN", request["requestType"]);
+            Assert.True((bool)request["returnOobLink"]);
+
+            Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
+            Assert.True((bool)request["canHandleCodeInApp"]);
+            Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+            Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
+            Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
+            Assert.Equal(
+                ActionCodeSettings.AndroidMinimumVersion, request["androidMinimumVersion"]);
+            Assert.True((bool)request["androidInstallApp"]);
+            this.AssertRequest(handler.Requests[0]);
+        }
+
+        [Fact]
+        public async Task SignInWithEmailLinkUnexpectedResponse()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.GenerateSignInWithEmailLinkAsync(
+                    "user@example.com", ActionCodeSettings));
 
             Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);

@@ -655,6 +655,44 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Generates the out-of-band email action link for email link sign-in flows for the
+        /// specified email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user signing in.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the email sign in link.</returns>
+        public async Task<string> GenerateSignInWithEmailLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GenerateSignInWithEmailLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email link sign-in flows for the
+        /// specified email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user signing in.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the email sign in link.</returns>
+        public async Task<string> GenerateSignInWithEmailLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var request = EmailActionLinkRequest.EmailSignInLinkRequest(email, settings);
+            return await userManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
