@@ -571,9 +571,9 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
         /// <param name="email">The email of the user to be verifed.</param>
-        /// <param name="settings">The action code settings object which defines whether
+        /// <param name="settings">The action code settings object that defines whether
         /// the link is to be handled by a mobile app and the additional state information to be
-        /// passed in the deep link..</param>
+        /// passed in the deep link.</param>
         /// <returns>A task that completes with the email verification link.</returns>
         public async Task<string> GenerateEmailVerificationLinkAsync(
             string email, ActionCodeSettings settings)
@@ -588,9 +588,9 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
         /// <param name="email">The email of the user to be verified.</param>
-        /// <param name="settings">The action code settings object which defines whether
+        /// <param name="settings">The action code settings object that defines whether
         /// the link is to be handled by a mobile app and the additional state information to be
-        /// passed in the deep link..</param>
+        /// passed in the deep link.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A task that completes with the email verification reset link.</returns>
