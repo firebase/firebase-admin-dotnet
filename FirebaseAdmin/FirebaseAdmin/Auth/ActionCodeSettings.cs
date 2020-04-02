@@ -71,7 +71,7 @@ namespace FirebaseAdmin.Auth
         public string AndroidPackageName { get; set; }
 
         /// <summary>
-        /// Gets or sets the minimum version for Android app. If the installed app is an older
+        /// Gets or sets the minimum version for the Android app. If the installed app is an older
         /// version, the user is taken to the Play Store to upgrade the app.
         /// </summary>
         public string AndroidMinimumVersion { get; set; }
