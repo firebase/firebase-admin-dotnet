@@ -31,12 +31,12 @@ namespace FirebaseAdmin.Auth.Tests
     public class FirebaseUserManagerTest
     {
         private const string MockProjectId = "project1";
+        private const string CreateUserResponse = @"{""localId"": ""user1""}";
+        private const string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
 
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
-        private static readonly string CreateUserResponse = @"{""localId"": ""user1""}";
-        private static readonly string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
         private static readonly IList<string> ListUsersResponse = new List<string>()
         {
             @"{
