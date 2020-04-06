@@ -97,6 +97,11 @@ namespace FirebaseAdmin.Auth.Tests
             var auth = this.CreateFirebaseAuth(handler);
 
             Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GenerateEmailVerificationLinkAsync(null));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GenerateEmailVerificationLinkAsync(string.Empty));
+
+            Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(null));
             Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(string.Empty));
@@ -111,7 +116,76 @@ namespace FirebaseAdmin.Auth.Tests
             var email = "user@example.com";
 
             Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.GenerateEmailVerificationLinkAsync(email, settings));
+
+            Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(email, settings));
+        }
+
+        [Fact]
+        public async Task EmailVerificationLink()
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var link = await auth.GenerateEmailVerificationLinkAsync("user@example.com");
+
+            Assert.Equal("https://mock-oob-link.for.auth.tests", link);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
+                handler.LastRequestBody);
+            Assert.Equal(3, request.Count);
+            Assert.Equal("user@example.com", request["email"]);
+            Assert.Equal("VERIFY_EMAIL", request["requestType"]);
+            Assert.True((bool)request["returnOobLink"]);
+            this.AssertRequest(handler.Requests[0]);
+        }
+
+        [Fact]
+        public async Task EmailVerificationLinkWithSettings()
+        {
+            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var link = await auth.GenerateEmailVerificationLinkAsync(
+                "user@example.com", ActionCodeSettings);
+
+            Assert.Equal("https://mock-oob-link.for.auth.tests", link);
+
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
+                handler.LastRequestBody);
+            Assert.Equal(10, request.Count);
+            Assert.Equal("user@example.com", request["email"]);
+            Assert.Equal("VERIFY_EMAIL", request["requestType"]);
+            Assert.True((bool)request["returnOobLink"]);
+
+            Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
+            Assert.True((bool)request["canHandleCodeInApp"]);
+            Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+            Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
+            Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
+            Assert.Equal(
+                ActionCodeSettings.AndroidMinimumVersion, request["androidMinimumVersion"]);
+            Assert.True((bool)request["androidInstallApp"]);
+            this.AssertRequest(handler.Requests[0]);
+        }
+
+        [Fact]
+        public async Task EmailVerificationLinkUnexpectedResponse()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.GenerateEmailVerificationLinkAsync("user@example.com"));
+
+            Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
+            Assert.Equal(
+                $"Failed to generate email action link for: user@example.com",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
         }
 
         [Fact]

@@ -553,6 +553,57 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verified.</param>
+        /// <returns>A task that completes with the email verification link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(string email)
+        {
+            return await this.GenerateEmailVerificationLinkAsync(email, null)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verifed.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the email verification link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GenerateEmailVerificationLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verified.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the email verification reset link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var request = EmailActionLinkRequest.EmailVerificationLinkRequest(email, settings);
+            return await userManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Generates the out-of-band email action link for password reset flows for the specified
         /// email address.
         /// </summary>
