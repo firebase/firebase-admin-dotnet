@@ -245,5 +245,68 @@ namespace FirebaseAdmin.Snippets
 
             // [END set_custom_user_claims_incremental]
         }
+
+        internal static ActionCodeSettings InitActionCodeSettings()
+        {
+            // [START init_action_code_settings]
+            var actionCodeSettings = new ActionCodeSettings()
+            {
+                Url = "https://www.example.com/checkout?cartId=1234",
+                HandleCodeInApp = true,
+                IosBundleId = "com.example.ios",
+                AndroidPackageName = "com.example.android",
+                AndroidInstallApp = true,
+                AndroidMinimumVersion = "12",
+                DynamicLinkDomain = "coolapp.page.link",
+            };
+            // [END init_action_code_settings]
+            return actionCodeSettings;
+        }
+
+        internal static async Task GeneratePasswordResetLink()
+        {
+            var actionCodeSettings = InitActionCodeSettings();
+            var displayName = "Example User";
+            // [START password_reset_link]
+            var email = "user@example.com";
+            var link = await FirebaseAuth.DefaultInstance.GeneratePasswordResetLinkAsync(
+                email, actionCodeSettings);
+            // Construct email verification template, embed the link and send
+            // using custom SMTP server.
+            SendCustomEmail(email, displayName, link);
+            // [END password_reset_link]
+        }
+
+        internal static async Task GenerateEmailVerificationLink()
+        {
+            var actionCodeSettings = InitActionCodeSettings();
+            var displayName = "Example User";
+            // [START email_verification_link]
+            var email = "user@example.com";
+            var link = await FirebaseAuth.DefaultInstance.GenerateEmailVerificationLinkAsync(
+                email, actionCodeSettings);
+            // Construct email verification template, embed the link and send
+            // using custom SMTP server.
+            SendCustomEmail(email, displayName, link);
+            // [END email_verification_link]
+        }
+
+        internal static async Task GenerateSignInWithEmailLink()
+        {
+            var actionCodeSettings = InitActionCodeSettings();
+            var displayName = "Example User";
+            // [START sign_in_with_email_link]
+            var email = "user@example.com";
+            var link = await FirebaseAuth.DefaultInstance.GenerateSignInWithEmailLinkAsync(
+                email, actionCodeSettings);
+            // Construct email verification template, embed the link and send
+            // using custom SMTP server.
+            SendCustomEmail(email, displayName, link);
+            // [END sign_in_with_email_link]
+        }
+
+        // Place holder method to make the compiler happy. This is referenced by all email action
+        // link snippets.
+        private static void SendCustomEmail(string email, string displayName, string link) { }
     }
 }

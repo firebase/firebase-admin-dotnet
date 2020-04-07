@@ -18,6 +18,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
@@ -27,8 +28,22 @@ namespace FirebaseAdmin.IntegrationTests
 {
     public class FirebaseAuthTest
     {
+        private const string EmailLinkSignInUrl =
+            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/emailLinkSignin";
+
+        private const string ResetPasswordUrl =
+            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/resetPassword";
+
         private const string VerifyCustomTokenUrl =
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyCustomToken";
+
+        private const string ContinueUrl = "http://localhost/?a=1&b=2#c=3";
+
+        private static readonly ActionCodeSettings EmailLinkSettings = new ActionCodeSettings()
+        {
+            Url = ContinueUrl,
+            HandleCodeInApp = false,
+        };
 
         public FirebaseAuthTest()
         {
@@ -365,6 +380,100 @@ namespace FirebaseAdmin.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task EmailVerificationLink()
+        {
+            var user = await CreateUserForActionLinksAsync();
+
+            try
+            {
+                var link = await FirebaseAuth.DefaultInstance.GenerateEmailVerificationLinkAsync(
+                    user.Email, EmailLinkSettings);
+
+                var uri = new Uri(link);
+                var query = HttpUtility.ParseQueryString(uri.Query);
+                Assert.Equal(ContinueUrl, query["continueUrl"]);
+                Assert.Equal("verifyEmail", query["mode"]);
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(user.Uid);
+            }
+        }
+
+        [Fact]
+        public async Task PasswordResetLink()
+        {
+            var user = await CreateUserForActionLinksAsync();
+
+            try
+            {
+                var link = await FirebaseAuth.DefaultInstance.GeneratePasswordResetLinkAsync(
+                    user.Email, EmailLinkSettings);
+
+                var uri = new Uri(link);
+                var query = HttpUtility.ParseQueryString(uri.Query);
+                Assert.Equal(ContinueUrl, query["continueUrl"]);
+
+                var request = new ResetPasswordRequest()
+                {
+                    Email = user.Email,
+                    OldPassword = "password",
+                    NewPassword = "NewP@$$w0rd",
+                    OobCode = query["oobCode"],
+                };
+                var resetEmail = await ResetPasswordAsync(request);
+                Assert.Equal(user.Email, resetEmail);
+
+                // Password reset also verifies the user's email
+                user = await FirebaseAuth.DefaultInstance.GetUserAsync(user.Uid);
+                Assert.True(user.EmailVerified);
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(user.Uid);
+            }
+        }
+
+        [Fact]
+        public async Task SignInWithEmailLink()
+        {
+            var user = await CreateUserForActionLinksAsync();
+
+            try
+            {
+                var link = await FirebaseAuth.DefaultInstance.GenerateSignInWithEmailLinkAsync(
+                    user.Email, EmailLinkSettings);
+
+                var uri = new Uri(link);
+                var query = HttpUtility.ParseQueryString(uri.Query);
+                Assert.Equal(ContinueUrl, query["continueUrl"]);
+
+                var idToken = await SignInWithEmailLinkAsync(user.Email, query["oobCode"]);
+                Assert.NotEmpty(idToken);
+
+                // Sign in with link also verifies the user's email
+                user = await FirebaseAuth.DefaultInstance.GetUserAsync(user.Uid);
+                Assert.True(user.EmailVerified);
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(user.Uid);
+            }
+        }
+
+        private static async Task<UserRecord> CreateUserForActionLinksAsync()
+        {
+            var randomUser = RandomUser.Create();
+            return await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs()
+            {
+                Uid = randomUser.Uid,
+                Email = randomUser.Email,
+                EmailVerified = false,
+                Password = "password",
+            });
+        }
+
         private static async Task<string> SignInWithCustomTokenAsync(string customToken)
         {
             var rb = new Google.Apis.Requests.RequestBuilder()
@@ -390,6 +499,59 @@ namespace FirebaseAdmin.IntegrationTests
                 return parsed.IdToken;
             }
         }
+
+        private static async Task<string> SignInWithEmailLinkAsync(string email, string oobCode)
+        {
+            var rb = new Google.Apis.Requests.RequestBuilder()
+            {
+                Method = Google.Apis.Http.HttpConsts.Post,
+                BaseUri = new Uri(EmailLinkSignInUrl),
+            };
+            rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
+
+            var data = new Dictionary<string, object>()
+            {
+                { "email", email },
+                { "oobCode", oobCode },
+            };
+            var jsonSerializer = Google.Apis.Json.NewtonsoftJsonSerializer.Instance;
+            var payload = jsonSerializer.Serialize(data);
+
+            var request = rb.CreateRequest();
+            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+            using (var client = new HttpClient())
+            {
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                var json = await response.Content.ReadAsStringAsync();
+                var parsed = jsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                return (string)parsed["idToken"];
+            }
+        }
+
+        private static async Task<string> ResetPasswordAsync(ResetPasswordRequest data)
+        {
+            var rb = new Google.Apis.Requests.RequestBuilder()
+            {
+                Method = Google.Apis.Http.HttpConsts.Post,
+                BaseUri = new Uri(ResetPasswordUrl),
+            };
+            rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
+
+            var jsonSerializer = Google.Apis.Json.NewtonsoftJsonSerializer.Instance;
+            var payload = jsonSerializer.Serialize(data);
+
+            var request = rb.CreateRequest();
+            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+            using (var client = new HttpClient())
+            {
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                var json = await response.Content.ReadAsStringAsync();
+                var parsed = jsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                return (string)parsed["email"];
+            }
+        }
     }
 
     /**
@@ -404,6 +566,21 @@ namespace FirebaseAdmin.IntegrationTests
                 throw new Xunit.Sdk.XunitException("Assert.NotNull() Failure: " + msg);
             }
         }
+    }
+
+    internal class ResetPasswordRequest
+    {
+        [Newtonsoft.Json.JsonProperty("email")]
+        public string Email { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("oldPassword")]
+        public string OldPassword { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("newPassword")]
+        public string NewPassword { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("oobCode")]
+        public string OobCode { get; set; }
     }
 
     internal class SignInRequest
