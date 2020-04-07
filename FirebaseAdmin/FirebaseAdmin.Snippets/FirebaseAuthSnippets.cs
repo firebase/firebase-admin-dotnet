@@ -307,6 +307,6 @@ namespace FirebaseAdmin.Snippets
 
         // Place holder method to make the compiler happy. This is referenced by all email action
         // link snippets.
-        private static void SendCustomEmail(String email, String displayName, String link) {}
+        private static void SendCustomEmail(string email, string displayName, string link) { }
     }
 }
