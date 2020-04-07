@@ -21,12 +21,19 @@ namespace FirebaseAdmin.Auth
     {
         private const string VerifyEmail = "VERIFY_EMAIL";
         private const string PasswordReset = "PASSWORD_RESET";
+        private const string EmailSignIn = "EMAIL_SIGNIN";
 
         private EmailActionLinkRequest(string type, string email, ActionCodeSettings settings)
         {
             if (string.IsNullOrEmpty(email))
             {
                 throw new ArgumentException("Email cannot be null or empty.");
+            }
+
+            if (type == EmailSignIn && settings == null)
+            {
+                throw new ArgumentNullException(
+                    "ActionCodeSettings must not be null when generating sign in links");
             }
 
             this.RequestType = type;
@@ -85,6 +92,12 @@ namespace FirebaseAdmin.Auth
             string email, ActionCodeSettings settings)
         {
             return new EmailActionLinkRequest(PasswordReset, email, settings);
+        }
+
+        internal static EmailActionLinkRequest EmailSignInLinkRequest(
+            string email, ActionCodeSettings settings)
+        {
+            return new EmailActionLinkRequest(EmailSignIn, email, settings);
         }
 
         private void ValidateSettings()
