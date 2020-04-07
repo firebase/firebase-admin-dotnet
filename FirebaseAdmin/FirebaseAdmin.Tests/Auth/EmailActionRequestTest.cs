@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
@@ -316,6 +317,35 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);
             Assert.Equal(
                 $"Failed to generate email action link for: user@example.com",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public async Task InvalidDynamicLinkDomain()
+        {
+            var json = $@"{{
+                ""error"": {{
+                    ""message"": ""INVALID_DYNAMIC_LINK_DOMAIN"",
+                }}
+            }}";
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = json,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.GenerateSignInWithEmailLinkAsync(
+                    "user@example.com", ActionCodeSettings));
+
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.InvalidDynamicLinkDomain, exception.AuthErrorCode);
+            Assert.Equal(
+                "Dynamic link domain specified in ActionCodeSettings is not authorized "
+                + "(INVALID_DYNAMIC_LINK_DOMAIN).",
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
