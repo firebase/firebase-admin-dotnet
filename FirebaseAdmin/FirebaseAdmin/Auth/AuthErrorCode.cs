@@ -58,5 +58,10 @@ namespace FirebaseAdmin.Auth
         /// No user record found for the given identifier.
         /// </summary>
         UserNotFound,
+
+        /// <summary>
+        /// Dynamic link domain specified in <see cref="ActionCodeSettings"/> is not authorized.
+        /// </summary>
+        InvalidDynamicLinkDomain,
     }
 }

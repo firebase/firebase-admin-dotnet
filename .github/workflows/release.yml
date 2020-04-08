@@ -100,7 +100,6 @@ jobs:
         name: Release
 
     - name: Setup .NET Core
-      if: matrix.os == 'ubuntu-latest'
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 2.2.108
