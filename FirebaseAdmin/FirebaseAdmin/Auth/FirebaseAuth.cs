@@ -468,7 +468,8 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="FirebaseAuthException">If an error occurs while revoking the tokens.</exception>
         public async Task RevokeRefreshTokensAsync(string uid)
         {
-            await this.RevokeRefreshTokensAsync(uid, default(CancellationToken));
+            await this.RevokeRefreshTokensAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
