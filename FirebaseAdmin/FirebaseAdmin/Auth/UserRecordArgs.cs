@@ -30,6 +30,8 @@ namespace FirebaseAdmin.Auth
         private Optional<string> photoUrl;
         private Optional<string> phoneNumber;
         private Optional<IReadOnlyDictionary<string, object>> customClaims;
+        private Optional<ProviderUserInfo> providerToLink;
+        private Optional<IList<string>> providersToDelete;
         private bool? disabled = null;
         private bool? emailVerified = null;
 
@@ -92,6 +94,24 @@ namespace FirebaseAdmin.Auth
         /// Gets or sets the password of the user.
         /// </summary>
         public string Password { get; set; }
+
+        /// <summary>
+        /// Gets or sets the user's provider info to be linked to the user account.
+        /// </summary>
+        public ProviderUserInfo ProviderToLink
+        {
+            get => this.providerToLink?.Value;
+            set => this.providerToLink = this.Wrap(value);
+        }
+
+        /// <summary>
+        /// Gets or sets IDs of providers to be unlinked from the user account.
+        /// </summary>
+        public IList<string> ProvidersToDelete
+        {
+            get => this.providersToDelete?.Value;
+            set => this.providersToDelete = this.Wrap(value);
+        }
 
         internal IReadOnlyDictionary<string, object> CustomClaims
         {
@@ -225,6 +245,27 @@ namespace FirebaseAdmin.Auth
             return customClaimsString;
         }
 
+        private static string CheckProviderId(string providerId)
+        {
+            if (providerId == null || providerId == string.Empty)
+            {
+                throw new ArgumentException("Provider ID must not be empty");
+            }
+
+            return providerId;
+        }
+
+        private static ProviderUserInfo CheckProviderUserInfo(ProviderUserInfo providerUserInfo)
+        {
+            CheckProviderId(providerUserInfo.ProviderId);
+            if (providerUserInfo.Uid == null || providerUserInfo.Uid == string.Empty)
+            {
+                throw new ArgumentException("Provider user ID must not be empty");
+            }
+
+            return providerUserInfo;
+        }
+
         private Optional<T> Wrap<T>(T value)
         {
             return new Optional<T>(value);
@@ -242,6 +283,10 @@ namespace FirebaseAdmin.Auth
                 this.PhoneNumber = CheckPhoneNumber(args.PhoneNumber);
                 this.PhotoUrl = CheckPhotoUrl(args.PhotoUrl);
                 this.Uid = CheckUid(args.Uid);
+                if (args.ProviderToLink != null)
+                {
+                    throw new ArgumentException("ProviderToLink must be null in CreateUserRequests.");
+                }
             }
 
             [JsonProperty("disabled")]
@@ -273,6 +318,9 @@ namespace FirebaseAdmin.Auth
         {
             internal UpdateUserRequest(UserRecordArgs args)
             {
+                // Keeping track of provider IDs being updated, to make sure a single ID
+                // is not updated in two places.
+                var providerIdsToUpdate = new List<string>();
                 this.Uid = CheckUid(args.Uid, required: true);
                 if (args.customClaims != null)
                 {
@@ -312,6 +360,7 @@ namespace FirebaseAdmin.Auth
 
                 if (args.phoneNumber != null)
                 {
+                    providerIdsToUpdate.Add("phone");
                     var phoneNumber = args.phoneNumber.Value;
                     if (phoneNumber == null)
                     {
@@ -322,6 +371,31 @@ namespace FirebaseAdmin.Auth
                         this.PhoneNumber = CheckPhoneNumber(phoneNumber);
                     }
                 }
+
+                if (args.providersToDelete != null)
+                {
+                    var providersToDelete = args.providersToDelete.Value;
+                    if (providersToDelete != null)
+                    {
+                        foreach (string providerToDelete in providersToDelete)
+                        {
+                            this.AddDeleteProvider(CheckProviderId(providerToDelete));
+                            providerIdsToUpdate.Add(providerToDelete);
+                       }
+                    }
+                }
+
+                if (args.providerToLink != null)
+                {
+                    var providerToLink = args.providerToLink.Value;
+                    if (providerToLink != null)
+                    {
+                        this.ProviderToLink = CheckProviderUserInfo(providerToLink);
+                        providerIdsToUpdate.Add(this.ProviderToLink.ProviderId);
+                    }
+                }
+
+                this.AssertDistinctProviderIds(providerIdsToUpdate);
             }
 
             [JsonProperty("customAttributes")]
@@ -357,6 +431,9 @@ namespace FirebaseAdmin.Auth
             [JsonProperty("localId")]
             public string Uid { get; set; }
 
+            [JsonProperty("linkProviderUserInfo")]
+            public ProviderUserInfo ProviderToLink { get; set; }
+
             private void AddDeleteAttribute(string attribute)
             {
                 if (this.DeleteAttribute == null)
@@ -375,6 +452,20 @@ namespace FirebaseAdmin.Auth
                 }
 
                 this.DeleteProvider.Add(provider);
+            }
+
+            private void AssertDistinctProviderIds(List<string> providerIds)
+            {
+                var iteratedIds = new HashSet<string>();
+                foreach (string providerId in providerIds)
+                {
+                    if (iteratedIds.Contains(providerId))
+                    {
+                        throw new ArgumentException("Update request includes more than one update for Provider ID " + providerId);
+                    }
+
+                    iteratedIds.Add(providerId);
+                }
             }
         }
 
