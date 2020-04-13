@@ -452,6 +452,50 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Revokes all refresh tokens for the specified user.
+        ///
+        /// Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
+        /// seconds since the epoch and truncated to 1 second accuracy. It is important that
+        /// the server on which this is called has its clock set correctly and synchronized.
+        ///
+        /// While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// for existing sessions from getting minted, existing ID tokens may remain active until
+        /// their natural expiration (one hour).
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <returns>A task that completes when the user's refresh tokens have been revoked.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while revoking the tokens.</exception>
+        public async Task RevokeRefreshTokensAsync(string uid)
+        {
+            await this.RevokeRefreshTokensAsync(uid, default(CancellationToken));
+        }
+
+        /// <summary>
+        /// Revokes all refresh tokens for the specified user.
+        ///
+        /// Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
+        /// seconds since the epoch and truncated to 1 second accuracy. It is important that
+        /// the server on which this is called has its clock set correctly and synchronized.
+        ///
+        /// While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// for existing sessions from getting minted, existing ID tokens may remain active until
+        /// their natural expiration (one hour).
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes when the user's refresh tokens have been revoked.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while revoking the tokens.</exception>
+        public async Task RevokeRefreshTokensAsync(string uid, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            await userManager.RevokeRefreshTokensAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes the user identified by the specified <paramref name="uid"/>.
         /// </summary>
         /// <param name="uid">A user ID string.</param>
