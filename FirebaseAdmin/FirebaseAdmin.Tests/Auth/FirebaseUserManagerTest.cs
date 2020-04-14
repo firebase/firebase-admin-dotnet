@@ -23,6 +23,7 @@ using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
+using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -36,6 +37,8 @@ namespace FirebaseAdmin.Auth.Tests
 
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
+
+        private static readonly IClock MockClock = new MockClock();
 
         private static readonly IList<string> ListUsersResponse = new List<string>()
         {
@@ -1530,6 +1533,49 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task RevokeRefreshTokens()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = CreateUserResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            await auth.RevokeRefreshTokensAsync("user1");
+
+            Assert.Equal(1, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal(2, request.Count);
+            Assert.Equal("user1", request["localId"]);
+            Assert.Equal(MockClock.UnixTimestamp(), request["validSince"]);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public void RevokeRefreshTokensNoUid()
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.RevokeRefreshTokensAsync(null));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.RevokeRefreshTokensAsync(string.Empty));
+        }
+
+        [Fact]
+        public void RevokeRefreshTokensInvalidUid()
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var uid = new string('a', 129);
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.RevokeRefreshTokensAsync(uid));
+        }
+
+        [Fact]
         public async Task ServiceUnvailable()
         {
             var handler = new MockMessageHandler()
@@ -1576,6 +1622,7 @@ namespace FirebaseAdmin.Auth.Tests
                 ProjectId = MockProjectId,
                 ClientFactory = new MockHttpClientFactory(handler),
                 RetryOptions = RetryOptions.NoBackOff,
+                Clock = MockClock,
             });
             return new FirebaseAuth(new FirebaseAuth.FirebaseAuthArgs()
             {

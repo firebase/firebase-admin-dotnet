@@ -18,14 +18,14 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
-using Google.Api.Gax;
 using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using Gax = Google.Api.Gax;
 
 namespace FirebaseAdmin.Auth
 {
@@ -45,6 +45,7 @@ namespace FirebaseAdmin.Auth
 
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
+        private readonly IClock clock;
 
         internal FirebaseUserManager(Args args)
         {
@@ -65,6 +66,7 @@ namespace FirebaseAdmin.Auth
                     RetryOptions = args.RetryOptions,
                 });
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
+            this.clock = args.Clock ?? SystemClock.Default;
         }
 
         public void Dispose()
@@ -159,7 +161,7 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
         }
 
-        internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
+        internal Gax.PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
             ListUsersOptions options)
         {
             var factory = new ListUsersRequest.Factory(this.baseUrl, this.httpClient, options);
@@ -244,6 +246,16 @@ namespace FirebaseAdmin.Auth
             }
         }
 
+        internal async Task RevokeRefreshTokensAsync(string uid, CancellationToken cancellationToken)
+        {
+            var args = new UserRecordArgs()
+            {
+                Uid = uid,
+                ValidSince = this.clock.UnixTimestamp(),
+            };
+            await this.UpdateUserAsync(args, cancellationToken).ConfigureAwait(false);
+        }
+
         internal async Task<string> GenerateEmailActionLinkAsync(
             EmailActionLinkRequest request,
             CancellationToken cancellationToken = default(CancellationToken))
@@ -313,6 +325,8 @@ namespace FirebaseAdmin.Auth
             internal string ProjectId { get; set; }
 
             internal RetryOptions RetryOptions { get; set; }
+
+            internal IClock Clock { get; set; }
         }
 
         /// <summary>
