@@ -32,7 +32,7 @@ namespace FirebaseAdmin.Auth
 
         public IPublicKeySource PublicKeySource { get; set; }
 
-        internal static FirebaseTokenVerifierArgs CreateIdTokenVerififierArgs(
+        internal static FirebaseTokenVerifierArgs ForIdTokens(
             string projectId, IPublicKeySource keySource, IClock clock = null)
         {
             return new FirebaseTokenVerifierArgs()

@@ -410,8 +410,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
         {
-            var args = FirebaseTokenVerifierArgs.CreateIdTokenVerififierArgs(
-                "test-project", KeySource, Clock);
+            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource, Clock);
             var tokenVerifier = new FirebaseTokenVerifier(args);
 
             FirebaseUserManager userManager = null;
