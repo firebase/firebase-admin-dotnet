@@ -45,6 +45,11 @@ namespace FirebaseAdmin.Auth
         PhoneNumberAlreadyExists,
 
         /// <summary>
+        /// The specified ID token has been revoked.
+        /// </summary>
+        RevokedIdToken,
+
+        /// <summary>
         /// The user with the provided uid already exists.
         /// </summary>
         UidAlreadyExists,

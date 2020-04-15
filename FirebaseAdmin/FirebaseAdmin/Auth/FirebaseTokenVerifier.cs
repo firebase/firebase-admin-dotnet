@@ -86,17 +86,7 @@ namespace FirebaseAdmin.Auth
 
             var keySource = new HttpPublicKeySource(
                 IdTokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
-            var args = new FirebaseTokenVerifierArgs()
-            {
-                ProjectId = projectId,
-                ShortName = "ID token",
-                Operation = "VerifyIdTokenAsync()",
-                Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
-                Issuer = "https://securetoken.google.com/",
-                Clock = SystemClock.Default,
-                PublicKeySource = keySource,
-            };
-
+            var args = FirebaseTokenVerifierArgs.CreateIdTokenVerififierArgs(projectId, keySource);
             return new FirebaseTokenVerifier(args);
         }
 
