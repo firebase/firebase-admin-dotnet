@@ -268,9 +268,83 @@ namespace FirebaseAdmin.Auth
         public async Task<FirebaseToken> VerifyIdTokenAsync(
             string idToken, CancellationToken cancellationToken)
         {
-            var idTokenVerifier = this.IfNotDeleted(() => this.idTokenVerifier.Value);
-            return await idTokenVerifier.VerifyTokenAsync(idToken, cancellationToken)
+            return await this.VerifyIdTokenAsync(idToken, false, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        ///
+        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The back-end server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        ///
+        /// <para>If <c>checkRevoked</c> is set to true, this method performs an additional check
+        /// to see if the ID token has been revoked since it was issued. This requires making an
+        /// additional remote API call.</para>
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were revoked.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken, bool checkRevoked)
+        {
+            return await this.VerifyIdTokenAsync(idToken, checkRevoked, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        ///
+        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The back-end server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        ///
+        /// <para>If <c>checkRevoked</c> is set to true, this method performs an additional check
+        /// to see if the ID token has been revoked since it was issued. This requires making an
+        /// additional remote API call.</para>
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were revoked.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(
+            string idToken, bool checkRevoked, CancellationToken cancellationToken)
+        {
+            var idTokenVerifier = this.IfNotDeleted(() => this.idTokenVerifier.Value);
+            var decodedToken = await idTokenVerifier.VerifyTokenAsync(idToken, cancellationToken)
+                .ConfigureAwait(false);
+            if (checkRevoked)
+            {
+                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken);
+                if (revoked)
+                {
+                    throw new FirebaseAuthException(
+                        ErrorCode.InvalidArgument,
+                        "Firebase ID token has been revoked.",
+                        AuthErrorCode.RevokedIdToken);
+                }
+            }
+
+            return decodedToken;
         }
 
         /// <summary>
@@ -454,13 +528,13 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Revokes all refresh tokens for the specified user.
         ///
-        /// Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
+        /// <para>Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
         /// seconds since the epoch and truncated to 1 second accuracy. It is important that
-        /// the server on which this is called has its clock set correctly and synchronized.
+        /// the server on which this is called has its clock set correctly and synchronized.</para>
         ///
-        /// While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// <para>While this will revoke all sessions for a specified user and disable any new ID tokens
         /// for existing sessions from getting minted, existing ID tokens may remain active until
-        /// their natural expiration (one hour).
+        /// their natural expiration (one hour).</para>
         /// </summary>
         /// <param name="uid">A user ID string.</param>
         /// <returns>A task that completes when the user's refresh tokens have been revoked.</returns>
@@ -475,13 +549,13 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Revokes all refresh tokens for the specified user.
         ///
-        /// Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
+        /// <para>Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
         /// seconds since the epoch and truncated to 1 second accuracy. It is important that
-        /// the server on which this is called has its clock set correctly and synchronized.
+        /// the server on which this is called has its clock set correctly and synchronized.</para>
         ///
-        /// While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// <para>While this will revoke all sessions for a specified user and disable any new ID tokens
         /// for existing sessions from getting minted, existing ID tokens may remain active until
-        /// their natural expiration (one hour).
+        /// their natural expiration (one hour).</para>
         /// </summary>
         /// <param name="uid">A user ID string.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
@@ -748,6 +822,15 @@ namespace FirebaseAdmin.Auth
                 this.tokenFactory.DisposeIfCreated();
                 this.userManager.DisposeIfCreated();
             }
+        }
+
+        private async Task<bool> IsRevokedAsync(
+            FirebaseToken token, CancellationToken cancellationToken)
+        {
+            var user = await this.GetUserAsync(token.Uid, cancellationToken);
+            var cutoff = user.TokensValidAfterTimestamp.Subtract(UserRecord.UnixEpoch)
+                .TotalSeconds;
+            return token.IssuedAtTimeSeconds < cutoff;
         }
 
         private TResult IfNotDeleted<TResult>(Func<TResult> func)

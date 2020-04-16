@@ -127,7 +127,7 @@ namespace FirebaseAdmin.Auth.Tests
         public async Task VerifyIdTokenNoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            var idToken = await FirebaseTokenVerifierTest.CreateTestTokenAsync();
+            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken));
         }
@@ -142,7 +142,7 @@ namespace FirebaseAdmin.Auth.Tests
             });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
-            var idToken = await FirebaseTokenVerifierTest.CreateTestTokenAsync();
+            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(
                 async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
                     idToken, canceller.Token));

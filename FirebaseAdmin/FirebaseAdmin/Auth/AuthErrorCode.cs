@@ -63,5 +63,10 @@ namespace FirebaseAdmin.Auth
         /// Dynamic link domain specified in <see cref="ActionCodeSettings"/> is not authorized.
         /// </summary>
         InvalidDynamicLinkDomain,
+
+        /// <summary>
+        /// The specified ID token has been revoked.
+        /// </summary>
+        RevokedIdToken,
     }
 }
