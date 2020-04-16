@@ -246,6 +246,44 @@ namespace FirebaseAdmin.Snippets
             // [END set_custom_user_claims_incremental]
         }
 
+        internal static async Task RevokeIdTokens(string idToken)
+        {
+            string uid = "someUid";
+            // [START revoke_tokens]
+            await FirebaseAuth.DefaultInstance.RevokeRefreshTokensAsync(uid);
+            var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+            Console.WriteLine("Tokens revoked at: " + user.TokensValidAfterTimestamp);
+            // [END revoke_tokens]
+        }
+
+        internal static async Task VerifyIdTokenCheckRevoked(string idToken)
+        {
+            // [START verify_id_token_check_revoked]
+            try
+            {
+                // Verify the ID token while checking if the token is revoked by passing checkRevoked
+                // as true.
+                bool checkRevoked = true;
+                var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
+                    idToken, checkRevoked);
+                // Token is valid and not revoked.
+                string uid = decodedToken.Uid;
+            }
+            catch (FirebaseAuthException ex)
+            {
+                if (ex.AuthErrorCode == AuthErrorCode.RevokedIdToken)
+                {
+                    // Token has been revoked. Inform the user to re-authenticate or signOut() the user.
+                }
+                else
+                {
+                    // Token is invalid.
+                }
+            }
+
+            // [END verify_id_token_check_revoked]
+        }
+
         internal static ActionCodeSettings InitActionCodeSettings()
         {
             // [START init_action_code_settings]
