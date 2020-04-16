@@ -110,6 +110,31 @@ namespace FirebaseAdmin.IntegrationTests
         }
 
         [Fact]
+        public async Task RevokeRefreshTokens()
+        {
+            var customToken = await FirebaseAuth.DefaultInstance
+                .CreateCustomTokenAsync("testuser");
+            var idToken = await SignInWithCustomTokenAsync(customToken);
+            var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken, true);
+            Assert.Equal("testuser", decoded.Uid);
+
+            await Task.Delay(1000);
+            await FirebaseAuth.DefaultInstance.RevokeRefreshTokensAsync("testuser");
+
+            decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken, false);
+            Assert.Equal("testuser", decoded.Uid);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken, true));
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.RevokedIdToken, exception.AuthErrorCode);
+
+            idToken = await SignInWithCustomTokenAsync(customToken);
+            decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken, true);
+            Assert.Equal("testuser", decoded.Uid);
+        }
+
+        [Fact]
         public async Task SetCustomUserClaims()
         {
             var user = await FirebaseAuth.DefaultInstance.CreateUserAsync(new UserRecordArgs());
