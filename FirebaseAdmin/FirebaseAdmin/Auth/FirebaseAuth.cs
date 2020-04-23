@@ -227,9 +227,9 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Parses and verifies a Firebase ID token.
-        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
         /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
-        /// client SDK) with its requests. The back-end server can then use this method
+        /// client SDK) with its requests. The backend server can then use this method
         /// to verify that the token is valid. This method ensures that the token is correctly
         /// signed, has not expired, and it was issued against the Firebase project associated with
         /// this <c>FirebaseAuth</c> instance.</para>
@@ -249,9 +249,9 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Parses and verifies a Firebase ID token.
-        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
         /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
-        /// client SDK) with its requests. The back-end server can then use this method
+        /// client SDK) with its requests. The backend server can then use this method
         /// to verify that the token is valid. This method ensures that the token is correctly
         /// signed, has not expired, and it was issued against the Firebase project associated with
         /// this <c>FirebaseAuth</c> instance.</para>
@@ -275,9 +275,9 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Parses and verifies a Firebase ID token.
         ///
-        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
         /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
-        /// client SDK) with its requests. The back-end server can then use this method
+        /// client SDK) with its requests. The backend server can then use this method
         /// to verify that the token is valid. This method ensures that the token is correctly
         /// signed, has not expired, and it was issued against the Firebase project associated with
         /// this <c>FirebaseAuth</c> instance.</para>
@@ -304,9 +304,9 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Parses and verifies a Firebase ID token.
         ///
-        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
         /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
-        /// client SDK) with its requests. The back-end server can then use this method
+        /// client SDK) with its requests. The backend server can then use this method
         /// to verify that the token is valid. This method ensures that the token is correctly
         /// signed, has not expired, and it was issued against the Firebase project associated with
         /// this <c>FirebaseAuth</c> instance.</para>
@@ -528,7 +528,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Revokes all refresh tokens for the specified user.
         ///
-        /// <para>Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
+        /// <para>Updates the user's <c>tokensValidAfterTimestamp</c> to the current UTC time expressed in
         /// seconds since the epoch and truncated to 1 second accuracy. It is important that
         /// the server on which this is called has its clock set correctly and synchronized.</para>
         ///
@@ -549,7 +549,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Revokes all refresh tokens for the specified user.
         ///
-        /// <para>Updates the user's tokensValidAfterTimestamp to the current UTC time expressed in
+        /// <para>Updates the user's <c>tokensValidAfterTimestamp</c> to the current UTC time expressed in
         /// seconds since the epoch and truncated to 1 second accuracy. It is important that
         /// the server on which this is called has its clock set correctly and synchronized.</para>
         ///
