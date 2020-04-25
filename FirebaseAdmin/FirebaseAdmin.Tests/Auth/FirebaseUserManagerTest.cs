@@ -1576,6 +1576,100 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public void CreateSessionCookieNoIdToken()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromHours(1),
+            };
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync(null, options));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync(string.Empty, options));
+        }
+
+        [Fact]
+        public void CreateSessionCookieNoOptions()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await auth.CreateSessionCookieAsync("idToken", null));
+        }
+
+        [Fact]
+        public void CreateSessionCookieNoExpiresIn()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync(
+                    "idToken", new SessionCookieOptions()));
+        }
+
+        [Fact]
+        public void CreateSessionCookieExpiresInTooLow()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+            var fiveMinutesInSeconds = TimeSpan.FromMinutes(5).TotalSeconds;
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromSeconds(fiveMinutesInSeconds - 1),
+            };
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync("idToken", options));
+        }
+
+        [Fact]
+        public void CreateSessionCookieExpiresInTooHigh()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+            var fourteenDaysInSeconds = TimeSpan.FromDays(14).TotalSeconds;
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromSeconds(fourteenDaysInSeconds + 1),
+            };
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync("idToken", options));
+        }
+
+        [Fact]
+        public async Task CreateSessionCookie()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{
+                    ""sessionCookie"": ""cookie""
+                }",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromHours(1),
+            };
+
+            var result = await auth.CreateSessionCookieAsync("idToken", options);
+
+            Assert.Equal("cookie", result);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal(2, request.Count);
+            Assert.Equal("idToken", request["idToken"]);
+            Assert.Equal(3600, request["validDuration"]);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
         public async Task ServiceUnvailable()
         {
             var handler = new MockMessageHandler()
