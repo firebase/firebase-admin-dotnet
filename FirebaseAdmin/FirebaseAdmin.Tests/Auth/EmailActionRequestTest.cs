@@ -365,6 +365,7 @@ namespace FirebaseAdmin.Auth.Tests
                 UserManager = new Lazy<FirebaseUserManager>(userManager),
                 TokenFactory = new Lazy<FirebaseTokenFactory>(),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
+                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
             });
         }
 

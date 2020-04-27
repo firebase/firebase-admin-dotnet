@@ -68,5 +68,20 @@ namespace FirebaseAdmin.Auth
         /// The specified ID token has been revoked.
         /// </summary>
         RevokedIdToken,
+
+        /// <summary>
+        /// The specified session cookie is invalid.
+        /// </summary>
+        InvalidSessionCookie,
+
+        /// <summary>
+        /// The specified session cookie is expired.
+        /// </summary>
+        ExpiredSessionCookie,
+
+        /// <summary>
+        /// The specified session cookie has been revoked.
+        /// </summary>
+        RevokedSessionCookie,
     }
 }
