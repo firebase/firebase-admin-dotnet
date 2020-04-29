@@ -272,6 +272,32 @@ namespace FirebaseAdmin.Auth
             return (string)response.Result["oobLink"];
         }
 
+        internal async Task<string> CreateSessionCookieAsync(
+            string idToken,
+            SessionCookieOptions options,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrEmpty(idToken))
+            {
+                throw new ArgumentException("idToken must not be null or empty");
+            }
+
+            var validOptions = options.ThrowIfNull(nameof(options)).CopyAndValidate();
+            var request = new Dictionary<string, object>()
+            {
+                { "idToken", idToken },
+                { "validDuration", (long)validOptions.ExpiresIn.TotalSeconds },
+            };
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                ":createSessionCookie", request, cancellationToken).ConfigureAwait(false);
+            if (response.Result == null || (string)response.Result["sessionCookie"] == null)
+            {
+                throw UnexpectedResponseException("Failed to generate session cookie");
+            }
+
+            return (string)response.Result["sessionCookie"];
+        }
+
         private static FirebaseAuthException UnexpectedResponseException(
             string message, Exception inner = null, HttpResponseMessage resp = null)
         {
