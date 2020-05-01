@@ -1,14 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <AssemblyOriginatorKeyFile>../../FirebaseAdmin.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>../../stylecop_test.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.40.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
