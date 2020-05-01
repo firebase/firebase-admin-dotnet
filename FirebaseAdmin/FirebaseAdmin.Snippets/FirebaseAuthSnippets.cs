@@ -359,7 +359,7 @@ namespace FirebaseAdmin.Snippets
             // [START session_login]
             // POST: /sessionLogin
             [HttpPost]
-            public async Task<ActionResult> Login(LoginRequest request)
+            public async Task<ActionResult> Login([FromBody] LoginRequest request)
             {
                 // Set session expiration to 5 days.
                 var options = new SessionCookieOptions()
@@ -397,8 +397,8 @@ namespace FirebaseAdmin.Snippets
             [HttpPost]
             public async Task<ActionResult> Profile()
             {
-                string sessionCookie;
-                if (!this.Request.Cookies.TryGetValue("session", out sessionCookie))
+                var sessionCookie = this.Request.Cookies["session"];
+                if (string.IsNullOrEmpty(sessionCookie))
                 {
                     // Session cookie is not available. Force user to login.
                     return this.Redirect("/login");
