@@ -375,7 +375,13 @@ namespace FirebaseAdmin.Snippets
                         .CreateSessionCookieAsync(request.IdToken, options);
 
                     // Set cookie policy parameters as required.
-                    this.Response.Cookies.Append("session", sessionCookie);
+                    var cookieOptions = new CookieOptions()
+                    {
+                        Expires = DateTimeOffset.UtcNow.Add(options.ExpiresIn),
+                        HttpOnly = true,
+                        Secure = true,
+                    };
+                    this.Response.Cookies.Append("session", sessionCookie, cookieOptions);
                     return this.Ok();
                 }
                 catch (FirebaseAuthException)
