@@ -857,8 +857,7 @@ namespace FirebaseAdmin.Auth
         /// the verified and decoded session cookie.</returns>
         /// <exception cref="ArgumentException">If the session cookie is null or
         /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie fails to
-        /// verify.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
         /// <param name="sessionCookie">A Firebase session cookie string to verify and
         /// parse.</param>
         public async Task<FirebaseToken> VerifySessionCookieAsync(string sessionCookie)
@@ -877,8 +876,7 @@ namespace FirebaseAdmin.Auth
         /// the verified and decoded session cookie.</returns>
         /// <exception cref="ArgumentException">If the session cookie is null or
         /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie fails to
-        /// verify.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
         /// <param name="sessionCookie">A Firebase session cookie string to verify and
         /// parse.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
@@ -900,8 +898,7 @@ namespace FirebaseAdmin.Auth
         /// the verified and decoded session cookie.</returns>
         /// <exception cref="ArgumentException">If the session cookie is null or
         /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie fails to
-        /// verify.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
         /// <param name="sessionCookie">A Firebase session cookie string to verify and
         /// parse.</param>
         /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were
@@ -924,8 +921,7 @@ namespace FirebaseAdmin.Auth
         /// the verified and decoded session cookie.</returns>
         /// <exception cref="ArgumentException">If the session cookie is null or
         /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie fails to
-        /// verify.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
         /// <param name="sessionCookie">A Firebase session cookie string to verify and
         /// parse.</param>
         /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were
