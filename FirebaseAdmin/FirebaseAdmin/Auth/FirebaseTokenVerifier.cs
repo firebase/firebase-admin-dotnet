@@ -35,6 +35,9 @@ namespace FirebaseAdmin.Auth
         private const string IdTokenCertUrl = "https://www.googleapis.com/robot/v1/metadata/x509/"
             + "securetoken@system.gserviceaccount.com";
 
+        private const string SessionCookieCertUrl = "https://www.googleapis.com/identitytoolkit/v3/"
+            + "relyingparty/publicKeys";
+
         private const string FirebaseAudience = "https://identitytoolkit.googleapis.com/"
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
@@ -53,6 +56,8 @@ namespace FirebaseAdmin.Auth
         private readonly string issuer;
         private readonly IClock clock;
         private readonly IPublicKeySource keySource;
+        private readonly AuthErrorCode invalidTokenCode;
+        private readonly AuthErrorCode expiredIdTokenCode;
 
         internal FirebaseTokenVerifier(FirebaseTokenVerifierArgs args)
         {
@@ -63,6 +68,8 @@ namespace FirebaseAdmin.Auth
             this.issuer = args.Issuer.ThrowIfNullOrEmpty(nameof(args.Issuer));
             this.clock = args.Clock.ThrowIfNull(nameof(args.Clock));
             this.keySource = args.PublicKeySource.ThrowIfNull(nameof(args.PublicKeySource));
+            this.invalidTokenCode = args.InvalidTokenCode;
+            this.expiredIdTokenCode = args.ExpiredTokenCode;
             if ("aeiou".Contains(this.shortName.ToLower().Substring(0, 1)))
             {
                 this.articledShortName = $"an {this.shortName}";
@@ -90,6 +97,21 @@ namespace FirebaseAdmin.Auth
             return new FirebaseTokenVerifier(args);
         }
 
+        internal static FirebaseTokenVerifier CreateSessionCookieVerifier(FirebaseApp app)
+        {
+            var projectId = app.GetProjectId();
+            if (string.IsNullOrEmpty(projectId))
+            {
+                throw new ArgumentException(
+                    "Must initialize FirebaseApp with a project ID to verify session cookies.");
+            }
+
+            var keySource = new HttpPublicKeySource(
+                SessionCookieCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
+            var args = FirebaseTokenVerifierArgs.ForSessionCookies(projectId, keySource);
+            return new FirebaseTokenVerifier(args);
+        }
+
         internal async Task<FirebaseToken> VerifyTokenAsync(
             string token, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -112,7 +134,7 @@ namespace FirebaseAdmin.Auth
                 + $"{this.shortName}.";
             var issuer = this.issuer + this.ProjectId;
             string error = null;
-            var errorCode = AuthErrorCode.InvalidIdToken;
+            var errorCode = this.invalidTokenCode;
             var currentTimeInSeconds = this.clock.UnixTimestamp();
 
             if (string.IsNullOrEmpty(header.KeyId))
@@ -139,13 +161,14 @@ namespace FirebaseAdmin.Auth
             }
             else if (this.ProjectId != payload.Audience)
             {
-                error = $"{this.shortName} has incorrect audience (aud) claim. Expected {this.ProjectId} "
-                    + $"but got {payload.Audience}. {projectIdMessage} {verifyTokenMessage}";
+                error = $"Firebase {this.shortName} has incorrect audience (aud) claim. Expected "
+                    + $"{this.ProjectId} but got {payload.Audience}. {projectIdMessage} "
+                    + $"{verifyTokenMessage}";
             }
             else if (payload.Issuer != issuer)
             {
-                error = $"{this.shortName} has incorrect issuer (iss) claim. Expected {issuer} but "
-                    + $"got {payload.Issuer}.  {projectIdMessage} {verifyTokenMessage}";
+                error = $"Firebase {this.shortName} has incorrect issuer (iss) claim. Expected "
+                    + $"{issuer} but got {payload.Issuer}.  {projectIdMessage} {verifyTokenMessage}";
             }
             else if (payload.IssuedAtTimeSeconds - ClockSkewSeconds > currentTimeInSeconds)
             {
@@ -157,7 +180,7 @@ namespace FirebaseAdmin.Auth
             {
                 error = $"Firebase {this.shortName} expired at {payload.ExpirationTimeSeconds}. "
                     + $"Expected to be greater than {currentTimeInSeconds}.";
-                errorCode = AuthErrorCode.ExpiredIdToken;
+                errorCode = this.expiredIdTokenCode;
             }
             else if (string.IsNullOrEmpty(payload.Subject))
             {
@@ -230,8 +253,13 @@ namespace FirebaseAdmin.Auth
         }
 
         private FirebaseAuthException CreateException(
-            string message, AuthErrorCode errorCode = AuthErrorCode.InvalidIdToken)
+            string message, AuthErrorCode? errorCode = null)
         {
+            if (errorCode == null)
+            {
+                errorCode = this.invalidTokenCode;
+            }
+
             return new FirebaseAuthException(ErrorCode.InvalidArgument, message, errorCode);
         }
     }

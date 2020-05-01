@@ -31,6 +31,7 @@ namespace FirebaseAdmin.Auth.Tests
                 Credential = MockCredential,
             });
             Assert.Throws<ArgumentException>(() => FirebaseTokenVerifier.CreateIDTokenVerifier(app));
+            Assert.Throws<ArgumentException>(() => FirebaseTokenVerifier.CreateSessionCookieVerifier(app));
         }
 
         [Fact]
@@ -43,6 +44,9 @@ namespace FirebaseAdmin.Auth.Tests
             });
             var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
             Assert.Equal("explicit-project-id", verifier.ProjectId);
+
+            verifier = FirebaseTokenVerifier.CreateSessionCookieVerifier(app);
+            Assert.Equal("explicit-project-id", verifier.ProjectId);
         }
 
         [Fact]
@@ -53,6 +57,9 @@ namespace FirebaseAdmin.Auth.Tests
                 Credential = GoogleCredential.FromFile("./resources/service_account.json"),
             });
             var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
+            Assert.Equal("test-project", verifier.ProjectId);
+
+            verifier = FirebaseTokenVerifier.CreateSessionCookieVerifier(app);
             Assert.Equal("test-project", verifier.ProjectId);
         }
 
@@ -67,6 +74,9 @@ namespace FirebaseAdmin.Auth.Tests
                     Credential = MockCredential,
                 });
                 var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
+                Assert.Equal("env-project-id", verifier.ProjectId);
+
+                verifier = FirebaseTokenVerifier.CreateSessionCookieVerifier(app);
                 Assert.Equal("env-project-id", verifier.ProjectId);
             }
             finally

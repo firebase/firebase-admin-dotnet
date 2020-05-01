@@ -14,13 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
@@ -30,7 +25,7 @@ using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {
-    public class IdTokenVerificationTest
+    public class SessionCookieVerificationTest
     {
         private const long ClockSkewSeconds = 5 * 60;
 
@@ -39,29 +34,26 @@ namespace FirebaseAdmin.Auth.Tests
 
         private static readonly IClock Clock = new MockClock();
 
-        private static readonly ISigner Signer = CreateTestSigner();
-
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
+        private static readonly ISigner Signer = IdTokenVerificationTest.CreateTestSigner();
 
         [Fact]
-        public async Task ValidToken()
+        public async Task ValidSessionCookie()
         {
             var payload = new Dictionary<string, object>()
             {
                 { "foo", "bar" },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
-            var decoded = await auth.VerifyIdTokenAsync(idToken);
+            var decoded = await auth.VerifySessionCookieAsync(cookie);
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal("test-project", decoded.Audience);
             Assert.Equal("testuser", decoded.Subject);
 
-            // The default test token created by CreateTestTokenAsync has an issue time 10 minutes
-            // ago, and an expiry time 50 minutes in the future.
+            // The default test cookie has an issue time 10 minutes ago, and an expiry time 50
+            // minutes in the future.
             Assert.Equal(Clock.UnixTimestamp() - (60 * 10), decoded.IssuedAtTimeSeconds);
             Assert.Equal(Clock.UnixTimestamp() + (60 * 50), decoded.ExpirationTimeSeconds);
             Assert.Single(decoded.Claims);
@@ -76,20 +68,20 @@ namespace FirebaseAdmin.Auth.Tests
             var auth = this.CreateFirebaseAuth();
 
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await auth.VerifyIdTokenAsync(null));
+                async () => await auth.VerifySessionCookieAsync(null));
             await Assert.ThrowsAsync<ArgumentException>(
-                async () => await auth.VerifyIdTokenAsync(string.Empty));
+                async () => await auth.VerifySessionCookieAsync(string.Empty));
         }
 
         [Fact]
-        public async Task MalformedToken()
+        public async Task MalformedCookie()
         {
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync("not-a-token"));
+                async () => await auth.VerifySessionCookieAsync("not-a-token"));
 
-            this.CheckException(exception, "Incorrect number of segments in ID token.");
+            this.CheckException(exception, "Incorrect number of segments in session cookie.");
         }
 
         [Fact]
@@ -99,13 +91,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "kid", string.Empty },
             };
-            var idToken = await CreateTestTokenAsync(headerOverrides: header);
+            var cookie = await CreateSessionCookieAsync(headerOverrides: header);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            this.CheckException(exception, "Firebase ID token has no 'kid' claim.");
+            this.CheckException(exception, "Firebase session cookie has no 'kid' claim.");
         }
 
         [Fact]
@@ -115,13 +107,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "kid", "incorrect-key-id" },
             };
-            var idToken = await CreateTestTokenAsync(headerOverrides: header);
+            var cookie = await CreateSessionCookieAsync(headerOverrides: header);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            this.CheckException(exception, "Failed to verify ID token signature.");
+            this.CheckException(exception, "Failed to verify session cookie signature.");
         }
 
         [Fact]
@@ -131,13 +123,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "alg", "HS256" },
             };
-            var idToken = await CreateTestTokenAsync(headerOverrides: header);
+            var cookie = await CreateSessionCookieAsync(headerOverrides: header);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            var expectedMessage = "Firebase ID token has incorrect algorithm."
+            var expectedMessage = "Firebase session cookie has incorrect algorithm."
                 + " Expected RS256 but got HS256.";
             this.CheckException(exception, expectedMessage);
         }
@@ -150,15 +142,15 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "exp", expiryTime },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            var expectedMessage = $"Firebase ID token expired at {expiryTime}. "
+            var expectedMessage = $"Firebase session cookie expired at {expiryTime}. "
                 + $"Expected to be greater than {Clock.UnixTimestamp()}.";
-            this.CheckException(exception, expectedMessage, AuthErrorCode.ExpiredIdToken);
+            this.CheckException(exception, expectedMessage, AuthErrorCode.ExpiredSessionCookie);
         }
 
         [Fact]
@@ -169,10 +161,10 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "exp", expiryTimeSeconds },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
-            var decoded = await auth.VerifyIdTokenAsync(idToken);
+            var decoded = await auth.VerifySessionCookieAsync(cookie);
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(expiryTimeSeconds, decoded.ExpirationTimeSeconds);
@@ -186,13 +178,14 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "iat", issuedAt },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            var expectedMessage = $"Firebase ID token issued at future timestamp {issuedAt}.";
+            var expectedMessage = "Firebase session cookie issued at future "
+                + $"timestamp {issuedAt}.";
             this.CheckException(exception, expectedMessage);
         }
 
@@ -204,10 +197,10 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "iat", issuedAtSeconds },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
-            var decoded = await auth.VerifyIdTokenAsync(idToken);
+            var decoded = await auth.VerifySessionCookieAsync(cookie);
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(issuedAtSeconds, decoded.IssuedAtTimeSeconds);
@@ -220,13 +213,30 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "iss", "wrong-issuer" },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            var expectedMessage = "Firebase ID token has incorrect issuer (iss) claim.";
+            var expectedMessage = "Firebase session cookie has incorrect issuer (iss) claim.";
+            this.CheckException(exception, expectedMessage);
+        }
+
+        [Fact]
+        public async Task IdToken()
+        {
+            var payload = new Dictionary<string, object>()
+            {
+                { "iss", "wrong-issuer" },
+            };
+            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
+            var auth = this.CreateFirebaseAuth();
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.VerifySessionCookieAsync(idToken));
+
+            var expectedMessage = "Firebase session cookie has incorrect issuer (iss) claim.";
             this.CheckException(exception, expectedMessage);
         }
 
@@ -237,13 +247,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "aud", "wrong-audience" },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            var expectedMessage = "Firebase ID token has incorrect audience (aud) claim."
+            var expectedMessage = "Firebase session cookie has incorrect audience (aud) claim."
                 + " Expected test-project but got wrong-audience";
             this.CheckException(exception, expectedMessage);
         }
@@ -255,13 +265,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "sub", string.Empty },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            var expectedMessage = "Firebase ID token has no or empty subject (sub) claim.";
+            var expectedMessage = "Firebase session cookie has no or empty subject (sub) claim.";
             this.CheckException(exception, expectedMessage);
         }
 
@@ -272,13 +282,13 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 { "sub", new string('a', 129) },
             };
-            var idToken = await CreateTestTokenAsync(payloadOverrides: payload);
+            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
             var auth = this.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken));
+                async () => await auth.VerifySessionCookieAsync(cookie));
 
-            var expectedMessage = "Firebase ID token has a subject claim longer than"
+            var expectedMessage = "Firebase session cookie has a subject claim longer than"
                 + " 128 characters.";
             this.CheckException(exception, expectedMessage);
         }
@@ -286,7 +296,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task RevokedToken()
         {
-            var idToken = await CreateTestTokenAsync();
+            var cookie = await CreateSessionCookieAsync();
             var handler = new MockMessageHandler()
             {
                 Response = $@"{{
@@ -300,23 +310,23 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var decoded = await auth.VerifyIdTokenAsync(idToken);
+            var decoded = await auth.VerifySessionCookieAsync(cookie);
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(0, handler.Calls);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken, true));
+                async () => await auth.VerifySessionCookieAsync(cookie, true));
 
-            var expectedMessage = "Firebase ID token has been revoked.";
-            this.CheckException(exception, expectedMessage, AuthErrorCode.RevokedIdToken);
+            var expectedMessage = "Firebase session cookie has been revoked.";
+            this.CheckException(exception, expectedMessage, AuthErrorCode.RevokedSessionCookie);
             Assert.Equal(1, handler.Calls);
         }
 
         [Fact]
         public async Task ValidUnrevokedToken()
         {
-            var idToken = await CreateTestTokenAsync();
+            var cookie = await CreateSessionCookieAsync();
             var handler = new MockMessageHandler()
             {
                 Response = @"{
@@ -329,7 +339,7 @@ namespace FirebaseAdmin.Auth.Tests
             };
             var auth = this.CreateFirebaseAuth(handler);
 
-            var decoded = await auth.VerifyIdTokenAsync(idToken, true);
+            var decoded = await auth.VerifySessionCookieAsync(cookie, true);
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(1, handler.Calls);
@@ -338,7 +348,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task CheckRevokedError()
         {
-            var idToken = await CreateTestTokenAsync();
+            var cookie = await CreateSessionCookieAsync();
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
@@ -349,7 +359,7 @@ namespace FirebaseAdmin.Auth.Tests
             var auth = this.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifyIdTokenAsync(idToken, true));
+                async () => await auth.VerifySessionCookieAsync(cookie, true));
 
             Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
             Assert.StartsWith("No user record found for the given identifier", exception.Message);
@@ -360,11 +370,11 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         /// <summary>
-        /// Creates a mock ID token for testing purposes. By default the created token has an issue
-        /// time 10 minutes ago, and an expirty time 50 minutes into the future. All header and
-        /// payload claims can be overridden if needed.
+        /// Creates a mock session cookie for testing purposes. By default the created cookie has
+        /// an issue time 10 minutes ago, and an expirty time 50 minutes into the future. All
+        /// header and payload claims can be overridden if needed.
         /// </summary>
-        internal static async Task<string> CreateTestTokenAsync(
+        internal static async Task<string> CreateSessionCookieAsync(
             Dictionary<string, object> headerOverrides = null,
             Dictionary<string, object> payloadOverrides = null)
         {
@@ -385,7 +395,7 @@ namespace FirebaseAdmin.Auth.Tests
             var payload = new Dictionary<string, object>()
             {
                 { "sub", "testuser" },
-                { "iss", "https://securetoken.google.com/test-project" },
+                { "iss", "https://session.firebase.google.com/test-project" },
                 { "aud", "test-project" },
                 { "iat", Clock.UnixTimestamp() - (60 * 10) },
                 { "exp", Clock.UnixTimestamp() + (60 * 50) },
@@ -401,16 +411,10 @@ namespace FirebaseAdmin.Auth.Tests
             return await JwtUtils.CreateSignedJwtAsync(header, payload, Signer);
         }
 
-        internal static ISigner CreateTestSigner()
-        {
-            var credential = GoogleCredential.FromFile("./resources/service_account.json");
-            var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
-            return new ServiceAccountSigner(serviceAccount);
-        }
-
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource, Clock);
+            var args = FirebaseTokenVerifierArgs.ForSessionCookies(
+                "test-project", KeySource, Clock);
             var tokenVerifier = new FirebaseTokenVerifier(args);
 
             FirebaseUserManager userManager = null;
@@ -418,7 +422,7 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 userManager = new FirebaseUserManager(new FirebaseUserManager.Args
                 {
-                    Credential = MockCredential,
+                    Credential = GoogleCredential.FromAccessToken("test-token"),
                     ProjectId = "test-project",
                     ClientFactory = new MockHttpClientFactory(handler),
                     RetryOptions = RetryOptions.NoBackOff,
@@ -427,9 +431,9 @@ namespace FirebaseAdmin.Auth.Tests
 
             return new FirebaseAuth(new FirebaseAuth.FirebaseAuthArgs()
             {
-                IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(tokenVerifier),
-                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
+                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(tokenVerifier),
                 UserManager = new Lazy<FirebaseUserManager>(userManager),
+                IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
                 TokenFactory = new Lazy<FirebaseTokenFactory>(),
             });
         }
@@ -437,31 +441,13 @@ namespace FirebaseAdmin.Auth.Tests
         private void CheckException(
             FirebaseAuthException exception,
             string prefix,
-            AuthErrorCode errorCode = AuthErrorCode.InvalidIdToken)
+            AuthErrorCode errorCode = AuthErrorCode.InvalidSessionCookie)
         {
             Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
             Assert.StartsWith(prefix, exception.Message);
             Assert.Equal(errorCode, exception.AuthErrorCode);
             Assert.Null(exception.InnerException);
             Assert.Null(exception.HttpResponse);
-        }
-    }
-
-    internal class FileSystemPublicKeySource : IPublicKeySource
-    {
-        private IReadOnlyList<PublicKey> rsa;
-
-        public FileSystemPublicKeySource(string file)
-        {
-            var x509cert = new X509Certificate2(File.ReadAllBytes(file));
-            var rsa = (RSA)x509cert.PublicKey.Key;
-            this.rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
-        }
-
-        public Task<IReadOnlyList<PublicKey>> GetPublicKeysAsync(
-            CancellationToken cancellationToken)
-        {
-            return Task.FromResult(this.rsa);
         }
     }
 }
