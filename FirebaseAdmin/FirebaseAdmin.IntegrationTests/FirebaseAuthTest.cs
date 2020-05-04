@@ -487,6 +487,39 @@ namespace FirebaseAdmin.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task SessionCookie()
+        {
+            var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("testuser");
+            var idToken = await SignInWithCustomTokenAsync(customToken);
+
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromHours(1),
+            };
+            var sessionCookie = await FirebaseAuth.DefaultInstance.CreateSessionCookieAsync(
+                idToken, options);
+            var decoded = await FirebaseAuth.DefaultInstance.VerifySessionCookieAsync(sessionCookie);
+            Assert.Equal("testuser", decoded.Uid);
+
+            await Task.Delay(1000);
+            await FirebaseAuth.DefaultInstance.RevokeRefreshTokensAsync("testuser");
+            decoded = await FirebaseAuth.DefaultInstance.VerifySessionCookieAsync(sessionCookie);
+            Assert.Equal("testuser", decoded.Uid);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await FirebaseAuth.DefaultInstance.VerifySessionCookieAsync(
+                    sessionCookie, true));
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.RevokedSessionCookie, exception.AuthErrorCode);
+
+            idToken = await SignInWithCustomTokenAsync(customToken);
+            sessionCookie = await FirebaseAuth.DefaultInstance.CreateSessionCookieAsync(
+                idToken, options);
+            decoded = await FirebaseAuth.DefaultInstance.VerifySessionCookieAsync(sessionCookie, true);
+            Assert.Equal("testuser", decoded.Uid);
+        }
+
         private static async Task<UserRecord> CreateUserForActionLinksAsync()
         {
             var randomUser = RandomUser.Create();
