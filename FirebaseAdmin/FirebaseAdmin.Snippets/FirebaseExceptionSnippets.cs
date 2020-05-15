@@ -21,7 +21,7 @@ namespace FirebaseAdmin.Snippets
 {
     internal class FirebaseExceptionSnippets
     {
-        internal async static Task GenericErrorHandler(string idToken)
+        internal static async Task GenericErrorHandler(string idToken)
         {
             // [START generic_error_handler]
             try
@@ -35,10 +35,11 @@ namespace FirebaseAdmin.Snippets
                 // other properties.
                 Console.WriteLine($"Failed to verify ID token: {ex.Message}");
             }
+
             // [END generic_error_handler]
         }
 
-        internal async static Task ServiceErrorCode(string idToken)
+        internal static async Task ServiceErrorCode(string idToken)
         {
             // [START service_error_code]
             try
@@ -63,10 +64,11 @@ namespace FirebaseAdmin.Snippets
                     Console.WriteLine($"Failed to verify ID token: {ex.Message}");
                 }
             }
+
             // [END service_error_code]
         }
 
-        internal async static Task PlatformErrorCode(string deviceToken)
+        internal static async Task PlatformErrorCode(string deviceToken)
         {
             // [START platform_error_code]
             var notification = CreateNotification(deviceToken);
@@ -96,10 +98,11 @@ namespace FirebaseAdmin.Snippets
                     Console.WriteLine($"Failed to send notification: {ex.Message}");
                 }
             }
+
             // [END platform_error_code]
         }
 
-        internal async static Task HttpResponse(string deviceToken)
+        internal static async Task HttpResponse(string deviceToken)
         {
             // [START http_response]
             var notification = CreateNotification(deviceToken);
@@ -115,7 +118,7 @@ namespace FirebaseAdmin.Snippets
                 var response = ex.HttpResponse;
                 if (response != null)
                 {
-                    Console.WriteLine($"FCM service responded with HTTP { response.StatusCode}");
+                    Console.WriteLine($"FCM service responded with HTTP {response.StatusCode}");
                     foreach (var entry in response.Headers)
                     {
                         Console.WriteLine($">>> {entry.Key}: {entry.Value}");
@@ -126,6 +129,7 @@ namespace FirebaseAdmin.Snippets
                     Console.WriteLine($">>> {body}");
                 }
             }
+
             // [END http_response]
         }
 
