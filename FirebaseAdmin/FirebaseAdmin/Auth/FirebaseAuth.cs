@@ -30,6 +30,7 @@ namespace FirebaseAdmin.Auth
     {
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
+        private readonly Lazy<FirebaseTokenVerifier> sessionCookieVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
         private readonly object authLock = new object();
         private bool deleted;
@@ -39,6 +40,8 @@ namespace FirebaseAdmin.Auth
             args.ThrowIfNull(nameof(args));
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
             this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
+            this.sessionCookieVerifier = args.SessionCookieVerifier.ThrowIfNull(
+                nameof(args.SessionCookieVerifier));
             this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
         }
 
@@ -228,9 +231,9 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Parses and verifies a Firebase ID token.
-        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
         /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
-        /// client SDK) with its requests. The back-end server can then use this method
+        /// client SDK) with its requests. The backend server can then use this method
         /// to verify that the token is valid. This method ensures that the token is correctly
         /// signed, has not expired, and it was issued against the Firebase project associated with
         /// this <c>FirebaseAuth</c> instance.</para>
@@ -250,9 +253,9 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Parses and verifies a Firebase ID token.
-        /// <para>A Firebase client app can identify itself to a trusted back-end server by sending
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
         /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
-        /// client SDK) with its requests. The back-end server can then use this method
+        /// client SDK) with its requests. The backend server can then use this method
         /// to verify that the token is valid. This method ensures that the token is correctly
         /// signed, has not expired, and it was issued against the Firebase project associated with
         /// this <c>FirebaseAuth</c> instance.</para>
@@ -269,9 +272,83 @@ namespace FirebaseAdmin.Auth
         public async Task<FirebaseToken> VerifyIdTokenAsync(
             string idToken, CancellationToken cancellationToken)
         {
-            var idTokenVerifier = this.IfNotDeleted(() => this.idTokenVerifier.Value);
-            return await idTokenVerifier.VerifyTokenAsync(idToken, cancellationToken)
+            return await this.VerifyIdTokenAsync(idToken, false, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        ///
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The backend server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        ///
+        /// <para>If <c>checkRevoked</c> is set to true, this method performs an additional check
+        /// to see if the ID token has been revoked since it was issued. This requires making an
+        /// additional remote API call.</para>
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were revoked.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken, bool checkRevoked)
+        {
+            return await this.VerifyIdTokenAsync(idToken, checkRevoked, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        ///
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The backend server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        ///
+        /// <para>If <c>checkRevoked</c> is set to true, this method performs an additional check
+        /// to see if the ID token has been revoked since it was issued. This requires making an
+        /// additional remote API call.</para>
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were revoked.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(
+            string idToken, bool checkRevoked, CancellationToken cancellationToken)
+        {
+            var idTokenVerifier = this.IfNotDeleted(() => this.idTokenVerifier.Value);
+            var decodedToken = await idTokenVerifier.VerifyTokenAsync(idToken, cancellationToken)
+                .ConfigureAwait(false);
+            if (checkRevoked)
+            {
+                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken);
+                if (revoked)
+                {
+                    throw new FirebaseAuthException(
+                        ErrorCode.InvalidArgument,
+                        "Firebase ID token has been revoked.",
+                        AuthErrorCode.RevokedIdToken);
+                }
+            }
+
+            return decodedToken;
         }
 
         /// <summary>
@@ -505,6 +582,51 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Revokes all refresh tokens for the specified user.
+        ///
+        /// <para>Updates the user's <c>tokensValidAfterTimestamp</c> to the current UTC time expressed in
+        /// seconds since the epoch and truncated to 1 second accuracy. It is important that
+        /// the server on which this is called has its clock set correctly and synchronized.</para>
+        ///
+        /// <para>While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// for existing sessions from getting minted, existing ID tokens may remain active until
+        /// their natural expiration (one hour).</para>
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <returns>A task that completes when the user's refresh tokens have been revoked.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while revoking the tokens.</exception>
+        public async Task RevokeRefreshTokensAsync(string uid)
+        {
+            await this.RevokeRefreshTokensAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Revokes all refresh tokens for the specified user.
+        ///
+        /// <para>Updates the user's <c>tokensValidAfterTimestamp</c> to the current UTC time expressed in
+        /// seconds since the epoch and truncated to 1 second accuracy. It is important that
+        /// the server on which this is called has its clock set correctly and synchronized.</para>
+        ///
+        /// <para>While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// for existing sessions from getting minted, existing ID tokens may remain active until
+        /// their natural expiration (one hour).</para>
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes when the user's refresh tokens have been revoked.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while revoking the tokens.</exception>
+        public async Task RevokeRefreshTokensAsync(string uid, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            await userManager.RevokeRefreshTokensAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes the user identified by the specified <paramref name="uid"/>.
         /// </summary>
         /// <param name="uid">A user ID string.</param>
@@ -670,6 +792,282 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verified.</param>
+        /// <returns>A task that completes with the email verification link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(string email)
+        {
+            return await this.GenerateEmailVerificationLinkAsync(email, null)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verifed.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the email verification link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GenerateEmailVerificationLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verified.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the email verification reset link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var request = EmailActionLinkRequest.EmailVerificationLinkRequest(email, settings);
+            return await userManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for password reset flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <param name="email">The email of the user whose password is to be reset.</param>
+        /// <returns>A task that completes with the password reset link.</returns>
+        public async Task<string> GeneratePasswordResetLinkAsync(string email)
+        {
+            return await this.GeneratePasswordResetLinkAsync(email, null)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for password reset flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <param name="email">The email of the user whose password is to be reset.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the password reset link.</returns>
+        public async Task<string> GeneratePasswordResetLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GeneratePasswordResetLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for password reset flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <param name="email">The email of the user whose password is to be reset.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the password reset link.</returns>
+        public async Task<string> GeneratePasswordResetLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var request = EmailActionLinkRequest.PasswordResetLinkRequest(email, settings);
+            return await userManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email link sign-in flows for the
+        /// specified email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user signing in.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the email sign in link.</returns>
+        public async Task<string> GenerateSignInWithEmailLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GenerateSignInWithEmailLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email link sign-in flows for the
+        /// specified email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user signing in.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the email sign in link.</returns>
+        public async Task<string> GenerateSignInWithEmailLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            var request = EmailActionLinkRequest.EmailSignInLinkRequest(email, settings);
+            return await userManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new Firebase session cookie from the given ID token and options. The returned JWT can
+        /// be set as a server-side session cookie with a custom cookie policy.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating the cookie.</exception>
+        /// <param name="idToken">The Firebase ID token to exchange for a session cookie.</param>
+        /// <param name="options">Additional options required to create the cookie.</param>
+        /// <returns>A task that completes with the Firebase session cookie.</returns>
+        public async Task<string> CreateSessionCookieAsync(
+            string idToken, SessionCookieOptions options)
+        {
+            return await this.CreateSessionCookieAsync(idToken, options, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new Firebase session cookie from the given ID token and options. The returned JWT can
+        /// be set as a server-side session cookie with a custom cookie policy.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating the cookie.</exception>
+        /// <param name="idToken">The Firebase ID token to exchange for a session cookie.</param>
+        /// <param name="options">Additional options required to create the cookie.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the Firebase session cookie.</returns>
+        public async Task<string> CreateSessionCookieAsync(
+            string idToken, SessionCookieOptions options, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+            return await userManager.CreateSessionCookieAsync(idToken, options, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase session cookie.
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
+        /// Session Cookies</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded session cookie.</returns>
+        /// <exception cref="ArgumentException">If the session cookie is null or
+        /// empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
+        /// <param name="sessionCookie">A Firebase session cookie string to verify and
+        /// parse.</param>
+        public async Task<FirebaseToken> VerifySessionCookieAsync(string sessionCookie)
+        {
+            return await this.VerifySessionCookieAsync(sessionCookie, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase session cookie.
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
+        /// Session Cookies</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded session cookie.</returns>
+        /// <exception cref="ArgumentException">If the session cookie is null or
+        /// empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
+        /// <param name="sessionCookie">A Firebase session cookie string to verify and
+        /// parse.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<FirebaseToken> VerifySessionCookieAsync(
+            string sessionCookie, CancellationToken cancellationToken)
+        {
+            return await this.VerifySessionCookieAsync(sessionCookie, false, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase session cookie.
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
+        /// Session Cookies</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded session cookie.</returns>
+        /// <exception cref="ArgumentException">If the session cookie is null or
+        /// empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
+        /// <param name="sessionCookie">A Firebase session cookie string to verify and
+        /// parse.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were
+        /// revoked.</param>
+        public async Task<FirebaseToken> VerifySessionCookieAsync(
+            string sessionCookie, bool checkRevoked)
+        {
+            return await this
+                .VerifySessionCookieAsync(sessionCookie, checkRevoked, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase session cookie.
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
+        /// Session Cookies</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded session cookie.</returns>
+        /// <exception cref="ArgumentException">If the session cookie is null or
+        /// empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
+        /// <param name="sessionCookie">A Firebase session cookie string to verify and
+        /// parse.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were
+        /// revoked.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<FirebaseToken> VerifySessionCookieAsync(
+            string sessionCookie, bool checkRevoked, CancellationToken cancellationToken)
+        {
+            var sessionCookieVerifier = this.IfNotDeleted(() => this.sessionCookieVerifier.Value);
+            var decodedToken = await sessionCookieVerifier
+                .VerifyTokenAsync(sessionCookie, cancellationToken)
+                .ConfigureAwait(false);
+            if (checkRevoked)
+            {
+                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken);
+                if (revoked)
+                {
+                    throw new FirebaseAuthException(
+                        ErrorCode.InvalidArgument,
+                        "Firebase session cookie has been revoked.",
+                        AuthErrorCode.RevokedSessionCookie);
+                }
+            }
+
+            return decodedToken;
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
@@ -680,6 +1078,15 @@ namespace FirebaseAdmin.Auth
                 this.tokenFactory.DisposeIfCreated();
                 this.userManager.DisposeIfCreated();
             }
+        }
+
+        private async Task<bool> IsRevokedAsync(
+            FirebaseToken token, CancellationToken cancellationToken)
+        {
+            var user = await this.GetUserAsync(token.Uid, cancellationToken);
+            var cutoff = user.TokensValidAfterTimestamp.Subtract(UserRecord.UnixEpoch)
+                .TotalSeconds;
+            return token.IssuedAtTimeSeconds < cutoff;
         }
 
         private TResult IfNotDeleted<TResult>(Func<TResult> func)
@@ -701,6 +1108,8 @@ namespace FirebaseAdmin.Auth
 
             internal Lazy<FirebaseTokenVerifier> IdTokenVerifier { get; set; }
 
+            internal Lazy<FirebaseTokenVerifier> SessionCookieVerifier { get; set; }
+
             internal Lazy<FirebaseUserManager> UserManager { get; set; }
 
             internal static FirebaseAuthArgs Create(FirebaseApp app)
@@ -711,6 +1120,8 @@ namespace FirebaseAdmin.Auth
                         () => FirebaseTokenFactory.Create(app), true),
                     IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
                         () => FirebaseTokenVerifier.CreateIDTokenVerifier(app), true),
+                    SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
+                        () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app), true),
                     UserManager = new Lazy<FirebaseUserManager>(
                         () => FirebaseUserManager.Create(app), true),
                 };

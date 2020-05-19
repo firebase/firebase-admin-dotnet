@@ -18,13 +18,14 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
-using Google.Api.Gax;
 using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
+
+using Gax = Google.Api.Gax;
 
 namespace FirebaseAdmin.Auth
 {
@@ -50,6 +51,7 @@ namespace FirebaseAdmin.Auth
 
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
+        private readonly IClock clock;
 
         internal FirebaseUserManager(Args args)
         {
@@ -70,6 +72,7 @@ namespace FirebaseAdmin.Auth
                     RetryOptions = args.RetryOptions,
                 });
             this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
+            this.clock = args.Clock ?? SystemClock.Default;
         }
 
         public void Dispose()
@@ -190,7 +193,7 @@ namespace FirebaseAdmin.Auth
             return response.Result;
         }
 
-        internal PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
+        internal Gax.PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
             ListUsersOptions options)
         {
             var factory = new ListUsersRequest.Factory(this.baseUrl, this.httpClient, options);
@@ -301,6 +304,58 @@ namespace FirebaseAdmin.Auth
             return new DeleteUsersResult(uids.Count, response.Result);
         }
 
+        internal async Task RevokeRefreshTokensAsync(string uid, CancellationToken cancellationToken)
+        {
+            var args = new UserRecordArgs()
+            {
+                Uid = uid,
+                ValidSince = this.clock.UnixTimestamp(),
+            };
+            await this.UpdateUserAsync(args, cancellationToken).ConfigureAwait(false);
+        }
+
+        internal async Task<string> GenerateEmailActionLinkAsync(
+            EmailActionLinkRequest request,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                "accounts:sendOobCode", request, cancellationToken).ConfigureAwait(false);
+            if (response.Result == null || (string)response.Result["oobLink"] == null)
+            {
+                throw UnexpectedResponseException(
+                    $"Failed to generate email action link for: {request.Email}",
+                    resp: response.HttpResponse);
+            }
+
+            return (string)response.Result["oobLink"];
+        }
+
+        internal async Task<string> CreateSessionCookieAsync(
+            string idToken,
+            SessionCookieOptions options,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrEmpty(idToken))
+            {
+                throw new ArgumentException("idToken must not be null or empty");
+            }
+
+            var validOptions = options.ThrowIfNull(nameof(options)).CopyAndValidate();
+            var request = new Dictionary<string, object>()
+            {
+                { "idToken", idToken },
+                { "validDuration", (long)validOptions.ExpiresIn.TotalSeconds },
+            };
+            var response = await this.PostAndDeserializeAsync<JObject>(
+                ":createSessionCookie", request, cancellationToken).ConfigureAwait(false);
+            if (response.Result == null || (string)response.Result["sessionCookie"] == null)
+            {
+                throw UnexpectedResponseException("Failed to generate session cookie");
+            }
+
+            return (string)response.Result["sessionCookie"];
+        }
+
         private static FirebaseAuthException UnexpectedResponseException(
             string message, Exception inner = null, HttpResponseMessage resp = null)
         {
@@ -354,6 +409,8 @@ namespace FirebaseAdmin.Auth
             internal string ProjectId { get; set; }
 
             internal RetryOptions RetryOptions { get; set; }
+
+            internal IClock Clock { get; set; }
         }
 
         /// <summary>

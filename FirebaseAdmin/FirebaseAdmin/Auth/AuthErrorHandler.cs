@@ -57,6 +57,13 @@ namespace FirebaseAdmin.Auth
                         "The user with the provided email already exists")
                 },
                 {
+                    "INVALID_DYNAMIC_LINK_DOMAIN",
+                    new ErrorInfo(
+                        ErrorCode.InvalidArgument,
+                        AuthErrorCode.InvalidDynamicLinkDomain,
+                        "Dynamic link domain specified in ActionCodeSettings is not authorized")
+                },
+                {
                     "PHONE_NUMBER_EXISTS",
                     new ErrorInfo(
                         ErrorCode.AlreadyExists,

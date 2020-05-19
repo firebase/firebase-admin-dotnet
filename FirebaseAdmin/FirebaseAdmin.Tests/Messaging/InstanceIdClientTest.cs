@@ -13,6 +13,16 @@ namespace FirebaseAdmin.Tests.Messaging
 {
     public class InstanceIdClientTest
     {
+        public static readonly IEnumerable<object[]> ErrorCodes =
+            new List<object[]>()
+            {
+                new object[] { HttpStatusCode.BadRequest, ErrorCode.InvalidArgument },
+                new object[] { HttpStatusCode.Unauthorized, ErrorCode.Unauthenticated },
+                new object[] { HttpStatusCode.Forbidden, ErrorCode.PermissionDenied },
+                new object[] { HttpStatusCode.NotFound, ErrorCode.NotFound },
+                new object[] { HttpStatusCode.ServiceUnavailable, ErrorCode.Unavailable },
+            };
+
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
@@ -64,13 +74,14 @@ namespace FirebaseAdmin.Tests.Messaging
             Assert.Equal(1, result.SuccessCount);
         }
 
-        [Fact]
-        public async Task BadRequest()
+        [Theory]
+        [MemberData(nameof(ErrorCodes))]
+        public async Task ErrorResponse(HttpStatusCode statusCode, ErrorCode expected)
         {
             var handler = new MockMessageHandler()
             {
-                StatusCode = HttpStatusCode.BadRequest,
-                Response = "BadRequest",
+                StatusCode = statusCode,
+                Response = @"{""error"":""ErrorCode""}",
             };
             var factory = new MockHttpClientFactory(handler);
 
@@ -79,22 +90,23 @@ namespace FirebaseAdmin.Tests.Messaging
             var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
 
-            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal(expected, exception.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 400 (BadRequest){Environment.NewLine}BadRequest",
+                "Error while calling the IID service: ErrorCode",
                 exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task Unauthorized()
+        [Theory]
+        [MemberData(nameof(ErrorCodes))]
+        public async Task UnexpectedErrorResponse(HttpStatusCode statusCode, ErrorCode expected)
         {
             var handler = new MockMessageHandler()
             {
-                StatusCode = HttpStatusCode.Unauthorized,
-                Response = "Unauthorized",
+                StatusCode = statusCode,
+                Response = "NonJsonErrorResponse",
             };
             var factory = new MockHttpClientFactory(handler);
 
@@ -103,86 +115,14 @@ namespace FirebaseAdmin.Tests.Messaging
             var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
                () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
 
-            Assert.Equal(ErrorCode.Unauthenticated, exception.ErrorCode);
+            Assert.Equal(expected, exception.ErrorCode);
             Assert.Equal(
-                $"Unexpected HTTP response with status: 401 (Unauthorized){Environment.NewLine}Unauthorized",
+                "Unexpected HTTP response with status: "
+                + $"{(int)statusCode} ({statusCode}){Environment.NewLine}NonJsonErrorResponse",
                 exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
-        }
-
-        [Fact]
-        public async Task Forbidden()
-        {
-            var handler = new MockMessageHandler()
-            {
-                StatusCode = HttpStatusCode.Forbidden,
-                Response = "Forbidden",
-            };
-            var factory = new MockHttpClientFactory(handler);
-
-            var client = new InstanceIdClient(factory, MockCredential);
-
-            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
-               () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
-
-            Assert.Equal(ErrorCode.PermissionDenied, exception.ErrorCode);
-            Assert.Equal(
-                $"Unexpected HTTP response with status: 403 (Forbidden){Environment.NewLine}Forbidden",
-                exception.Message);
-            Assert.Null(exception.MessagingErrorCode);
-            Assert.NotNull(exception.HttpResponse);
-            Assert.Null(exception.InnerException);
-        }
-
-        [Fact]
-        public async Task NotFound()
-        {
-            var handler = new MockMessageHandler()
-            {
-                StatusCode = HttpStatusCode.NotFound,
-                Response = "NotFound",
-            };
-            var factory = new MockHttpClientFactory(handler);
-
-            var client = new InstanceIdClient(factory, MockCredential);
-
-            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
-               () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
-
-            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
-            Assert.Equal(
-                $"Unexpected HTTP response with status: 404 (NotFound){Environment.NewLine}NotFound",
-                exception.Message);
-            Assert.Null(exception.MessagingErrorCode);
-            Assert.NotNull(exception.HttpResponse);
-            Assert.Null(exception.InnerException);
-        }
-
-        [Fact]
-        public async Task ServiceUnavailable()
-        {
-            var handler = new MockMessageHandler()
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                Response = "ServiceUnavailable",
-            };
-            var factory = new MockHttpClientFactory(handler);
-
-            var client = new InstanceIdClient(factory, MockCredential, RetryOptions.NoBackOff);
-
-            var exception = await Assert.ThrowsAsync<FirebaseMessagingException>(
-               () => client.SubscribeToTopicAsync(new List<string> { "abc123" }, "test-topic"));
-
-            Assert.Equal(ErrorCode.Unavailable, exception.ErrorCode);
-            Assert.Equal(
-                $"Unexpected HTTP response with status: 503 (ServiceUnavailable){Environment.NewLine}ServiceUnavailable",
-                exception.Message);
-            Assert.Null(exception.MessagingErrorCode);
-            Assert.NotNull(exception.HttpResponse);
-            Assert.Null(exception.InnerException);
-            Assert.Equal(5, handler.Calls);
         }
 
         [Fact]

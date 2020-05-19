@@ -31,5 +31,43 @@ namespace FirebaseAdmin.Auth
         public IClock Clock { get; set; }
 
         public IPublicKeySource PublicKeySource { get; set; }
+
+        public AuthErrorCode InvalidTokenCode { get; set; }
+
+        public AuthErrorCode ExpiredTokenCode { get; set; }
+
+        internal static FirebaseTokenVerifierArgs ForIdTokens(
+            string projectId, IPublicKeySource keySource, IClock clock = null)
+        {
+            return new FirebaseTokenVerifierArgs()
+            {
+                ProjectId = projectId,
+                ShortName = "ID token",
+                Operation = "VerifyIdTokenAsync()",
+                Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
+                Issuer = "https://securetoken.google.com/",
+                Clock = clock ?? SystemClock.Default,
+                PublicKeySource = keySource,
+                InvalidTokenCode = AuthErrorCode.InvalidIdToken,
+                ExpiredTokenCode = AuthErrorCode.ExpiredIdToken,
+            };
+        }
+
+        internal static FirebaseTokenVerifierArgs ForSessionCookies(
+            string projectId, IPublicKeySource keySource, IClock clock = null)
+        {
+            return new FirebaseTokenVerifierArgs()
+            {
+                ProjectId = projectId,
+                ShortName = "session cookie",
+                Operation = "VerifySessionCookieAsync()",
+                Url = "https://firebase.google.com/docs/auth/admin/manage-cookies",
+                Issuer = "https://session.firebase.google.com/",
+                Clock = clock ?? SystemClock.Default,
+                PublicKeySource = keySource,
+                InvalidTokenCode = AuthErrorCode.InvalidSessionCookie,
+                ExpiredTokenCode = AuthErrorCode.ExpiredSessionCookie,
+            };
+        }
     }
 }

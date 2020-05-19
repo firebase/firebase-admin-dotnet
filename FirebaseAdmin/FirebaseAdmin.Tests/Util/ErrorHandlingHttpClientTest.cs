@@ -115,6 +115,9 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Equal("Example error message: {}", exception.Message);
             Assert.Null(exception.InnerException);
             Assert.NotNull(exception.HttpResponse);
+
+            var errorPayload = await exception.HttpResponse.Content.ReadAsStringAsync();
+            Assert.Equal("{}", errorPayload);
         }
 
         [Fact]
@@ -136,6 +139,9 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Equal("Response parse error", exception.Message);
             Assert.NotNull(exception.InnerException);
             Assert.NotNull(exception.HttpResponse);
+
+            var errorPayload = await exception.HttpResponse.Content.ReadAsStringAsync();
+            Assert.Equal("not json", errorPayload);
         }
 
         [Fact]

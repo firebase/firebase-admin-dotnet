@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FirebaseAdmin.Snippets
 {
@@ -244,6 +246,278 @@ namespace FirebaseAdmin.Snippets
             }
 
             // [END set_custom_user_claims_incremental]
+        }
+
+        internal static async Task RevokeIdTokens(string idToken)
+        {
+            string uid = "someUid";
+            // [START revoke_tokens]
+            await FirebaseAuth.DefaultInstance.RevokeRefreshTokensAsync(uid);
+            var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+            Console.WriteLine("Tokens revoked at: " + user.TokensValidAfterTimestamp);
+            // [END revoke_tokens]
+        }
+
+        internal static async Task VerifyIdTokenCheckRevoked(string idToken)
+        {
+            // [START verify_id_token_check_revoked]
+            try
+            {
+                // Verify the ID token while checking if the token is revoked by passing checkRevoked
+                // as true.
+                bool checkRevoked = true;
+                var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
+                    idToken, checkRevoked);
+                // Token is valid and not revoked.
+                string uid = decodedToken.Uid;
+            }
+            catch (FirebaseAuthException ex)
+            {
+                if (ex.AuthErrorCode == AuthErrorCode.RevokedIdToken)
+                {
+                    // Token has been revoked. Inform the user to re-authenticate or signOut() the user.
+                }
+                else
+                {
+                    // Token is invalid.
+                }
+            }
+
+            // [END verify_id_token_check_revoked]
+        }
+
+        internal static ActionCodeSettings InitActionCodeSettings()
+        {
+            // [START init_action_code_settings]
+            var actionCodeSettings = new ActionCodeSettings()
+            {
+                Url = "https://www.example.com/checkout?cartId=1234",
+                HandleCodeInApp = true,
+                IosBundleId = "com.example.ios",
+                AndroidPackageName = "com.example.android",
+                AndroidInstallApp = true,
+                AndroidMinimumVersion = "12",
+                DynamicLinkDomain = "coolapp.page.link",
+            };
+            // [END init_action_code_settings]
+            return actionCodeSettings;
+        }
+
+        internal static async Task GeneratePasswordResetLink()
+        {
+            var actionCodeSettings = InitActionCodeSettings();
+            var displayName = "Example User";
+            // [START password_reset_link]
+            var email = "user@example.com";
+            var link = await FirebaseAuth.DefaultInstance.GeneratePasswordResetLinkAsync(
+                email, actionCodeSettings);
+            // Construct email verification template, embed the link and send
+            // using custom SMTP server.
+            SendCustomEmail(email, displayName, link);
+            // [END password_reset_link]
+        }
+
+        internal static async Task GenerateEmailVerificationLink()
+        {
+            var actionCodeSettings = InitActionCodeSettings();
+            var displayName = "Example User";
+            // [START email_verification_link]
+            var email = "user@example.com";
+            var link = await FirebaseAuth.DefaultInstance.GenerateEmailVerificationLinkAsync(
+                email, actionCodeSettings);
+            // Construct email verification template, embed the link and send
+            // using custom SMTP server.
+            SendCustomEmail(email, displayName, link);
+            // [END email_verification_link]
+        }
+
+        internal static async Task GenerateSignInWithEmailLink()
+        {
+            var actionCodeSettings = InitActionCodeSettings();
+            var displayName = "Example User";
+            // [START sign_in_with_email_link]
+            var email = "user@example.com";
+            var link = await FirebaseAuth.DefaultInstance.GenerateSignInWithEmailLinkAsync(
+                email, actionCodeSettings);
+            // Construct email verification template, embed the link and send
+            // using custom SMTP server.
+            SendCustomEmail(email, displayName, link);
+            // [END sign_in_with_email_link]
+        }
+
+        // Place holder method to make the compiler happy. This is referenced by all email action
+        // link snippets.
+        private static void SendCustomEmail(string email, string displayName, string link) { }
+
+        public class LoginRequest
+        {
+            public string IdToken { get; set; }
+        }
+
+        public class SessionCookieSnippets : ControllerBase
+        {
+            // [START session_login]
+            // POST: /sessionLogin
+            [HttpPost]
+            public async Task<ActionResult> Login([FromBody] LoginRequest request)
+            {
+                // Set session expiration to 5 days.
+                var options = new SessionCookieOptions()
+                {
+                    ExpiresIn = TimeSpan.FromDays(5),
+                };
+
+                try
+                {
+                    // Create the session cookie. This will also verify the ID token in the process.
+                    // The session cookie will have the same claims as the ID token.
+                    var sessionCookie = await FirebaseAuth.DefaultInstance
+                        .CreateSessionCookieAsync(request.IdToken, options);
+
+                    // Set cookie policy parameters as required.
+                    var cookieOptions = new CookieOptions()
+                    {
+                        Expires = DateTimeOffset.UtcNow.Add(options.ExpiresIn),
+                        HttpOnly = true,
+                        Secure = true,
+                    };
+                    this.Response.Cookies.Append("session", sessionCookie, cookieOptions);
+                    return this.Ok();
+                }
+                catch (FirebaseAuthException)
+                {
+                    return this.Unauthorized("Failed to create a session cookie");
+                }
+            }
+
+            // [END session_login]
+
+            // [START session_verify]
+            // POST: /profile
+            [HttpPost]
+            public async Task<ActionResult> Profile()
+            {
+                var sessionCookie = this.Request.Cookies["session"];
+                if (string.IsNullOrEmpty(sessionCookie))
+                {
+                    // Session cookie is not available. Force user to login.
+                    return this.Redirect("/login");
+                }
+
+                try
+                {
+                    // Verify the session cookie. In this case an additional check is added to detect
+                    // if the user's Firebase session was revoked, user deleted/disabled, etc.
+                    var checkRevoked = true;
+                    var decodedToken = await FirebaseAuth.DefaultInstance.VerifySessionCookieAsync(
+                        sessionCookie, checkRevoked);
+                    return ViewContentForUser(decodedToken);
+                }
+                catch (FirebaseAuthException)
+                {
+                    // Session cookie is invalid or revoked. Force user to login.
+                    return this.Redirect("/login");
+                }
+            }
+
+            // [END session_verify]
+
+            // [START session_clear]
+            // POST: /sessionLogout
+            [HttpPost]
+            public ActionResult ClearSessionCookie()
+            {
+                this.Response.Cookies.Delete("session");
+                return this.Redirect("/login");
+            }
+
+            // [END session_clear]
+
+            // [START session_clear_and_revoke]
+            // POST: /sessionLogout
+            [HttpPost]
+            public async Task<ActionResult> ClearSessionCookieAndRevoke()
+            {
+                var sessionCookie = this.Request.Cookies["session"];
+                try
+                {
+                    var decodedToken = await FirebaseAuth.DefaultInstance
+                        .VerifySessionCookieAsync(sessionCookie);
+                    await FirebaseAuth.DefaultInstance.RevokeRefreshTokensAsync(decodedToken.Uid);
+                    this.Response.Cookies.Delete("session");
+                    return this.Redirect("/login");
+                }
+                catch (FirebaseAuthException)
+                {
+                    return this.Redirect("/login");
+                }
+            }
+
+            // [END session_clear_and_revoke]
+
+            internal async Task<ActionResult> CheckAuthTime(string idToken)
+            {
+                // [START check_auth_time]
+                // To ensure that cookies are set only on recently signed in users, check auth_time in
+                // ID token before creating a cookie.
+                var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+                var authTime = new DateTime(1970, 1, 1).AddSeconds(
+                    (long)decodedToken.Claims["auth_time"]);
+
+                // Only process if the user signed in within the last 5 minutes.
+                if (DateTime.UtcNow - authTime < TimeSpan.FromMinutes(5))
+                {
+                    var options = new SessionCookieOptions()
+                    {
+                        ExpiresIn = TimeSpan.FromDays(5),
+                    };
+                    var sessionCookie = await FirebaseAuth.DefaultInstance.CreateSessionCookieAsync(
+                        idToken, options);
+                    // Set cookie policy parameters as required.
+                    this.Response.Cookies.Append("session", sessionCookie);
+                    return this.Ok();
+                }
+
+                // User did not sign in recently. To guard against ID token theft, require
+                // re-authentication.
+                return this.Unauthorized("Recent sign in required");
+                // [END check_auth_time]
+            }
+
+            internal async Task<ActionResult> CheckPermissions(string sessionCookie)
+            {
+                // [START session_verify_with_permission_check]
+                try
+                {
+                    var checkRevoked = true;
+                    var decodedToken = await FirebaseAuth.DefaultInstance.VerifySessionCookieAsync(
+                        sessionCookie, checkRevoked);
+                    object isAdmin;
+                    if (decodedToken.Claims.TryGetValue("admin", out isAdmin) && (bool)isAdmin)
+                    {
+                        return ViewContentForAdmin(decodedToken);
+                    }
+
+                    return this.Unauthorized("Insufficient permissions");
+                }
+                catch (FirebaseAuthException)
+                {
+                    // Session cookie is invalid or revoked. Force user to login.
+                    return this.Redirect("/login");
+                }
+
+                // [END session_verify_with_permission_check]
+            }
+
+            private static ActionResult ViewContentForUser(FirebaseToken token)
+            {
+                return null;
+            }
+
+            private static ActionResult ViewContentForAdmin(FirebaseToken token)
+            {
+                return null;
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
+using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -31,12 +32,14 @@ namespace FirebaseAdmin.Auth.Tests
     public class FirebaseUserManagerTest
     {
         private const string MockProjectId = "project1";
+        private const string CreateUserResponse = @"{""localId"": ""user1""}";
+        private const string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
 
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
-        private static readonly string CreateUserResponse = @"{""localId"": ""user1""}";
-        private static readonly string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
+        private static readonly IClock MockClock = new MockClock();
+
         private static readonly IList<string> ListUsersResponse = new List<string>()
         {
             @"{
@@ -1732,6 +1735,143 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task RevokeRefreshTokens()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = CreateUserResponse,
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            await auth.RevokeRefreshTokensAsync("user1");
+
+            Assert.Equal(1, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal(2, request.Count);
+            Assert.Equal("user1", request["localId"]);
+            Assert.Equal(MockClock.UnixTimestamp(), request["validSince"]);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public void RevokeRefreshTokensNoUid()
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.RevokeRefreshTokensAsync(null));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.RevokeRefreshTokensAsync(string.Empty));
+        }
+
+        [Fact]
+        public void RevokeRefreshTokensInvalidUid()
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var uid = new string('a', 129);
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.RevokeRefreshTokensAsync(uid));
+        }
+
+        [Fact]
+        public void CreateSessionCookieNoIdToken()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromHours(1),
+            };
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync(null, options));
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync(string.Empty, options));
+        }
+
+        [Fact]
+        public void CreateSessionCookieNoOptions()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await auth.CreateSessionCookieAsync("idToken", null));
+        }
+
+        [Fact]
+        public void CreateSessionCookieNoExpiresIn()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync(
+                    "idToken", new SessionCookieOptions()));
+        }
+
+        [Fact]
+        public void CreateSessionCookieExpiresInTooLow()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+            var fiveMinutesInSeconds = TimeSpan.FromMinutes(5).TotalSeconds;
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromSeconds(fiveMinutesInSeconds - 1),
+            };
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync("idToken", options));
+        }
+
+        [Fact]
+        public void CreateSessionCookieExpiresInTooHigh()
+        {
+            var handler = new MockMessageHandler() { Response = "{}" };
+            var auth = this.CreateFirebaseAuth(handler);
+            var fourteenDaysInSeconds = TimeSpan.FromDays(14).TotalSeconds;
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromSeconds(fourteenDaysInSeconds + 1),
+            };
+
+            Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.CreateSessionCookieAsync("idToken", options));
+        }
+
+        [Fact]
+        public async Task CreateSessionCookie()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{
+                    ""sessionCookie"": ""cookie""
+                }",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromHours(1),
+            };
+
+            var result = await auth.CreateSessionCookieAsync("idToken", options);
+
+            Assert.Equal("cookie", result);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
+            Assert.Equal(2, request.Count);
+            Assert.Equal("idToken", request["idToken"]);
+            Assert.Equal(3600, request["validDuration"]);
+
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
         public async Task ServiceUnvailable()
         {
             var handler = new MockMessageHandler()
@@ -1778,12 +1918,14 @@ namespace FirebaseAdmin.Auth.Tests
                 ProjectId = MockProjectId,
                 ClientFactory = new MockHttpClientFactory(handler),
                 RetryOptions = RetryOptions.NoBackOff,
+                Clock = MockClock,
             });
             return new FirebaseAuth(new FirebaseAuth.FirebaseAuthArgs()
             {
                 UserManager = new Lazy<FirebaseUserManager>(userManager),
                 TokenFactory = new Lazy<FirebaseTokenFactory>(),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
+                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
             });
         }
 

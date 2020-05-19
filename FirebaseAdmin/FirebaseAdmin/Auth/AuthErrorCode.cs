@@ -58,5 +58,30 @@ namespace FirebaseAdmin.Auth
         /// No user record found for the given identifier.
         /// </summary>
         UserNotFound,
+
+        /// <summary>
+        /// Dynamic link domain specified in <see cref="ActionCodeSettings"/> is not authorized.
+        /// </summary>
+        InvalidDynamicLinkDomain,
+
+        /// <summary>
+        /// The specified ID token has been revoked.
+        /// </summary>
+        RevokedIdToken,
+
+        /// <summary>
+        /// The specified session cookie is invalid.
+        /// </summary>
+        InvalidSessionCookie,
+
+        /// <summary>
+        /// The specified session cookie is expired.
+        /// </summary>
+        ExpiredSessionCookie,
+
+        /// <summary>
+        /// The specified session cookie has been revoked.
+        /// </summary>
+        RevokedSessionCookie,
     }
 }

@@ -93,6 +93,8 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         public string Password { get; set; }
 
+        internal long? ValidSince { get; set; }
+
         internal IReadOnlyDictionary<string, object> CustomClaims
         {
             get => this.customClaims?.Value;
@@ -321,6 +323,7 @@ namespace FirebaseAdmin.Auth
                 this.Email = CheckEmail(args.Email);
                 this.EmailVerified = args.emailVerified;
                 this.Password = CheckPassword(args.Password);
+                this.ValidSince = args.ValidSince;
 
                 if (args.displayName != null)
                 {
@@ -394,6 +397,9 @@ namespace FirebaseAdmin.Auth
 
             [JsonProperty("localId")]
             public string Uid { get; set; }
+
+            [JsonProperty("validSince")]
+            public long? ValidSince { get; set; }
 
             private void AddDeleteAttribute(string attribute)
             {
