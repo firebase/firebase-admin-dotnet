@@ -153,6 +153,13 @@ required to ensure that exported user records contain the password hashes of the
 3. Click 'ADD ANOTHER ROLE' and choose 'Firebase Authentication Admin'.
 4. Click 'SAVE'.
 
+For some of the authentication integration tests, it is required to manually enable Email/Password 
+functionality:
+1. Go to the [Firebase console](https://console.firebase.google.com).
+2. Click on 'Authentication', 'Sign-in method'.
+3. Enable 'Email/Password'.
+4. Enable 'Email link (passwordless sign-in)'.
+
 Finally, to run the integration test suite:
 
 ```bash
