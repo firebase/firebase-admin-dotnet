@@ -285,7 +285,15 @@ namespace FirebaseAdmin.IntegrationTests
                 user = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(randomUser.Email);
                 Assert.Equal(uid, user.Uid);
 
-                // Disable user and remove properties
+                // Get user by phone provider uid
+                user = await FirebaseAuth.DefaultInstance.GetUserByProviderUidAsync("phone", randomUser.PhoneNumber);
+                Assert.Equal(uid, user.Uid);
+
+                // Get user by email provider uid
+                user = await FirebaseAuth.DefaultInstance.GetUserByProviderUidAsync("email", randomUser.Email);
+                Assert.Equal(uid, user.Uid);
+
+               // Disable user and remove properties
                 var disableArgs = new UserRecordArgs()
                 {
                     Uid = uid,
@@ -332,6 +340,15 @@ namespace FirebaseAdmin.IntegrationTests
         {
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await FirebaseAuth.DefaultInstance.GetUserByEmailAsync("non.existing@definitely.non.existing"));
+
+            Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
+        }
+
+        [Fact]
+        public async Task GetUserNonExistingProviderUid()
+        {
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await FirebaseAuth.DefaultInstance.GetUserByProviderUidAsync("google.com", "non_existing_user"));
 
             Assert.Equal(AuthErrorCode.UserNotFound, exception.AuthErrorCode);
         }
