@@ -101,23 +101,13 @@ namespace FirebaseAdmin.Auth
             set => this.customClaims = this.Wrap(value);
         }
 
-        internal CreateUserRequest ToCreateUserRequest()
-        {
-            return new CreateUserRequest(this);
-        }
-
-        internal UpdateUserRequest ToUpdateUserRequest()
-        {
-            return new UpdateUserRequest(this);
-        }
-
-        private static string CheckUid(string uid, bool required = false)
+        internal static string CheckUid(string uid, bool required = false)
         {
             if (uid == null)
             {
                 if (required)
                 {
-                    throw new ArgumentException("Uid must not be null");
+                    throw new ArgumentNullException(nameof(uid));
                 }
             }
             else if (uid == string.Empty)
@@ -132,39 +122,87 @@ namespace FirebaseAdmin.Auth
             return uid;
         }
 
-        private static string CheckEmail(string email)
+        internal static string CheckEmail(string email, bool required = false)
         {
-            if (email != null)
+            if (email == null)
             {
-                if (email == string.Empty)
+                if (required)
                 {
-                    throw new ArgumentException("Email must not be empty");
+                    throw new ArgumentNullException(nameof(email));
                 }
-                else if (!Regex.IsMatch(email, @"^[^@]+@[^@]+$"))
-                {
-                    throw new ArgumentException($"Invalid email address: {email}");
-                }
+            }
+            else if (email == string.Empty)
+            {
+                throw new ArgumentException("Email must not be empty");
+            }
+            else if (!Regex.IsMatch(email, @"^[^@]+@[^@]+$"))
+            {
+                throw new ArgumentException($"Invalid email address: {email}");
             }
 
             return email;
         }
 
-        private static string CheckPhoneNumber(string phoneNumber)
+        internal static string CheckPhoneNumber(string phoneNumber, bool required = false)
         {
-            if (phoneNumber != null)
+            if (phoneNumber == null)
             {
-                if (phoneNumber == string.Empty)
+                if (required)
                 {
-                    throw new ArgumentException("Phone number must not be empty.");
+                    throw new ArgumentNullException(nameof(phoneNumber));
                 }
-                else if (!phoneNumber.StartsWith("+"))
-                {
-                    throw new ArgumentException(
-                        "Phone number must be a valid, E.164 compliant identifier starting with a '+' sign.");
-                }
+            }
+            else if (phoneNumber == string.Empty)
+            {
+                throw new ArgumentException("Phone number must not be empty.");
+            }
+            else if (!phoneNumber.StartsWith("+"))
+            {
+                throw new ArgumentException(
+                    "Phone number must be a valid, E.164 compliant identifier starting with a '+' sign.");
             }
 
             return phoneNumber;
+        }
+
+        // TODO(rsgowman): Once we upgrade our floor from .NET4.5 to .NET4.7, we can return a tuple
+        // here, making this more like the other CheckX methods. i.e.:
+        //     internal static (string, string) CheckProvider(...)
+        internal static void CheckProvider(string providerId, string providerUid, bool required = false)
+        {
+            if (providerId == null)
+            {
+                if (required)
+                {
+                    throw new ArgumentNullException(nameof(providerId));
+                }
+            }
+            else if (providerId == string.Empty)
+            {
+                throw new ArgumentException(nameof(providerId) + " must not be empty");
+            }
+
+            if (providerUid == null)
+            {
+                if (required)
+                {
+                    throw new ArgumentNullException(nameof(providerUid));
+                }
+            }
+            else if (providerUid == string.Empty)
+            {
+                throw new ArgumentException(nameof(providerUid) + " must not be empty");
+            }
+        }
+
+        internal CreateUserRequest ToCreateUserRequest()
+        {
+            return new CreateUserRequest(this);
+        }
+
+        internal UpdateUserRequest ToUpdateUserRequest()
+        {
+            return new UpdateUserRequest(this);
         }
 
         private static string CheckPhotoUrl(string photoUrl)

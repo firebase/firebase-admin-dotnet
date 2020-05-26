@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
@@ -96,6 +97,12 @@ namespace FirebaseAdmin.Auth
             /// </summary>
             [JsonProperty(PropertyName = "lastLoginAt")]
             public long LastLoginAt { get; set; }
+
+            /// <summary>
+            /// Gets or sets the timestamp representing the last refresh time.
+            /// </summary>
+            [JsonProperty(PropertyName = "lastRefreshAt")]
+            public DateTime LastRefreshAt { get; set; }
 
             /// <summary>
             /// Gets or sets the timestamp representing the time that the user account was first valid.

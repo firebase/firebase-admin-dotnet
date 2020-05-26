@@ -23,16 +23,19 @@ namespace FirebaseAdmin.Auth
     {
         private readonly long creationTimestampMillis;
         private readonly long lastSignInTimestampMillis;
+        private readonly DateTime? lastRefreshTimestamp;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserMetadata"/> class with the specified creation and last sign-in timestamps.
         /// </summary>
         /// <param name="creationTimestamp">A timestamp representing the date and time that the user account was created.</param>
         /// <param name="lastSignInTimestamp">A timestamp representing the date and time that the user account was last signed-on to.</param>
-        internal UserMetadata(long creationTimestamp, long lastSignInTimestamp)
+        /// <param name="lastRefreshTimestamp">A timestamp representing the date and time that the user account was last refreshed.</param>
+        internal UserMetadata(long creationTimestamp, long lastSignInTimestamp, DateTime? lastRefreshTimestamp)
         {
             this.creationTimestampMillis = creationTimestamp;
             this.lastSignInTimestampMillis = lastSignInTimestamp;
+            this.lastRefreshTimestamp = lastRefreshTimestamp;
         }
 
         /// <summary>
@@ -51,6 +54,15 @@ namespace FirebaseAdmin.Auth
         public DateTime? LastSignInTimestamp
         {
             get => this.ToDateTime(this.lastSignInTimestampMillis);
+        }
+
+        /// <summary>
+        /// Gets the time at which the user was last active (ID token refreshed), or <c>null</c>
+        /// if the user was never active.
+        /// </summary>
+        public DateTime? LastRefreshTimestamp
+        {
+            get => this.lastRefreshTimestamp;
         }
 
         private DateTime? ToDateTime(long millisFromEpoch)

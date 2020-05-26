@@ -43,6 +43,12 @@ namespace FirebaseAdmin.Auth
 
         private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
+        /** Maximum allowed number of users to batch get at one time. */
+        private const int MaxGetAccountsBatchSize = 100;
+
+        /** Maximum allowed number of users to batch delete at one time. */
+        private const int MaxDeleteAccountsBatchSize = 1000;
+
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
         private readonly IClock clock;
@@ -161,6 +167,32 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
         }
 
+        internal async Task<GetAccountInfoResponse> GetAccountInfoByIdentifiersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers, CancellationToken cancellationToken)
+        {
+            if (identifiers.Count == 0)
+            {
+                return new GetAccountInfoResponse();
+            }
+
+            if (identifiers.Count > MaxGetAccountsBatchSize)
+            {
+                throw new ArgumentException(
+                        $"`identifier` parameter must have <= {MaxGetAccountsBatchSize} entries.");
+            }
+
+            var query = new GetAccountInfoRequest();
+            foreach (var id in identifiers)
+            {
+                id.Populate(query);
+            }
+
+            var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
+                "accounts:lookup", query.Build(), cancellationToken).ConfigureAwait(false);
+
+            return response.Result;
+        }
+
         internal Gax.PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
             ListUsersOptions options)
         {
@@ -244,6 +276,32 @@ namespace FirebaseAdmin.Auth
                 throw UnexpectedResponseException(
                     $"Failed to delete user: {uid}", resp: response.HttpResponse);
             }
+        }
+
+        internal async Task<DeleteUsersResult> DeleteUsersAsync(
+            IReadOnlyList<string> uids, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (uids.Count > MaxDeleteAccountsBatchSize)
+            {
+                throw new ArgumentException(
+                        "`uids` parameter must have <= " + MaxDeleteAccountsBatchSize
+                        + " entries.");
+            }
+
+            foreach (string uid in uids)
+            {
+                UserRecordArgs.CheckUid(uid, required: true);
+            }
+
+            var payload = new Dictionary<string, object>()
+            {
+                { "localIds", uids },
+                { "force", true },
+            };
+            var response = await this.PostAndDeserializeAsync<BatchDeleteResponse>(
+                "accounts:batchDelete", payload, cancellationToken).ConfigureAwait(false);
+
+            return new DeleteUsersResult(uids.Count, response.Result);
         }
 
         internal async Task RevokeRefreshTokensAsync(string uid, CancellationToken cancellationToken)

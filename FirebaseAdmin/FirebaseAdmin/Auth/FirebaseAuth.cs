@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Api.Gax;
@@ -491,6 +492,58 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets the user data corresponding to the specified identifiers.
+        /// <para>
+        /// There are no ordering guarantees; in particular, the nth entry in the users result list
+        /// is not guaranteed to correspond to the nth entry in the input parameters list.
+        /// </para>
+        /// <para>
+        /// A maximum of 100 identifiers may be supplied. If more than 100 identifiers are specified,
+        /// this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// </summary>
+        /// <param name="identifiers">The identifiers used to indicate which user records should be
+        /// returned. Must have 100 entries or fewer.</param>
+        /// <returns>A {@code Task} that resolves to the corresponding user records.</returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 100 identifiers are specified.</exception>
+        public async Task<GetUsersResult> GetUsersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers)
+        {
+            return await this.GetUsersAsync(identifiers, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets the user data corresponding to the specified identifiers.
+        /// <para>
+        /// There are no ordering guarantees; in particular, the nth entry in the users result list
+        /// is not guaranteed to correspond to the nth entry in the input parameters list.
+        /// </para>
+        /// <para>
+        /// A maximum of 100 identifiers may be supplied. If more than 100 identifiers are specified,
+        /// this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// </summary>
+        /// <param name="identifiers">The identifiers used to indicate which user records should be
+        /// returned. Must have 100 entries or fewer.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A {@code Task} that resolves to the corresponding user records.</returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 100 identifiers are specified.</exception>
+        public async Task<GetUsersResult> GetUsersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            GetAccountInfoResponse response = await userManager.GetAccountInfoByIdentifiersAsync(identifiers, cancellationToken)
+                .ConfigureAwait(false);
+
+            return new GetUsersResult(response, identifiers);
+        }
+
+        /// <summary>
         /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
         /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
         /// </summary>
@@ -600,6 +653,70 @@ namespace FirebaseAdmin.Auth
             var userManager = this.IfNotDeleted(() => this.userManager.Value);
 
             await userManager.DeleteUserAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the users specified by the given identifiers.
+        /// <para>
+        /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
+        /// Non-existing users will be considered to be successfully deleted, and will therefore be
+        /// counted in the `DeleteUserResult.SuccessCount` value.
+        /// </para>
+        /// <para>
+        /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are
+        /// specified, this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// <para>
+        /// This API is currently rate limited at the server to 1 QPS. If you exceed this, you may
+        /// get a quota exceeded error. Therefore, if you want to delete more than 1000 users, you
+        /// may need to add a delay to ensure you don't go over this limit.
+        /// </para>
+        /// </summary>
+        /// <param name="uids">The uids of the users to be deleted. Must have 1000 or fewer entries.
+        /// </param>
+        /// <returns>A {@code Task} that resolves to the total number of successful/failed
+        /// deletions, as well as the array of errors that correspond to the failed deletions.
+        /// </returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 1000 identifiers are specified.</exception>
+        public async Task<DeleteUsersResult> DeleteUsersAsync(IReadOnlyList<string> uids)
+        {
+            return await this.DeleteUsersAsync(uids, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the users specified by the given identifiers.
+        /// <para>
+        /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
+        /// Non-existing users will be considered to be successfully deleted, and will therefore be
+        /// counted in the `DeleteUserResult.SuccessCount` value.
+        /// </para>
+        /// <para>
+        /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are
+        /// specified, this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// <para>
+        /// This API is currently rate limited at the server to 1 QPS. If you exceed this, you may
+        /// get a quota exceeded error. Therefore, if you want to delete more than 1000 users, you
+        /// may need to add a delay to ensure you don't go over this limit.
+        /// </para>
+        /// </summary>
+        /// <param name="uids">The uids of the users to be deleted. Must have 1000 or fewer entries.
+        /// </param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A {@code Task} that resolves to the total number of successful/failed
+        /// deletions, as well as the array of errors that correspond to the failed deletions.
+        /// </returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 1000 identifiers are specified.</exception>
+        public async Task<DeleteUsersResult> DeleteUsersAsync(IReadOnlyList<string> uids, CancellationToken cancellationToken)
+        {
+            var userManager = this.IfNotDeleted(() => this.userManager.Value);
+
+            return await userManager.DeleteUsersAsync(uids, cancellationToken)
                 .ConfigureAwait(false);
         }
 

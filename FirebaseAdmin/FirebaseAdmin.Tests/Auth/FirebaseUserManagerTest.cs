@@ -330,6 +330,132 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public async Task GetUsersExceeds100()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var identifiers = new List<UserIdentifier>();
+            for (int i = 0; i < 101; i++)
+            {
+                identifiers.Add(new UidIdentifier("id" + i));
+            }
+
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUsersAsync(identifiers));
+        }
+
+        [Fact]
+        public async Task GetUsersEmpty()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var identifiers = new List<UserIdentifier>();
+
+            var getUsersResult = await auth.GetUsersAsync(identifiers);
+            Assert.Empty(getUsersResult.Users);
+            Assert.Empty(getUsersResult.NotFound);
+        }
+
+        [Fact]
+        public async Task GetUsersAllNonExisting()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { "{ \"users\": [] }" },
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+
+            var notFoundIds = new List<UserIdentifier>()
+            {
+                new UidIdentifier("id that doesnt exist"),
+            };
+
+            var getUsersResult = await auth.GetUsersAsync(notFoundIds);
+            Assert.Empty(getUsersResult.Users);
+            Assert.Same(notFoundIds[0], getUsersResult.NotFound.Single());
+        }
+
+        [Fact]
+        public async Task GetUsersMultipleIdentifierTypes()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>()
+                {
+                    @"{
+                        'users': [{
+                            'localId': 'uid1',
+                            'email': 'user1@example.com',
+                            'phoneNumber': '+15555550001'
+                        }, {
+                            'localId': 'uid2',
+                            'email': 'user2@example.com',
+                            'phoneNumber': '+15555550002'
+                        }, {
+                            'localId': 'uid3',
+                            'email': 'user3@example.com',
+                            'phoneNumber': '+15555550003'
+                        }, {
+                            'localId': 'uid4',
+                            'email': 'user4@example.com',
+                            'phoneNumber': '+15555550004',
+                            'providerUserInfo': [{
+                                'providerId': 'google.com',
+                                'rawId': 'google_uid4'
+                            }]
+                        }]
+                    }".Replace("'", "\""),
+                },
+            };
+
+            var doesntExist = new UidIdentifier("this-uid-doesnt-exist");
+            var ids = new List<UserIdentifier>
+            {
+                new UidIdentifier("uid1"),
+                new EmailIdentifier("user2@example.com"),
+                new PhoneIdentifier("+15555550003"),
+                new ProviderIdentifier("google.com", "google_uid4"),
+                doesntExist,
+            };
+
+            var auth = this.CreateFirebaseAuth(handler);
+            var result = await auth.GetUsersAsync(ids);
+            var uids = result.Users.Select(userRecord => userRecord.Uid);
+            var expectedUids = new List<string> { "uid1", "uid2", "uid3", "uid4" };
+            Assert.True(expectedUids.All(expectedUid => uids.Contains(expectedUid)));
+            Assert.Single(result.NotFound);
+            Assert.Contains(doesntExist, result.NotFound);
+        }
+
+        [Fact]
+        public void InvalidUidIdentifier()
+        {
+            Assert.Throws<ArgumentException>(
+                    () => new UidIdentifier("too long " + new string('.', 128)));
+        }
+
+        [Fact]
+        public void InvalidEmailIdentifier()
+        {
+            Assert.Throws<ArgumentException>(
+                    () => new EmailIdentifier("invalid email addr"));
+        }
+
+        [Fact]
+        public void InvalidPhoneIdentifier()
+        {
+            Assert.Throws<ArgumentException>(
+                    () => new PhoneIdentifier("invalid phone number"));
+        }
+
+        [Fact]
+        public void InvalidProviderIdentifier()
+        {
+            Assert.Throws<ArgumentException>(
+                    () => new ProviderIdentifier(string.Empty, "valid-uid"));
+
+            Assert.Throws<ArgumentException>(
+                    () => new ProviderIdentifier("valid-id", string.Empty));
+        }
+
+        [Fact]
         public async Task ListUsers()
         {
             var handler = new MockMessageHandler()
@@ -1530,6 +1656,82 @@ namespace FirebaseAdmin.Auth.Tests
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public async Task DeleteUsersExceeds1000()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var uids = new List<string>();
+            for (int i = 0; i < 1001; i++)
+            {
+                uids.Add("id" + i);
+            }
+
+            await Assert.ThrowsAsync<ArgumentException>(() => auth.DeleteUsersAsync(uids));
+        }
+
+        [Fact]
+        public async Task DeleteUsersInvalidId()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var uids = new List<string>() { "too long " + new string('.', 128) };
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.DeleteUsersAsync(uids));
+        }
+
+        [Fact]
+        public async Task DeleteUsersIndexesErrorsCorrectly()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>()
+                {
+                    @"{
+                        'errors': [{
+                            'index': 0,
+                            'localId': 'uid1',
+                            'message': 'NOT_DISABLED : Disable the account before batch deletion.'
+                        }, {
+                            'index': 2,
+                            'localId': 'uid3',
+                            'message': 'something awful'
+                        }]
+                    }".Replace("'", "\""),
+                },
+            };
+
+            var auth = this.CreateFirebaseAuth(handler);
+            var deleteUsersResult = await auth.DeleteUsersAsync(
+                    new List<string> { "uid1", "uid2", "uid3", "uid4" });
+
+            Assert.Equal(2, deleteUsersResult.SuccessCount);
+            Assert.Equal(2, deleteUsersResult.FailureCount);
+            Assert.Equal(2, deleteUsersResult.Errors.Count);
+            Assert.Equal(0, deleteUsersResult.Errors[0].Index);
+            Assert.Equal(
+                    "NOT_DISABLED : Disable the account before batch deletion.",
+                    deleteUsersResult.Errors[0].Reason);
+            Assert.Equal(2, deleteUsersResult.Errors[1].Index);
+            Assert.Equal("something awful", deleteUsersResult.Errors[1].Reason);
+        }
+
+        [Fact]
+        public async Task DeleteUsersSuccess()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { "{}" },
+            };
+
+            var auth = this.CreateFirebaseAuth(handler);
+            DeleteUsersResult result = await auth.DeleteUsersAsync(
+                    new List<string> { "uid1", "uid2", "uid3" });
+
+            Assert.Equal(3, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
         }
 
         [Fact]
