@@ -18,7 +18,7 @@ using System.Linq;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Represents a request to lookup account information.
+    /// Represents a request to look up account information.
     /// </summary>
     internal sealed class GetAccountInfoRequest
     {

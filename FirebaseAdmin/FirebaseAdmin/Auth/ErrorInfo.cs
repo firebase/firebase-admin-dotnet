@@ -18,7 +18,7 @@ namespace FirebaseAdmin.Auth
     // ImportUsersAsync() method... once that exists.
 
     /// <summary>
-    /// Represents an error encountered while delete users via the
+    /// Represents an error encountered while deleting users via the
     /// <see cref="M:FirebaseAuth.DeleteUsersAsync(IReadOnlyList{String})"/> API.
     /// </summary>
     public sealed class ErrorInfo
@@ -30,7 +30,7 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Gets the index of the failed user in the list passed to the
+        /// Gets the index of the user that was unable to be deleted in the list passed to the
         /// <see cref="M:FirebaseAuth.DeleteUsersAsync(IReadOnlyList{String})"/> method.
         /// </summary>
         public int Index { get; }

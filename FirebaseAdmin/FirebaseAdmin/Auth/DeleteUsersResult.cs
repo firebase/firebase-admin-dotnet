@@ -59,7 +59,7 @@ namespace FirebaseAdmin.Auth
         public int SuccessCount { get; }
 
         /// <summary>
-        /// Gets the number of users that failed to be deleted (possibly zero).
+        /// Gets the number of users that `DeleteUsersAsync` failed to be deleted (possibly zero).
         /// </summary>
         public int FailureCount { get => this.Errors.Count; }
 

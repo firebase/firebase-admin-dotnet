@@ -661,7 +661,7 @@ namespace FirebaseAdmin.Auth
         /// <para>
         /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
         /// Non-existing users will be considered to be successfully deleted, and will therefore be
-        /// counted in the DeleteUserResult.SuccessCount value.
+        /// counted in the `DeleteUserResult.SuccessCount` value.
         /// </para>
         /// <para>
         /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are
@@ -691,7 +691,7 @@ namespace FirebaseAdmin.Auth
         /// <para>
         /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
         /// Non-existing users will be considered to be successfully deleted, and will therefore be
-        /// counted in the DeleteUserResult.SuccessCount value.
+        /// counted in the `DeleteUserResult.SuccessCount` value.
         /// </para>
         /// <para>
         /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are

@@ -18,7 +18,8 @@ using Newtonsoft.Json;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// JSON data binding for BatchDeleteResponse messages sent by Google Identity Toolkit service.
+    /// JSON data binding for `BatchDeleteResponse` messages sent by Google Identity Toolkit
+    /// service.
     /// </summary>
     internal sealed class BatchDeleteResponse
     {
