@@ -675,7 +675,7 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <param name="uids">The uids of the users to be deleted. Must have 1000 or fewer entries.
         /// </param>
-        /// <returns>A {@code Task} that resolves to the total number of successful/failed
+        /// <returns>A task that resolves to the total number of successful/failed
         /// deletions, as well as the array of errors that correspond to the failed deletions.
         /// </returns>
         /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
@@ -707,7 +707,7 @@ namespace FirebaseAdmin.Auth
         /// </param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        /// <returns>A {@code Task} that resolves to the total number of successful/failed
+        /// <returns>A task that resolves to the total number of successful/failed
         /// deletions, as well as the array of errors that correspond to the failed deletions.
         /// </returns>
         /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
