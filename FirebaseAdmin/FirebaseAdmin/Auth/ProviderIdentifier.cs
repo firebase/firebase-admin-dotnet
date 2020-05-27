@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FirebaseAdmin.Auth
@@ -19,7 +20,7 @@ namespace FirebaseAdmin.Auth
     /// <summary>
     /// Used for looking up an account by provider.
     ///
-    /// See <see cref="M:FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
+    /// See <see cref="FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
     /// </summary>
     public sealed class ProviderIdentifier : UserIdentifier
     {

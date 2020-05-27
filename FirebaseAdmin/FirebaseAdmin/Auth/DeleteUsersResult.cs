@@ -20,7 +20,7 @@ namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// Represents the result of the
-    /// <see cref="M:FirebaseAuth.DeleteUsersAsync(IReadOnlyList{String})"/> API.
+    /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> API.
     /// </summary>
     public sealed class DeleteUsersResult
     {
@@ -53,7 +53,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the number of users that were deleted successfully (possibly zero). Users that
         /// did not exist prior to calling
-        /// <see cref="M:FirebaseAuth.DeleteUsersAsync(IReadOnlyList{String})"/> are considered to
+        /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> are considered to
         /// be successfully deleted.
         /// </summary>
         public int SuccessCount { get; }

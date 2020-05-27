@@ -18,7 +18,7 @@ using System.Linq;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Represents the result of the <see cref="M:FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/> API.
+    /// Represents the result of the <see cref="FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/> API.
     /// </summary>
     public sealed class GetUsersResult
     {
