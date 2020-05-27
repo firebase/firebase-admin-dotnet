@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace FirebaseAdmin.Auth
 {
     // TODO(rsgowman): This class is expected to also be used for the
@@ -19,7 +21,7 @@ namespace FirebaseAdmin.Auth
 
     /// <summary>
     /// Represents an error encountered while deleting users via the
-    /// <see cref="M:FirebaseAuth.DeleteUsersAsync(IReadOnlyList{String})"/> API.
+    /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> API.
     /// </summary>
     public sealed class ErrorInfo
     {
@@ -31,7 +33,7 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Gets the index of the user that was unable to be deleted in the list passed to the
-        /// <see cref="M:FirebaseAuth.DeleteUsersAsync(IReadOnlyList{String})"/> method.
+        /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> method.
         /// </summary>
         public int Index { get; }
 
