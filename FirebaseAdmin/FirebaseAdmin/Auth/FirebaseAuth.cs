@@ -504,7 +504,7 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <param name="identifiers">The identifiers used to indicate which user records should be
         /// returned. Must have 100 entries or fewer.</param>
-        /// <returns>A {@code Task} that resolves to the corresponding user records.</returns>
+        /// <returns>A task that resolves to the corresponding user records.</returns>
         /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
         /// than 100 identifiers are specified.</exception>
         public async Task<GetUsersResult> GetUsersAsync(
@@ -529,7 +529,7 @@ namespace FirebaseAdmin.Auth
         /// returned. Must have 100 entries or fewer.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        /// <returns>A {@code Task} that resolves to the corresponding user records.</returns>
+        /// <returns>A task that resolves to the corresponding user records.</returns>
         /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
         /// than 100 identifiers are specified.</exception>
         public async Task<GetUsersResult> GetUsersAsync(
