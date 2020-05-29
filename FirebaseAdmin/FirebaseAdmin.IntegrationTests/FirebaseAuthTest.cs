@@ -573,6 +573,29 @@ namespace FirebaseAdmin.IntegrationTests
                 EmailVerified = true,
                 PasswordSalt = Encoding.ASCII.GetBytes("abc"),
                 PasswordHash = Encoding.ASCII.GetBytes("def"),
+                CustomClaims = new Dictionary<string, object>()
+                {
+                    { "admin", true },
+                },
+                UserProviders = new List<UserProvider>
+                {
+                    new UserProvider()
+                    {
+                        Uid = "google.uid",
+                        Email = "johndoe@gmail.com",
+                        DisplayName = "John Doe",
+                        PhotoUrl = "http://example.com/123/photo.png",
+                        ProviderId = "google.com",
+                    },
+                    new UserProvider()
+                    {
+                        Uid = "fb.uid",
+                        Email = "johndoe@gmail.com",
+                        DisplayName = "John Doe",
+                        PhotoUrl = "http://example.com/123/photo.png",
+                        ProviderId = "facebook.com",
+                    },
+                },
             };
 
             var options = new UserImportOptions()
