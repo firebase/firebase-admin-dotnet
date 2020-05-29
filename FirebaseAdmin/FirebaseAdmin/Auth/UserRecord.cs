@@ -206,7 +206,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="phoneNumber">phone number to be verified.</param>
         public static void CheckPhoneNumber(string phoneNumber)
         {
-          if (!string.IsNullOrEmpty(phoneNumber))
+          if (string.IsNullOrEmpty(phoneNumber))
           {
             throw new ArgumentException("phone number cannot be null or empty");
           }

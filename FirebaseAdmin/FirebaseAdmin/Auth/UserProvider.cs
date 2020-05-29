@@ -44,6 +44,11 @@ namespace FirebaseAdmin.Auth
 
       set
       {
+        if (string.IsNullOrEmpty(value))
+        {
+          throw new ArgumentException("Uid must not be null or empty");
+        }
+
         this.uid = value;
       }
     }
@@ -85,6 +90,11 @@ namespace FirebaseAdmin.Auth
 
       set
       {
+        if (string.IsNullOrEmpty(value))
+        {
+          throw new ArgumentException("ProviderId must not be null or empty");
+        }
+
         this.providerId = value;
       }
     }
