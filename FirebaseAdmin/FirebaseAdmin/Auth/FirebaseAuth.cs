@@ -721,6 +721,52 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Imports the provided list of users into Firebase Auth. You can import a maximum of
+        /// 1000 users at a time. This operation is optimized for bulk imports and does not
+        /// check identifier uniqueness which could result in duplications.</summary>
+        /// <p><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
+        ///  passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
+        /// FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions)</a>.</p>
+        /// <param name="userRecordArgs"> A non-empty list of users to be imported. Length
+        /// must not exceed 1000.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
+        /// <exception cref="ArgumentException">If the users list is null, empty or has more than
+        /// 1000 elements. Or if at least one user specifies a password.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
+        public async Task<UserImportResult> ImportUsersAsync(
+          IEnumerable<ImportUserRecordArgs> userRecordArgs,
+          CancellationToken cancellationToken)
+        {
+          return await this.ImportUsersAsync(userRecordArgs, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Imports the provided list of users into Firebase Auth. You can import a maximum of
+        /// 1000 users at a time. This operation is optimized for bulk imports and does not
+        /// check identifier uniqueness which could result in duplications.</summary>
+        /// <param name="userRecordArgs"> A non-empty list of users to be imported.
+        /// Length must not exceed 1000.</param>
+        /// <param name="options"> A <a cref="UserImportOptions">UserImportOptions</a> instance or
+        /// null. Required when importing users with passwords.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
+        /// <exception cref="ArgumentException">If the users list is null, empty or has more than
+        /// 1000 elements. Or if at least one user specifies a password.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
+        public async Task<UserImportResult> ImportUsersAsync(
+            IEnumerable<ImportUserRecordArgs> userRecordArgs,
+            UserImportOptions options,
+            CancellationToken cancellationToken)
+        {
+          var request = new UserImportRequest(userRecordArgs, options);
+          var userManager = this.IfNotDeleted(() => this.userManager.Value);
+          return await userManager.ImportUsersAsync(request, cancellationToken);
+        }
+
+        /// <summary>
         /// Sets the specified custom claims on an existing user account. A null claims value
         /// removes any claims currently set on the user account. The claims must serialize into
         /// a valid JSON string. The serialized claims must not be larger than 1000 characters.

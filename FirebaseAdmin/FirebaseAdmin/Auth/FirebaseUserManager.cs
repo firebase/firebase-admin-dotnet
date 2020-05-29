@@ -228,6 +228,26 @@ namespace FirebaseAdmin.Auth
             return uid.Value<string>();
         }
 
+        internal async Task<UserImportResult> ImportUsersAsync(
+          UserImportRequest request,
+          CancellationToken cancellationToken)
+        {
+          if (request == null)
+          {
+            throw new ArgumentNullException("The UserImportRequest request should not be null");
+          }
+
+          var response = await this.PostAndDeserializeAsync<UploadAccountResponse>(
+              "accounts:batchCreate", request, cancellationToken).ConfigureAwait(false);
+          UploadAccountResponse uploadAccountResponse = response.Result;
+          if (uploadAccountResponse == null)
+          {
+            throw new FirebaseAuthException(ErrorCode.Internal, "Failed to import users.");
+          }
+
+          return new UserImportResult(request.GetUsersCount(), uploadAccountResponse);
+        }
+
         /// <summary>
         /// Update an existing user.
         /// </summary>

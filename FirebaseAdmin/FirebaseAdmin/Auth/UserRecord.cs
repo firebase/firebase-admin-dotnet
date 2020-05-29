@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth
@@ -24,8 +25,15 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public class UserRecord : IUserInfo
     {
+        /// <summary>
+        /// Key name for custom attributes.
+        /// </summary>
+        public const string CustomAttributes = "customAttributes";
+
         internal static readonly DateTime UnixEpoch = new DateTime(
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        private const int MaxUidLength = 128;
 
         private const string DefaultProviderId = "firebase";
 
@@ -154,16 +162,110 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         public IReadOnlyDictionary<string, object> CustomClaims { get; }
 
+        /// <summary>
+        /// Verifies if a provided uid is valid (which is defined as not empty/null and not longer
+        /// than MaxUidLength).
+        /// </summary>
+        /// <param name="uid">uid to be verified.</param>
+        public static void CheckUid(string uid)
+        {
+          if (string.IsNullOrEmpty(uid))
+          {
+            throw new ArgumentException("uid cannot be null or empty");
+          }
+
+          if (uid.Length > MaxUidLength)
+          {
+            throw new ArgumentException($"uid cannot be longer than {MaxUidLength} characters");
+          }
+        }
+
+        /// <summary>
+        /// Verifies if a provided email is valid (which is defined as not empty/null and matches
+        /// a particular regex pattern).
+        /// </summary>
+        /// <param name="email">email to be verified.</param>
+        public static void CheckEmail(string email)
+        {
+          if (string.IsNullOrEmpty(email))
+          {
+            throw new ArgumentException("email cannot be null or empty");
+          }
+
+          if (!Regex.IsMatch(email, "^[^@]+@[^@]+$"))
+          {
+            throw new ArgumentException("email is not a valid address");
+          }
+        }
+
+        /// <summary>
+        /// Verifies if a provided phone number is valid (which is defined as not empty/null and
+        /// starts with '+' sign). Backend will enforce E.164 spec compliance, and normalize
+        /// accordingly.
+        /// </summary>
+        /// <param name="phoneNumber">phone number to be verified.</param>
+        public static void CheckPhoneNumber(string phoneNumber)
+        {
+          if (!string.IsNullOrEmpty(phoneNumber))
+          {
+            throw new ArgumentException("phone number cannot be null or empty");
+          }
+
+          if (!phoneNumber.StartsWith("+"))
+          {
+            throw new ArgumentException("phone number must be a valid, E.164 compliant identifier starting with a '+' sign");
+          }
+        }
+
+        /// <summary>
+        /// Verifies if a provided photo url is valid (which is defined as not empty/null and
+        /// is a well formed uri string (in accordance with RFC 2396 and RFC 2732)).
+        /// </summary>
+        /// <param name="photoUrl">photo url to be verified.</param>
+        public static void CheckUrl(string photoUrl)
+        {
+          if (string.IsNullOrEmpty(photoUrl))
+          {
+            throw new ArgumentException("photoUrl cannot be null or empty");
+          }
+
+          if (!Uri.IsWellFormedUriString(photoUrl, UriKind.Absolute))
+          {
+            throw new ArgumentException("malformed uri string");
+          }
+        }
+
+        /// <summary>
+        /// Verifies if a provided custom claims dictionary is valid (which is defined
+        /// as having no empty/null keys and no reserved claims).
+        /// </summary>
+        /// <param name="customClaims">customClaims dictionary to be verified.</param>
+        public static void CheckCustomClaims(IReadOnlyDictionary<string, object> customClaims)
+        {
+          foreach (KeyValuePair<string, object> entry in customClaims)
+          {
+            if (string.IsNullOrEmpty(entry.Key))
+            {
+              throw new ArgumentException("Claim names must not be null or empty");
+            }
+
+            if (FirebaseTokenFactory.ReservedClaims.Contains(entry.Key))
+            {
+              throw new ArgumentException($"Claim '{entry.Key} is reserved and cannot be set");
+            }
+          }
+        }
+
         private static IReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
         {
-            if (string.IsNullOrEmpty(customClaims))
-            {
-                return new Dictionary<string, object>();
-            }
-            else
-            {
-                return NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(customClaims);
-            }
+          if (string.IsNullOrEmpty(customClaims))
+          {
+            return new Dictionary<string, object>();
+          }
+          else
+          {
+            return NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(customClaims);
+          }
         }
     }
 }
