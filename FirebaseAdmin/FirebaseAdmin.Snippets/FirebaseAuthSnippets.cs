@@ -96,9 +96,9 @@ namespace FirebaseAdmin.Snippets
                     new UidIdentifier("uid1"),
                     new EmailIdentifier("user2@example.com"),
                     new PhoneIdentifier("+15555550003"),
-                    new ProviderIdentifier("google.com", "google_uid4")
+                    new ProviderIdentifier("google.com", "google_uid4"),
                 });
-            
+
             Console.WriteLine("Successfully fetched user data:");
             foreach (UserRecord user in result.Users)
             {
@@ -110,6 +110,7 @@ namespace FirebaseAdmin.Snippets
             {
                 Console.WriteLine($"{uid}");
             }
+
             // [END bulk_get_users]
         }
 
@@ -184,14 +185,15 @@ namespace FirebaseAdmin.Snippets
                     "uid2",
                     "uid3",
                 });
-            
+
             Console.WriteLine($"Successfully deleted {result.SuccessCount} users.");
             Console.WriteLine($"Failed to delete {result.FailureCount} users.");
 
             foreach (ErrorInfo err in result.Errors)
             {
-                Console.WriteLine($"Error #{err.Index}, reason: {err.Message}");
+                Console.WriteLine($"Error #{err.Index}, reason: {err.Reason}");
             }
+
             // [END bulk_delete_users]
         }
 
