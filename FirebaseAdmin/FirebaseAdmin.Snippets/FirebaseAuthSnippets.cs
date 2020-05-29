@@ -90,7 +90,7 @@ namespace FirebaseAdmin.Snippets
         internal static async Task GetUsersAsync()
         {
             // [START bulk_get_users]
-            GetUsersResult getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
+            GetUsersResult result = await FirebaseAuth.DefaultInstance.GetUsersAsync(
                 new List<UserIdentifier>
                 {
                     new UidIdentifier("uid1"),
@@ -100,13 +100,13 @@ namespace FirebaseAdmin.Snippets
                 });
             
             Console.WriteLine("Successfully fetched user data:");
-            foreach (UserRecord user in getUsersresult.Users)
+            foreach (UserRecord user in result.Users)
             {
                 Console.WriteLine($"User: {user.Uid}");
             }
 
             Console.WriteLine("Unable to find users corresponding to these identifiers:");
-            foreach (UserIdentifier uid in getUsersresult.NotFound)
+            foreach (UserIdentifier uid in result.NotFound)
             {
                 Console.WriteLine($"{uid}");
             }
@@ -178,17 +178,17 @@ namespace FirebaseAdmin.Snippets
         internal static async Task DeleteUsersAsync()
         {
             // [START bulk_delete_users]
-            DeleteUsersResult deleteUsersResult = await FirebaseAuth.DefaultInstance.DeleteUsersAsync(new List<string>
+            DeleteUsersResult result = await FirebaseAuth.DefaultInstance.DeleteUsersAsync(new List<string>
                 {
                     "uid1",
                     "uid2",
                     "uid3",
                 });
             
-            Console.WriteLine($"Successfully deleted {deleteUsersResult.SuccessCount} users.");
-            Console.WriteLine($"Failed to delete {deleteUsersResult.FailureCount} users.");
+            Console.WriteLine($"Successfully deleted {result.SuccessCount} users.");
+            Console.WriteLine($"Failed to delete {result.FailureCount} users.");
 
-            for (ErrorInfo err in deleteUsersResult.Errors)
+            for (ErrorInfo err in result.Errors)
             {
                 Console.WriteLine($"Error #{err.Index}, reason: {err.Message}");
             }
