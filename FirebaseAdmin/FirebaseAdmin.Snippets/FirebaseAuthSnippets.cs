@@ -87,6 +87,32 @@ namespace FirebaseAdmin.Snippets
             // [END get_user_by_phone]
         }
 
+        internal static async Task GetUsersAsync()
+        {
+            // [START bulk_get_users]
+            GetUsersResult getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
+                new List<UserIdentifier>
+                {
+                    new UidIdentifier("uid1"),
+                    new EmailIdentifier("user2@example.com"),
+                    new PhoneIdentifier("+15555550003"),
+                    new ProviderIdentifier("google.com", "google_uid4")
+                });
+            
+            Console.WriteLine("Successfully fetched user data:");
+            foreach (UserRecord user in getUsersresult.Users)
+            {
+                Console.WriteLine($"User: {user.Uid}");
+            }
+
+            Console.WriteLine("Unable to find users corresponding to these identifiers:");
+            foreach (UserIdentifier uid in getUsersresult.NotFound)
+            {
+                Console.WriteLine($"{uid}");
+            }
+            // [END bulk_get_users]
+        }
+
         internal static async Task CreateUserAsync()
         {
             // [START create_user]
@@ -147,6 +173,26 @@ namespace FirebaseAdmin.Snippets
             await FirebaseAuth.DefaultInstance.DeleteUserAsync(uid);
             Console.WriteLine("Successfully deleted user.");
             // [END delete_user]
+        }
+
+        internal static async Task DeleteUsersAsync()
+        {
+            // [START bulk_delete_users]
+            DeleteUsersResult deleteUsersResult = await FirebaseAuth.DefaultInstance.DeleteUsersAsync(new List<string>
+                {
+                    "uid1",
+                    "uid2",
+                    "uid3",
+                });
+            
+            Console.WriteLine($"Successfully deleted {deleteUsersResult.SuccessCount} users.");
+            Console.WriteLine($"Failed to delete {deleteUsersResult.FailureCount} users.");
+
+            for (ErrorInfo err in deleteUsersResult.Errors)
+            {
+                Console.WriteLine($"Error #{err.Index}, reason: {err.Message}");
+            }
+            // [END bulk_delete_users]
         }
 
         internal static async Task ListAllUsersAsync()
