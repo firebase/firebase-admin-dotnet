@@ -154,12 +154,12 @@ namespace FirebaseAdmin.Auth
         properties.Add("salt", UrlSafeBase64Encode(this.PasswordSalt));
       }
 
-      if (this.UserProviders.Count() > 0)
+      if (this.UserProviders != null && this.UserProviders.Count() > 0)
       {
         properties.Add("providerUserInfo", new List<UserProvider>(this.UserProviders));
       }
 
-      if (this.CustomClaims.Count() > 0)
+      if (this.CustomClaims != null && this.CustomClaims.Count() > 0)
       {
         IReadOnlyDictionary<string, object> mergedClaims = this.CustomClaims;
         UserRecord.CheckCustomClaims(mergedClaims);

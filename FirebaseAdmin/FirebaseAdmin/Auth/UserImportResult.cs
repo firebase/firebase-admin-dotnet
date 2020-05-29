@@ -32,7 +32,16 @@ namespace FirebaseAdmin.Auth
     /// <param name="response"> The UploadAccountResponse generated from the post request.</param>
     public UserImportResult(int users, UploadAccountResponse response)
     {
-      this.Errors = new List<ErrorInfo>(response.Errors);
+      // TODO: Cleanup
+      if (response.Errors != null)
+      {
+        this.Errors = new List<ErrorInfo>(response.Errors);
+      }
+      else
+      {
+        this.Errors = new List<ErrorInfo>();
+      }
+
       this.users = users;
     }
 

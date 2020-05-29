@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace FirebaseAdmin.Auth.Hash
 {
@@ -42,7 +43,7 @@ namespace FirebaseAdmin.Auth.Hash
 
       return new Dictionary<string, object>
       {
-         { "signerKey", this.Key },
+         { "signerKey", Encoding.ASCII.GetBytes(this.Key) },
       };
     }
   }

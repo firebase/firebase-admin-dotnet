@@ -18,15 +18,39 @@ using System.Collections.Generic;
 namespace FirebaseAdmin.Auth.Hash
 {
   /// <summary>
-  /// An abstract <a cref="UserImportHash">UserImportHash</a> implementation for specifying a <c>Rounds</c> count in
-  /// a given range.
+  /// An abstract <a cref="UserImportHash">UserImportHash</a> implementation for specifying a
+  /// <c>Rounds</c> count in a given range.
   /// </summary>
   public abstract class RepeatableHash : UserImportHash
   {
+    private int? rounds;
+
     /// <summary>
-    /// Gets or sets the number of rounds for the repeatable hash.
+    /// Gets or sets the number of rounds for the repeatable hash. Verifies that the specified Rounds are
+    /// within the required bounds.
     /// </summary>
-    public int Rounds { get; set; }
+    public int Rounds
+    {
+      get
+      {
+        if (this.rounds == null)
+        {
+          throw new ArgumentException("Rounds was not initialized");
+        }
+
+        return (int)this.rounds;
+      }
+
+      set
+      {
+        if (value < this.MinRounds || value > this.MaxRounds)
+        {
+          throw new ArgumentException($"Rounds value must be between {this.MinRounds} and {this.MaxRounds} (inclusive).");
+        }
+
+        this.rounds = value;
+      }
+    }
 
     /// <summary>
     /// Gets the minimum number of rounds for that respective repeatable hash implementation.
@@ -39,16 +63,12 @@ namespace FirebaseAdmin.Auth.Hash
     protected abstract int MaxRounds { get; }
 
     /// <summary>
-    /// Verifies that the specified Rounds are within the required bounds and returns an appropriate dictionary.
+    /// Returns a dictionary specifying the number of rounds the hashing algorithm
+    /// was set to iterate over.
     /// </summary>
-    /// <returns> Dictionary containing the number of rounds.</returns>
+    /// <returns>Dictionary containing the number of rounds.</returns>
     protected override IReadOnlyDictionary<string, object> GetOptions()
     {
-      if (this.Rounds < this.MinRounds || this.Rounds > this.MaxRounds)
-      {
-        throw new ArgumentException($"Rounds value must be between {this.MinRounds} and {this.MaxRounds} (inclusive).");
-      }
-
       return new Dictionary<string, object>
       {
         {

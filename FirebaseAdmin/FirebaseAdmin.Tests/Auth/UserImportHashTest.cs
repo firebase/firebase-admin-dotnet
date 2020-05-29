@@ -1,4 +1,4 @@
-// Copyright 2019, Google Inc. All rights reserved.
+// Copyright 2020, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Hash.Tests
@@ -77,7 +78,6 @@ namespace FirebaseAdmin.Auth.Hash.Tests
       var expectedResult = new Dictionary<string, object>
         {
           { "hashAlgorithm", "STANDARD_SCRYPT" },
-          { "rounds", 8 },
           { "dkLen", 8 },
           { "blockSize", 4 },
           { "parallization", 2 },
@@ -92,22 +92,22 @@ namespace FirebaseAdmin.Auth.Hash.Tests
     {
       var repeatableHashes = new Dictionary<string, RepeatableHash>()
       {
-          { "MD5", new Md5 { Rounds = 5 } },
-          { "SHA1", new Sha1 { Rounds = 5 } },
-          { "SHA256", new Sha256 { Rounds = 5 } },
-          { "SHA512", new Sha512 { Rounds = 5 } },
-          { "PBKDF_SHA1", new PdkdfSha1 { Rounds = 5 } },
-          { "PBKDF2_SHA256", new Pdkdf2Sha256 { Rounds = 5 } },
+        { "MD5", new Md5 { Rounds = 5 } },
+        { "SHA1", new Sha1 { Rounds = 5 } },
+        { "SHA256", new Sha256 { Rounds = 5 } },
+        { "SHA512", new Sha512 { Rounds = 5 } },
+        { "PBKDF_SHA1", new PdkdfSha1 { Rounds = 5 } },
+        { "PBKDF2_SHA256", new Pdkdf2Sha256 { Rounds = 5 } },
       };
 
       foreach (KeyValuePair<string, RepeatableHash> entry in repeatableHashes)
       {
-          var expected = new Dictionary<string, object>()
-          {
-            { "hashAlgorithm", entry.Key },
-            { "rounds", 5 },
-          };
-          Assert.Equal(expected, entry.Value.GetProperties());
+        var expected = new Dictionary<string, object>()
+        {
+          { "hashAlgorithm", entry.Key },
+          { "rounds", 5 },
+        };
+        Assert.Equal(expected, entry.Value.GetProperties());
       }
     }
 
@@ -116,57 +116,179 @@ namespace FirebaseAdmin.Auth.Hash.Tests
     {
       var repeatableHashes = new Dictionary<string, RepeatableHash>()
       {
-          { "MD5", new Md5 { } },
-          { "SHA1", new Sha1 { } },
-          { "SHA256", new Sha256 { } },
-          { "SHA512", new Sha512 { } },
-          { "PBKDF_SHA1", new PdkdfSha1 { } },
-          { "PBKDF2_SHA256", new Pdkdf2Sha256 { } },
+        { "MD5", new Md5 { } },
+        { "SHA1", new Sha1 { } },
+        { "SHA256", new Sha256 { } },
+        { "SHA512", new Sha512 { } },
+        { "PBKDF_SHA1", new PdkdfSha1 { } },
+        { "PBKDF2_SHA256", new Pdkdf2Sha256 { } },
       };
 
       foreach (KeyValuePair<string, RepeatableHash> entry in repeatableHashes)
       {
-          Assert.Throws<ArgumentException>(() => entry.Value.GetProperties());
+        Assert.Throws<ArgumentException>(() => entry.Value.GetProperties());
       }
     }
 
     [Fact]
     public void TestHmacHashes()
     {
-      var repeatableHashes = new Dictionary<string, Hmac>()
+      var hmacHashes = new Dictionary<string, Hmac>()
       {
-          { "HMAC_MD5", new HmacMd5 { Key = signerKey } },
-          { "HMAC_SHA1", new HmacSha1 { Key = signerKey } },
-          { "HMAC_SHA256", new HmacSha256 { Key = signerKey } },
-          { "HMAC_SHA512", new HmacSha512 { Key = signerKey } },
+        { "HMAC_MD5", new HmacMd5 { Key = signerKey } },
+        { "HMAC_SHA1", new HmacSha1 { Key = signerKey } },
+        { "HMAC_SHA256", new HmacSha256 { Key = signerKey } },
+        { "HMAC_SHA512", new HmacSha512 { Key = signerKey } },
       };
 
-      foreach (KeyValuePair<string, Hmac> entry in repeatableHashes)
+      foreach (KeyValuePair<string, Hmac> entry in hmacHashes)
       {
-          var expected = new Dictionary<string, object>()
-          {
-            { "hashAlgorithm", entry.Key },
-            { "signerKey", signerKey },
-          };
-          Assert.Equal(expected, entry.Value.GetProperties());
+        var expected = new Dictionary<string, object>()
+        {
+          { "hashAlgorithm", entry.Key },
+          { "signerKey", Encoding.ASCII.GetBytes(signerKey) },
+        };
+        Assert.Equal(expected, entry.Value.GetProperties());
       }
     }
 
     [Fact]
     public void TestHmacHashesNoKey()
     {
-      var repeatableHashes = new Dictionary<string, Hmac>()
+      var hmacHashes = new Dictionary<string, Hmac>()
       {
-          { "HMAC_MD5", new HmacMd5 { } },
-          { "HMAC_SHA1", new HmacSha1 { } },
-          { "HMAC_SHA256", new HmacSha256 { } },
-          { "HMAC_SHA512", new HmacSha512 { } },
+        { "HMAC_MD5", new HmacMd5 { } },
+        { "HMAC_SHA1", new HmacSha1 { } },
+        { "HMAC_SHA256", new HmacSha256 { } },
+        { "HMAC_SHA512", new HmacSha512 { } },
       };
 
-      foreach (KeyValuePair<string, Hmac> entry in repeatableHashes)
+      foreach (KeyValuePair<string, Hmac> entry in hmacHashes)
       {
-          Assert.Throws<ArgumentException>(() => entry.Value.GetProperties());
+        Assert.Throws<ArgumentException>(() => entry.Value.GetProperties());
       }
+    }
+
+    [Fact]
+    public void TestRepeatableHashRoundsTooLow()
+    {
+      Assert.Throws<ArgumentException>(() => new Md5 { Rounds = -1 });
+      Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 0 });
+      Assert.Throws<ArgumentException>(() => new Sha256 { Rounds = 0 });
+      Assert.Throws<ArgumentException>(() => new Sha512 { Rounds = 0 });
+      Assert.Throws<ArgumentException>(() => new PdkdfSha1 { Rounds = -1 });
+      Assert.Throws<ArgumentException>(() => new Pdkdf2Sha256 { Rounds = -1 });
+    }
+
+    [Fact]
+    public void TestRepeatableHashRoundsTooHigh()
+    {
+      Assert.Throws<ArgumentException>(() => new Md5 { Rounds = 8193 });
+      Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 8193 });
+      Assert.Throws<ArgumentException>(() => new Sha256 { Rounds = 8193 });
+      Assert.Throws<ArgumentException>(() => new Sha512 { Rounds = 8193 });
+      Assert.Throws<ArgumentException>(() => new PdkdfSha1 { Rounds = 120001 });
+      Assert.Throws<ArgumentException>(() => new Pdkdf2Sha256 { Rounds = 120001 });
+    }
+
+    [Fact]
+    public void TestScryptHashConstraintsTooLow()
+    {
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new Scrypt()
+        {
+          Rounds = 0,
+          Key = signerKey,
+          SaltSeparator = saltSeperator,
+          MemoryCost = 3,
+        };
+      });
+
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new Scrypt()
+        {
+          Rounds = 3,
+          Key = signerKey,
+          SaltSeparator = saltSeperator,
+          MemoryCost = 0,
+        };
+      });
+    }
+
+    [Fact]
+    public void TestScryptHashConstraintsTooHigh()
+    {
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new Scrypt()
+        {
+          Rounds = 9,
+          Key = signerKey,
+          SaltSeparator = saltSeperator,
+          MemoryCost = 3,
+        };
+      });
+
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new Scrypt()
+        {
+          Rounds = 3,
+          Key = signerKey,
+          SaltSeparator = saltSeperator,
+          MemoryCost = 15,
+        };
+      });
+    }
+
+    [Fact]
+    public void TestStandardScryptHashConstraintsTooLow()
+    {
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new StandardScrypt()
+        {
+          DerivedKeyLength = -1,
+          BlockSize = 4,
+          Parallelization = 2,
+          MemoryCost = 13,
+        };
+      });
+
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new StandardScrypt()
+        {
+          DerivedKeyLength = 2,
+          BlockSize = -1,
+          Parallelization = 2,
+          MemoryCost = 13,
+        };
+      });
+
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new StandardScrypt()
+        {
+          DerivedKeyLength = 2,
+          BlockSize = 4,
+          Parallelization = -2,
+          MemoryCost = 13,
+        };
+      });
+
+      Assert.Throws<ArgumentException>(() =>
+      {
+        new StandardScrypt()
+        {
+          DerivedKeyLength = 2,
+          BlockSize = 4,
+          Parallelization = 2,
+          MemoryCost = -1,
+        };
+      });
     }
 
     private class MockHash : UserImportHash
@@ -176,9 +298,9 @@ namespace FirebaseAdmin.Auth.Hash.Tests
       protected override IReadOnlyDictionary<string, object> GetOptions()
       {
         return new Dictionary<string, object>
-           {
-               { "key", "value" },
-           };
+          {
+            { "key", "value" },
+          };
       }
     }
   }
