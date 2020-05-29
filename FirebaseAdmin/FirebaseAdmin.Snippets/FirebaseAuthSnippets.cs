@@ -188,7 +188,7 @@ namespace FirebaseAdmin.Snippets
             Console.WriteLine($"Successfully deleted {result.SuccessCount} users.");
             Console.WriteLine($"Failed to delete {result.FailureCount} users.");
 
-            for (ErrorInfo err in result.Errors)
+            foreach (ErrorInfo err in result.Errors)
             {
                 Console.WriteLine($"Error #{err.Index}, reason: {err.Message}");
             }
