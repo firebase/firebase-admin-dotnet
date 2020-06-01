@@ -26,7 +26,7 @@ namespace FirebaseAdmin.Auth.Hash
         private int? rounds;
 
         /// <summary>
-        /// Gets or sets the number of rounds for the repeatable hash. Verifies that the 
+        /// Gets or sets the number of rounds for the repeatable hash. Verifies that the
         /// specified <c>Rounds</c> are within the required bounds.
         /// </summary>
         public int Rounds

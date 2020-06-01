@@ -726,7 +726,7 @@ namespace FirebaseAdmin.Auth
         /// check identifier uniqueness which could result in duplications.</summary>
         /// <p><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
         ///  passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
-        /// FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions)</a>.</p>
+        /// FirebaseAuth.ImportUsersAsync</a>.</p>
         /// <param name="userRecordArgs"> A non-empty list of users to be imported. Length
         /// must not exceed 1000.</param>
         /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
@@ -746,7 +746,7 @@ namespace FirebaseAdmin.Auth
         /// check identifier uniqueness which could result in duplications.</summary>
         /// <p><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
         ///  passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
-        /// FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions)</a>.</p>
+        /// FirebaseAuth.ImportUsersAsync</a>.</p>
         /// <param name="userRecordArgs"> A non-empty list of users to be imported. Length
         /// must not exceed 1000.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous

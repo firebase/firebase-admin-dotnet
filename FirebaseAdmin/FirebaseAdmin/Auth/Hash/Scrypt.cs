@@ -20,8 +20,8 @@ namespace FirebaseAdmin.Auth.Hash
     /// <summary>
     /// Represents the Scrypt password hashing algorithm. This is the
     /// <a href="https://github.com/firebase/scrypt">modified Scrypt algorithm</a> used by
-    /// Firebase Auth. See <a cref="StandardScrypt">StandardScrypt</a> for the standard 
-    /// Scrypt algorithm. Can be used as an instance of 
+    /// Firebase Auth. See <a cref="StandardScrypt">StandardScrypt</a> for the standard
+    /// Scrypt algorithm. Can be used as an instance of
     /// <a cref="UserImportHash">UserImportHash</a> when importing users.
     /// </summary>
     public sealed class Scrypt : RepeatableHash

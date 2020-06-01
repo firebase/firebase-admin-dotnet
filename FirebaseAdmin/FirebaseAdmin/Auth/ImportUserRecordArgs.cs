@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -165,17 +164,10 @@ namespace FirebaseAdmin.Auth
       {
           IReadOnlyDictionary<string, object> mergedClaims = this.CustomClaims;
 
-          // UserRecord.CheckCustomClaims(mergedClaims);
           var serialized = UserRecordArgs.CheckCustomClaims(mergedClaims);
           properties.Add(
               UserRecord.CustomAttributes,
               serialized);
-
-          /*
-          properties.Add(
-            UserRecord.CustomAttributes,
-            JsonConvert.SerializeObject(mergedClaims));
-          */
       }
 
       if (this.EmailVerified != null)
