@@ -17,69 +17,67 @@ using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {
-  public class UserProviderTest
-  {
-    [Fact]
-    public void NoUid()
+    public class UserProviderTest
     {
-      Assert.Throws<ArgumentException>(() => new UserProvider().Uid);
+        [Fact]
+        public void NoUid()
+        {
+            Assert.Throws<ArgumentException>(() => new UserProvider().Uid);
+        }
+
+        [Fact]
+        public void EmptyUid()
+        {
+            var userProvider = new UserProvider();
+            Assert.Throws<ArgumentException>(() => userProvider.Uid = string.Empty);
+        }
+
+        [Fact]
+        public void NoProviderId()
+        {
+            Assert.Throws<ArgumentException>(() => new UserProvider().ProviderId);
+        }
+
+        [Fact]
+        public void EmptyProviderId()
+        {
+            var userProvider = new UserProvider();
+            Assert.Throws<ArgumentException>(() => userProvider.ProviderId = string.Empty);
+        }
+
+        [Fact]
+        public void RequiredOnly()
+        {
+            var userProvider = new UserProvider()
+            {
+                Uid = "user1",
+                ProviderId = "firebase",
+            };
+
+            Assert.Equal("user1", userProvider.Uid);
+            Assert.Null(userProvider.DisplayName);
+            Assert.Null(userProvider.Email);
+            Assert.Null(userProvider.PhotoUrl);
+            Assert.Equal("firebase", userProvider.ProviderId);
+        }
+
+        [Fact]
+        public void AllProperties()
+        {
+            var userProvider = new UserProvider()
+            {
+                DisplayName = "displayName",
+                Email = "example@gmail.com",
+                PhotoUrl = "http://photo.com",
+                Uid = "user1",
+                ProviderId = "firebase",
+            };
+
+            Assert.Equal("user1", userProvider.Uid);
+            Assert.Equal("displayName", userProvider.DisplayName);
+            Assert.Equal("example@gmail.com", userProvider.Email);
+            Assert.Equal("http://photo.com", userProvider.PhotoUrl);
+            Assert.Equal("firebase", userProvider.ProviderId);
+        }
     }
-
-    [Fact]
-    public void EmptyUid()
-    {
-      var userProvider = new UserProvider();
-      userProvider.Uid = string.Empty;
-      Assert.Throws<ArgumentException>(() => userProvider.Uid);
-    }
-
-    [Fact]
-    public void NoProviderId()
-    {
-      Assert.Throws<ArgumentException>(() => new UserProvider().ProviderId);
-    }
-
-    [Fact]
-    public void EmptyProviderId()
-    {
-      var userProvider = new UserProvider();
-      userProvider.ProviderId = string.Empty;
-      Assert.Throws<ArgumentException>(() => userProvider.ProviderId);
-    }
-
-    [Fact]
-    public void RequiredOnly()
-    {
-      var userProvider = new UserProvider()
-      {
-          Uid = "user1",
-          ProviderId = "firebase",
-      };
-
-      Assert.Equal("user1", userProvider.Uid);
-      Assert.Null(userProvider.DisplayName);
-      Assert.Null(userProvider.Email);
-      Assert.Null(userProvider.PhotoUrl);
-      Assert.Equal("firebase", userProvider.ProviderId);
-    }
-
-    [Fact]
-    public void AllProperties()
-    {
-      var userProvider = new UserProvider()
-      {
-          DisplayName = "displayName",
-          Email = "example@gmail.com",
-          PhotoUrl = "http://photo.com",
-          Uid = "user1",
-          ProviderId = "firebase",
-      };
-
-      Assert.Equal("user1", userProvider.Uid);
-      Assert.Equal("displayName", userProvider.DisplayName);
-      Assert.Equal("example@gmail.com", userProvider.Email);
-      Assert.Equal("http://photo.com", userProvider.PhotoUrl);
-      Assert.Equal("firebase", userProvider.ProviderId);
-    }
-  }
 }

@@ -99,75 +99,83 @@ namespace FirebaseAdmin.Auth
     }
 
     /// <summary>
-    /// Verifies ImportUserRecordArgs properties by invoking UserRecord validation functions and
-    /// returns a dictionary containing the values to be serialied.
+    /// Verifies ImportUserRecordArgs properties by invoking UserRecordArgs validation functions and
+    /// returns a dictionary containing the values to be serialized.
     /// </summary>
-    /// <returns>Readonly dictionary containing all defined properties.</returns>
+    /// <returns>Read-only dictionary containing all defined properties.</returns>
     public IReadOnlyDictionary<string, object> GetProperties()
     {
       Dictionary<string, object> properties = new Dictionary<string, object>();
-      UserRecord.CheckUid(this.Uid);
+
+      UserRecordArgs.CheckUid(this.Uid, true);
       properties.Add("localId", this.Uid);
 
       if (!string.IsNullOrEmpty(this.Email))
       {
-        UserRecord.CheckEmail(this.Email);
-        properties.Add("email", this.Email);
+          UserRecordArgs.CheckEmail(this.Email);
+          properties.Add("email", this.Email);
       }
 
       if (!string.IsNullOrEmpty(this.PhotoUrl))
       {
-        UserRecord.CheckUrl(this.PhotoUrl);
-        properties.Add("photoUrl", this.PhotoUrl);
+          UserRecordArgs.CheckPhotoUrl(this.PhotoUrl);
+          properties.Add("photoUrl", this.PhotoUrl);
       }
 
       if (!string.IsNullOrEmpty(this.PhoneNumber))
       {
-        UserRecord.CheckPhoneNumber(this.PhoneNumber);
-        properties.Add("phoneNumber", this.PhoneNumber);
+          UserRecordArgs.CheckPhoneNumber(this.PhoneNumber);
+          properties.Add("phoneNumber", this.PhoneNumber);
       }
 
       if (!string.IsNullOrEmpty(this.DisplayName))
       {
-        properties.Add("displayName", this.DisplayName);
+          properties.Add("displayName", this.DisplayName);
       }
 
       if (this.UserMetadata != null)
       {
-        if (this.UserMetadata.CreationTimestamp != null)
-        {
-          properties.Add("createdAt", this.UserMetadata.CreationTimestamp);
-        }
+          if (this.UserMetadata.CreationTimestamp != null)
+          {
+              properties.Add("createdAt", this.UserMetadata.CreationTimestamp);
+          }
 
-        if (this.UserMetadata.LastSignInTimestamp != null)
-        {
-          properties.Add("lastLoginAt", this.UserMetadata.LastSignInTimestamp);
-        }
+          if (this.UserMetadata.LastSignInTimestamp != null)
+          {
+              properties.Add("lastLoginAt", this.UserMetadata.LastSignInTimestamp);
+          }
       }
 
       if (this.PasswordHash != null)
       {
-        properties.Add("passwordHash", UrlSafeBase64Encode(this.PasswordHash));
+          properties.Add("passwordHash", UrlSafeBase64Encode(this.PasswordHash));
       }
 
       if (this.PasswordSalt != null)
       {
-        properties.Add("salt", UrlSafeBase64Encode(this.PasswordSalt));
+          properties.Add("salt", UrlSafeBase64Encode(this.PasswordSalt));
       }
 
       if (this.UserProviders != null && this.UserProviders.Count() > 0)
       {
-        properties.Add("providerUserInfo", new List<UserProvider>(this.UserProviders));
+          properties.Add("providerUserInfo", new List<UserProvider>(this.UserProviders));
       }
 
       if (this.CustomClaims != null && this.CustomClaims.Count > 0)
       {
-        IReadOnlyDictionary<string, object> mergedClaims = this.CustomClaims;
-        UserRecord.CheckCustomClaims(mergedClaims);
+          IReadOnlyDictionary<string, object> mergedClaims = this.CustomClaims;
 
-        properties.Add(
-          UserRecord.CustomAttributes,
-          JsonConvert.SerializeObject(mergedClaims));
+          // UserRecord.CheckCustomClaims(mergedClaims);
+          var serialized = UserRecordArgs.CheckCustomClaims(mergedClaims);
+          properties.Add(
+              UserRecord.CustomAttributes,
+              serialized);
+
+          /*
+          properties.Add(
+            UserRecord.CustomAttributes,
+            JsonConvert.SerializeObject(mergedClaims));
+          */
       }
 
       if (this.EmailVerified != null)

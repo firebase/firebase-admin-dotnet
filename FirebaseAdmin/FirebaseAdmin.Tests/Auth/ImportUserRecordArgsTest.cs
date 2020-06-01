@@ -20,109 +20,109 @@ using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {
-  public class ImportUserRecordArgsTest
-  {
-    [Fact]
-    public void TestImportUserRecordArgsSerializationBasic()
+    public class ImportUserRecordArgsTest
     {
-      var userProviders = new List<UserProvider>
-      {
-        new UserProvider()
+        [Fact]
+        public void TestImportUserRecordArgsSerializationBasic()
         {
-          Uid = "google.uid",
-          ProviderId = "google.com",
-        },
-      };
+            var userProviders = new List<UserProvider>
+            {
+                new UserProvider()
+                {
+                    Uid = "google.uid",
+                    ProviderId = "google.com",
+                },
+            };
 
-      var customClaims = new Dictionary<string, object>()
-      {
-        { "admin", true },
-      };
+            var customClaims = new Dictionary<string, object>()
+            {
+                { "admin", true },
+            };
 
-      var userMetadata = new UserMetadata(1, 2, null);
+            var userMetadata = new UserMetadata(1, 2, null);
 
-      var importUserRecordArgs = new ImportUserRecordArgs()
-      {
-        Uid = "123",
-        Email = "example@gmail.com",
-        EmailVerified = true,
-        DisplayName = "Example",
-        PhotoUrl = "http://example.com/photo",
-        PhoneNumber = "+11234567890",
-        Disabled = false,
-        UserMetadata = userMetadata,
-        PasswordHash = Encoding.ASCII.GetBytes("secret"),
-        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
-        CustomClaims = customClaims,
-        UserProviders = userProviders,
-      };
+            var importUserRecordArgs = new ImportUserRecordArgs()
+            {
+                Uid = "123",
+                Email = "example@gmail.com",
+                EmailVerified = true,
+                DisplayName = "Example",
+                PhotoUrl = "http://example.com/photo",
+                PhoneNumber = "+11234567890",
+                Disabled = false,
+                UserMetadata = userMetadata,
+                PasswordHash = Encoding.ASCII.GetBytes("secret"),
+                PasswordSalt = Encoding.ASCII.GetBytes("salt"),
+                CustomClaims = customClaims,
+                UserProviders = userProviders,
+            };
 
-      var expected = new Dictionary<string, object>()
-      {
-        { "localId", "123" },
-        { "email", "example@gmail.com" },
-        { "photoUrl", "http://example.com/photo" },
-        { "phoneNumber", "+11234567890" },
-        { "displayName", "Example" },
-        { "createdAt", userMetadata.CreationTimestamp },
-        { "lastLoginAt", userMetadata.LastSignInTimestamp },
-        { "passwordHash", "c2VjcmV0" },
-        { "salt", "c2FsdA" },
-        { "providerUserInfo", userProviders },
-        { "customAttributes", JsonConvert.SerializeObject(customClaims) },
-        { "emailVerified", true },
-        { "disabled", false },
-      };
+            var expected = new Dictionary<string, object>()
+            {
+                { "localId", "123" },
+                { "email", "example@gmail.com" },
+                { "photoUrl", "http://example.com/photo" },
+                { "phoneNumber", "+11234567890" },
+                { "displayName", "Example" },
+                { "createdAt", userMetadata.CreationTimestamp },
+                { "lastLoginAt", userMetadata.LastSignInTimestamp },
+                { "passwordHash", "c2VjcmV0" },
+                { "salt", "c2FsdA" },
+                { "providerUserInfo", userProviders },
+                { "customAttributes", JsonConvert.SerializeObject(customClaims) },
+                { "emailVerified", true },
+                { "disabled", false },
+            };
 
-      Assert.Equal(
-        JsonConvert.SerializeObject(expected),
-        JsonConvert.SerializeObject(importUserRecordArgs.GetProperties()));
-    }
+            Assert.Equal(
+              JsonConvert.SerializeObject(expected),
+              JsonConvert.SerializeObject(importUserRecordArgs.GetProperties()));
+        }
 
-    [Fact]
-    public void TestImportUserRecordArgsMissingUid()
-    {
-      var userProviderWithMissingUid = new ImportUserRecordArgs() { };
-      Assert.Throws<ArgumentException>(() => userProviderWithMissingUid.GetProperties());
-    }
-
-    [Fact]
-    public void TestImportUserRecordArgsInvalidEmail()
-    {
-      var userProviderWithMissingUid = new ImportUserRecordArgs()
-      {
-        Uid = "123",
-        Email = "invalidemail",
-      };
-      Assert.Throws<ArgumentException>(() => userProviderWithMissingUid.GetProperties());
-    }
-
-    [Fact]
-    public void TestImportUserRecordArgsInvalidPhone()
-    {
-      var userProviderWithMissingUid = new ImportUserRecordArgs()
-      {
-        Uid = "123",
-        PhoneNumber = "11234567890",
-      };
-      Assert.Throws<ArgumentException>(() => userProviderWithMissingUid.GetProperties());
-    }
-
-    [Fact]
-    public void TestImportUserRecordArgsReservedCustomClaims()
-    {
-      foreach (string reservedKey in FirebaseTokenFactory.ReservedClaims)
-      {
-        var userProviderWithReservedClaimKey = new ImportUserRecordArgs()
+        [Fact]
+        public void TestImportUserRecordArgsMissingUid()
         {
-          Uid = "123",
-          CustomClaims = new Dictionary<string, object>()
-          {
-            { reservedKey, "abc" },
-          },
-        };
-        Assert.Throws<ArgumentException>(() => userProviderWithReservedClaimKey.GetProperties());
-      }
+            var userProviderWithMissingUid = new ImportUserRecordArgs() { };
+            Assert.Throws<ArgumentNullException>(() => userProviderWithMissingUid.GetProperties());
+        }
+
+        [Fact]
+        public void TestImportUserRecordArgsInvalidEmail()
+        {
+            var userProviderWithMissingUid = new ImportUserRecordArgs()
+            {
+                Uid = "123",
+                Email = "invalidemail",
+            };
+            Assert.Throws<ArgumentException>(() => userProviderWithMissingUid.GetProperties());
+        }
+
+        [Fact]
+        public void TestImportUserRecordArgsInvalidPhone()
+        {
+            var userProviderWithMissingUid = new ImportUserRecordArgs()
+            {
+                Uid = "123",
+                PhoneNumber = "11234567890",
+            };
+            Assert.Throws<ArgumentException>(() => userProviderWithMissingUid.GetProperties());
+        }
+
+        [Fact]
+        public void TestImportUserRecordArgsReservedCustomClaims()
+        {
+            foreach (string reservedKey in FirebaseTokenFactory.ReservedClaims)
+            {
+                var userProviderWithReservedClaimKey = new ImportUserRecordArgs()
+                {
+                    Uid = "123",
+                    CustomClaims = new Dictionary<string, object>()
+                    {
+                        { reservedKey, "abc" },
+                    },
+                };
+                Assert.Throws<ArgumentException>(() => userProviderWithReservedClaimKey.GetProperties());
+            }
+        }
     }
-  }
 }

@@ -29,7 +29,7 @@ namespace FirebaseAdmin.Auth.Hash
     public string Key { get; set; }
 
     /// <summary>
-    /// Verifies that the key was appropriately set and returns the options dictionary.
+    /// Verifies that the is non-empty or null and returns the options dictionary.
     /// </summary>
     /// <returns>
     /// Returns the dictionary containing an entry for the signing key.

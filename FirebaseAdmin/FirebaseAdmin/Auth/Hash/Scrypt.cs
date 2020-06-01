@@ -40,7 +40,7 @@ namespace FirebaseAdmin.Auth.Hash
       {
         if (this.key == null)
         {
-          throw new ArgumentException("key must be initialized");
+          throw new ArgumentNullException("key must be initialized");
         }
 
         return this.key;
@@ -91,7 +91,7 @@ namespace FirebaseAdmin.Auth.Hash
       {
         if (this.memoryCost == null)
         {
-          throw new ArgumentException("memory cost must be set");
+          throw new ArgumentNullException("memory cost must be set");
         }
 
         return (int)this.memoryCost;

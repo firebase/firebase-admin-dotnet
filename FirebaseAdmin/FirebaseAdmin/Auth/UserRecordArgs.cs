@@ -195,17 +195,7 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        internal CreateUserRequest ToCreateUserRequest()
-        {
-            return new CreateUserRequest(this);
-        }
-
-        internal UpdateUserRequest ToUpdateUserRequest()
-        {
-            return new UpdateUserRequest(this);
-        }
-
-        private static string CheckPhotoUrl(string photoUrl)
+        internal static string CheckPhotoUrl(string photoUrl)
         {
             if (photoUrl != null)
             {
@@ -222,20 +212,7 @@ namespace FirebaseAdmin.Auth
             return photoUrl;
         }
 
-        private static string CheckPassword(string password)
-        {
-            if (password != null)
-            {
-                if (password.Length < 6)
-                {
-                    throw new ArgumentException("Password must be at least 6 characters long.");
-                }
-            }
-
-            return password;
-        }
-
-        private static string CheckCustomClaims(IReadOnlyDictionary<string, object> claims)
+        internal static string CheckCustomClaims(IReadOnlyDictionary<string, object> claims)
         {
             if (claims == null || claims.Count == 0)
             {
@@ -263,6 +240,29 @@ namespace FirebaseAdmin.Auth
             }
 
             return customClaimsString;
+        }
+
+        internal CreateUserRequest ToCreateUserRequest()
+        {
+            return new CreateUserRequest(this);
+        }
+
+        internal UpdateUserRequest ToUpdateUserRequest()
+        {
+            return new UpdateUserRequest(this);
+        }
+
+        private static string CheckPassword(string password)
+        {
+            if (password != null)
+            {
+                if (password.Length < 6)
+                {
+                    throw new ArgumentException("Password must be at least 6 characters long.");
+                }
+            }
+
+            return password;
         }
 
         private Optional<T> Wrap<T>(T value)

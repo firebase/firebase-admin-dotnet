@@ -35,7 +35,7 @@ namespace FirebaseAdmin.Auth.Hash
       {
         if (this.rounds == null)
         {
-          throw new ArgumentException("Rounds was not initialized");
+          throw new ArgumentNullException("Rounds was not initialized");
         }
 
         return (int)this.rounds;

@@ -18,30 +18,30 @@ using Xunit;
 
 namespace FirebaseAdmin.Auth.Hash.Tests
 {
-  public class UserImportOptionsTest
-  {
-    [Fact]
-    public void TestUserImportOptionsBasic()
+    public class UserImportOptionsTest
     {
-      var options = new UserImportOptions()
-      {
-        Hash = new Md5 { Rounds = 5 },
-      };
-
-      var expectedResult = new Dictionary<string, object>
+        [Fact]
+        public void TestUserImportOptionsBasic()
         {
-          { "rounds", "5" },
-          { "hashAlgorithm", "MD5" },
-        };
+            var options = new UserImportOptions()
+            {
+                Hash = new Md5 { Rounds = 5 },
+            };
 
-      Assert.Equal(expectedResult, options.GetHashProperties());
-    }
+            var expectedResult = new Dictionary<string, object>
+            {
+                { "rounds", 5 },
+                { "hashAlgorithm", "MD5" },
+            };
 
-    [Fact]
-    public void TestUserImportOptionsNoHash()
-    {
-      var options = new UserImportOptions();
-      Assert.Throws<ArgumentException>(() => options.GetHashProperties());
+            Assert.Equal(expectedResult, options.GetHashProperties());
+        }
+
+        [Fact]
+        public void TestUserImportOptionsNoHash()
+        {
+            var options = new UserImportOptions();
+            Assert.Throws<ArgumentException>(() => options.GetHashProperties());
+        }
     }
-  }
 }

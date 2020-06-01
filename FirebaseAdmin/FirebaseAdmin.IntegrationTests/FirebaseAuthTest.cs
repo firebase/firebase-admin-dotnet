@@ -556,7 +556,7 @@ namespace FirebaseAdmin.IntegrationTests
             var options = new UserImportOptions();
             IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();
             usersLst = usersLst.Append(args);
-            Assert.Throws<ArgumentException>(() => new UserImportRequest(usersLst, options));
+            Assert.Throws<ArgumentNullException>(() => new UserImportRequest(usersLst, options));
         }
 
         [Fact]

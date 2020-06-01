@@ -13,35 +13,26 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
   /// <summary>
-  /// Represents the result of the <see cref="o:FirebaseAuth.ImportUsersAsync"/> API.
+  /// Represents the result of the
+  /// <a cref="o:FirebaseAuth.ImportUsersAsync">FirebaseAuth.ImportUsersAsync</a> API.
   /// </summary>
   public class UserImportResult
   {
     private readonly int users;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="UserImportResult"/> class based on supplied users and
-    /// <a cref="UploadAccountResponse">UploadAccountResponse</a> objects.
+    /// Initializes a new instance of the <see cref="UserImportResult"/> class based on supplied
+    /// users and <a cref="UploadAccountResponse">UploadAccountResponse</a> objects.
     /// </summary>
     /// <param name="users"> The number of users.</param>
     /// <param name="response"> The UploadAccountResponse generated from the post request.</param>
     public UserImportResult(int users, UploadAccountResponse response)
     {
-      // TODO: Cleanup
-      if (response.Errors != null)
-      {
-        this.Errors = new List<ErrorInfo>(response.Errors);
-      }
-      else
-      {
-        this.Errors = new List<ErrorInfo>();
-      }
-
+      this.Errors = new List<ErrorInfo>(response.Errors ?? new List<ErrorInfo>());
       this.users = users;
     }
 
