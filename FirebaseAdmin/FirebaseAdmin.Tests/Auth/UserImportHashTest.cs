@@ -198,7 +198,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
             {
                 new Scrypt()
                 {
-                    Rounds = 0,
+                    Rounds = -1,
                     Key = signerKey,
                     SaltSeparator = saltSeperator,
                     MemoryCost = 3,
