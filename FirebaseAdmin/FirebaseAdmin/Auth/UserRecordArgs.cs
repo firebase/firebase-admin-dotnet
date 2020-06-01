@@ -254,12 +254,9 @@ namespace FirebaseAdmin.Auth
 
         private static string CheckPassword(string password)
         {
-            if (password != null)
+            if (password != null && password.Length < 6)
             {
-                if (password.Length < 6)
-                {
-                    throw new ArgumentException("Password must be at least 6 characters long.");
-                }
+                throw new ArgumentException("Password must be at least 6 characters long.");
             }
 
             return password;
