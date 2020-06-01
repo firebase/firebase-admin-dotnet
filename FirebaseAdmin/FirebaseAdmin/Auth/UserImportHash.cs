@@ -17,45 +17,45 @@ using System.Collections.Generic;
 
 namespace FirebaseAdmin.Auth
 {
-  /// <summary>
-  /// Represents a hash algorithm and the related configuration parameters used to hash user
-  /// passwords. An instance of this class must be specified if importing any users with password
-  /// hashes (see <a cref="UserImportOptions">UserImportOptions</a>).
-  /// </summary>
-  /// <remarks>
-  /// This is not expected to be extended in user code. Applications should use one of the provided
-  ///  concrete implementations in the <a cref="FirebaseAdmin.Auth.Hash">namespace</a>. See
-  /// <a href="https://firebase.google.com/docs/auth/admin/import-users">documentation</a> for more
-  /// details on available options.
-  /// </remarks>
-  public abstract class UserImportHash
-  {
     /// <summary>
-    /// Gets the name of the import hash.
+    /// Represents a hash algorithm and the related configuration parameters used to hash user
+    /// passwords. An instance of this class must be specified if importing any users with password
+    /// hashes (see <a cref="UserImportOptions">UserImportOptions</a>).
     /// </summary>
-    protected abstract string HashName { get; }
-
-    /// <summary>
-    /// Retrives the properties of the chosen hashing algorithm.
-    /// </summary>
-    /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
-    public IReadOnlyDictionary<string, object> GetProperties()
+    /// <remarks>
+    /// This is not expected to be extended in user code. Applications should use one of the provided
+    ///  concrete implementations in the <a cref="FirebaseAdmin.Auth.Hash">namespace</a>. See
+    /// <a href="https://firebase.google.com/docs/auth/admin/import-users">documentation</a> for more
+    /// details on available options.
+    /// </remarks>
+    public abstract class UserImportHash
     {
-      if (string.IsNullOrEmpty(this.HashName))
-      {
-        throw new ArgumentException("User import hash name must not be null or empty.");
-      }
+        /// <summary>
+        /// Gets the name of the import hash.
+        /// </summary>
+        protected abstract string HashName { get; }
 
-      var options = this.GetOptions();
-      var properties = new Dictionary<string, object>((Dictionary<string, object>)options);
-      properties.Add("hashAlgorithm", this.HashName);
-      return properties;
+        /// <summary>
+        /// Retrives the properties of the chosen hashing algorithm.
+        /// </summary>
+        /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
+        public IReadOnlyDictionary<string, object> GetProperties()
+        {
+            if (string.IsNullOrEmpty(this.HashName))
+            {
+                throw new ArgumentException("User import hash name must not be null or empty.");
+            }
+
+            var options = this.GetOptions();
+            var properties = new Dictionary<string, object>((Dictionary<string, object>)options);
+            properties.Add("hashAlgorithm", this.HashName);
+            return properties;
+        }
+
+        /// <summary>
+        /// Retrives dictionary with the specified properties of the hashing algorithm.
+        /// </summary>
+        /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
+        protected abstract IReadOnlyDictionary<string, object> GetOptions();
     }
-
-    /// <summary>
-    /// Retrives dictionary with the specified properties of the hashing algorithm.
-    /// </summary>
-    /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
-    protected abstract IReadOnlyDictionary<string, object> GetOptions();
-  }
 }
