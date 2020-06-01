@@ -14,25 +14,25 @@
 
 namespace FirebaseAdmin.Auth.Hash
 {
-  /// <summary>
-  /// Represents the PBKDF2 SHA256 password hashing algorithm. Can be used as an instance of
-  /// <a cref="UserImportHash">UserImportHash</a> when importing users.
-  /// </summary>
-  public sealed class Pbkdf2Sha256 : RepeatableHash
-  {
     /// <summary>
-    /// Gets the hash name which is PBKDF2_SHA256.
+    /// Represents the PBKDF2 SHA256 password hashing algorithm. Can be used as an instance of
+    /// <a cref="UserImportHash">UserImportHash</a> when importing users.
     /// </summary>
-    protected override string HashName { get { return "PBKDF2_SHA256"; } }
+    public sealed class Pbkdf2Sha256 : RepeatableHash
+    {
+        /// <summary>
+        /// Gets the hash name which is PBKDF2_SHA256.
+        /// </summary>
+        protected override string HashName { get { return "PBKDF2_SHA256"; } }
 
-    /// <summary>
-    /// Gets the minimum number of rounds for a Pbkdf2 Sha256 hash which is 0.
-    /// </summary>
-    protected override int MinRounds { get { return 0; } }
+        /// <summary>
+        /// Gets the minimum number of rounds for a Pbkdf2 Sha256 hash which is 0.
+        /// </summary>
+        protected override int MinRounds { get { return 0; } }
 
-    /// <summary>
-    /// Gets the maximum number of rounds for a Pbkdf2 Sha256 hash which is 120000.
-    /// </summary>
-    protected override int MaxRounds { get { return 120000; } }
-  }
+        /// <summary>
+        /// Gets the maximum number of rounds for a Pbkdf2 Sha256 hash which is 120000.
+        /// </summary>
+        protected override int MaxRounds { get { return 120000; } }
+    }
 }

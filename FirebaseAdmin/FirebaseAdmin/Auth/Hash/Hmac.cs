@@ -18,33 +18,33 @@ using System.Text;
 
 namespace FirebaseAdmin.Auth.Hash
 {
-  /// <summary>
-  /// Base class for Hmac type hashes.
-  /// </summary>
-  public abstract class Hmac : UserImportHash
-  {
     /// <summary>
-    /// Gets or sets the key for the hash.
+    /// Base class for Hmac type hashes.
     /// </summary>
-    public string Key { get; set; }
-
-    /// <summary>
-    /// Verifies that the is non-empty or null and returns the options dictionary.
-    /// </summary>
-    /// <returns>
-    /// Returns the dictionary containing an entry for the signing key.
-    /// </returns>
-    protected override IReadOnlyDictionary<string, object> GetOptions()
+    public abstract class Hmac : UserImportHash
     {
-      if (string.IsNullOrEmpty(this.Key))
-      {
-        throw new ArgumentException("key must not be null or empty");
-      }
+        /// <summary>
+        /// Gets or sets the key for the hash.
+        /// </summary>
+        public string Key { get; set; }
 
-      return new Dictionary<string, object>
-      {
-         { "signerKey", Encoding.ASCII.GetBytes(this.Key) },
-      };
+        /// <summary>
+        /// Verifies that the is non-empty or null and returns the options dictionary.
+        /// </summary>
+        /// <returns>
+        /// Returns the dictionary containing an entry for the signing key.
+        /// </returns>
+        protected override IReadOnlyDictionary<string, object> GetOptions()
+        {
+            if (string.IsNullOrEmpty(this.Key))
+            {
+                throw new ArgumentException("key must not be null or empty");
+            }
+
+            return new Dictionary<string, object>
+            {
+                { "signerKey", Encoding.ASCII.GetBytes(this.Key) },
+            };
+        }
     }
-  }
 }

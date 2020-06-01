@@ -14,15 +14,15 @@
 
 namespace FirebaseAdmin.Auth.Hash
 {
-  /// <summary>
-  /// Represents the HMAC SHA256 password hashing algorithm. Can be used as an instance of
-  /// <a cref="UserImportHash">UserImportHash</a> when importing users.
-  /// </summary>
-  public sealed class HmacSha256 : Hmac
-  {
     /// <summary>
-    /// Gets and defines name to be equal to HMAC_SHA256.
+    /// Represents the HMAC SHA256 password hashing algorithm. Can be used as an instance of
+    /// <a cref="UserImportHash">UserImportHash</a> when importing users.
     /// </summary>
-    protected override string HashName { get { return "HMAC_SHA256"; } }
-  }
+    public sealed class HmacSha256 : Hmac
+    {
+        /// <summary>
+        /// Gets and defines name to be equal to HMAC_SHA256.
+        /// </summary>
+        protected override string HashName { get { return "HMAC_SHA256"; } }
+    }
 }

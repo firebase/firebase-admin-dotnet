@@ -17,65 +17,66 @@ using System.Collections.Generic;
 
 namespace FirebaseAdmin.Auth.Hash
 {
-  /// <summary>
-  /// An abstract <a cref="UserImportHash">UserImportHash</a> implementation for specifying a
-  /// <c>Rounds</c> count in a given range.
-  /// </summary>
-  public abstract class RepeatableHash : UserImportHash
-  {
-    private int? rounds;
-
     /// <summary>
-    /// Gets or sets the number of rounds for the repeatable hash. Verifies that the specified Rounds are
-    /// within the required bounds.
+    /// An abstract <a cref="UserImportHash">UserImportHash</a> implementation for specifying a
+    /// <c>Rounds</c> count in a given range.
     /// </summary>
-    public int Rounds
+    public abstract class RepeatableHash : UserImportHash
     {
-      get
-      {
-        if (this.rounds == null)
+        private int? rounds;
+
+        /// <summary>
+        /// Gets or sets the number of rounds for the repeatable hash. Verifies that the 
+        /// specified <c>Rounds</c> are within the required bounds.
+        /// </summary>
+        public int Rounds
         {
-          throw new ArgumentNullException("Rounds was not initialized");
+            get
+            {
+                if (this.rounds == null)
+                {
+                    throw new ArgumentNullException("Rounds was not initialized");
+                }
+
+                return (int)this.rounds;
+            }
+
+            set
+            {
+                if (value < this.MinRounds || value > this.MaxRounds)
+                {
+                    throw new ArgumentException($"Rounds value must be between {this.MinRounds}"
+                    + " and {this.MaxRounds} (inclusive).");
+                }
+
+                this.rounds = value;
+            }
         }
 
-        return (int)this.rounds;
-      }
+        /// <summary>
+        /// Gets the minimum number of rounds for that respective repeatable hash implementation.
+        /// </summary>
+        protected abstract int MinRounds { get; }
 
-      set
-      {
-        if (value < this.MinRounds || value > this.MaxRounds)
+        /// <summary>
+        /// Gets the maximum number of rounds for that respective repeatable hash implementation.
+        /// </summary>
+        protected abstract int MaxRounds { get; }
+
+        /// <summary>
+        /// Returns a dictionary specifying the number of rounds the hashing algorithm
+        /// was set to iterate over.
+        /// </summary>
+        /// <returns>Dictionary containing the number of rounds.</returns>
+        protected override IReadOnlyDictionary<string, object> GetOptions()
         {
-          throw new ArgumentException($"Rounds value must be between {this.MinRounds} and {this.MaxRounds} (inclusive).");
+            return new Dictionary<string, object>
+            {
+                {
+                    "rounds",
+                    this.Rounds
+                },
+            };
         }
-
-        this.rounds = value;
-      }
     }
-
-    /// <summary>
-    /// Gets the minimum number of rounds for that respective repeatable hash implementation.
-    /// </summary>
-    protected abstract int MinRounds { get; }
-
-    /// <summary>
-    /// Gets the maximum number of rounds for that respective repeatable hash implementation.
-    /// </summary>
-    protected abstract int MaxRounds { get; }
-
-    /// <summary>
-    /// Returns a dictionary specifying the number of rounds the hashing algorithm
-    /// was set to iterate over.
-    /// </summary>
-    /// <returns>Dictionary containing the number of rounds.</returns>
-    protected override IReadOnlyDictionary<string, object> GetOptions()
-    {
-      return new Dictionary<string, object>
-      {
-        {
-          "rounds",
-          this.Rounds
-        },
-      };
-    }
-  }
 }

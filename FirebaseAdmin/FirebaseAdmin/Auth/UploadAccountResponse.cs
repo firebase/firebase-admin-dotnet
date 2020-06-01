@@ -17,15 +17,15 @@ using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
-  /// <summary>
-  /// Represents the response from identity toolkit for a user import request.
-  /// </summary>
-  public class UploadAccountResponse
-  {
     /// <summary>
-    /// Gets the list of errors populated after a user import request by the identity toolkit.
+    /// Represents the response from identity toolkit for a user import request.
     /// </summary>
-    [JsonProperty("error")]
-    public IEnumerable<ErrorInfo> Errors { get; }
-  }
+    public class UploadAccountResponse
+    {
+        /// <summary>
+        /// Gets the list of errors populated after a user import request by the identity toolkit.
+        /// </summary>
+        [JsonProperty("error")]
+        public IEnumerable<ErrorInfo> Errors { get; }
+    }
 }

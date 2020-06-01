@@ -731,7 +731,8 @@ namespace FirebaseAdmin.Auth
         /// must not exceed 1000.</param>
         /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
         /// <exception cref="ArgumentException">If the users list is null, empty or has more than
-        /// 1000 elements. Or if at least one user specifies a password.</exception>
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
           IEnumerable<ImportUserRecordArgs> userRecordArgs)
@@ -752,7 +753,8 @@ namespace FirebaseAdmin.Auth
         /// operation.</param>
         /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
         /// <exception cref="ArgumentException">If the users list is null, empty or has more than
-        /// 1000 elements. Or if at least one user specifies a password.</exception>
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
           IEnumerable<ImportUserRecordArgs> userRecordArgs,
@@ -771,7 +773,8 @@ namespace FirebaseAdmin.Auth
         /// null. Required when importing users with passwords.</param>
         /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
         /// <exception cref="ArgumentException">If the users list is null, empty or has more than
-        /// 1000 elements. Or if at least one user specifies a password.</exception>
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
             IEnumerable<ImportUserRecordArgs> userRecordArgs,
@@ -794,7 +797,8 @@ namespace FirebaseAdmin.Auth
         /// operation.</param>
         /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
         /// <exception cref="ArgumentException">If the users list is null, empty or has more than
-        /// 1000 elements. Or if at least one user specifies a password.</exception>
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
             IEnumerable<ImportUserRecordArgs> userRecordArgs,

@@ -33,7 +33,7 @@ namespace FirebaseAdmin.Auth.Hash
 
     /// <summary>
     /// Gets or sets the derived key length for the hashing algorithm.
-    /// <remark>The length cannot be negative.</remark>
+    /// <remarks>The length cannot be negative.</remarks>
     /// </summary>
     public int DerivedKeyLength
     {
@@ -60,7 +60,7 @@ namespace FirebaseAdmin.Auth.Hash
 
     /// <summary>
     /// Gets or sets the block size for the hashing algorithm.
-    /// <remark>The size cannot be negative.</remark>
+    /// <remarks>The size cannot be negative.</remarks>
     /// </summary>
     public int BlockSize
     {
@@ -87,7 +87,7 @@ namespace FirebaseAdmin.Auth.Hash
 
     /// <summary>
     /// Gets or sets parallelization of the hashing algorithm.
-    /// <remark> The parallelization factor cannot be negative. </remark>
+    /// <remarks> The parallelization factor cannot be negative. </remarks>
     /// </summary>
     public int Parallelization
     {
@@ -114,7 +114,7 @@ namespace FirebaseAdmin.Auth.Hash
 
     /// <summary>
     /// Gets or sets memory cost for the hashing algorithm.
-    /// <remark> The memory cost cannot be negative. </remark>
+    /// <remarks> The memory cost cannot be negative. </remarks>
     /// </summary>
     public int MemoryCost
     {

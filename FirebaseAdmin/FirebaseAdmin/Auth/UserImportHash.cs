@@ -22,11 +22,11 @@ namespace FirebaseAdmin.Auth
   /// passwords. An instance of this class must be specified if importing any users with password
   /// hashes (see <a cref="UserImportOptions">UserImportOptions</a>).
   /// </summary>
-  /// <remark>This is not expected to be extended in user code. Applications should use one of the provided
+  /// <remarks>This is not expected to be extended in user code. Applications should use one of the provided
   ///  concrete implementations in the <a cref="FirebaseAdmin.Auth.Hash">namespace</a>. See
   /// <a href="https://firebase.google.com/docs/auth/admin/import-users">documentation</a> for more
   /// details on available options.
-  /// </remark>
+  /// </remarks>
   public abstract class UserImportHash
   {
     /// <summary>
