@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth
@@ -25,15 +24,8 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public class UserRecord : IUserInfo
     {
-        /// <summary>
-        /// Key name for custom attributes.
-        /// </summary>
-        public const string CustomAttributes = "customAttributes";
-
         internal static readonly DateTime UnixEpoch = new DateTime(
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        private const int MaxUidLength = 128;
 
         private const string DefaultProviderId = "firebase";
 

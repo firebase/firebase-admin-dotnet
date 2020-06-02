@@ -21,8 +21,10 @@ namespace FirebaseAdmin.Auth.Hash
     public sealed class HmacSha1 : Hmac
     {
         /// <summary>
-        /// Gets and defines the name to be equal to HMAC_SHA1.
+        /// Initializes a new instance of the <see cref="HmacSha1"/> class.
+        /// Defines the name of the hash to be equal to HMAC_SHA1.
         /// </summary>
-        protected override string HashName { get { return "HMAC_SHA1"; } }
+        public HmacSha1()
+            : base("HMAC_SHA1") { }
     }
 }

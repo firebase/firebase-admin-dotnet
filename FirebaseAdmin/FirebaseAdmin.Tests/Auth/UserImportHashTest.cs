@@ -291,9 +291,31 @@ namespace FirebaseAdmin.Auth.Hash.Tests
             });
         }
 
+        [Fact]
+        public void InstantiateInvalidHashType()
+        {
+            Assert.Throws<ArgumentException>(() => new InvalidHashType(null));
+            Assert.Throws<ArgumentException>(() => new InvalidHashType(string.Empty));
+        }
+
         private class MockHash : UserImportHash
         {
-            protected override string HashName { get { return "MockHash"; } }
+            public MockHash()
+                : base("MockHash") { }
+
+            protected override IReadOnlyDictionary<string, object> GetOptions()
+            {
+                return new Dictionary<string, object>
+                {
+                    { "key", "value" },
+                };
+            }
+        }
+
+        private class InvalidHashType : UserImportHash
+        {
+            public InvalidHashType(string hashName)
+                : base(hashName) { }
 
             protected override IReadOnlyDictionary<string, object> GetOptions()
             {

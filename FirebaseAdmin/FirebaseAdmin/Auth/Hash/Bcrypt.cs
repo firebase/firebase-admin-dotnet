@@ -23,9 +23,13 @@ namespace FirebaseAdmin.Auth.Hash
     public sealed class Bcrypt : UserImportHash
     {
         /// <summary>
-        /// Gets and defines name to be equal to BCRYPT.
+        /// Initializes a new instance of the <see cref="Bcrypt"/> class.
+        /// Defines name to be equal to BCRYPT.
         /// </summary>
-        protected override string HashName { get { return "BCRYPT"; } }
+        public Bcrypt()
+            : base("BCRYPT") { }
+
+        // protected override string HashName { get { return "BCRYPT"; } }
 
         /// <summary>
         /// Returns an empty dictionary representing no options for the Bcrypt hashing algorithm.

@@ -23,12 +23,12 @@ namespace FirebaseAdmin.Auth
     /// Encapsulates user import requests by specifying hashing properties for passwords and
     /// the list of users to be imported.
     /// </summary>
-    public class UserImportRequest
+    internal class UserImportRequest
     {
         internal const int MaxImportUsers = 1000;
 
         [JsonProperty("users")]
-        private IEnumerable<IReadOnlyDictionary<string, object>> users;
+        private readonly IEnumerable<ImportUserRecordArgs.ImportUserRequest> users;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserImportRequest"/> class by verifying
@@ -52,30 +52,23 @@ namespace FirebaseAdmin.Auth
             if (usersToImport.Count() > MaxImportUsers)
             {
                 throw new ArgumentException($"users list must not contain more than"
-                    + " {MaxImportUsers} items");
+                    + $" {MaxImportUsers} items");
             }
 
             bool hasPassword = false;
-            List<IReadOnlyDictionary<string, object>> usersLst =
-                new List<IReadOnlyDictionary<string, object>>();
-            foreach (ImportUserRecordArgs user in usersToImport)
-            {
-                hasPassword = hasPassword || user.HasPassword();
-                usersLst.Add(user.GetProperties());
-            }
-
-            this.users = usersLst;
+            this.users = usersToImport.Select((user) => user.ToImportUserRequest());
+            hasPassword = usersToImport.Any((user) => user.HasPassword());
 
             if (hasPassword)
             {
-                if (options == null || options.Hash == null)
+                if (options?.Hash == null)
                 {
                     throw new ArgumentNullException("UserImportHash option is required when at"
                         + " least one user has a password. Provide a UserImportHash via the"
                         + " Hash setter.");
                 }
 
-                this.HashingProperties = (Dictionary<string, object>)options.GetHashProperties();
+                this.HashProperties = (Dictionary<string, object>)options.GetHashProperties();
             }
         }
 
@@ -85,7 +78,7 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <returns>Dictionary containing key/values for password hashing algorithm.</returns>
         [JsonExtensionData]
-        protected Dictionary<string, object> HashingProperties { get; set; }
+        protected Dictionary<string, object> HashProperties { get; set; }
 
         /// <summary>
         /// Retrives the number of users based on the constructor parameter.

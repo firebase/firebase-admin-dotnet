@@ -23,6 +23,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Gax = Google.Api.Gax;
@@ -232,20 +233,20 @@ namespace FirebaseAdmin.Auth
           UserImportRequest request,
           CancellationToken cancellationToken)
         {
-          if (request == null)
-          {
-            throw new ArgumentNullException("The UserImportRequest request should not be null");
-          }
+            if (request == null)
+            {
+                throw new ArgumentNullException("The UserImportRequest request should not be null");
+            }
 
-          var response = await this.PostAndDeserializeAsync<UploadAccountResponse>(
-              "accounts:batchCreate", request, cancellationToken).ConfigureAwait(false);
-          UploadAccountResponse uploadAccountResponse = response.Result;
-          if (uploadAccountResponse == null)
-          {
-            throw new FirebaseAuthException(ErrorCode.Internal, "Failed to import users.");
-          }
+            var response = await this.PostAndDeserializeAsync<UploadAccountResponse>(
+                "accounts:batchCreate", request, cancellationToken).ConfigureAwait(false);
+            var uploadAccountResponse = response.Result;
+            if (uploadAccountResponse == null)
+            {
+                throw new FirebaseAuthException(ErrorCode.Internal, "Failed to import users.");
+            }
 
-          return new UserImportResult(request.GetUsersCount(), uploadAccountResponse);
+            return new UserImportResult(request.GetUsersCount(), uploadAccountResponse);
         }
 
         /// <summary>
@@ -431,6 +432,18 @@ namespace FirebaseAdmin.Auth
             internal RetryOptions RetryOptions { get; set; }
 
             internal IClock Clock { get; set; }
+        }
+
+        /// <summary>
+        /// Represents the response from identity toolkit for a user import request.
+        /// </summary>
+        internal sealed class UploadAccountResponse
+        {
+            /// <summary>
+            /// Gets the list of errors populated after a user import request by the identity toolkit.
+            /// </summary>
+            [JsonProperty("error")]
+            public IEnumerable<ErrorInfo> Errors { get; }
         }
 
         /// <summary>

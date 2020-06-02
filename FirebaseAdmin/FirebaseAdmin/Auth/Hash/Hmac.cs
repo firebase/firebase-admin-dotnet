@@ -24,6 +24,14 @@ namespace FirebaseAdmin.Auth.Hash
     public abstract class Hmac : UserImportHash
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="Hmac"/> class.
+        /// Propogates the name to UserImportHash.
+        /// </summary>
+        /// <param name="hashName">The name of the hashing algorithm.</param>
+        public Hmac(string hashName)
+            : base(hashName) { }
+
+        /// <summary>
         /// Gets or sets the key for the hash.
         /// </summary>
         public string Key { get; set; }

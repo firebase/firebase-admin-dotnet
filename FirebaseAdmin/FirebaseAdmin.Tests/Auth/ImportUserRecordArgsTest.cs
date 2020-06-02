@@ -59,31 +59,32 @@ namespace FirebaseAdmin.Auth.Tests
 
             var expected = new Dictionary<string, object>()
             {
-                { "localId", "123" },
-                { "email", "example@gmail.com" },
-                { "photoUrl", "http://example.com/photo" },
-                { "phoneNumber", "+11234567890" },
-                { "displayName", "Example" },
                 { "createdAt", userMetadata.CreationTimestamp },
+                { "customAttributes", JsonConvert.SerializeObject(customClaims) },
+                { "disabled", false },
+                { "displayName", "Example" },
+                { "email", "example@gmail.com" },
+                { "emailVerified", true },
                 { "lastLoginAt", userMetadata.LastSignInTimestamp },
                 { "passwordHash", "c2VjcmV0" },
                 { "salt", "c2FsdA" },
+                { "phoneNumber", "+11234567890" },
+                { "photoUrl", "http://example.com/photo" },
                 { "providerUserInfo", userProviders },
-                { "customAttributes", JsonConvert.SerializeObject(customClaims) },
-                { "emailVerified", true },
-                { "disabled", false },
+                { "localId", "123" },
             };
 
             Assert.Equal(
               JsonConvert.SerializeObject(expected),
-              JsonConvert.SerializeObject(importUserRecordArgs.GetProperties()));
+              JsonConvert.SerializeObject(importUserRecordArgs.ToImportUserRequest()));
         }
 
         [Fact]
         public void TestImportUserRecordArgsMissingUid()
         {
             var userProviderWithMissingUid = new ImportUserRecordArgs() { };
-            Assert.Throws<ArgumentNullException>(() => userProviderWithMissingUid.GetProperties());
+            Assert.Throws<ArgumentNullException>(
+                () => userProviderWithMissingUid.ToImportUserRequest());
         }
 
         [Fact]
@@ -94,7 +95,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "123",
                 Email = "invalidemail",
             };
-            Assert.Throws<ArgumentException>(() => userProviderWithMissingUid.GetProperties());
+            Assert.Throws<ArgumentException>(
+                () => userProviderWithMissingUid.ToImportUserRequest());
         }
 
         [Fact]
@@ -105,7 +107,8 @@ namespace FirebaseAdmin.Auth.Tests
                 Uid = "123",
                 PhoneNumber = "11234567890",
             };
-            Assert.Throws<ArgumentException>(() => userProviderWithMissingUid.GetProperties());
+            Assert.Throws<ArgumentException>(
+                () => userProviderWithMissingUid.ToImportUserRequest());
         }
 
         [Fact]
@@ -121,7 +124,8 @@ namespace FirebaseAdmin.Auth.Tests
                         { reservedKey, "abc" },
                     },
                 };
-                Assert.Throws<ArgumentException>(() => userProviderWithReservedClaimKey.GetProperties());
+                Assert.Throws<ArgumentException>(
+                    () => userProviderWithReservedClaimKey.ToImportUserRequest());
             }
         }
     }

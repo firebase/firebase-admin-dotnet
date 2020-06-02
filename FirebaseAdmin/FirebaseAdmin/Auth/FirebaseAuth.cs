@@ -723,11 +723,13 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
-        /// check identifier uniqueness which could result in duplications.</summary>
-        /// <p><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
-        ///  passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
-        /// FirebaseAuth.ImportUsersAsync</a>.</p>
-        /// <param name="userRecordArgs"> A non-empty list of users to be imported. Length
+        /// check identifier uniqueness which could result in duplications.
+        ///
+        /// <para><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
+        /// passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
+        /// FirebaseAuth.ImportUsersAsync</a>.</para>
+        /// </summary>
+        /// <param name="users"> A non-empty list of users to be imported. Length
         /// must not exceed 1000.</param>
         /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
         /// <exception cref="ArgumentException">If the users list is null, empty or has more than
@@ -735,19 +737,21 @@ namespace FirebaseAdmin.Auth
         /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
-          IEnumerable<ImportUserRecordArgs> userRecordArgs)
+          IEnumerable<ImportUserRecordArgs> users)
         {
-          return await this.ImportUsersAsync(userRecordArgs, null, default(CancellationToken));
+          return await this.ImportUsersAsync(users, default(CancellationToken)).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
-        /// check identifier uniqueness which could result in duplications.</summary>
-        /// <p><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
-        ///  passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
-        /// FirebaseAuth.ImportUsersAsync</a>.</p>
-        /// <param name="userRecordArgs"> A non-empty list of users to be imported. Length
+        /// check identifier uniqueness which could result in duplications.
+        ///
+        /// <para><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
+        /// passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
+        /// FirebaseAuth.ImportUsersAsync</a>.</para>
+        /// </summary>
+        /// <param name="users"> A non-empty list of users to be imported. Length
         /// must not exceed 1000.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -757,17 +761,17 @@ namespace FirebaseAdmin.Auth
         /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
-          IEnumerable<ImportUserRecordArgs> userRecordArgs,
+          IEnumerable<ImportUserRecordArgs> users,
           CancellationToken cancellationToken)
         {
-          return await this.ImportUsersAsync(userRecordArgs, null, cancellationToken);
+          return await this.ImportUsersAsync(users, null, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
         /// check identifier uniqueness which could result in duplications.</summary>
-        /// <param name="userRecordArgs"> A non-empty list of users to be imported.
+        /// <param name="users"> A non-empty list of users to be imported.
         /// Length must not exceed 1000.</param>
         /// <param name="options"> A <a cref="UserImportOptions">UserImportOptions</a> instance or
         /// null. Required when importing users with passwords.</param>
@@ -777,19 +781,17 @@ namespace FirebaseAdmin.Auth
         /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
-            IEnumerable<ImportUserRecordArgs> userRecordArgs,
+            IEnumerable<ImportUserRecordArgs> users,
             UserImportOptions options)
         {
-          var request = new UserImportRequest(userRecordArgs, options);
-          var userManager = this.IfNotDeleted(() => this.userManager.Value);
-          return await userManager.ImportUsersAsync(request, default(CancellationToken));
+          return await this.ImportUsersAsync(users, options, default(CancellationToken)).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
         /// check identifier uniqueness which could result in duplications.</summary>
-        /// <param name="userRecordArgs"> A non-empty list of users to be imported.
+        /// <param name="users"> A non-empty list of users to be imported.
         /// Length must not exceed 1000.</param>
         /// <param name="options"> A <a cref="UserImportOptions">UserImportOptions</a> instance or
         /// null. Required when importing users with passwords.</param>
@@ -801,11 +803,11 @@ namespace FirebaseAdmin.Auth
         /// set.</exception>
         /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
         public async Task<UserImportResult> ImportUsersAsync(
-            IEnumerable<ImportUserRecordArgs> userRecordArgs,
+            IEnumerable<ImportUserRecordArgs> users,
             UserImportOptions options,
             CancellationToken cancellationToken)
         {
-          var request = new UserImportRequest(userRecordArgs, options);
+          var request = new UserImportRequest(users, options);
           var userManager = this.IfNotDeleted(() => this.userManager.Value);
           return await userManager.ImportUsersAsync(request, cancellationToken);
         }
@@ -819,7 +821,8 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
         /// characters.</exception>
-        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <exception cref="FirebaseAuthException">
+        /// If an error occurs while setting custom claims. </exception>
         /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
         /// or longer than 128 characters.
         /// </param>
@@ -842,7 +845,8 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
         /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
         /// characters.</exception>
-        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <exception cref="FirebaseAuthException">
+        /// If an error occurs while setting custom claims. </exception>
         /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
         /// or longer than 128 characters.
         /// </param>

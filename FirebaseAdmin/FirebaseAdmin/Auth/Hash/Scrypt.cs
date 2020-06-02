@@ -33,6 +33,13 @@ namespace FirebaseAdmin.Auth.Hash
         private int? memoryCost;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Scrypt"/> class.
+        /// Defines the name of the hash to be equal to SCRYPT.
+        /// </summary>
+        public Scrypt()
+            : base("SCRYPT") { }
+
+        /// <summary>
         /// Gets or sets the signer key for the hashing algorithm.
         /// </summary>
         public string Key
@@ -108,11 +115,6 @@ namespace FirebaseAdmin.Auth.Hash
                 this.memoryCost = (int?)value;
             }
         }
-
-        /// <summary>
-        /// Gets the hash name which is SCRYPT.
-        /// </summary>
-        protected override string HashName { get { return "SCRYPT"; } }
 
         /// <summary>
         /// Gets the minimum number of rounds for a Scrypt hash which is 0.

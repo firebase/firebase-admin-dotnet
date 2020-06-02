@@ -21,9 +21,11 @@ namespace FirebaseAdmin.Auth.Hash
     public sealed class Md5 : RepeatableHash
     {
         /// <summary>
-        /// Gets the hash name which is MD5.
+        /// Initializes a new instance of the <see cref="Md5"/> class.
+        /// Defines the name of the hash to be equal to MD5.
         /// </summary>
-        protected override string HashName { get { return "MD5"; } }
+        public Md5()
+            : base("MD5") { }
 
         /// <summary>
         /// Gets the minimum number of rounds for an MD5 hash which is 0.

@@ -527,13 +527,12 @@ namespace FirebaseAdmin.IntegrationTests
             IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();
             usersLst = usersLst.Append(args);
 
-            var req = new UserImportRequest(usersLst, options);
             var resp = await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst);
 
             try
             {
-                Assert.Equal(1, resp.SuccessCount());
-                Assert.Equal(0, resp.FailureCount());
+                Assert.Equal(1, resp.SuccessCount);
+                Assert.Equal(0, resp.FailureCount);
             }
             finally
             {
@@ -542,7 +541,7 @@ namespace FirebaseAdmin.IntegrationTests
         }
 
         [Fact]
-        public void ImportUsersPasswordNoHash()
+        public async Task ImportUsersPasswordNoHash()
         {
             var randomUser = RandomUser.Create();
             var args = new ImportUserRecordArgs()
@@ -556,7 +555,8 @@ namespace FirebaseAdmin.IntegrationTests
             var options = new UserImportOptions();
             IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();
             usersLst = usersLst.Append(args);
-            Assert.Throws<ArgumentNullException>(() => new UserImportRequest(usersLst, options));
+            await Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst, options));
         }
 
         [Fact]
@@ -610,8 +610,8 @@ namespace FirebaseAdmin.IntegrationTests
 
             try
             {
-                Assert.Equal(1, resp.SuccessCount());
-                Assert.Equal(0, resp.FailureCount());
+                Assert.Equal(1, resp.SuccessCount);
+                Assert.Equal(0, resp.FailureCount);
             }
             finally
             {

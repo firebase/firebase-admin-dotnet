@@ -26,6 +26,14 @@ namespace FirebaseAdmin.Auth.Hash
         private int? rounds;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="RepeatableHash"/> class.
+        /// Propogates the name to UserImportHash.
+        /// </summary>
+        /// <param name="hashName">The name of the hashing algorithm.</param>
+        public RepeatableHash(string hashName)
+            : base(hashName) { }
+
+        /// <summary>
         /// Gets or sets the number of rounds for the repeatable hash. Verifies that the
         /// specified <c>Rounds</c> are within the required bounds.
         /// </summary>

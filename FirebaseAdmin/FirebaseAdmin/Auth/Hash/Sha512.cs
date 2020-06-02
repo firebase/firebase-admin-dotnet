@@ -21,9 +21,11 @@ namespace FirebaseAdmin.Auth.Hash
     public sealed class Sha512 : RepeatableHash
     {
         /// <summary>
-        /// Gets the hash name which is SHA512.
+        /// Initializes a new instance of the <see cref="Sha512"/> class.
+        /// Defines the name of the hash to be equal to SHA512.
         /// </summary>
-        protected override string HashName { get { return "SHA512"; } }
+        public Sha512()
+            : base("SHA512") { }
 
         /// <summary>
         /// Gets the minimum number of rounds for a SHA512 hash which is 1.

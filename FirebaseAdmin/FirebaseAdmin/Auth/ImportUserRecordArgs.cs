@@ -15,178 +15,196 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
-  /// <summary>
-  /// Represents a user account to be imported to Firebase Auth via the
-  /// <a cref="o:FirebaseAuth.ImportUsersAsync">FirebaseAuth.ImportUsersAsync</a> API. Must contain at least a
-  /// uid string.
-  /// </summary>
-  public class ImportUserRecordArgs
-  {
     /// <summary>
-    /// Gets or sets the uid of the user.
+    /// Represents a user account to be imported to Firebase Auth via the
+    /// <a cref="o:FirebaseAuth.ImportUsersAsync">FirebaseAuth.ImportUsersAsync</a> API. Must contain at least a
+    /// uid string.
     /// </summary>
-    public string Uid { get; set; }
-
-    /// <summary>
-    /// Gets or sets the email address of the user.
-    /// </summary>
-    public string Email { get; set; }
-
-    /// <summary>
-    /// Gets or sets if the email was verified, null signifies that it was not specified.
-    /// </summary>
-    public bool? EmailVerified { get; set; }
-
-    /// <summary>
-    /// Gets or sets the display name of the user.
-    /// </summary>
-    public string DisplayName { get; set; }
-
-    /// <summary>
-    /// Gets or sets phone number of the user.
-    /// </summary>
-    public string PhoneNumber { get; set; }
-
-    /// <summary>
-    /// Gets or sets the photo url.
-    /// </summary>
-    public string PhotoUrl { get; set; }
-
-    /// <summary>
-    /// Gets or sets the disabled value, null signifies that it was not specified.
-    /// </summary>
-    public bool? Disabled
+    public sealed class ImportUserRecordArgs
     {
-      get; set;
+        /// <summary>
+        /// Key name for custom attributes.
+        /// </summary>
+        private const string CustomAttributes = "customAttributes";
+
+        /// <summary>
+        /// Gets or sets the uid of the user.
+        /// </summary>
+        public string Uid { get; set; }
+
+        /// <summary>
+        /// Gets or sets the email address of the user.
+        /// </summary>
+        public string Email { get; set; }
+
+        /// <summary>
+        /// Gets or sets if the email was verified, null signifies that it was not specified.
+        /// </summary>
+        public bool? EmailVerified { get; set; }
+
+        /// <summary>
+        /// Gets or sets the display name of the user.
+        /// </summary>
+        public string DisplayName { get; set; }
+
+        /// <summary>
+        /// Gets or sets phone number of the user.
+        /// </summary>
+        public string PhoneNumber { get; set; }
+
+        /// <summary>
+        /// Gets or sets the photo url.
+        /// </summary>
+        public string PhotoUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the disabled value, null signifies that it was not specified.
+        /// </summary>
+        public bool? Disabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the UserMetadata.
+        /// </summary>
+        public UserMetadata UserMetadata { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password hash.
+        /// </summary>
+        public byte[] PasswordHash { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password salt.
+        /// </summary>
+        public byte[] PasswordSalt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the user providers.
+        /// </summary>
+        public IEnumerable<UserProvider> UserProviders { get; set; }
+
+        /// <summary>
+        /// Gets or sets the custom claims.
+        /// </summary>
+        public IReadOnlyDictionary<string, object> CustomClaims { get; set; }
+
+        internal bool HasPassword()
+        {
+            return this.PasswordHash != null;
+        }
+
+        internal ImportUserRequest ToImportUserRequest()
+        {
+            return new ImportUserRequest(this);
+        }
+
+        private static string UrlSafeBase64Encode(byte[] bytes)
+        {
+            var base64Value = Convert.ToBase64String(bytes);
+            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+
+        internal sealed class ImportUserRequest
+        {
+            internal ImportUserRequest(ImportUserRecordArgs args)
+            {
+                this.Uid = UserRecordArgs.CheckUid(args.Uid, true);
+
+                if (!string.IsNullOrEmpty(args.Email))
+                {
+                    UserRecordArgs.CheckEmail(args.Email);
+                    this.Email = args.Email;
+                }
+
+                if (!string.IsNullOrEmpty(args.PhotoUrl))
+                {
+                    UserRecordArgs.CheckPhotoUrl(args.PhotoUrl);
+                    this.PhotoUrl = args.PhotoUrl;
+                }
+
+                if (!string.IsNullOrEmpty(args.PhoneNumber))
+                {
+                    UserRecordArgs.CheckPhoneNumber(args.PhoneNumber);
+                    this.PhoneNumber = args.PhoneNumber;
+                }
+
+                if (!string.IsNullOrEmpty(args.DisplayName))
+                {
+                    this.DisplayName = args.DisplayName;
+                }
+
+                if (args.UserMetadata != null)
+                {
+                    this.CreatedAt = args.UserMetadata.CreationTimestamp;
+                    this.LastLoginAt = args.UserMetadata.LastSignInTimestamp;
+                }
+
+                if (args.PasswordHash != null)
+                {
+                    this.PasswordHash = UrlSafeBase64Encode(args.PasswordHash);
+                }
+
+                if (args.PasswordSalt != null)
+                {
+                    this.PasswordSalt = UrlSafeBase64Encode(args.PasswordSalt);
+                }
+
+                if (args.UserProviders != null && args.UserProviders.Count() > 0)
+                {
+                    this.ProviderUserInfo = new List<UserProvider>(args.UserProviders);
+                }
+
+                if (args.CustomClaims != null && args.CustomClaims.Count > 0)
+                {
+                    var serialized = UserRecordArgs.CheckCustomClaims(args.CustomClaims);
+                    this.CustomAttributes = serialized;
+                }
+
+                this.EmailVerified = args.EmailVerified;
+                this.Disabled = args.Disabled;
+            }
+
+            [JsonProperty("createdAt")]
+            public DateTime? CreatedAt { get; set; }
+
+            [JsonProperty("customAttributes")]
+            public string CustomAttributes { get; set; }
+
+            [JsonProperty("disabled")]
+            public bool? Disabled { get; set; }
+
+            [JsonProperty("displayName")]
+            public string DisplayName { get; set; }
+
+            [JsonProperty("email")]
+            public string Email { get; set; }
+
+            [JsonProperty("emailVerified")]
+            public bool? EmailVerified { get; set; }
+
+            [JsonProperty("lastLoginAt")]
+            public DateTime? LastLoginAt { get; set; }
+
+            [JsonProperty("passwordHash")]
+            public string PasswordHash { get; set; }
+
+            [JsonProperty("salt")]
+            public string PasswordSalt { get; set; }
+
+            [JsonProperty("phoneNumber")]
+            public string PhoneNumber { get; set; }
+
+            [JsonProperty("photoUrl")]
+            public string PhotoUrl { get; set; }
+
+            [JsonProperty("providerUserInfo")]
+            public List<UserProvider> ProviderUserInfo { get; set; }
+
+            [JsonProperty("localId")]
+            public string Uid { get; set; }
+        }
     }
-
-    /// <summary>
-    /// Gets or sets the UserMetadata.
-    /// </summary>
-    public UserMetadata UserMetadata { get; set; }
-
-    /// <summary>
-    /// Gets or sets the password hash.
-    /// </summary>
-    public byte[] PasswordHash { get; set; }
-
-    /// <summary>
-    /// Gets or sets the password salt.
-    /// </summary>
-    public byte[] PasswordSalt { get; set; }
-
-    /// <summary>
-    /// Gets or sets the user providers.
-    /// </summary>
-    public IEnumerable<UserProvider> UserProviders { get; set; }
-
-    /// <summary>
-    /// Gets or sets the custom claims.
-    /// </summary>
-    public IReadOnlyDictionary<string, object> CustomClaims { get; set; }
-
-    /// <summary>
-    /// Determines if a password was set.
-    /// </summary>
-    /// <returns>bool equivalent to if the PasswordHash is defined.</returns>
-    public bool HasPassword()
-    {
-      return this.PasswordHash != null;
-    }
-
-    /// <summary>
-    /// Verifies ImportUserRecordArgs properties by invoking UserRecordArgs validation functions and
-    /// returns a dictionary containing the values to be serialized.
-    /// </summary>
-    /// <returns>Read-only dictionary containing all defined properties.</returns>
-    public IReadOnlyDictionary<string, object> GetProperties()
-    {
-      Dictionary<string, object> properties = new Dictionary<string, object>();
-
-      UserRecordArgs.CheckUid(this.Uid, true);
-      properties.Add("localId", this.Uid);
-
-      if (!string.IsNullOrEmpty(this.Email))
-      {
-          UserRecordArgs.CheckEmail(this.Email);
-          properties.Add("email", this.Email);
-      }
-
-      if (!string.IsNullOrEmpty(this.PhotoUrl))
-      {
-          UserRecordArgs.CheckPhotoUrl(this.PhotoUrl);
-          properties.Add("photoUrl", this.PhotoUrl);
-      }
-
-      if (!string.IsNullOrEmpty(this.PhoneNumber))
-      {
-          UserRecordArgs.CheckPhoneNumber(this.PhoneNumber);
-          properties.Add("phoneNumber", this.PhoneNumber);
-      }
-
-      if (!string.IsNullOrEmpty(this.DisplayName))
-      {
-          properties.Add("displayName", this.DisplayName);
-      }
-
-      if (this.UserMetadata != null)
-      {
-          if (this.UserMetadata.CreationTimestamp != null)
-          {
-              properties.Add("createdAt", this.UserMetadata.CreationTimestamp);
-          }
-
-          if (this.UserMetadata.LastSignInTimestamp != null)
-          {
-              properties.Add("lastLoginAt", this.UserMetadata.LastSignInTimestamp);
-          }
-      }
-
-      if (this.PasswordHash != null)
-      {
-          properties.Add("passwordHash", UrlSafeBase64Encode(this.PasswordHash));
-      }
-
-      if (this.PasswordSalt != null)
-      {
-          properties.Add("salt", UrlSafeBase64Encode(this.PasswordSalt));
-      }
-
-      if (this.UserProviders != null && this.UserProviders.Count() > 0)
-      {
-          properties.Add("providerUserInfo", new List<UserProvider>(this.UserProviders));
-      }
-
-      if (this.CustomClaims != null && this.CustomClaims.Count > 0)
-      {
-          IReadOnlyDictionary<string, object> mergedClaims = this.CustomClaims;
-
-          var serialized = UserRecordArgs.CheckCustomClaims(mergedClaims);
-          properties.Add(
-              UserRecord.CustomAttributes,
-              serialized);
-      }
-
-      if (this.EmailVerified != null)
-      {
-        properties.Add("emailVerified", this.EmailVerified);
-      }
-
-      if (this.Disabled != null)
-      {
-        properties.Add("disabled", this.Disabled);
-      }
-
-      return properties;
-    }
-
-    private static string UrlSafeBase64Encode(byte[] bytes)
-    {
-      var base64Value = Convert.ToBase64String(bytes);
-      return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
-    }
-  }
 }

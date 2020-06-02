@@ -17,147 +17,149 @@ using System.Collections.Generic;
 
 namespace FirebaseAdmin.Auth.Hash
 {
-  /// <summary>
-  /// Represents the Standard Scrypt password hashing algorithm. Can be used as an instance of
-  /// <a cref="UserImportHash">UserImportHash</a> when importing users.
-  /// </summary>
-  public sealed class StandardScrypt : UserImportHash
-  {
-    private int? derivedKeyLength;
-
-    private int? blockSize;
-
-    private int? memoryCost;
-
-    private int? parallelization;
-
     /// <summary>
-    /// Gets or sets the derived key length for the hashing algorithm.
-    /// <remarks>The length cannot be negative.</remarks>
+    /// Represents the Standard Scrypt password hashing algorithm. Can be used as an instance of
+    /// <a cref="UserImportHash">UserImportHash</a> when importing users.
     /// </summary>
-    public int DerivedKeyLength
+    public sealed class StandardScrypt : UserImportHash
     {
-      get
-      {
-        if (this.derivedKeyLength == null)
+        private int? derivedKeyLength;
+
+        private int? blockSize;
+
+        private int? memoryCost;
+
+        private int? parallelization;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StandardScrypt"/> class.
+        /// Defines the name of the hash to be equal to STANDARD_SCRYPT.
+        /// </summary>
+        public StandardScrypt()
+            : base("STANDARD_SCRYPT") { }
+
+        /// <summary>
+        /// Gets or sets the derived key length for the hashing algorithm.
+        /// <remarks>The length cannot be negative.</remarks>
+        /// </summary>
+        public int DerivedKeyLength
         {
-          throw new ArgumentException("DerivedKeyLength must be initialized");
+            get
+            {
+                if (this.derivedKeyLength == null)
+                {
+                    throw new ArgumentException("DerivedKeyLength must be initialized");
+                }
+
+                return (int)this.derivedKeyLength;
+            }
+
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentException("DerivedKeyLength must be non-negative");
+                }
+
+                this.derivedKeyLength = value;
+            }
         }
 
-        return (int)this.derivedKeyLength;
-      }
-
-      set
-      {
-        if (value < 0)
+        /// <summary>
+        /// Gets or sets the block size for the hashing algorithm.
+        /// <remarks>The size cannot be negative.</remarks>
+        /// </summary>
+        public int BlockSize
         {
-          throw new ArgumentException("DerivedKeyLength must be non-negative");
+            get
+            {
+                if (this.blockSize == null)
+                {
+                    throw new ArgumentException("BlockSize must be initialized");
+                }
+
+                return (int)this.blockSize;
+            }
+
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentException("BlockSize must be non-negative");
+                }
+
+                this.blockSize = value;
+            }
         }
 
-        this.derivedKeyLength = value;
-      }
+        /// <summary>
+        /// Gets or sets parallelization of the hashing algorithm.
+        /// <remarks> The parallelization factor cannot be negative. </remarks>
+        /// </summary>
+        public int Parallelization
+        {
+            get
+            {
+                if (this.parallelization == null)
+                {
+                    throw new ArgumentException("Parallelization must be initialized");
+                }
+
+                return (int)this.parallelization;
+            }
+
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentException("Parallelization must be non-negative");
+                }
+
+                this.parallelization = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets memory cost for the hashing algorithm.
+        /// <remarks> The memory cost cannot be negative. </remarks>
+        /// </summary>
+        public int MemoryCost
+        {
+            get
+            {
+                if (this.memoryCost == null)
+                {
+                    throw new ArgumentException("Memory cost must be initialized");
+                }
+
+                return (int)this.memoryCost;
+            }
+
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentException("Memory cost must be non-negative");
+                }
+
+                this.memoryCost = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns the options for the hashing algorithm.
+        /// </summary>
+        /// <returns>
+        /// Dictionary defining options such as derived key length, block size, parallization and memory cost.
+        /// </returns>
+        protected override IReadOnlyDictionary<string, object> GetOptions()
+        {
+            var dict = new Dictionary<string, object>();
+            dict.Add("dkLen", this.DerivedKeyLength);
+            dict.Add("blockSize", this.BlockSize);
+            dict.Add("parallization", this.Parallelization);
+            dict.Add("memoryCost", this.MemoryCost);
+            return dict;
+        }
     }
-
-    /// <summary>
-    /// Gets or sets the block size for the hashing algorithm.
-    /// <remarks>The size cannot be negative.</remarks>
-    /// </summary>
-    public int BlockSize
-    {
-      get
-      {
-        if (this.blockSize == null)
-        {
-          throw new ArgumentException("BlockSize must be initialized");
-        }
-
-        return (int)this.blockSize;
-      }
-
-      set
-      {
-        if (value < 0)
-        {
-          throw new ArgumentException("BlockSize must be non-negative");
-        }
-
-        this.blockSize = value;
-      }
-    }
-
-    /// <summary>
-    /// Gets or sets parallelization of the hashing algorithm.
-    /// <remarks> The parallelization factor cannot be negative. </remarks>
-    /// </summary>
-    public int Parallelization
-    {
-      get
-      {
-        if (this.parallelization == null)
-        {
-          throw new ArgumentException("Parallelization must be initialized");
-        }
-
-        return (int)this.parallelization;
-      }
-
-      set
-      {
-        if (value < 0)
-        {
-          throw new ArgumentException("Parallelization must be non-negative");
-        }
-
-        this.parallelization = value;
-      }
-    }
-
-    /// <summary>
-    /// Gets or sets memory cost for the hashing algorithm.
-    /// <remarks> The memory cost cannot be negative. </remarks>
-    /// </summary>
-    public int MemoryCost
-    {
-      get
-      {
-        if (this.memoryCost == null)
-        {
-          throw new ArgumentException("Memory cost must be initialized");
-        }
-
-        return (int)this.memoryCost;
-      }
-
-      set
-      {
-        if (value < 0)
-        {
-          throw new ArgumentException("Memory cost must be non-negative");
-        }
-
-        this.memoryCost = value;
-      }
-    }
-
-    /// <summary>
-    /// Gets the hash name which is STANDARD_SCRYPT.
-    /// </summary>
-    protected override string HashName { get { return "STANDARD_SCRYPT"; } }
-
-    /// <summary>
-    /// Returns the options for the hashing algorithm.
-    /// </summary>
-    /// <returns>
-    /// Dictionary defining options such as derived key length, block size, parallization and memory cost.
-    /// </returns>
-    protected override IReadOnlyDictionary<string, object> GetOptions()
-    {
-      var dict = new Dictionary<string, object>();
-      dict.Add("dkLen", this.DerivedKeyLength);
-      dict.Add("blockSize", this.BlockSize);
-      dict.Add("parallization", this.Parallelization);
-      dict.Add("memoryCost", this.MemoryCost);
-      return dict;
-    }
-  }
 }

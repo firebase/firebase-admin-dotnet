@@ -21,9 +21,11 @@ namespace FirebaseAdmin.Auth.Hash
     public sealed class Sha256 : RepeatableHash
     {
         /// <summary>
-        /// Gets the hash name which is SHA256.
+        /// Initializes a new instance of the <see cref="Sha256"/> class.
+        /// Defines the name of the hash to be equal to SHA256.
         /// </summary>
-        protected override string HashName { get { return "SHA256"; } }
+        public Sha256()
+            : base("SHA256") { }
 
         /// <summary>
         /// Gets the minimum number of rounds for a SHA256 hash which is 1.

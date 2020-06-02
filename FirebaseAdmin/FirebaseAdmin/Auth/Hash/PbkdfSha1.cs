@@ -21,9 +21,11 @@ namespace FirebaseAdmin.Auth.Hash
     public sealed class PbkdfSha1 : RepeatableHash
     {
         /// <summary>
-        /// Gets the hash name which is PBKDF_SHA1.
+        /// Initializes a new instance of the <see cref="PbkdfSha1"/> class.
+        /// Defines the name of the hash to be equal to PBKDF_SHA1.
         /// </summary>
-        protected override string HashName { get { return "PBKDF_SHA1"; } }
+        public PbkdfSha1()
+            : base("PBKDF_SHA1") { }
 
         /// <summary>
         /// Gets the minimum number of rounds for a Pbkdf Sha1 hash which is 0.
