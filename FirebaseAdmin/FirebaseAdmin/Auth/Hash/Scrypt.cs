@@ -30,7 +30,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="Scrypt"/> class.
         /// Defines the name of the hash to be equal to SCRYPT.
         /// </summary>
-        internal Scrypt()
+        public Scrypt()
             : base("SCRYPT") { }
 
         /// <summary>
@@ -66,12 +66,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// </returns>
         protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {
-            if (this.Key == null)
-            {
-                throw new ArgumentNullException("key must be initialized");
-            }
-
-            if (this.Key.Length == 0)
+            if (this.Key == null || this.Key.Length == 0)
             {
                 throw new ArgumentException("key must not be null or empty");
             }
@@ -91,12 +86,18 @@ namespace FirebaseAdmin.Auth.Hash
                 throw new ArgumentException("memory cost must be between 1 and 14 (inclusive)");
             }
 
-            var dict = new Dictionary<string, object>(
-                (Dictionary<string, object>)base.GetHashConfiguration());
+            var dict = new Dictionary<string, object>()
+            {
+                { "signerKey", this.Key },
+                { "memoryCost", (int)this.MemoryCost },
+                { "saltSeparator", this.SaltSeparator },
+            };
 
-            dict.Add("signerKey", this.Key);
-            dict.Add("memoryCost", (int)this.MemoryCost);
-            dict.Add("saltSeparator", this.SaltSeparator);
+            foreach (var entry in base.GetHashConfiguration())
+            {
+                dict[entry.Key] = entry.Value;
+            }
+
             return dict;
         }
     }

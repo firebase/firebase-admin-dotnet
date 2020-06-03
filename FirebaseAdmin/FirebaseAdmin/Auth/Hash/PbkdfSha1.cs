@@ -24,7 +24,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="PbkdfSha1"/> class.
         /// Defines the name of the hash to be equal to PBKDF_SHA1.
         /// </summary>
-        internal PbkdfSha1()
+        public PbkdfSha1()
             : base("PBKDF_SHA1") { }
 
         /// <summary>

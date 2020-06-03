@@ -76,7 +76,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(
               JsonConvert.SerializeObject(expected),
-              JsonConvert.SerializeObject(importUserRecordArgs.ToImportUserRequest()));
+              JsonConvert.SerializeObject(importUserRecordArgs.ToRequest()));
         }
 
         [Fact]
@@ -84,7 +84,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var userProviderWithMissingUid = new ImportUserRecordArgs() { };
             Assert.Throws<ArgumentNullException>(
-                () => userProviderWithMissingUid.ToImportUserRequest());
+                () => userProviderWithMissingUid.ToRequest());
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace FirebaseAdmin.Auth.Tests
                 Email = "invalidemail",
             };
             Assert.Throws<ArgumentException>(
-                () => userProviderWithMissingUid.ToImportUserRequest());
+                () => userProviderWithMissingUid.ToRequest());
         }
 
         [Fact]
@@ -108,7 +108,7 @@ namespace FirebaseAdmin.Auth.Tests
                 PhoneNumber = "11234567890",
             };
             Assert.Throws<ArgumentException>(
-                () => userProviderWithMissingUid.ToImportUserRequest());
+                () => userProviderWithMissingUid.ToRequest());
         }
 
         [Fact]
@@ -125,7 +125,7 @@ namespace FirebaseAdmin.Auth.Tests
                     },
                 };
                 Assert.Throws<ArgumentException>(
-                    () => userProviderWithReservedClaimKey.ToImportUserRequest());
+                    () => userProviderWithReservedClaimKey.ToRequest());
             }
         }
     }

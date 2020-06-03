@@ -26,7 +26,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="Bcrypt"/> class.
         /// Defines name to be equal to BCRYPT.
         /// </summary>
-        internal Bcrypt()
+        public Bcrypt()
             : base("BCRYPT") { }
 
         /// <summary>

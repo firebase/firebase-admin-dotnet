@@ -24,7 +24,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="Md5"/> class.
         /// Defines the name of the hash to be equal to MD5.
         /// </summary>
-        internal Md5()
+        public Md5()
             : base("MD5") { }
 
         /// <summary>

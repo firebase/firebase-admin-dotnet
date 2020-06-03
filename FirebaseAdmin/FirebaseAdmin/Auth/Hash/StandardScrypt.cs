@@ -27,7 +27,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="StandardScrypt"/> class.
         /// Defines the name of the hash to be equal to STANDARD_SCRYPT.
         /// </summary>
-        internal StandardScrypt()
+        public StandardScrypt()
             : base("STANDARD_SCRYPT") { }
 
         /// <summary>
@@ -62,29 +62,31 @@ namespace FirebaseAdmin.Auth.Hash
         /// </returns>
         protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {
-            this.CheckPropertyNegativeOrZero(this.DerivedKeyLength, "DerivedKeyLength");
-            this.CheckPropertyNegativeOrZero(this.BlockSize, "BlockSize");
-            this.CheckPropertyNegativeOrZero(this.Parallelization, "Parallelization");
-            this.CheckPropertyNegativeOrZero(this.MemoryCost, "MemoryCost");
+            this.ThrowIfNullOrNegative(
+                this.DerivedKeyLength, "DerivedKeyLength cannot be null or negative");
+            this.ThrowIfNullOrNegative(
+                this.BlockSize, "BlockSize cannot be null or negative");
+            this.ThrowIfNullOrNegative(
+                this.Parallelization, "Parallelization cannot be null or negative");
+            this.ThrowIfNullOrNegative(
+                this.MemoryCost, "MemoryCost cannot be null or negative");
 
-            var dict = new Dictionary<string, object>();
-            dict.Add("dkLen", this.DerivedKeyLength);
-            dict.Add("blockSize", this.BlockSize);
-            dict.Add("parallization", this.Parallelization);
-            dict.Add("memoryCost", this.MemoryCost);
+            var dict = new Dictionary<string, object>()
+            {
+                { "dkLen", this.DerivedKeyLength },
+                { "blockSize", this.BlockSize },
+                { "parallization", this.Parallelization },
+                { "memoryCost", this.MemoryCost },
+            };
+
             return dict;
         }
 
-        private void CheckPropertyNegativeOrZero(int? value, string name)
+        private void ThrowIfNullOrNegative(int? value, string message)
         {
-            if (value == null)
+            if (value == null || value < 0)
             {
-                throw new ArgumentException($"{name} must be initialized");
-            }
-
-            if (value < 0)
-            {
-                throw new ArgumentException($"{name} must be non-negative");
+                throw new ArgumentException(message);
             }
         }
     }

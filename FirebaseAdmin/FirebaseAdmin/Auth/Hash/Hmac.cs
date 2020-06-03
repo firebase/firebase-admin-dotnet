@@ -33,6 +33,8 @@ namespace FirebaseAdmin.Auth.Hash
         /// <summary>
         /// Gets or sets the key for the hash.
         /// </summary>
+        // Note: Newtonsoft will by default Base64 encode the byte array.
+        // Source: https://www.newtonsoft.com/json/help/html/SerializationGuide.htm#PrimitiveTypes
         public byte[] Key { get; set; }
 
         /// <summary>

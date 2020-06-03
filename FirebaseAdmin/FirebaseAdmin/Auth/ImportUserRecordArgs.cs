@@ -96,14 +96,14 @@ namespace FirebaseAdmin.Auth
             return this.PasswordHash != null;
         }
 
-        internal ImportUserRecordArgsRequest ToImportUserRequest()
+        internal Request ToRequest()
         {
-            return new ImportUserRecordArgsRequest(this);
+            return new Request(this);
         }
 
-        internal sealed class ImportUserRecordArgsRequest
+        internal sealed class Request
         {
-            internal ImportUserRecordArgsRequest(ImportUserRecordArgs args)
+            internal Request(ImportUserRecordArgs args)
             {
                 this.Uid = UserRecordArgs.CheckUid(args.Uid, true);
                 this.Email = UserRecordArgs.CheckEmail(args.Email);

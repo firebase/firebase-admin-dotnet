@@ -52,7 +52,7 @@ namespace FirebaseAdmin.Auth
                     + $" {MaxImportUsers} items");
             }
 
-            this.Users = usersToImport.Select((user) => user.ToImportUserRequest());
+            this.Users = usersToImport.Select((user) => user.ToRequest());
             var hasPassword = usersToImport.Any((user) => user.HasPassword());
 
             if (hasPassword)
@@ -69,7 +69,7 @@ namespace FirebaseAdmin.Auth
         }
 
         [JsonProperty("users")]
-        internal IEnumerable<ImportUserRecordArgs.ImportUserRecordArgsRequest> Users { get; private set; }
+        internal IEnumerable<ImportUserRecordArgs.Request> Users { get; private set; }
 
         /// <summary>
         /// Gets or sets JsonExtensionData for putting hashing properties at the root of the
