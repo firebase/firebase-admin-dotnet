@@ -99,7 +99,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 { "PBKDF2_SHA256", new Pbkdf2Sha256 { Rounds = 5 } },
             };
 
-            foreach (KeyValuePair<string, RepeatableHash> entry in repeatableHashes)
+            foreach (var entry in repeatableHashes)
             {
                 var expected = new Dictionary<string, object>()
                 {
@@ -123,7 +123,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 { "PBKDF2_SHA256", new Pbkdf2Sha256 { } },
             };
 
-            foreach (KeyValuePair<string, RepeatableHash> entry in repeatableHashes)
+            foreach (var entry in repeatableHashes)
             {
                 Assert.Throws<ArgumentNullException>(() => entry.Value.GetProperties());
             }
@@ -140,7 +140,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 { "HMAC_SHA512", new HmacSha512 { Key = signerKey } },
             };
 
-            foreach (KeyValuePair<string, Hmac> entry in hmacHashes)
+            foreach (var entry in hmacHashes)
             {
                 var expected = new Dictionary<string, object>()
                 {
@@ -162,7 +162,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 { "HMAC_SHA512", new HmacSha512 { } },
             };
 
-            foreach (KeyValuePair<string, Hmac> entry in hmacHashes)
+            foreach (var entry in hmacHashes)
             {
                 Assert.Throws<ArgumentException>(() => entry.Value.GetProperties());
             }
