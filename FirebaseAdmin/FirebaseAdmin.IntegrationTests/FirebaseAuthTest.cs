@@ -601,7 +601,7 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 Hash = new HmacSha256()
                 {
-                    Key = "secretKey",
+                    Key = System.Text.Encoding.UTF8.GetBytes("secretKey"),
                 },
             };
             IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();

@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace FirebaseAdmin.Auth.Hash
 {
@@ -28,13 +27,13 @@ namespace FirebaseAdmin.Auth.Hash
         /// Propogates the name to UserImportHash.
         /// </summary>
         /// <param name="hashName">The name of the hashing algorithm.</param>
-        public Hmac(string hashName)
+        internal Hmac(string hashName)
             : base(hashName) { }
 
         /// <summary>
         /// Gets or sets the key for the hash.
         /// </summary>
-        public string Key { get; set; }
+        public byte[] Key { get; set; }
 
         /// <summary>
         /// Verifies that the is key non-empty or null and returns the options dictionary.
@@ -42,16 +41,16 @@ namespace FirebaseAdmin.Auth.Hash
         /// <returns>
         /// Returns the dictionary containing an entry for the signing key.
         /// </returns>
-        protected override IReadOnlyDictionary<string, object> GetOptions()
+        protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {
-            if (string.IsNullOrEmpty(this.Key))
+            if (this.Key == null || this.Key.Length == 0)
             {
                 throw new ArgumentException("key must not be null or empty");
             }
 
             return new Dictionary<string, object>
             {
-                { "signerKey", Encoding.ASCII.GetBytes(this.Key) },
+                { "signerKey", this.Key },
             };
         }
     }

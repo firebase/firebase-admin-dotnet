@@ -26,10 +26,8 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="Bcrypt"/> class.
         /// Defines name to be equal to BCRYPT.
         /// </summary>
-        public Bcrypt()
+        internal Bcrypt()
             : base("BCRYPT") { }
-
-        // protected override string HashName { get { return "BCRYPT"; } }
 
         /// <summary>
         /// Returns an empty dictionary representing no options for the Bcrypt hashing algorithm.
@@ -37,7 +35,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// <returns>
         /// Dictionary defining no options.
         /// </returns>
-        protected override IReadOnlyDictionary<string, object> GetOptions()
+        protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {
             return new Dictionary<string, object>();
         }

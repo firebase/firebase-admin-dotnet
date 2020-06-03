@@ -24,17 +24,17 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="PbkdfSha1"/> class.
         /// Defines the name of the hash to be equal to PBKDF_SHA1.
         /// </summary>
-        public PbkdfSha1()
+        internal PbkdfSha1()
             : base("PBKDF_SHA1") { }
 
         /// <summary>
         /// Gets the minimum number of rounds for a Pbkdf Sha1 hash which is 0.
         /// </summary>
-        protected override int MinRounds { get { return 0; } }
+        protected override int MinRounds { get => 0; }
 
         /// <summary>
         /// Gets the maximum number of rounds for a Pbkdf Sha1 hash which is 120000.
         /// </summary>
-        protected override int MaxRounds { get { return 120000; } }
+        protected override int MaxRounds { get => 120000; }
     }
 }

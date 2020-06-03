@@ -96,40 +96,19 @@ namespace FirebaseAdmin.Auth
             return this.PasswordHash != null;
         }
 
-        internal ImportUserRequest ToImportUserRequest()
+        internal ImportUserRecordArgsRequest ToImportUserRequest()
         {
-            return new ImportUserRequest(this);
+            return new ImportUserRecordArgsRequest(this);
         }
 
-        private static string UrlSafeBase64Encode(byte[] bytes)
+        internal sealed class ImportUserRecordArgsRequest
         {
-            var base64Value = Convert.ToBase64String(bytes);
-            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
-        }
-
-        internal sealed class ImportUserRequest
-        {
-            internal ImportUserRequest(ImportUserRecordArgs args)
+            internal ImportUserRecordArgsRequest(ImportUserRecordArgs args)
             {
                 this.Uid = UserRecordArgs.CheckUid(args.Uid, true);
-
-                if (!string.IsNullOrEmpty(args.Email))
-                {
-                    UserRecordArgs.CheckEmail(args.Email);
-                    this.Email = args.Email;
-                }
-
-                if (!string.IsNullOrEmpty(args.PhotoUrl))
-                {
-                    UserRecordArgs.CheckPhotoUrl(args.PhotoUrl);
-                    this.PhotoUrl = args.PhotoUrl;
-                }
-
-                if (!string.IsNullOrEmpty(args.PhoneNumber))
-                {
-                    UserRecordArgs.CheckPhoneNumber(args.PhoneNumber);
-                    this.PhoneNumber = args.PhoneNumber;
-                }
+                this.Email = UserRecordArgs.CheckEmail(args.Email);
+                this.PhotoUrl = UserRecordArgs.CheckPhotoUrl(args.PhotoUrl);
+                this.PhoneNumber = UserRecordArgs.CheckPhoneNumber(args.PhoneNumber);
 
                 if (!string.IsNullOrEmpty(args.DisplayName))
                 {
@@ -144,12 +123,12 @@ namespace FirebaseAdmin.Auth
 
                 if (args.PasswordHash != null)
                 {
-                    this.PasswordHash = UrlSafeBase64Encode(args.PasswordHash);
+                    this.PasswordHash = JwtUtils.UrlSafeBase64Encode(args.PasswordHash);
                 }
 
                 if (args.PasswordSalt != null)
                 {
-                    this.PasswordSalt = UrlSafeBase64Encode(args.PasswordSalt);
+                    this.PasswordSalt = JwtUtils.UrlSafeBase64Encode(args.PasswordSalt);
                 }
 
                 if (args.UserProviders != null && args.UserProviders.Count() > 0)

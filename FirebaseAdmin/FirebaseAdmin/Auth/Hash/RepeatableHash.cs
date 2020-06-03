@@ -23,43 +23,18 @@ namespace FirebaseAdmin.Auth.Hash
     /// </summary>
     public abstract class RepeatableHash : UserImportHash
     {
-        private int? rounds;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="RepeatableHash"/> class.
         /// Propogates the name to UserImportHash.
         /// </summary>
         /// <param name="hashName">The name of the hashing algorithm.</param>
-        public RepeatableHash(string hashName)
+        internal RepeatableHash(string hashName)
             : base(hashName) { }
 
         /// <summary>
-        /// Gets or sets the number of rounds for the repeatable hash. Verifies that the
-        /// specified <c>Rounds</c> are within the required bounds.
+        /// Gets or sets the number of rounds for the repeatable hash.
         /// </summary>
-        public int Rounds
-        {
-            get
-            {
-                if (this.rounds == null)
-                {
-                    throw new ArgumentNullException("Rounds was not initialized");
-                }
-
-                return (int)this.rounds;
-            }
-
-            set
-            {
-                if (value < this.MinRounds || value > this.MaxRounds)
-                {
-                    throw new ArgumentException($"Rounds value must be between {this.MinRounds}"
-                    + " and {this.MaxRounds} (inclusive).");
-                }
-
-                this.rounds = value;
-            }
-        }
+        public int? Rounds { get; set; }
 
         /// <summary>
         /// Gets the minimum number of rounds for that respective repeatable hash implementation.
@@ -76,8 +51,19 @@ namespace FirebaseAdmin.Auth.Hash
         /// was set to iterate over.
         /// </summary>
         /// <returns>Dictionary containing the number of rounds.</returns>
-        protected override IReadOnlyDictionary<string, object> GetOptions()
+        protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {
+            if (this.Rounds == null)
+            {
+                throw new ArgumentNullException("Rounds was not initialized");
+            }
+
+            if (this.Rounds < this.MinRounds || this.Rounds > this.MaxRounds)
+            {
+                throw new ArgumentException($"Rounds value must be between {this.MinRounds}"
+                    + $" and {this.MaxRounds} (inclusive).");
+            }
+
             return new Dictionary<string, object>
             {
                 {

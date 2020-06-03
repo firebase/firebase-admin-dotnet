@@ -26,95 +26,27 @@ namespace FirebaseAdmin.Auth.Hash
     /// </summary>
     public sealed class Scrypt : RepeatableHash
     {
-        private string key;
-
-        private string saltSeparator;
-
-        private int? memoryCost;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Scrypt"/> class.
         /// Defines the name of the hash to be equal to SCRYPT.
         /// </summary>
-        public Scrypt()
+        internal Scrypt()
             : base("SCRYPT") { }
 
         /// <summary>
         /// Gets or sets the signer key for the hashing algorithm.
         /// </summary>
-        public string Key
-        {
-            get
-            {
-                if (this.key == null)
-                {
-                    throw new ArgumentNullException("key must be initialized");
-                }
-
-                return this.key;
-            }
-
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("key must not be null or empty");
-                }
-
-                var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(value);
-                this.key = UrlSafeBase64Encode(plainTextBytes);
-            }
-        }
+        public byte[] Key { get; set; }
 
         /// <summary>
         /// Gets or sets the salt separator for the hashing algorithm.
         /// </summary>
-        public string SaltSeparator
-        {
-            get
-            {
-                return this.saltSeparator;
-            }
-
-            set
-            {
-                if (value != null)
-                {
-                    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(value);
-                    this.saltSeparator = UrlSafeBase64Encode(plainTextBytes);
-                }
-                else
-                {
-                    this.saltSeparator = System.Convert.ToBase64String(new byte[0]);
-                }
-            }
-        }
+        public byte[] SaltSeparator { get; set; }
 
         /// <summary>
         /// Gets or sets the memory cost for the hashing algorithm.
         /// </summary>
-        public int MemoryCost
-        {
-            get
-            {
-                if (this.memoryCost == null)
-                {
-                    throw new ArgumentNullException("memory cost must be set");
-                }
-
-                return (int)this.memoryCost;
-            }
-
-            set
-            {
-                if (value < 1 || value > 14)
-                {
-                    throw new ArgumentException("memory cost must be between 1 and 14 (inclusive)");
-                }
-
-                this.memoryCost = (int?)value;
-            }
-        }
+        public int? MemoryCost { get; set; }
 
         /// <summary>
         /// Gets the minimum number of rounds for a Scrypt hash which is 0.
@@ -130,21 +62,42 @@ namespace FirebaseAdmin.Auth.Hash
         /// Returns the options for the hashing algorithm.
         /// </summary>
         /// <returns>
-        /// Dictionary defining options such as signer key, .
+        /// Dictionary defining options such as signer key.
         /// </returns>
-        protected override IReadOnlyDictionary<string, object> GetOptions()
+        protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {
-            var dict = new Dictionary<string, object>((Dictionary<string, object>)base.GetOptions());
+            if (this.Key == null)
+            {
+                throw new ArgumentNullException("key must be initialized");
+            }
+
+            if (this.Key.Length == 0)
+            {
+                throw new ArgumentException("key must not be null or empty");
+            }
+
+            if (this.SaltSeparator == null)
+            {
+                this.SaltSeparator = new byte[0];
+            }
+
+            if (this.MemoryCost == null)
+            {
+                throw new ArgumentNullException("memory cost must be set");
+            }
+
+            if (this.MemoryCost < 1 || this.MemoryCost > 14)
+            {
+                throw new ArgumentException("memory cost must be between 1 and 14 (inclusive)");
+            }
+
+            var dict = new Dictionary<string, object>(
+                (Dictionary<string, object>)base.GetHashConfiguration());
+
             dict.Add("signerKey", this.Key);
-            dict.Add("memoryCost", this.MemoryCost);
+            dict.Add("memoryCost", (int)this.MemoryCost);
             dict.Add("saltSeparator", this.SaltSeparator);
             return dict;
-        }
-
-        private static string UrlSafeBase64Encode(byte[] bytes)
-        {
-            var base64Value = Convert.ToBase64String(bytes);
-            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
     }
 }

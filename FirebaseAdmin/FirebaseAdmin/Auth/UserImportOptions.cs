@@ -21,7 +21,7 @@ namespace FirebaseAdmin.Auth
     /// A collection of options that can be passed to the
     /// <a cref="o:FirebaseAuth.ImportUsersAsync">FirebaseAuth.ImportUsersAsync</a> API.
     /// </summary>
-    public class UserImportOptions
+    public sealed class UserImportOptions
     {
         /// <summary>
         /// Gets or sets the <a cref="UserImportHash">UserImportHash</a> object associated with

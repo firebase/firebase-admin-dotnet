@@ -36,7 +36,7 @@ namespace FirebaseAdmin.Auth
         /// Initializes a new instance of the <see cref="UserImportHash"/> class.
         /// </summary>
         /// <param name="hashName">The name of the hashing algorithm.</param>
-        public UserImportHash(string hashName)
+        protected UserImportHash(string hashName)
         {
             if (string.IsNullOrEmpty(hashName))
             {
@@ -57,7 +57,7 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException("User import hash name must not be null or empty.");
             }
 
-            var options = this.GetOptions();
+            var options = this.GetHashConfiguration();
             var properties = new Dictionary<string, object>();
             foreach (var entry in options)
             {
@@ -72,6 +72,6 @@ namespace FirebaseAdmin.Auth
         /// Retrives dictionary with the specified properties of the hashing algorithm.
         /// </summary>
         /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
-        protected abstract IReadOnlyDictionary<string, object> GetOptions();
+        protected abstract IReadOnlyDictionary<string, object> GetHashConfiguration();
     }
 }

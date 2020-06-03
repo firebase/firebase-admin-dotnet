@@ -23,128 +23,36 @@ namespace FirebaseAdmin.Auth.Hash
     /// </summary>
     public sealed class StandardScrypt : UserImportHash
     {
-        private int? derivedKeyLength;
-
-        private int? blockSize;
-
-        private int? memoryCost;
-
-        private int? parallelization;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="StandardScrypt"/> class.
         /// Defines the name of the hash to be equal to STANDARD_SCRYPT.
         /// </summary>
-        public StandardScrypt()
+        internal StandardScrypt()
             : base("STANDARD_SCRYPT") { }
 
         /// <summary>
         /// Gets or sets the derived key length for the hashing algorithm.
         /// <remarks>The length cannot be negative.</remarks>
         /// </summary>
-        public int DerivedKeyLength
-        {
-            get
-            {
-                if (this.derivedKeyLength == null)
-                {
-                    throw new ArgumentException("DerivedKeyLength must be initialized");
-                }
-
-                return (int)this.derivedKeyLength;
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentException("DerivedKeyLength must be non-negative");
-                }
-
-                this.derivedKeyLength = value;
-            }
-        }
+        public int DerivedKeyLength { get; set; }
 
         /// <summary>
         /// Gets or sets the block size for the hashing algorithm.
         /// <remarks>The size cannot be negative.</remarks>
         /// </summary>
-        public int BlockSize
-        {
-            get
-            {
-                if (this.blockSize == null)
-                {
-                    throw new ArgumentException("BlockSize must be initialized");
-                }
-
-                return (int)this.blockSize;
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentException("BlockSize must be non-negative");
-                }
-
-                this.blockSize = value;
-            }
-        }
+        public int BlockSize { get; set; }
 
         /// <summary>
         /// Gets or sets parallelization of the hashing algorithm.
         /// <remarks> The parallelization factor cannot be negative. </remarks>
         /// </summary>
-        public int Parallelization
-        {
-            get
-            {
-                if (this.parallelization == null)
-                {
-                    throw new ArgumentException("Parallelization must be initialized");
-                }
-
-                return (int)this.parallelization;
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentException("Parallelization must be non-negative");
-                }
-
-                this.parallelization = value;
-            }
-        }
+        public int? Parallelization { get; set; }
 
         /// <summary>
         /// Gets or sets memory cost for the hashing algorithm.
         /// <remarks> The memory cost cannot be negative. </remarks>
         /// </summary>
-        public int MemoryCost
-        {
-            get
-            {
-                if (this.memoryCost == null)
-                {
-                    throw new ArgumentException("Memory cost must be initialized");
-                }
-
-                return (int)this.memoryCost;
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentException("Memory cost must be non-negative");
-                }
-
-                this.memoryCost = value;
-            }
-        }
+        public int? MemoryCost { get; set; }
 
         /// <summary>
         /// Returns the options for the hashing algorithm.
@@ -152,14 +60,32 @@ namespace FirebaseAdmin.Auth.Hash
         /// <returns>
         /// Dictionary defining options such as derived key length, block size, parallization and memory cost.
         /// </returns>
-        protected override IReadOnlyDictionary<string, object> GetOptions()
+        protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {
+            this.CheckPropertyNegativeOrZero(this.DerivedKeyLength, "DerivedKeyLength");
+            this.CheckPropertyNegativeOrZero(this.BlockSize, "BlockSize");
+            this.CheckPropertyNegativeOrZero(this.Parallelization, "Parallelization");
+            this.CheckPropertyNegativeOrZero(this.MemoryCost, "MemoryCost");
+
             var dict = new Dictionary<string, object>();
             dict.Add("dkLen", this.DerivedKeyLength);
             dict.Add("blockSize", this.BlockSize);
             dict.Add("parallization", this.Parallelization);
             dict.Add("memoryCost", this.MemoryCost);
             return dict;
+        }
+
+        private void CheckPropertyNegativeOrZero(int? value, string name)
+        {
+            if (value == null)
+            {
+                throw new ArgumentException($"{name} must be initialized");
+            }
+
+            if (value < 0)
+            {
+                throw new ArgumentException($"{name} must be non-negative");
+            }
         }
     }
 }

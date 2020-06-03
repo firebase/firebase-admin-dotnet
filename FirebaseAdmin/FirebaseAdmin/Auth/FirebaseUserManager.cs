@@ -246,7 +246,7 @@ namespace FirebaseAdmin.Auth
                 throw new FirebaseAuthException(ErrorCode.Internal, "Failed to import users.");
             }
 
-            return new UserImportResult(request.GetUsersCount(), uploadAccountResponse);
+            return new UserImportResult(request.GetUsersCount(), uploadAccountResponse.Errors);
         }
 
         /// <summary>
@@ -443,7 +443,7 @@ namespace FirebaseAdmin.Auth
             /// Gets the list of errors populated after a user import request by the identity toolkit.
             /// </summary>
             [JsonProperty("error")]
-            public IEnumerable<ErrorInfo> Errors { get; }
+            public IReadOnlyList<ErrorInfo> Errors { get; }
         }
 
         /// <summary>

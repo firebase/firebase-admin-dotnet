@@ -24,17 +24,17 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="Md5"/> class.
         /// Defines the name of the hash to be equal to MD5.
         /// </summary>
-        public Md5()
+        internal Md5()
             : base("MD5") { }
 
         /// <summary>
         /// Gets the minimum number of rounds for an MD5 hash which is 0.
         /// </summary>
-        protected override int MinRounds { get { return 0; } }
+        protected override int MinRounds { get => 0; }
 
         /// <summary>
         /// Gets the maximum number of rounds for an MD5 hash which is 8192.
         /// </summary>
-        protected override int MaxRounds { get { return 8192; } }
+        protected override int MaxRounds { get => 8192; }
     }
 }

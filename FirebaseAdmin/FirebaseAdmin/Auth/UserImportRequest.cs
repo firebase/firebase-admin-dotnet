@@ -23,12 +23,9 @@ namespace FirebaseAdmin.Auth
     /// Encapsulates user import requests by specifying hashing properties for passwords and
     /// the list of users to be imported.
     /// </summary>
-    internal class UserImportRequest
+    internal sealed class UserImportRequest
     {
         internal const int MaxImportUsers = 1000;
-
-        [JsonProperty("users")]
-        private readonly IEnumerable<ImportUserRecordArgs.ImportUserRequest> users;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserImportRequest"/> class by verifying
@@ -51,13 +48,12 @@ namespace FirebaseAdmin.Auth
 
             if (usersToImport.Count() > MaxImportUsers)
             {
-                throw new ArgumentException($"users list must not contain more than"
+                throw new ArgumentException("users list must not contain more than"
                     + $" {MaxImportUsers} items");
             }
 
-            bool hasPassword = false;
-            this.users = usersToImport.Select((user) => user.ToImportUserRequest());
-            hasPassword = usersToImport.Any((user) => user.HasPassword());
+            this.Users = usersToImport.Select((user) => user.ToImportUserRequest());
+            var hasPassword = usersToImport.Any((user) => user.HasPassword());
 
             if (hasPassword)
             {
@@ -72,13 +68,16 @@ namespace FirebaseAdmin.Auth
             }
         }
 
+        [JsonProperty("users")]
+        internal IEnumerable<ImportUserRecordArgs.ImportUserRecordArgsRequest> Users { get; private set; }
+
         /// <summary>
         /// Gets or sets JsonExtensionData for putting hashing properties at the root of the
         /// Json serialized object.
         /// </summary>
         /// <returns>Dictionary containing key/values for password hashing algorithm.</returns>
         [JsonExtensionData]
-        protected Dictionary<string, object> HashProperties { get; set; }
+        private Dictionary<string, object> HashProperties { get; set; }
 
         /// <summary>
         /// Retrives the number of users based on the constructor parameter.
@@ -86,7 +85,7 @@ namespace FirebaseAdmin.Auth
         /// <returns>Number of users.</returns>
         public int GetUsersCount()
         {
-            return this.users.Count();
+            return this.Users.Count();
         }
     }
 }

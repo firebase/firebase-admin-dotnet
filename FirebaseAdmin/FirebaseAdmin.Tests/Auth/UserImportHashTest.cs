@@ -14,15 +14,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Hash.Tests
 {
     public class UserImportHashTest
     {
-        private static string signerKey = "key%20";
-        private static string saltSeperator = "separator";
+        private static byte[] signerKey = System.Text.Encoding.UTF8.GetBytes("key%20");
+        private static byte[] saltSeperator = System.Text.Encoding.UTF8.GetBytes("separator");
 
         [Fact]
         public void TestBase()
@@ -42,25 +41,25 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         [Fact]
         public void TestScryptHash()
         {
-            UserImportHash hash = new Scrypt()
+            var scryptHash = new Scrypt()
             {
                 Rounds = 8,
                 Key = signerKey,
                 SaltSeparator = saltSeperator,
                 MemoryCost = 13,
             };
-            var props = hash.GetProperties();
+            var props = scryptHash.GetProperties();
 
             var expectedResult = new Dictionary<string, object>
             {
                 { "hashAlgorithm", "SCRYPT" },
                 { "rounds", 8 },
-                { "signerKey", "a2V5JTIw" },
-                { "saltSeparator", "c2VwYXJhdG9y" },
+                { "signerKey", signerKey },
+                { "saltSeparator", saltSeperator },
                 { "memoryCost", 13 },
             };
 
-            Assert.Equal(expectedResult, hash.GetProperties());
+            Assert.Equal(expectedResult, scryptHash.GetProperties());
         }
 
         [Fact]
@@ -146,7 +145,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 var expected = new Dictionary<string, object>()
                 {
                     { "hashAlgorithm", entry.Key },
-                    { "signerKey", Encoding.ASCII.GetBytes(signerKey) },
+                    { "signerKey", signerKey },
                 };
                 Assert.Equal(expected, entry.Value.GetProperties());
             }
@@ -172,122 +171,141 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         [Fact]
         public void TestRepeatableHashRoundsTooLow()
         {
-            Assert.Throws<ArgumentException>(() => new Md5 { Rounds = -1 });
-            Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 0 });
-            Assert.Throws<ArgumentException>(() => new Sha256 { Rounds = 0 });
-            Assert.Throws<ArgumentException>(() => new Sha512 { Rounds = 0 });
-            Assert.Throws<ArgumentException>(() => new PbkdfSha1 { Rounds = -1 });
-            Assert.Throws<ArgumentException>(() => new Pbkdf2Sha256 { Rounds = -1 });
+            Assert.Throws<ArgumentException>(() => new Md5 { Rounds = -1 }.GetProperties());
+            Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 0 }.GetProperties());
+            Assert.Throws<ArgumentException>(() => new Sha256 { Rounds = 0 }.GetProperties());
+            Assert.Throws<ArgumentException>(() => new Sha512 { Rounds = 0 }.GetProperties());
+            Assert.Throws<ArgumentException>(() => new PbkdfSha1 { Rounds = -1 }.GetProperties());
+            Assert.Throws<ArgumentException>(
+                () => new Pbkdf2Sha256 { Rounds = -1 }.GetProperties());
         }
 
         [Fact]
         public void TestRepeatableHashRoundsTooHigh()
         {
-            Assert.Throws<ArgumentException>(() => new Md5 { Rounds = 8193 });
-            Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 8193 });
-            Assert.Throws<ArgumentException>(() => new Sha256 { Rounds = 8193 });
-            Assert.Throws<ArgumentException>(() => new Sha512 { Rounds = 8193 });
-            Assert.Throws<ArgumentException>(() => new PbkdfSha1 { Rounds = 120001 });
-            Assert.Throws<ArgumentException>(() => new Pbkdf2Sha256 { Rounds = 120001 });
+            Assert.Throws<ArgumentException>(() => new Md5 { Rounds = 8193 }.GetProperties());
+            Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 8193 }.GetProperties());
+            Assert.Throws<ArgumentException>(() => new Sha256 { Rounds = 8193 }.GetProperties());
+            Assert.Throws<ArgumentException>(() => new Sha512 { Rounds = 8193 }.GetProperties());
+            Assert.Throws<ArgumentException>(
+                () => new PbkdfSha1 { Rounds = 120001 }.GetProperties());
+            Assert.Throws<ArgumentException>(
+                () => new Pbkdf2Sha256 { Rounds = 120001 }.GetProperties());
         }
 
         [Fact]
         public void TestScryptHashConstraintsTooLow()
         {
-            Assert.Throws<ArgumentException>(() =>
+            var scryptHash = new Scrypt()
             {
-                new Scrypt()
-                {
-                    Rounds = -1,
-                    Key = signerKey,
-                    SaltSeparator = saltSeperator,
-                    MemoryCost = 3,
-                };
-            });
+                Rounds = -1,
+                Key = signerKey,
+                SaltSeparator = saltSeperator,
+                MemoryCost = 3,
+            };
 
             Assert.Throws<ArgumentException>(() =>
             {
-                new Scrypt()
-                {
-                    Rounds = 3,
-                    Key = signerKey,
-                    SaltSeparator = saltSeperator,
-                    MemoryCost = 0,
-                };
+                scryptHash.GetProperties();
+            });
+
+            scryptHash = new Scrypt()
+            {
+                Rounds = 3,
+                Key = signerKey,
+                SaltSeparator = saltSeperator,
+                MemoryCost = 0,
+            };
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                scryptHash.GetProperties();
             });
         }
 
         [Fact]
         public void TestScryptHashConstraintsTooHigh()
         {
-            Assert.Throws<ArgumentException>(() =>
+            var scryptHash = new Scrypt()
             {
-                new Scrypt()
-                {
-                    Rounds = 9,
-                    Key = signerKey,
-                    SaltSeparator = saltSeperator,
-                    MemoryCost = 3,
-                };
-            });
+                Rounds = 9,
+                Key = signerKey,
+                SaltSeparator = saltSeperator,
+                MemoryCost = 3,
+            };
 
             Assert.Throws<ArgumentException>(() =>
             {
-                new Scrypt()
-                {
-                    Rounds = 3,
-                    Key = signerKey,
-                    SaltSeparator = saltSeperator,
-                    MemoryCost = 15,
-                };
+                scryptHash.GetProperties();
+            });
+
+            scryptHash = new Scrypt()
+            {
+                Rounds = 3,
+                Key = signerKey,
+                SaltSeparator = saltSeperator,
+                MemoryCost = 15,
+            };
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                scryptHash.GetProperties();
             });
         }
 
         [Fact]
         public void TestStandardScryptHashConstraintsTooLow()
         {
-            Assert.Throws<ArgumentException>(() =>
+            var standardScryptHash = new StandardScrypt()
             {
-                new StandardScrypt()
-                {
-                    DerivedKeyLength = -1,
-                    BlockSize = 4,
-                    Parallelization = 2,
-                    MemoryCost = 13,
-                };
-            });
+                DerivedKeyLength = -1,
+                BlockSize = 4,
+                Parallelization = 2,
+                MemoryCost = 13,
+            };
 
             Assert.Throws<ArgumentException>(() =>
             {
-                new StandardScrypt()
-                {
-                    DerivedKeyLength = 2,
-                    BlockSize = -1,
-                    Parallelization = 2,
-                    MemoryCost = 13,
-                };
+                standardScryptHash.GetProperties();
             });
+
+            standardScryptHash = new StandardScrypt()
+            {
+                DerivedKeyLength = 2,
+                BlockSize = -1,
+                Parallelization = 2,
+                MemoryCost = 13,
+            };
 
             Assert.Throws<ArgumentException>(() =>
             {
-                new StandardScrypt()
-                {
-                    DerivedKeyLength = 2,
-                    BlockSize = 4,
-                    Parallelization = -2,
-                    MemoryCost = 13,
-                };
+                standardScryptHash.GetProperties();
             });
+
+            standardScryptHash = new StandardScrypt()
+            {
+                DerivedKeyLength = 2,
+                BlockSize = 4,
+                Parallelization = -2,
+                MemoryCost = 13,
+            };
 
             Assert.Throws<ArgumentException>(() =>
             {
-                new StandardScrypt()
-                {
-                    DerivedKeyLength = 2,
-                    BlockSize = 4,
-                    Parallelization = 2,
-                    MemoryCost = -1,
-                };
+                standardScryptHash.GetProperties();
+            });
+
+            standardScryptHash = new StandardScrypt()
+            {
+                DerivedKeyLength = 2,
+                BlockSize = 4,
+                Parallelization = 2,
+                MemoryCost = -1,
+            };
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                standardScryptHash.GetProperties();
             });
         }
 
@@ -303,7 +321,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
             public MockHash()
                 : base("MockHash") { }
 
-            protected override IReadOnlyDictionary<string, object> GetOptions()
+            protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
             {
                 return new Dictionary<string, object>
                 {
@@ -317,7 +335,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
             public InvalidHashType(string hashName)
                 : base(hashName) { }
 
-            protected override IReadOnlyDictionary<string, object> GetOptions()
+            protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
             {
                 return new Dictionary<string, object>
                 {
