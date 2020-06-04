@@ -171,13 +171,12 @@ namespace FirebaseAdmin.Auth.Tests
                 PasswordHash = Encoding.ASCII.GetBytes("def"),
             };
 
-            var options = new UserImportOptions();
             var usersLst = new List<ImportUserRecordArgs>()
             {
                 args,
             };
             await Assert.ThrowsAsync<NullReferenceException>(
-                async () => await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst, options));
+                async () => await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst));
         }
 
         public void Dispose()
