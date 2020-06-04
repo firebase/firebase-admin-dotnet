@@ -20,13 +20,13 @@ namespace FirebaseAdmin.Auth.Hash.Tests
 {
     public class UserImportHashTest
     {
-        private static byte[] signerKey = System.Text.Encoding.UTF8.GetBytes("key%20");
-        private static byte[] saltSeperator = System.Text.Encoding.UTF8.GetBytes("separator");
+        private static readonly byte[] SignerKey = System.Text.Encoding.UTF8.GetBytes("key%20");
+        private static readonly byte[] SaltSeperator = System.Text.Encoding.UTF8.GetBytes("separator");
 
         [Fact]
-        public void TestBase()
+        public void Base()
         {
-            UserImportHash hash = new MockHash();
+            var hash = new MockHash();
             var props = hash.GetProperties();
 
             var expectedResult = new Dictionary<string, object>
@@ -39,13 +39,13 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestScryptHash()
+        public void ScryptHash()
         {
             var scryptHash = new Scrypt()
             {
                 Rounds = 8,
-                Key = signerKey,
-                SaltSeparator = saltSeperator,
+                Key = SignerKey,
+                SaltSeparator = SaltSeperator,
                 MemoryCost = 13,
             };
             var props = scryptHash.GetProperties();
@@ -54,8 +54,8 @@ namespace FirebaseAdmin.Auth.Hash.Tests
             {
                 { "hashAlgorithm", "SCRYPT" },
                 { "rounds", 8 },
-                { "signerKey", signerKey },
-                { "saltSeparator", saltSeperator },
+                { "signerKey", SignerKey },
+                { "saltSeparator", SaltSeperator },
                 { "memoryCost", 13 },
             };
 
@@ -63,7 +63,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestStandardScryptHash()
+        public void StandardScryptHash()
         {
             UserImportHash hash = new StandardScrypt()
             {
@@ -87,7 +87,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestRepeatableHashes()
+        public void RepeatableHashes()
         {
             var repeatableHashes = new Dictionary<string, RepeatableHash>()
             {
@@ -111,7 +111,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestRepeatableHashesNoRounds()
+        public void RepeatableHashesNoRounds()
         {
             var repeatableHashes = new Dictionary<string, RepeatableHash>()
             {
@@ -130,14 +130,14 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestHmacHashes()
+        public void HmacHashes()
         {
             var hmacHashes = new Dictionary<string, Hmac>()
             {
-                { "HMAC_MD5", new HmacMd5 { Key = signerKey } },
-                { "HMAC_SHA1", new HmacSha1 { Key = signerKey } },
-                { "HMAC_SHA256", new HmacSha256 { Key = signerKey } },
-                { "HMAC_SHA512", new HmacSha512 { Key = signerKey } },
+                { "HMAC_MD5", new HmacMd5 { Key = SignerKey } },
+                { "HMAC_SHA1", new HmacSha1 { Key = SignerKey } },
+                { "HMAC_SHA256", new HmacSha256 { Key = SignerKey } },
+                { "HMAC_SHA512", new HmacSha512 { Key = SignerKey } },
             };
 
             foreach (var entry in hmacHashes)
@@ -145,14 +145,14 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 var expected = new Dictionary<string, object>()
                 {
                     { "hashAlgorithm", entry.Key },
-                    { "signerKey", signerKey },
+                    { "signerKey", SignerKey },
                 };
                 Assert.Equal(expected, entry.Value.GetProperties());
             }
         }
 
         [Fact]
-        public void TestHmacHashesNoKey()
+        public void HmacHashesNoKey()
         {
             var hmacHashes = new Dictionary<string, Hmac>()
             {
@@ -169,7 +169,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestRepeatableHashRoundsTooLow()
+        public void RepeatableHashRoundsTooLow()
         {
             Assert.Throws<ArgumentException>(() => new Md5 { Rounds = -1 }.GetProperties());
             Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 0 }.GetProperties());
@@ -181,7 +181,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestRepeatableHashRoundsTooHigh()
+        public void RepeatableHashRoundsTooHigh()
         {
             Assert.Throws<ArgumentException>(() => new Md5 { Rounds = 8193 }.GetProperties());
             Assert.Throws<ArgumentException>(() => new Sha1 { Rounds = 8193 }.GetProperties());
@@ -194,67 +194,55 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestScryptHashConstraintsTooLow()
+        public void ScryptHashConstraintsTooLow()
         {
             var scryptHash = new Scrypt()
             {
                 Rounds = -1,
-                Key = signerKey,
-                SaltSeparator = saltSeperator,
+                Key = SignerKey,
+                SaltSeparator = SaltSeperator,
                 MemoryCost = 3,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                scryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => scryptHash.GetProperties());
 
             scryptHash = new Scrypt()
             {
                 Rounds = 3,
-                Key = signerKey,
-                SaltSeparator = saltSeperator,
+                Key = SignerKey,
+                SaltSeparator = SaltSeperator,
                 MemoryCost = 0,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                scryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => scryptHash.GetProperties());
         }
 
         [Fact]
-        public void TestScryptHashConstraintsTooHigh()
+        public void ScryptHashConstraintsTooHigh()
         {
             var scryptHash = new Scrypt()
             {
                 Rounds = 9,
-                Key = signerKey,
-                SaltSeparator = saltSeperator,
+                Key = SignerKey,
+                SaltSeparator = SaltSeperator,
                 MemoryCost = 3,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                scryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => scryptHash.GetProperties());
 
             scryptHash = new Scrypt()
             {
                 Rounds = 3,
-                Key = signerKey,
-                SaltSeparator = saltSeperator,
+                Key = SignerKey,
+                SaltSeparator = SaltSeperator,
                 MemoryCost = 15,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                scryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => scryptHash.GetProperties());
         }
 
         [Fact]
-        public void TestStandardScryptHashConstraintsTooLow()
+        public void StandardScryptHashConstraintsTooLow()
         {
             var standardScryptHash = new StandardScrypt()
             {
@@ -264,10 +252,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 MemoryCost = 13,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                standardScryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => standardScryptHash.GetProperties());
 
             standardScryptHash = new StandardScrypt()
             {
@@ -277,10 +262,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 MemoryCost = 13,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                standardScryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => standardScryptHash.GetProperties());
 
             standardScryptHash = new StandardScrypt()
             {
@@ -290,10 +272,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 MemoryCost = 13,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                standardScryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => standardScryptHash.GetProperties());
 
             standardScryptHash = new StandardScrypt()
             {
@@ -303,10 +282,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
                 MemoryCost = -1,
             };
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                standardScryptHash.GetProperties();
-            });
+            Assert.Throws<ArgumentException>(() => standardScryptHash.GetProperties());
         }
 
         [Fact]

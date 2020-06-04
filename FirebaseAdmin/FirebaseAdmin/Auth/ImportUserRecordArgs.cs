@@ -133,7 +133,8 @@ namespace FirebaseAdmin.Auth
 
                 if (args.UserProviders != null && args.UserProviders.Count() > 0)
                 {
-                    this.ProviderUserInfo = new List<UserProvider>(args.UserProviders);
+                    this.ProviderUserInfo = new List<UserProvider.Request>(
+                        args.UserProviders.Select(userProvider => userProvider.ToRequest()));
                 }
 
                 if (args.CustomClaims != null && args.CustomClaims.Count > 0)
@@ -146,41 +147,41 @@ namespace FirebaseAdmin.Auth
                 this.Disabled = args.Disabled;
             }
 
-            [JsonProperty("createdAt")]
+            [JsonProperty("createdAt", NullValueHandling = NullValueHandling.Ignore)]
             public DateTime? CreatedAt { get; set; }
 
-            [JsonProperty("customAttributes")]
+            [JsonProperty("customAttributes", NullValueHandling = NullValueHandling.Ignore)]
             public string CustomAttributes { get; set; }
 
-            [JsonProperty("disabled")]
+            [JsonProperty("disabled", NullValueHandling = NullValueHandling.Ignore)]
             public bool? Disabled { get; set; }
 
-            [JsonProperty("displayName")]
+            [JsonProperty("displayName", NullValueHandling = NullValueHandling.Ignore)]
             public string DisplayName { get; set; }
 
-            [JsonProperty("email")]
+            [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
             public string Email { get; set; }
 
-            [JsonProperty("emailVerified")]
+            [JsonProperty("emailVerified", NullValueHandling = NullValueHandling.Ignore)]
             public bool? EmailVerified { get; set; }
 
-            [JsonProperty("lastLoginAt")]
+            [JsonProperty("lastLoginAt", NullValueHandling = NullValueHandling.Ignore)]
             public DateTime? LastLoginAt { get; set; }
 
-            [JsonProperty("passwordHash")]
+            [JsonProperty("passwordHash", NullValueHandling = NullValueHandling.Ignore)]
             public string PasswordHash { get; set; }
 
-            [JsonProperty("salt")]
+            [JsonProperty("salt", NullValueHandling = NullValueHandling.Ignore)]
             public string PasswordSalt { get; set; }
 
-            [JsonProperty("phoneNumber")]
+            [JsonProperty("phoneNumber", NullValueHandling = NullValueHandling.Ignore)]
             public string PhoneNumber { get; set; }
 
-            [JsonProperty("photoUrl")]
+            [JsonProperty("photoUrl", NullValueHandling = NullValueHandling.Ignore)]
             public string PhotoUrl { get; set; }
 
-            [JsonProperty("providerUserInfo")]
-            public List<UserProvider> ProviderUserInfo { get; set; }
+            [JsonProperty("providerUserInfo", NullValueHandling = NullValueHandling.Ignore)]
+            public List<UserProvider.Request> ProviderUserInfo { get; set; }
 
             [JsonProperty("localId")]
             public string Uid { get; set; }

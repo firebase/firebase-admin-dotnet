@@ -14,14 +14,15 @@
 
 using System;
 using System.Collections.Generic;
+using FirebaseAdmin.Auth.Hash;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Hash.Tests
+namespace FirebaseAdmin.Auth.Tests
 {
     public class UserImportOptionsTest
     {
         [Fact]
-        public void TestUserImportOptionsBasic()
+        public void UserImportOptionsBasic()
         {
             var options = new UserImportOptions()
             {
@@ -38,7 +39,7 @@ namespace FirebaseAdmin.Auth.Hash.Tests
         }
 
         [Fact]
-        public void TestUserImportOptionsNoHash()
+        public void UserImportOptionsNoHash()
         {
             var options = new UserImportOptions();
             Assert.Throws<ArgumentException>(() => options.GetHashProperties());
