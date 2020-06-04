@@ -595,6 +595,9 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 Assert.Equal(1, resp.SuccessCount);
                 Assert.Equal(0, resp.FailureCount);
+
+                var user = await FirebaseAuth.DefaultInstance.GetUserAsync(randomUser.Uid);
+                Assert.Equal(randomUser.Email, user.Email);
             }
             finally
             {
