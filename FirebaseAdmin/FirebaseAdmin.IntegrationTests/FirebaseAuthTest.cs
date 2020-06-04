@@ -604,7 +604,7 @@ namespace FirebaseAdmin.IntegrationTests
                 var savedUser = await FirebaseAuth.DefaultInstance.GetUserAsync(randomUser.Uid);
                 Assert.Equal(randomUser.Email, savedUser.Email);
                 var idToken = await SignInWithPasswordAsync(randomUser.Email, "password");
-                Assert.NotNull(idToken);
+                Assert.False(string.IsNullOrEmpty(idToken));
             }
             finally
             {
