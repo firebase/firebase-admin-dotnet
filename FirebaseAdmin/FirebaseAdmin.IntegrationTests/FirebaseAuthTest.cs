@@ -574,7 +574,8 @@ namespace FirebaseAdmin.IntegrationTests
                 PhotoUrl = "https://example.com/photo.png",
                 EmailVerified = true,
                 PasswordSalt = Encoding.ASCII.GetBytes("NaCl"),
-                PasswordHash = Encoding.ASCII.GetBytes("V358E8LdWJXAO7muq0CufVpEOXaj8aFiC7T/rcaGieN04q/ZPJ08WhJEHGjj9lz/2TT+/86N5VjVoc5DdBhBiw=="),
+                PasswordHash = System.Convert.FromBase64String("V358E8LdWJXAO7muq0CufVpEOXaj8aFiC7"
+                    + "T/rcaGieN04q/ZPJ08WhJEHGjj9lz/2TT+/86N5VjVoc5DdBhBiw=="),
                 CustomClaims = new Dictionary<string, object>()
                 {
                     { "admin", true },
@@ -604,8 +605,9 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 Hash = new Scrypt()
                 {
-                    Key = System.Text.Encoding.UTF8.GetBytes("jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC8pVMXAn210wjLNmdZJzxUECKbm0QsEmYUSDzZvpjeJ9WmXA=="),
-                    SaltSeparator = System.Text.Encoding.UTF8.GetBytes("Bw=="),
+                    Key = System.Convert.FromBase64String("jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC"
+                        + "8pVMXAn210wjLNmdZJzxUECKbm0QsEmYUSDzZvpjeJ9WmXA=="),
+                    SaltSeparator = System.Convert.FromBase64String("Bw=="),
                     Rounds = 8,
                     MemoryCost = 14,
                 },
