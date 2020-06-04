@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using Google.Apis.Json;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -23,7 +25,7 @@ namespace FirebaseAdmin.Auth.Tests
     public class ImportUserRecordArgsTest
     {
         [Fact]
-        public void TestImportUserRecordArgsSerializationBasic()
+        public void Serialize()
         {
             var userProviders = new List<UserProvider>
             {
@@ -40,6 +42,8 @@ namespace FirebaseAdmin.Auth.Tests
             };
 
             var userMetadata = new UserMetadata(1, 2, null);
+            var passwordHash = Encoding.ASCII.GetBytes("secret");
+            var passwordSalt = Encoding.ASCII.GetBytes("salt");
 
             var importUserRecordArgs = new ImportUserRecordArgs()
             {
@@ -51,8 +55,8 @@ namespace FirebaseAdmin.Auth.Tests
                 PhoneNumber = "+11234567890",
                 Disabled = false,
                 UserMetadata = userMetadata,
-                PasswordHash = Encoding.ASCII.GetBytes("secret"),
-                PasswordSalt = Encoding.ASCII.GetBytes("salt"),
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
                 CustomClaims = customClaims,
                 UserProviders = userProviders,
             };
@@ -66,11 +70,11 @@ namespace FirebaseAdmin.Auth.Tests
                 { "email", "example@gmail.com" },
                 { "emailVerified", true },
                 { "lastLoginAt", userMetadata.LastSignInTimestamp },
-                { "passwordHash", "c2VjcmV0" },
-                { "salt", "c2FsdA" },
+                { "passwordHash", JwtUtils.UrlSafeBase64Encode(passwordHash) },
+                { "salt", JwtUtils.UrlSafeBase64Encode(passwordSalt) },
                 { "phoneNumber", "+11234567890" },
                 { "photoUrl", "http://example.com/photo" },
-                { "providerUserInfo", userProviders },
+                { "providerUserInfo", userProviders.Select(userProvider => userProvider.ToRequest()) },
                 { "localId", "123" },
             };
 
@@ -80,27 +84,44 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void TestImportUserRecordArgsMissingUid()
+        public void RequiredOnly()
         {
-            var userProviderWithMissingUid = new ImportUserRecordArgs() { };
-            Assert.Throws<ArgumentNullException>(
-                () => userProviderWithMissingUid.ToRequest());
+            var userRecordMinimal = new ImportUserRecordArgs()
+            {
+                Uid = "123",
+            };
+
+            var expected = new Dictionary<string, object>()
+            {
+                { "localId", "123" },
+            };
+            Assert.Equal(
+                NewtonsoftJsonSerializer.Instance.Serialize(expected),
+                NewtonsoftJsonSerializer.Instance.Serialize(userRecordMinimal.ToRequest()));
         }
 
         [Fact]
-        public void TestImportUserRecordArgsInvalidEmail()
+        public void MissingUid()
         {
-            var userProviderWithMissingUid = new ImportUserRecordArgs()
+            var userRecordArgsWithMissingUid = new ImportUserRecordArgs() { };
+            Assert.Throws<ArgumentNullException>(
+                () => userRecordArgsWithMissingUid.ToRequest());
+        }
+
+        [Fact]
+        public void InvalidEmail()
+        {
+            var userRecordArgsInvalidEmail = new ImportUserRecordArgs()
             {
                 Uid = "123",
                 Email = "invalidemail",
             };
             Assert.Throws<ArgumentException>(
-                () => userProviderWithMissingUid.ToRequest());
+                () => userRecordArgsInvalidEmail.ToRequest());
         }
 
         [Fact]
-        public void TestImportUserRecordArgsInvalidPhone()
+        public void InvalidPhone()
         {
             var userProviderWithMissingUid = new ImportUserRecordArgs()
             {
@@ -112,9 +133,9 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void TestImportUserRecordArgsReservedCustomClaims()
+        public void ReservedCustomClaims()
         {
-            foreach (string reservedKey in FirebaseTokenFactory.ReservedClaims)
+            foreach (var reservedKey in FirebaseTokenFactory.ReservedClaims)
             {
                 var userProviderWithReservedClaimKey = new ImportUserRecordArgs()
                 {

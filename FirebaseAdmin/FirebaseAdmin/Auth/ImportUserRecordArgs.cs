@@ -133,7 +133,8 @@ namespace FirebaseAdmin.Auth
 
                 if (args.UserProviders != null && args.UserProviders.Count() > 0)
                 {
-                    this.ProviderUserInfo = new List<UserProvider>(args.UserProviders);
+                    this.ProviderUserInfo = new List<UserProvider.Request>(
+                        args.UserProviders.Select(userProvider => userProvider.ToRequest()));
                 }
 
                 if (args.CustomClaims != null && args.CustomClaims.Count > 0)
@@ -180,7 +181,7 @@ namespace FirebaseAdmin.Auth
             public string PhotoUrl { get; set; }
 
             [JsonProperty("providerUserInfo")]
-            public List<UserProvider> ProviderUserInfo { get; set; }
+            public List<UserProvider.Request> ProviderUserInfo { get; set; }
 
             [JsonProperty("localId")]
             public string Uid { get; set; }

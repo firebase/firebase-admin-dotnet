@@ -511,7 +511,7 @@ namespace FirebaseAdmin.IntegrationTests
         }
 
         [Fact]
-        public async Task ImportUsersBasic()
+        public async Task ImportUsers()
         {
             var randomUser = RandomUser.Create();
             var args = new ImportUserRecordArgs()
@@ -523,7 +523,6 @@ namespace FirebaseAdmin.IntegrationTests
                 EmailVerified = true,
             };
 
-            var options = new UserImportOptions();
             IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();
             usersLst = usersLst.Append(args);
 
@@ -544,26 +543,7 @@ namespace FirebaseAdmin.IntegrationTests
         }
 
         [Fact]
-        public async Task ImportUsersPasswordNoHash()
-        {
-            var randomUser = RandomUser.Create();
-            var args = new ImportUserRecordArgs()
-            {
-                Uid = randomUser.Uid,
-                Email = randomUser.Email,
-                PasswordSalt = Encoding.ASCII.GetBytes("abc"),
-                PasswordHash = Encoding.ASCII.GetBytes("def"),
-            };
-
-            var options = new UserImportOptions();
-            IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();
-            usersLst = usersLst.Append(args);
-            await Assert.ThrowsAsync<ArgumentNullException>(
-                async () => await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst, options));
-        }
-
-        [Fact]
-        public async Task ImportUsersPassword()
+        public async Task ImportUsersWithPassword()
         {
             var randomUser = RandomUser.Create();
             var args = new ImportUserRecordArgs()
@@ -584,8 +564,8 @@ namespace FirebaseAdmin.IntegrationTests
                 {
                     new UserProvider()
                     {
-                        Uid = "google.uid",
-                        Email = "johndoe@gmail.com",
+                        Uid = randomUser.Uid,
+                        Email = randomUser.Email,
                         DisplayName = "John Doe",
                         PhotoUrl = "http://example.com/123/photo.png",
                         ProviderId = "google.com",

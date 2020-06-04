@@ -24,7 +24,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// Initializes a new instance of the <see cref="Sha256"/> class.
         /// Defines the name of the hash to be equal to SHA256.
         /// </summary>
-        internal Sha256()
+        public Sha256()
             : base("SHA256") { }
 
         /// <summary>
