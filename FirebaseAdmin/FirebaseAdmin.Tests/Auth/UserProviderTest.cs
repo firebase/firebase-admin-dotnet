@@ -22,27 +22,41 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void NoUid()
         {
-            Assert.Throws<ArgumentException>(() => new UserProvider().Uid);
+            var userProvider = new UserProvider()
+            {
+                ProviderId = "abc",
+            };
+            Assert.Throws<ArgumentException>(() => userProvider.ToRequest());
         }
 
         [Fact]
         public void EmptyUid()
         {
-            var userProvider = new UserProvider();
-            Assert.Throws<ArgumentException>(() => userProvider.Uid = string.Empty);
+            var userProvider = new UserProvider()
+            {
+                Uid = string.Empty,
+            };
+            Assert.Throws<ArgumentException>(() => userProvider.ToRequest());
         }
 
         [Fact]
         public void NoProviderId()
         {
-            Assert.Throws<ArgumentException>(() => new UserProvider().ProviderId);
+            var userProvider = new UserProvider()
+            {
+                Uid = "abc",
+            };
+            Assert.Throws<ArgumentException>(() => userProvider.ToRequest());
         }
 
         [Fact]
         public void EmptyProviderId()
         {
-            var userProvider = new UserProvider();
-            Assert.Throws<ArgumentException>(() => userProvider.ProviderId = string.Empty);
+            var userProvider = new UserProvider()
+            {
+                ProviderId = string.Empty,
+            };
+            Assert.Throws<ArgumentException>(() => userProvider.ToRequest());
         }
 
         [Fact]

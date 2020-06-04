@@ -31,7 +31,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="creationTimestamp">A timestamp representing the date and time that the user account was created.</param>
         /// <param name="lastSignInTimestamp">A timestamp representing the date and time that the user account was last signed-on to.</param>
         /// <param name="lastRefreshTimestamp">A timestamp representing the date and time that the user account was last refreshed.</param>
-        internal UserMetadata(long creationTimestamp, long lastSignInTimestamp, DateTime? lastRefreshTimestamp)
+        public UserMetadata(long creationTimestamp, long lastSignInTimestamp, DateTime? lastRefreshTimestamp)
         {
             this.creationTimestampMillis = creationTimestamp;
             this.lastSignInTimestampMillis = lastSignInTimestamp;
