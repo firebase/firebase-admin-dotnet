@@ -533,6 +533,9 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 Assert.Equal(1, resp.SuccessCount);
                 Assert.Equal(0, resp.FailureCount);
+
+                var savedUser = await FirebaseAuth.DefaultInstance.GetUserAsync(randomUser.Uid);
+                Assert.Equal(savedUser.Email, randomUser.Email);
             }
             finally
             {
@@ -612,6 +615,11 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 Assert.Equal(1, resp.SuccessCount);
                 Assert.Equal(0, resp.FailureCount);
+
+                var savedUser = await FirebaseAuth.DefaultInstance.GetUserAsync(randomUser.Uid);
+                Assert.Equal(savedUser.Email, randomUser.Email);
+                var idToken = await SignInWithPasswordAsync(randomUser.Email, "password");
+                Assert.NotNull(idToken);
             }
             finally
             {
