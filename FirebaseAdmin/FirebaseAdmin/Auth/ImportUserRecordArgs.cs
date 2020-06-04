@@ -147,40 +147,40 @@ namespace FirebaseAdmin.Auth
                 this.Disabled = args.Disabled;
             }
 
-            [JsonProperty("createdAt", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("createdAt")]
             public DateTime? CreatedAt { get; set; }
 
-            [JsonProperty("customAttributes", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("customAttributes")]
             public string CustomAttributes { get; set; }
 
-            [JsonProperty("disabled", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("disabled")]
             public bool? Disabled { get; set; }
 
-            [JsonProperty("displayName", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("displayName")]
             public string DisplayName { get; set; }
 
-            [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("email")]
             public string Email { get; set; }
 
-            [JsonProperty("emailVerified", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("emailVerified")]
             public bool? EmailVerified { get; set; }
 
-            [JsonProperty("lastLoginAt", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("lastLoginAt")]
             public DateTime? LastLoginAt { get; set; }
 
-            [JsonProperty("passwordHash", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("passwordHash")]
             public string PasswordHash { get; set; }
 
-            [JsonProperty("salt", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("salt")]
             public string PasswordSalt { get; set; }
 
-            [JsonProperty("phoneNumber", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("phoneNumber")]
             public string PhoneNumber { get; set; }
 
-            [JsonProperty("photoUrl", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("photoUrl")]
             public string PhotoUrl { get; set; }
 
-            [JsonProperty("providerUserInfo", NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty("providerUserInfo")]
             public List<UserProvider.Request> ProviderUserInfo { get; set; }
 
             [JsonProperty("localId")]

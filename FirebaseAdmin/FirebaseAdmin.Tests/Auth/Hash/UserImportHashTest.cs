@@ -14,14 +14,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Hash.Tests
 {
     public class UserImportHashTest
     {
-        private static readonly byte[] SignerKey = System.Text.Encoding.UTF8.GetBytes("key%20");
-        private static readonly byte[] SaltSeperator = System.Text.Encoding.UTF8.GetBytes("separator");
+        private static readonly byte[] SignerKey = Encoding.UTF8.GetBytes("key%20");
+        private static readonly byte[] SaltSeperator = Encoding.UTF8.GetBytes("separator");
 
         [Fact]
         public void Base()

@@ -22,7 +22,7 @@ namespace FirebaseAdmin.Auth.Tests
     public class UserImportOptionsTest
     {
         [Fact]
-        public void UserImportOptionsBasic()
+        public void Serialize()
         {
             var options = new UserImportOptions()
             {

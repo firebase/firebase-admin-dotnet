@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Google.Apis.Json;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -24,7 +25,7 @@ namespace FirebaseAdmin.Auth.Tests
     public class ImportUserRecordArgsTest
     {
         [Fact]
-        public void SerializationBasic()
+        public void Serialize()
         {
             var userProviders = new List<UserProvider>
             {
@@ -95,8 +96,8 @@ namespace FirebaseAdmin.Auth.Tests
                 { "localId", "123" },
             };
             Assert.Equal(
-                JsonConvert.SerializeObject(expected),
-                JsonConvert.SerializeObject(userRecordMinimal.ToRequest()));
+                NewtonsoftJsonSerializer.Instance.Serialize(expected),
+                NewtonsoftJsonSerializer.Instance.Serialize(userRecordMinimal.ToRequest()));
         }
 
         [Fact]
@@ -134,7 +135,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void ReservedCustomClaims()
         {
-            foreach (string reservedKey in FirebaseTokenFactory.ReservedClaims)
+            foreach (var reservedKey in FirebaseTokenFactory.ReservedClaims)
             {
                 var userProviderWithReservedClaimKey = new ImportUserRecordArgs()
                 {
