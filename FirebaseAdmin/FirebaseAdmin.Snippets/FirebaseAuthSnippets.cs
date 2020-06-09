@@ -169,10 +169,12 @@ namespace FirebaseAdmin.Snippets
             {
                 // Some unrecoverable error occurred that prevented the operation from running.
             }
+
             // [END import_users]
         }
 
-        internal static async Task ImportWithHmac() {
+        internal static async Task ImportWithHmac() 
+        {
             // [START import_with_hmac]
             try
             {
@@ -205,10 +207,12 @@ namespace FirebaseAdmin.Snippets
             {
                 Console.WriteLine("Error importing users: " + e.Message);
             }
+
             // [END import_with_hmac]
         }
 
-        internal static async Task ImportWithPbkdf() {
+        internal static async Task ImportWithPbkdf()
+        {
             // [START import_with_pbkdf]
             try
             {
@@ -241,10 +245,12 @@ namespace FirebaseAdmin.Snippets
             {
                 Console.WriteLine("Error importing users: " + e.Message);
             }
+
             // [END import_with_pbkdf]
         }
 
-        internal static async Task ImportWithStandardScrypt() {
+        internal static async Task ImportWithStandardScrypt()
+        {
             // [START import_with_standard_scrypt]
             try
             {
@@ -280,10 +286,12 @@ namespace FirebaseAdmin.Snippets
             {
                 Console.WriteLine("Error importing users: " + e.Message);
             }
+
             // [END import_with_standard_scrypt]
         }
 
-        internal static async Task ImportWithBcrypt() {
+        internal static async Task ImportWithBcrypt()
+        {
             // [START import_with_bcrypt]
             try
             {
@@ -313,10 +321,12 @@ namespace FirebaseAdmin.Snippets
             {
                 Console.WriteLine("Error importing users: " + e.Message);
             }
+
             // [END import_with_bcrypt]
         }
 
-        internal static async Task ImportWithScrypt() {
+        internal static async Task ImportWithScrypt()
+        {
             // [START import_with_scrypt]
             try
             {
@@ -352,10 +362,12 @@ namespace FirebaseAdmin.Snippets
             {
                 Console.WriteLine("Error importing users: " + e.Message);
             }
+
             // [END import_with_scrypt]
         }
 
-        internal static async Task ImportWithoutPassword() {
+        internal static async Task ImportWithoutPassword()
+        {
             // [START import_without_password]
             try
             {
@@ -397,9 +409,9 @@ namespace FirebaseAdmin.Snippets
             {
                 Console.WriteLine("Error importing users: " + e.Message);
             }
+
             // [END import_without_password]
         }
-
 
         internal static async Task UpdateUserAsync(string uid)
         {
