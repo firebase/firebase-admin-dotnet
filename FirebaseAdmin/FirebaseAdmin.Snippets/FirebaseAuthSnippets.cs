@@ -227,7 +227,7 @@ namespace FirebaseAdmin.Snippets
                 {
                     Hash = new Pbkdf2Sha256()
                     {
-                        Rounds = 1000,
+                        Rounds = 100000,
                     },
                 };
 
