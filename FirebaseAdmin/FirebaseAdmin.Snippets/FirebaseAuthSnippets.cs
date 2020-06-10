@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth.Hash;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -119,6 +121,299 @@ namespace FirebaseAdmin.Snippets
             // See the UserRecord reference doc for the contents of userRecord.
             Console.WriteLine($"Successfully created new user: {userRecord.Uid}");
             // [END create_user_with_uid]
+        }
+
+        internal static async Task ImportUsers()
+        {
+            // [START build_user_list]
+            //  Up to 1000 users can be imported at once.
+            var users = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs()
+                {
+                    Uid = "uid1",
+                    Email = "user1@example.com",
+                    PasswordHash = Encoding.ASCII.GetBytes("passwordHash1"),
+                    PasswordSalt = Encoding.ASCII.GetBytes("salt1"),
+                },
+                new ImportUserRecordArgs()
+                {
+                    Uid = "uid2",
+                    Email = "user2@example.com",
+                    PasswordHash = Encoding.ASCII.GetBytes("passwordHash2"),
+                    PasswordSalt = Encoding.ASCII.GetBytes("salt2"),
+                },
+            };
+            // [END build_user_list]
+
+            // [START import_users]
+            var options = new UserImportOptions()
+            {
+                Hash = new HmacSha256()
+                {
+                    Key = Encoding.ASCII.GetBytes("secretKey"),
+                },
+            };
+
+            try
+            {
+                UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
+                Console.WriteLine($"Successfully imported {result.SuccessCount} users");
+                Console.WriteLine($"Failed to import {result.FailureCount} users");
+                foreach (ErrorInfo indexedError in result.Errors)
+                {
+                    Console.WriteLine($"Failed to import user at index: {indexedError.Index}"
+                        + $" due to error: {indexedError.Reason}");
+                }
+            }
+            catch (FirebaseAuthException)
+            {
+                // Some unrecoverable error occurred that prevented the operation from running.
+            }
+
+            // [END import_users]
+        }
+
+        internal static async Task ImportWithHmac()
+        {
+            // [START import_with_hmac]
+            try
+            {
+                var users = new List<ImportUserRecordArgs>()
+                {
+                    new ImportUserRecordArgs()
+                    {
+                        Uid = "some-uid",
+                        Email = "user@example.com",
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
+                    },
+                };
+
+                var options = new UserImportOptions()
+                {
+                    Hash = new HmacSha256()
+                    {
+                        Key = Encoding.ASCII.GetBytes("secret"),
+                    },
+                };
+
+                UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
+                foreach (ErrorInfo indexedError in result.Errors)
+                {
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
+                }
+            }
+            catch (FirebaseAuthException e)
+            {
+                Console.WriteLine($"Error importing users: {e.Message}");
+            }
+
+            // [END import_with_hmac]
+        }
+
+        internal static async Task ImportWithPbkdf()
+        {
+            // [START import_with_pbkdf]
+            try
+            {
+                var users = new List<ImportUserRecordArgs>()
+                {
+                    new ImportUserRecordArgs()
+                    {
+                        Uid = "some-uid",
+                        Email = "user@example.com",
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
+                    },
+                };
+
+                var options = new UserImportOptions()
+                {
+                    Hash = new Pbkdf2Sha256()
+                    {
+                        Rounds = 100000,
+                    },
+                };
+
+                UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
+                foreach (ErrorInfo indexedError in result.Errors)
+                {
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
+                }
+            }
+            catch (FirebaseAuthException e)
+            {
+                Console.WriteLine($"Error importing users: {e.Message}");
+            }
+
+            // [END import_with_pbkdf]
+        }
+
+        internal static async Task ImportWithStandardScrypt()
+        {
+            // [START import_with_standard_scrypt]
+            try
+            {
+                var users = new List<ImportUserRecordArgs>()
+                {
+                    new ImportUserRecordArgs()
+                    {
+                        Uid = "some-uid",
+                        Email = "user@example.com",
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
+                    },
+                };
+
+                var options = new UserImportOptions()
+                {
+                    Hash = new StandardScrypt()
+                    {
+                        MemoryCost = 1024,
+                        Parallelization = 16,
+                        BlockSize = 8,
+                        DerivedKeyLength = 64,
+                    },
+                };
+
+                UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
+                foreach (ErrorInfo indexedError in result.Errors)
+                {
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
+                }
+            }
+            catch (FirebaseAuthException e)
+            {
+                Console.WriteLine($"Error importing users: {e.Message}");
+            }
+
+            // [END import_with_standard_scrypt]
+        }
+
+        internal static async Task ImportWithBcrypt()
+        {
+            // [START import_with_bcrypt]
+            try
+            {
+                var users = new List<ImportUserRecordArgs>()
+                {
+                    new ImportUserRecordArgs()
+                    {
+                        Uid = "some-uid",
+                        Email = "user@example.com",
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
+                    },
+                };
+
+                var options = new UserImportOptions()
+                {
+                    Hash = new Bcrypt(),
+                };
+
+                UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
+                foreach (ErrorInfo indexedError in result.Errors)
+                {
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
+                }
+            }
+            catch (FirebaseAuthException e)
+            {
+                Console.WriteLine($"Error importing users: {e.Message}");
+            }
+
+            // [END import_with_bcrypt]
+        }
+
+        internal static async Task ImportWithScrypt()
+        {
+            // [START import_with_scrypt]
+            try
+            {
+                var users = new List<ImportUserRecordArgs>()
+                {
+                    new ImportUserRecordArgs()
+                    {
+                        Uid = "some-uid",
+                        Email = "user@example.com",
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
+                    },
+                };
+
+                var options = new UserImportOptions()
+                {
+                    // All the parameters below can be obtained from the Firebase Console's "Users"
+                    // section. Base64 encoded parameters must be decoded into raw bytes.
+                    Hash = new Scrypt()
+                    {
+                        Key = Encoding.ASCII.GetBytes("base64-secret"),
+                        SaltSeparator = Encoding.ASCII.GetBytes("base64-salt-separator"),
+                        Rounds = 8,
+                        MemoryCost = 14,
+                    },
+                };
+
+                UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
+                foreach (ErrorInfo indexedError in result.Errors)
+                {
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
+                }
+            }
+            catch (FirebaseAuthException e)
+            {
+                Console.WriteLine($"Error importing users: {e.Message}");
+            }
+
+            // [END import_with_scrypt]
+        }
+
+        internal static async Task ImportWithoutPassword()
+        {
+            // [START import_without_password]
+            try
+            {
+                var users = new List<ImportUserRecordArgs>()
+                {
+                    new ImportUserRecordArgs()
+                    {
+                        Uid = "some-uid",
+                        DisplayName = "John Doe",
+                        Email = "johndoe@gmail.com",
+                        PhotoUrl = "http://www.example.com/12345678/photo.png",
+                        EmailVerified = true,
+                        PhoneNumber = "+11234567890",
+                        CustomClaims = new Dictionary<string, object>()
+                        {
+                            { "admin", true }, // set this user as admin
+                        },
+                        UserProviders = new List<UserProvider>
+                        {
+                            new UserProvider() // user with Google provider
+                            {
+                                Uid = "google-uid",
+                                Email = "johndoe@gmail.com",
+                                DisplayName = "John Doe",
+                                PhotoUrl = "http://www.example.com/12345678/photo.png",
+                                ProviderId = "google.com",
+                            },
+                        },
+                    },
+                };
+
+                UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users);
+                foreach (ErrorInfo indexedError in result.Errors)
+                {
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
+                }
+            }
+            catch (FirebaseAuthException e)
+            {
+                Console.WriteLine($"Error importing users: {e.Message}");
+            }
+
+            // [END import_without_password]
         }
 
         internal static async Task UpdateUserAsync(string uid)
