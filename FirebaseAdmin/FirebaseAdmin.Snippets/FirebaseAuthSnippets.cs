@@ -126,6 +126,7 @@ namespace FirebaseAdmin.Snippets
         internal static async Task ImportUsers()
         {
             // [START build_user_list]
+            //  Up to 1000 users can be imported at once.
             var users = new List<ImportUserRecordArgs>()
             {
                 new ImportUserRecordArgs()
@@ -157,12 +158,12 @@ namespace FirebaseAdmin.Snippets
             try
             {
                 UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
-                Console.WriteLine("Successfully imported " + result.SuccessCount + " users");
-                Console.WriteLine("Failed to import " + result.FailureCount + " users");
+                Console.WriteLine($"Successfully imported {result.SuccessCount} users");
+                Console.WriteLine($"Failed to import {result.FailureCount} users");
                 foreach (ErrorInfo indexedError in result.Errors)
                 {
-                    Console.WriteLine("Failed to import user at index: " + indexedError.Index
-                        + " due to error: " + indexedError.Reason);
+                    Console.WriteLine($"Failed to import user at index: {indexedError.Index}"
+                        + $" due to error: {indexedError.Reason}");
                 }
             }
             catch (FirebaseAuthException)
@@ -200,12 +201,12 @@ namespace FirebaseAdmin.Snippets
                 UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
                 foreach (ErrorInfo indexedError in result.Errors)
                 {
-                    Console.WriteLine("Failed to import user: " + indexedError.Reason);
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
                 }
             }
             catch (FirebaseAuthException e)
             {
-                Console.WriteLine("Error importing users: " + e.Message);
+                Console.WriteLine($"Error importing users: {e.Message}");
             }
 
             // [END import_with_hmac]
@@ -238,12 +239,12 @@ namespace FirebaseAdmin.Snippets
                 UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
                 foreach (ErrorInfo indexedError in result.Errors)
                 {
-                    Console.WriteLine("Failed to import user: " + indexedError.Reason);
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
                 }
             }
             catch (FirebaseAuthException e)
             {
-                Console.WriteLine("Error importing users: " + e.Message);
+                Console.WriteLine($"Error importing users: {e.Message}");
             }
 
             // [END import_with_pbkdf]
@@ -279,12 +280,12 @@ namespace FirebaseAdmin.Snippets
                 UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
                 foreach (ErrorInfo indexedError in result.Errors)
                 {
-                    Console.WriteLine("Failed to import user: " + indexedError.Reason);
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
                 }
             }
             catch (FirebaseAuthException e)
             {
-                Console.WriteLine("Error importing users: " + e.Message);
+                Console.WriteLine($"Error importing users: {e.Message}");
             }
 
             // [END import_with_standard_scrypt]
@@ -314,12 +315,12 @@ namespace FirebaseAdmin.Snippets
                 UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
                 foreach (ErrorInfo indexedError in result.Errors)
                 {
-                    Console.WriteLine("Failed to import user: " + indexedError.Reason);
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
                 }
             }
             catch (FirebaseAuthException e)
             {
-                Console.WriteLine("Error importing users: " + e.Message);
+                Console.WriteLine($"Error importing users: {e.Message}");
             }
 
             // [END import_with_bcrypt]
@@ -343,6 +344,8 @@ namespace FirebaseAdmin.Snippets
 
                 var options = new UserImportOptions()
                 {
+                    // All the parameters below can be obtained from the Firebase Console's "Users"
+                    // section. Base64 encoded parameters must be decoded into raw bytes.
                     Hash = new Scrypt()
                     {
                         Key = Encoding.ASCII.GetBytes("base64-secret"),
@@ -355,12 +358,12 @@ namespace FirebaseAdmin.Snippets
                 UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users, options);
                 foreach (ErrorInfo indexedError in result.Errors)
                 {
-                    Console.WriteLine("Failed to import user: " + indexedError.Reason);
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
                 }
             }
             catch (FirebaseAuthException e)
             {
-                Console.WriteLine("Error importing users: " + e.Message);
+                Console.WriteLine($"Error importing users: {e.Message}");
             }
 
             // [END import_with_scrypt]
@@ -383,11 +386,11 @@ namespace FirebaseAdmin.Snippets
                         PhoneNumber = "+11234567890",
                         CustomClaims = new Dictionary<string, object>()
                         {
-                            { "admin", true },
+                            { "admin", true }, // set this user as admin
                         },
                         UserProviders = new List<UserProvider>
                         {
-                            new UserProvider()
+                            new UserProvider() // user with Google provider
                             {
                                 Uid = "google-uid",
                                 Email = "johndoe@gmail.com",
@@ -402,12 +405,12 @@ namespace FirebaseAdmin.Snippets
                 UserImportResult result = await FirebaseAuth.DefaultInstance.ImportUsersAsync(users);
                 foreach (ErrorInfo indexedError in result.Errors)
                 {
-                    Console.WriteLine("Failed to import user: " + indexedError.Reason);
+                    Console.WriteLine($"Failed to import user: {indexedError.Reason}");
                 }
             }
             catch (FirebaseAuthException e)
             {
-                Console.WriteLine("Error importing users: " + e.Message);
+                Console.WriteLine($"Error importing users: {e.Message}");
             }
 
             // [END import_without_password]
