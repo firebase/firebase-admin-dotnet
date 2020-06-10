@@ -173,7 +173,7 @@ namespace FirebaseAdmin.Snippets
             // [END import_users]
         }
 
-        internal static async Task ImportWithHmac() 
+        internal static async Task ImportWithHmac()
         {
             // [START import_with_hmac]
             try
