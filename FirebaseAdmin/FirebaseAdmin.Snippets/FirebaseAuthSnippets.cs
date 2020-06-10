@@ -132,15 +132,15 @@ namespace FirebaseAdmin.Snippets
                 {
                     Uid = "uid1",
                     Email = "user1@example.com",
-                    PasswordSalt = Encoding.ASCII.GetBytes("passwordHash1"),
-                    PasswordHash = Encoding.ASCII.GetBytes("salt1"),
+                    PasswordHash = Encoding.ASCII.GetBytes("passwordHash1"),
+                    PasswordSalt = Encoding.ASCII.GetBytes("salt1"),
                 },
                 new ImportUserRecordArgs()
                 {
                     Uid = "uid2",
                     Email = "user2@example.com",
-                    PasswordSalt = Encoding.ASCII.GetBytes("passwordHash2"),
-                    PasswordHash = Encoding.ASCII.GetBytes("salt2"),
+                    PasswordHash = Encoding.ASCII.GetBytes("passwordHash2"),
+                    PasswordSalt = Encoding.ASCII.GetBytes("salt2"),
                 },
             };
             // [END build_user_list]
@@ -184,8 +184,8 @@ namespace FirebaseAdmin.Snippets
                     {
                         Uid = "some-uid",
                         Email = "user@example.com",
-                        PasswordSalt = Encoding.ASCII.GetBytes("password-hash"),
-                        PasswordHash = Encoding.ASCII.GetBytes("salt"),
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
                     },
                 };
 
@@ -222,8 +222,8 @@ namespace FirebaseAdmin.Snippets
                     {
                         Uid = "some-uid",
                         Email = "user@example.com",
-                        PasswordSalt = Encoding.ASCII.GetBytes("password-hash"),
-                        PasswordHash = Encoding.ASCII.GetBytes("salt"),
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
                     },
                 };
 
@@ -260,8 +260,8 @@ namespace FirebaseAdmin.Snippets
                     {
                         Uid = "some-uid",
                         Email = "user@example.com",
-                        PasswordSalt = Encoding.ASCII.GetBytes("password-hash"),
-                        PasswordHash = Encoding.ASCII.GetBytes("salt"),
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
                     },
                 };
 
@@ -301,8 +301,8 @@ namespace FirebaseAdmin.Snippets
                     {
                         Uid = "some-uid",
                         Email = "user@example.com",
-                        PasswordSalt = Encoding.ASCII.GetBytes("password-hash"),
-                        PasswordHash = Encoding.ASCII.GetBytes("salt"),
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
                     },
                 };
 
@@ -336,8 +336,8 @@ namespace FirebaseAdmin.Snippets
                     {
                         Uid = "some-uid",
                         Email = "user@example.com",
-                        PasswordSalt = Encoding.ASCII.GetBytes("password-hash"),
-                        PasswordHash = Encoding.ASCII.GetBytes("salt"),
+                        PasswordHash = Encoding.ASCII.GetBytes("password-hash"),
+                        PasswordSalt = Encoding.ASCII.GetBytes("salt"),
                     },
                 };
 
