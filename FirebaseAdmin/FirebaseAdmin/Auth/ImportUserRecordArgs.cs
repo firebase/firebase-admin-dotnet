@@ -22,7 +22,7 @@ namespace FirebaseAdmin.Auth
     /// <summary>
     /// Represents a user account to be imported to Firebase Auth via the
     /// <a cref="o:FirebaseAuth.ImportUsersAsync">FirebaseAuth.ImportUsersAsync</a> API. Must contain at least a
-    /// uid string.
+    /// user ID string.
     /// </summary>
     public sealed class ImportUserRecordArgs
     {
