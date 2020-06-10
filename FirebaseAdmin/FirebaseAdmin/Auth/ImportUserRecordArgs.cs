@@ -32,7 +32,7 @@ namespace FirebaseAdmin.Auth
         private const string CustomAttributes = "customAttributes";
 
         /// <summary>
-        /// Gets or sets the uid of the user.
+        /// Gets or sets the user ID of the user.
         /// </summary>
         public string Uid { get; set; }
 
@@ -57,7 +57,7 @@ namespace FirebaseAdmin.Auth
         public string PhoneNumber { get; set; }
 
         /// <summary>
-        /// Gets or sets the photo url.
+        /// Gets or sets the photo URL.
         /// </summary>
         public string PhotoUrl { get; set; }
 
@@ -67,7 +67,7 @@ namespace FirebaseAdmin.Auth
         public bool? Disabled { get; set; }
 
         /// <summary>
-        /// Gets or sets the UserMetadata.
+        /// Gets or sets the user metadata.
         /// </summary>
         public UserMetadata UserMetadata { get; set; }
 

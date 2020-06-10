@@ -29,14 +29,14 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserImportRequest"/> class by verifying
-        /// the supplied users IEnumerable is valid (non-empty and not greater than
+        /// the supplied user's <c>IEnumerable</c> is valid (non-empty and not greater than
         /// <c>MaxImportUsers</c>), and a valid <see cref="UserImportHash"/> is supplied when a
         /// password is provided to at least one of the users.
         /// </summary>
         /// <param name="usersToImport"> List of users to be imported.</param>
         /// <param name="options"> Options for user imports, see
         /// <a cref="UserImportOptions">UserImportOptions</a>.</param>
-        /// <returns>Dictionary containing key/values for password hashing algorithm.</returns>
+        /// <returns>Dictionary containing key/values for the password hashing algorithm.</returns>
         public UserImportRequest(
             IEnumerable<ImportUserRecordArgs> usersToImport,
             UserImportOptions options)
@@ -72,10 +72,10 @@ namespace FirebaseAdmin.Auth
         internal IEnumerable<ImportUserRecordArgs.Request> Users { get; private set; }
 
         /// <summary>
-        /// Gets or sets JsonExtensionData for putting hashing properties at the root of the
-        /// Json serialized object.
+        /// Gets or sets JSON extension data for putting hashing properties at the root of the
+        /// JSON serialized object.
         /// </summary>
-        /// <returns>Dictionary containing key/values for password hashing algorithm.</returns>
+        /// <returns>Dictionary containing key/values for the password hashing algorithm.</returns>
         [JsonExtensionData]
         private Dictionary<string, object> HashProperties { get; set; }
 

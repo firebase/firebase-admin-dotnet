@@ -28,12 +28,12 @@ namespace FirebaseAdmin.Auth.Hash
             : base("MD5") { }
 
         /// <summary>
-        /// Gets the minimum number of rounds for an MD5 hash which is 0.
+        /// Gets the minimum number of rounds for an MD5 hash, which is 0.
         /// </summary>
         protected override int MinRounds { get => 0; }
 
         /// <summary>
-        /// Gets the maximum number of rounds for an MD5 hash which is 8192.
+        /// Gets the maximum number of rounds for an MD5 hash, which is 8192.
         /// </summary>
         protected override int MaxRounds { get => 8192; }
     }

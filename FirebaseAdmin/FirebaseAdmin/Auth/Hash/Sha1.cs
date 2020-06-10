@@ -28,12 +28,12 @@ namespace FirebaseAdmin.Auth.Hash
             : base("SHA1") { }
 
         /// <summary>
-        /// Gets the minimum number of rounds for a SHA1 hash which is 1.
+        /// Gets the minimum number of rounds for a SHA1 hash, which is 1.
         /// </summary>
         protected override int MinRounds { get => 1; }
 
         /// <summary>
-        /// Gets the maximum number of rounds for a SHA1 hash which is 8192.
+        /// Gets the maximum number of rounds for a SHA1 hash, which is 8192.
         /// </summary>
         protected override int MaxRounds { get => 8192; }
     }

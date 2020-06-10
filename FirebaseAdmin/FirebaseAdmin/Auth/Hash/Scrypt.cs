@@ -49,12 +49,12 @@ namespace FirebaseAdmin.Auth.Hash
         public int? MemoryCost { get; set; }
 
         /// <summary>
-        /// Gets the minimum number of rounds for a Scrypt hash which is 0.
+        /// Gets the minimum number of rounds for a Scrypt hash, which is 0.
         /// </summary>
         protected override int MinRounds { get { return 0; } }
 
         /// <summary>
-        /// Gets the maximum number of rounds for a Scrypt hash which is 8.
+        /// Gets the maximum number of rounds for a Scrypt hash, which is 8.
         /// </summary>
         protected override int MaxRounds { get { return 8; } }
 

@@ -28,12 +28,12 @@ namespace FirebaseAdmin.Auth.Hash
             : base("PBKDF2_SHA256") { }
 
         /// <summary>
-        /// Gets the minimum number of rounds for a Pbkdf2 Sha256 hash which is 0.
+        /// Gets the minimum number of rounds for a Pbkdf2 Sha256 hash, which is 0.
         /// </summary>
         protected override int MinRounds { get => 0; }
 
         /// <summary>
-        /// Gets the maximum number of rounds for a Pbkdf2 Sha256 hash which is 120000.
+        /// Gets the maximum number of rounds for a Pbkdf2 Sha256 hash, which is 120000.
         /// </summary>
         protected override int MaxRounds { get => 120000; }
     }

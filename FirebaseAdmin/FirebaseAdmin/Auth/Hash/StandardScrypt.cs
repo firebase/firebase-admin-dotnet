@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// Returns the options for the hashing algorithm.
         /// </summary>
         /// <returns>
-        /// Dictionary defining options such as derived key length, block size, parallization and memory cost.
+        /// Dictionary defining options such as derived key length, block size, parallelization and memory cost.
         /// </returns>
         protected override IReadOnlyDictionary<string, object> GetHashConfiguration()
         {

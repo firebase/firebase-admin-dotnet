@@ -25,7 +25,7 @@ namespace FirebaseAdmin.Auth.Hash
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="RepeatableHash"/> class.
-        /// Propogates the name to UserImportHash.
+        /// Propogates the name to <c>UserImportHash</c>.
         /// </summary>
         /// <param name="hashName">The name of the hashing algorithm.</param>
         internal RepeatableHash(string hashName)

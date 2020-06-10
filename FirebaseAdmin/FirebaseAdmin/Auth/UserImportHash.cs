@@ -47,7 +47,7 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Retrives the properties of the chosen hashing algorithm.
+        /// Retrieves the properties of the chosen hashing algorithm.
         /// </summary>
         /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
         internal IReadOnlyDictionary<string, object> GetProperties()
@@ -69,7 +69,7 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Retrives dictionary with the specified properties of the hashing algorithm.
+        /// Retrieves dictionary with the specified properties of the hashing algorithm.
         /// </summary>
         /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
         protected abstract IReadOnlyDictionary<string, object> GetHashConfiguration();

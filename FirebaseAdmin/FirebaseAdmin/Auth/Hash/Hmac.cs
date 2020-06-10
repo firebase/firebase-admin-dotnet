@@ -24,7 +24,7 @@ namespace FirebaseAdmin.Auth.Hash
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Hmac"/> class.
-        /// Propogates the name to UserImportHash.
+        /// Propogates the name to <c>UserImportHash</c>.
         /// </summary>
         /// <param name="hashName">The name of the hashing algorithm.</param>
         internal Hmac(string hashName)
@@ -33,7 +33,7 @@ namespace FirebaseAdmin.Auth.Hash
         /// <summary>
         /// Gets or sets the key for the hash.
         /// </summary>
-        // Note: Newtonsoft will by default Base64 encode the byte array.
+        // Note: Newtonsoft Base64 encodes the byte array by default.
         // Source: https://www.newtonsoft.com/json/help/html/SerializationGuide.htm#PrimitiveTypes
         public byte[] Key { get; set; }
 

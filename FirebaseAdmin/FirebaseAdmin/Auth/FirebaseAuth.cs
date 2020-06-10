@@ -723,7 +723,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
-        /// check identifier uniqueness which could result in duplications.
+        /// check identifier uniqueness, which could result in duplications.
         ///
         /// <para><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
         /// passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
@@ -745,7 +745,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
-        /// check identifier uniqueness which could result in duplications.
+        /// check identifier uniqueness, which could result in duplications.
         ///
         /// <para><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
         /// passwords. See <a cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
@@ -770,7 +770,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
-        /// check identifier uniqueness which could result in duplications.</summary>
+        /// check identifier uniqueness, which could result in duplications.</summary>
         /// <param name="users"> A non-empty list of users to be imported.
         /// Length must not exceed 1000.</param>
         /// <param name="options"> A <a cref="UserImportOptions">UserImportOptions</a> instance or
@@ -790,7 +790,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Imports the provided list of users into Firebase Auth. You can import a maximum of
         /// 1000 users at a time. This operation is optimized for bulk imports and does not
-        /// check identifier uniqueness which could result in duplications.</summary>
+        /// check identifier uniqueness, which could result in duplications.</summary>
         /// <param name="users"> A non-empty list of users to be imported.
         /// Length must not exceed 1000.</param>
         /// <param name="options"> A <a cref="UserImportOptions">UserImportOptions</a> instance or
