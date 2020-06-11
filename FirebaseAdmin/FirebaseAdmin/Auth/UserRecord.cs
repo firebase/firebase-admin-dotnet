@@ -32,11 +32,11 @@ namespace FirebaseAdmin.Auth
         private readonly long validSinceTimestampInSeconds;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the
-        /// <see cref="GetAccountInfoResponse.User"/> class.
+        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing
+        /// instance of the <see cref="GetAccountInfoResponse.User"/> class.
         /// </summary>
-        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy the user's data
-        /// from.</param>
+        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy
+        /// the user's data from.</param>
         internal UserRecord(GetAccountInfoResponse.User user)
         {
             if (user == null)

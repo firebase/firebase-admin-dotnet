@@ -17,10 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth.Hash;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
 using Xunit;
@@ -507,6 +507,108 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 var deleteTasks = users.Select((uid) => FirebaseAuth.DefaultInstance.DeleteUserAsync(uid));
                 await Task.WhenAll(deleteTasks);
+            }
+        }
+
+        [Fact]
+        public async Task ImportUsers()
+        {
+            var randomUser = RandomUser.Create();
+            var args = new ImportUserRecordArgs()
+            {
+                Uid = randomUser.Uid,
+                Email = randomUser.Email,
+                DisplayName = "Random User",
+                PhotoUrl = "https://example.com/photo.png",
+                EmailVerified = true,
+            };
+
+            IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();
+            usersLst = usersLst.Append(args);
+
+            var resp = await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst);
+
+            try
+            {
+                Assert.Equal(1, resp.SuccessCount);
+                Assert.Equal(0, resp.FailureCount);
+
+                var user = await FirebaseAuth.DefaultInstance.GetUserAsync(randomUser.Uid);
+                Assert.Equal(randomUser.Email, user.Email);
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(randomUser.Uid);
+            }
+        }
+
+        [Fact]
+        public async Task ImportUsersWithPassword()
+        {
+            var randomUser = RandomUser.Create();
+            var args = new ImportUserRecordArgs()
+            {
+                Uid = randomUser.Uid,
+                Email = randomUser.Email,
+                DisplayName = "Random User",
+                PhotoUrl = "https://example.com/photo.png",
+                EmailVerified = true,
+                PasswordSalt = Encoding.ASCII.GetBytes("NaCl"),
+                PasswordHash = Convert.FromBase64String("V358E8LdWJXAO7muq0CufVpEOXaj8aFiC7"
+                    + "T/rcaGieN04q/ZPJ08WhJEHGjj9lz/2TT+/86N5VjVoc5DdBhBiw=="),
+                CustomClaims = new Dictionary<string, object>()
+                {
+                    { "admin", true },
+                },
+                UserProviders = new List<UserProvider>
+                {
+                    new UserProvider()
+                    {
+                        Uid = randomUser.Uid,
+                        Email = randomUser.Email,
+                        DisplayName = "John Doe",
+                        PhotoUrl = "http://example.com/123/photo.png",
+                        ProviderId = "google.com",
+                    },
+                    new UserProvider()
+                    {
+                        Uid = "fb.uid",
+                        Email = "johndoe@gmail.com",
+                        DisplayName = "John Doe",
+                        PhotoUrl = "http://example.com/123/photo.png",
+                        ProviderId = "facebook.com",
+                    },
+                },
+            };
+
+            var options = new UserImportOptions()
+            {
+                Hash = new Scrypt()
+                {
+                    Key = Convert.FromBase64String("jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC"
+                        + "8pVMXAn210wjLNmdZJzxUECKbm0QsEmYUSDzZvpjeJ9WmXA=="),
+                    SaltSeparator = Convert.FromBase64String("Bw=="),
+                    Rounds = 8,
+                    MemoryCost = 14,
+                },
+            };
+            IEnumerable<ImportUserRecordArgs> usersLst = new List<ImportUserRecordArgs>();
+            usersLst = usersLst.Append(args);
+            var resp = await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst, options);
+
+            try
+            {
+                Assert.Equal(1, resp.SuccessCount);
+                Assert.Equal(0, resp.FailureCount);
+
+                var user = await FirebaseAuth.DefaultInstance.GetUserAsync(randomUser.Uid);
+                Assert.Equal(randomUser.Email, user.Email);
+                var idToken = await SignInWithPasswordAsync(randomUser.Email, "password");
+                Assert.False(string.IsNullOrEmpty(idToken));
+            }
+            finally
+            {
+                await FirebaseAuth.DefaultInstance.DeleteUserAsync(randomUser.Uid);
             }
         }
 

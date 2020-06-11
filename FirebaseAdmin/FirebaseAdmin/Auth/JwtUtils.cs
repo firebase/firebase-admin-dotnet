@@ -77,16 +77,16 @@ namespace FirebaseAdmin.Auth
             return assertion.ToString();
         }
 
+        internal static string UrlSafeBase64Encode(byte[] bytes)
+        {
+            var base64Value = Convert.ToBase64String(bytes);
+            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+
         private static string Encode(object obj)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(obj);
             return UrlSafeBase64Encode(Encoding.UTF8.GetBytes(json));
-        }
-
-        private static string UrlSafeBase64Encode(byte[] bytes)
-        {
-            var base64Value = Convert.ToBase64String(bytes);
-            return base64Value.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
     }
 }
