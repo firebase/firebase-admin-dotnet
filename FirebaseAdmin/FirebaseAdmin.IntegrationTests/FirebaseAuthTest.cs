@@ -352,7 +352,22 @@ namespace FirebaseAdmin.IntegrationTests
                 // Login to cause the LastRefreshTimestamp to be set.
                 await SignInWithPasswordAsync(newUserRecord.Email, "password");
 
-                var userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(newUserRecord.Uid);
+                // Attempt to retrieve the user 3 times (with a small delay between each attempt).
+                // Occassionally, this call retrieves the user data without the
+                // lastLoginTime/lastRefreshTime set; possibly because it's hitting a different
+                // server than the login request uses.
+                UserRecord userRecord = null;
+                for (int i = 0; i < 3; i++)
+                {
+                    userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(newUserRecord.Uid);
+
+                    if (userRecord.UserMetaData.LastRefreshTimestamp != null)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(1000 * (int)Math.Pow(2, i));
+                }
 
                 // Ensure the LastRefreshTimstamp is approximately "now" (with a tollerance of 10 minutes).
                 var now = DateTime.UtcNow;
