@@ -366,7 +366,7 @@ namespace FirebaseAdmin.IntegrationTests
                         break;
                     }
 
-                    System.Threading.Thread.Sleep(1000 * (int)Math.Pow(2, i));
+                    await Task.Delay(1000 * (int)Math.Pow(2, i));
                 }
 
                 // Ensure the LastRefreshTimstamp is approximately "now" (with a tollerance of 10 minutes).
