@@ -83,5 +83,10 @@ namespace FirebaseAdmin.Auth
         /// The specified session cookie has been revoked.
         /// </summary>
         RevokedSessionCookie,
+
+        /// <summary>
+        /// No identity provider configuration found for the given identifier.
+        /// </summary>
+        ConfigurationNotFound,
     }
 }
