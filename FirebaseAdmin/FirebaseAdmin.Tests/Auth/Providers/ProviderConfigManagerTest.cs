@@ -29,14 +29,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         private const string ClientVersionHeader = "X-Client-Version";
 
-        private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v2/projects/{0}";
-
-        private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
-
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
-
-        private static readonly string OidcProviderConfigResponse = @"{
+        private const string OidcProviderConfigResponse = @"{
             ""name"": ""projects/mock-project-id/oauthIdpConfigs/oidc.provider"",
             ""clientId"": ""CLIENT_ID"",
             ""issuer"": ""https://oidc.com/issuer"",
@@ -44,11 +37,16 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             ""enabled"": true
         }";
 
-        private static readonly string ConfigNotFoundResponse = @"{
+        private const string ConfigNotFoundResponse = @"{
             ""error"": {
                 ""message"": ""CONFIGURATION_NOT_FOUND""
             }
         }";
+
+        private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
+
+        private static readonly GoogleCredential MockCredential =
+            GoogleCredential.FromAccessToken("test-token");
 
         [Fact]
         public async Task OidcProviderConfig()

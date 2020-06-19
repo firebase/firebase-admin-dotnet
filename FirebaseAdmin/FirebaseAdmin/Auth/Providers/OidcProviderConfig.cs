@@ -18,7 +18,7 @@ namespace FirebaseAdmin.Auth.Providers
 {
     /// <summary>
     /// Represents an OIDC auth provider configuration. See
-    /// https://openid.net/specs/openid-connect-core-1_0-final.html.
+    /// <a href="https://openid.net/specs/openid-connect-core-1_0-final.html">OpenID Connect</a>.
     /// </summary>
     public sealed class OidcProviderConfig : AuthProviderConfig
     {
@@ -57,7 +57,8 @@ namespace FirebaseAdmin.Auth.Providers
         /// </list>
         /// <para>
         /// ID token validation is performed as defined in
-        /// https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation.
+        /// <a href="https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation">
+        /// OpenID Connect</a>.
         /// </para>
         /// </summary>
         public string Issuer { get; }

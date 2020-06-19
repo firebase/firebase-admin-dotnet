@@ -32,7 +32,7 @@ namespace FirebaseAdmin.Auth.Providers
     {
         private const string ClientVersionHeader = "X-Client-Version";
 
-        private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v2/projects/{0}";
+        private const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/v2/projects/{0}";
 
         private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Auth.Providers
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
                     RetryOptions = args.RetryOptions,
                 });
-            this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
+            this.baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
         }
 
         public void Dispose()
