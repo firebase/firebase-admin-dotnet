@@ -13,12 +13,16 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
+using Google.Apis.Json;
+using Google.Apis.Util;
+using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -41,6 +45,7 @@ namespace FirebaseAdmin.Auth.Providers
 
         internal ProviderConfigManager(Args args)
         {
+            args.ThrowIfNull(nameof(args));
             if (string.IsNullOrEmpty(args.ProjectId))
             {
                 throw new ArgumentException(
@@ -92,20 +97,65 @@ namespace FirebaseAdmin.Auth.Providers
                 throw new ArgumentException("OIDC provider ID must have the prefix 'oidc.'.");
             }
 
-            var request = this.CreateRequest(HttpMethod.Get, $"oauthIdpConfigs/{providerId}");
+            var request = this.CreateHttpRequestMessage(
+                HttpMethod.Get, $"oauthIdpConfigs/{providerId}");
             var response = await this.httpClient
-                .SendAndDeserializeAsync<OidcProviderConfig.Response>(request, cancellationToken)
+                .SendAndDeserializeAsync<OidcProviderConfig.Request>(request, cancellationToken)
                 .ConfigureAwait(false);
             return new OidcProviderConfig(response.Result);
         }
 
-        private HttpRequestMessage CreateRequest(HttpMethod method, string path)
+        internal async Task<T> CreateProviderConfigAsync<T>(
+            AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
+            where T : AuthProviderConfig
+        {
+            args.ThrowIfNull(nameof(args));
+            var query = new Dictionary<string, object>()
+            {
+                { "oauthIdpConfigId", args.ValidateProviderId() },
+            };
+            var body = args.ToCreateRequest();
+            var request = this.CreateHttpRequestMessage(
+                HttpMethod.Post, "oauthIdpConfigs", body, query);
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<JObject>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return args.CreateAuthProviderConfig(response.Body);
+        }
+
+        private static string EncodeQueryParams(IDictionary<string, object> queryParams)
+        {
+            var queryString = string.Empty;
+            if (queryParams != null && queryParams.Count > 0)
+            {
+                var list = new List<string>();
+                foreach (var entry in queryParams)
+                {
+                    list.Add($"{entry.Key}={entry.Value}");
+                }
+
+                queryString = "?" + string.Join("&", list);
+            }
+
+            return queryString;
+        }
+
+        private HttpRequestMessage CreateHttpRequestMessage(
+            HttpMethod method,
+            string path,
+            object body = null,
+            Dictionary<string, object> queryParams = null)
         {
             var request = new HttpRequestMessage()
             {
                 Method = method,
-                RequestUri = new Uri($"{this.baseUrl}/{path}"),
+                RequestUri = new Uri($"{this.baseUrl}/{path}{EncodeQueryParams(queryParams)}"),
             };
+            if (body != null)
+            {
+                request.Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body);
+            }
+
             request.Headers.Add(ClientVersionHeader, ClientVersion);
             return request;
         }

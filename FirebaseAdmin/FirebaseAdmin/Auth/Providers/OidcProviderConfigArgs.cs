@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
+using System;
+using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -20,22 +21,15 @@ namespace FirebaseAdmin.Auth.Providers
     /// Represents an OIDC auth provider configuration. See
     /// <a href="https://openid.net/specs/openid-connect-core-1_0-final.html">OpenID Connect</a>.
     /// </summary>
-    public sealed class OidcProviderConfig : AuthProviderConfig
+    public sealed class OidcProviderConfigArgs : AuthProviderConfigArgs<OidcProviderConfig>
     {
-        internal OidcProviderConfig(Request request)
-        : base(request)
-        {
-            this.ClientId = request.ClientId;
-            this.Issuer = request.Issuer;
-        }
-
         /// <summary>
-        /// Gets the client ID used to confirm the audience of an OIDC provider's ID token.
+        /// Gets or sets the client ID used to confirm the audience of an OIDC provider's ID token.
         /// </summary>
-        public string ClientId { get; }
+        public string ClientId { get; set; }
 
         /// <summary>
-        /// Gets the issuer used to match the issuer of the ID token and to determine the
+        /// Gets or sets the issuer used to match the issuer of the ID token and to determine the
         /// corresponding OIDC discovery document, eg. <c>/.well-known/openid-configuration</c>.
         /// This is needed for the following:
         /// <list type="bullet">
@@ -61,15 +55,50 @@ namespace FirebaseAdmin.Auth.Providers
         /// OpenID Connect</a>.
         /// </para>
         /// </summary>
-        public string Issuer { get; }
+        public string Issuer { get; set; }
 
-        internal sealed new class Request : AuthProviderConfig.Request
+        internal override string ValidateProviderId()
         {
-            [JsonProperty("clientId")]
-            internal string ClientId { get; set; }
+            var providerId = this.ProviderId ?? string.Empty;
+            if (!providerId.StartsWith("oidc."))
+            {
+                throw new ArgumentException("OIDC provider ID must have the prefix 'oidc.'.");
+            }
 
-            [JsonProperty("issuer")]
-            internal string Issuer { get; set; }
+            return providerId;
+        }
+
+        internal override AuthProviderConfig.Request ToCreateRequest()
+        {
+            var req = new OidcProviderConfig.Request()
+            {
+                DisplayName = this.DisplayName,
+                Enabled = this.Enabled,
+                ClientId = this.ClientId,
+                Issuer = this.Issuer,
+            };
+            if (string.IsNullOrEmpty(req.ClientId))
+            {
+                throw new ArgumentException("Client ID must not be null or empty.");
+            }
+
+            if (string.IsNullOrEmpty(req.Issuer))
+            {
+                throw new ArgumentException("Issuer must not be null or empty.");
+            }
+            else if (!Uri.IsWellFormedUriString(req.Issuer, UriKind.Absolute))
+            {
+                throw new ArgumentException($"Malformed issuer string: {req.Issuer}");
+            }
+
+            return req;
+        }
+
+        internal override OidcProviderConfig CreateAuthProviderConfig(string json)
+        {
+            var model = NewtonsoftJsonSerializer.Instance
+                .Deserialize<OidcProviderConfig.Request>(json);
+            return new OidcProviderConfig(model);
         }
     }
 }

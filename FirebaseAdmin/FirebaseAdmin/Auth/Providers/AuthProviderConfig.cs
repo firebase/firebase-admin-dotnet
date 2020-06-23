@@ -26,12 +26,12 @@ namespace FirebaseAdmin.Auth.Providers
     /// </summary>
     public abstract class AuthProviderConfig
     {
-        internal AuthProviderConfig(BaseResponse response)
+        internal AuthProviderConfig(Request request)
         {
-            var segments = response.Name.Split('/');
+            var segments = request.Name.Split('/');
             this.ProviderId = segments[segments.Length - 1];
-            this.DisplayName = response.DisplayName;
-            this.Enabled = response.Enabled;
+            this.DisplayName = request.DisplayName;
+            this.Enabled = request.Enabled ?? false;
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace FirebaseAdmin.Auth.Providers
         /// </summary>
         public bool Enabled { get; }
 
-        internal class BaseResponse
+        internal abstract class Request
         {
             [JsonProperty("name")]
             internal string Name { get; set; }
@@ -61,7 +61,7 @@ namespace FirebaseAdmin.Auth.Providers
             internal string DisplayName { get; set; }
 
             [JsonProperty("enabled")]
-            internal bool Enabled { get; set; }
+            internal bool? Enabled { get; set; }
         }
     }
 }
