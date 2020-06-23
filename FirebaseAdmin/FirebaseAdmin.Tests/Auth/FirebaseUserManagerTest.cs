@@ -1920,13 +1920,9 @@ namespace FirebaseAdmin.Auth.Tests
                 RetryOptions = RetryOptions.NoBackOff,
                 Clock = MockClock,
             });
-            return new FirebaseAuth(new FirebaseAuth.FirebaseAuthArgs()
-            {
-                UserManager = new Lazy<FirebaseUserManager>(userManager),
-                TokenFactory = new Lazy<FirebaseTokenFactory>(),
-                IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
-                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
-            });
+            var args = FirebaseAuth.Args.CreateDefault();
+            args.UserManager = new Lazy<FirebaseUserManager>(userManager);
+            return new FirebaseAuth(args);
         }
 
         private IDictionary<string, string> ExtractQueryParams(MockMessageHandler.IncomingRequest req)

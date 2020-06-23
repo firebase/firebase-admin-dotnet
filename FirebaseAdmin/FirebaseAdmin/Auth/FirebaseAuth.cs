@@ -14,9 +14,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Providers;
 using Google.Api.Gax;
 using Google.Apis.Util;
 
@@ -32,10 +32,11 @@ namespace FirebaseAdmin.Auth
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
         private readonly Lazy<FirebaseTokenVerifier> sessionCookieVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
+        private readonly Lazy<ProviderConfigManager> providerConfigManager;
         private readonly object authLock = new object();
         private bool deleted;
 
-        internal FirebaseAuth(FirebaseAuthArgs args)
+        internal FirebaseAuth(Args args)
         {
             args.ThrowIfNull(nameof(args));
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
@@ -43,6 +44,8 @@ namespace FirebaseAdmin.Auth
             this.sessionCookieVerifier = args.SessionCookieVerifier.ThrowIfNull(
                 nameof(args.SessionCookieVerifier));
             this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
+            this.providerConfigManager = args.ProviderConfigManager.ThrowIfNull(
+                nameof(args.ProviderConfigManager));
         }
 
         /// <summary>
@@ -79,7 +82,7 @@ namespace FirebaseAdmin.Auth
 
             return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
             {
-                return new FirebaseAuth(FirebaseAuthArgs.Create(app));
+                return new FirebaseAuth(Args.Create(app));
             });
         }
 
@@ -1162,6 +1165,44 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Looks up an OIDC auth provider configuration by the provided ID.
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
+        /// contain the <c>oidc.</c> prefix.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist.</exception>
+        /// <param name="providerId">The provider ID corresponding to the OIDC provider config
+        /// to return.</param>
+        public async Task<OidcProviderConfig> GetOidcProviderConfigAsync(string providerId)
+        {
+            return await this.GetOidcProviderConfigAsync(providerId, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Looks up an OIDC auth provider configuration by the provided ID.
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
+        /// contain the <c>oidc.</c> prefix.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist.</exception>
+        /// <param name="providerId">The provider ID corresponding to the OIDC provider config
+        /// to return.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<OidcProviderConfig> GetOidcProviderConfigAsync(
+            string providerId, CancellationToken cancellationToken)
+        {
+            var providerConfigManager = this.IfNotDeleted(
+                () => this.providerConfigManager.Value);
+            return await providerConfigManager
+                .GetOidcProviderConfigAsync(providerId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
@@ -1171,6 +1212,7 @@ namespace FirebaseAdmin.Auth
                 this.deleted = true;
                 this.tokenFactory.DisposeIfCreated();
                 this.userManager.DisposeIfCreated();
+                this.providerConfigManager.DisposeIfCreated();
             }
         }
 
@@ -1196,7 +1238,7 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        internal sealed class FirebaseAuthArgs
+        internal sealed class Args
         {
             internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
 
@@ -1206,9 +1248,11 @@ namespace FirebaseAdmin.Auth
 
             internal Lazy<FirebaseUserManager> UserManager { get; set; }
 
-            internal static FirebaseAuthArgs Create(FirebaseApp app)
+            internal Lazy<ProviderConfigManager> ProviderConfigManager { get; set; }
+
+            internal static Args Create(FirebaseApp app)
             {
-                return new FirebaseAuthArgs()
+                return new Args()
                 {
                     TokenFactory = new Lazy<FirebaseTokenFactory>(
                         () => FirebaseTokenFactory.Create(app), true),
@@ -1218,6 +1262,20 @@ namespace FirebaseAdmin.Auth
                         () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app), true),
                     UserManager = new Lazy<FirebaseUserManager>(
                         () => FirebaseUserManager.Create(app), true),
+                    ProviderConfigManager = new Lazy<ProviderConfigManager>(
+                        () => Providers.ProviderConfigManager.Create(app), true),
+                };
+            }
+
+            internal static Args CreateDefault()
+            {
+                return new Args()
+                {
+                    TokenFactory = new Lazy<FirebaseTokenFactory>(),
+                    IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
+                    SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
+                    UserManager = new Lazy<FirebaseUserManager>(),
+                    ProviderConfigManager = new Lazy<ProviderConfigManager>(),
                 };
             }
         }

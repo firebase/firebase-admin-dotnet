@@ -429,13 +429,10 @@ namespace FirebaseAdmin.Auth.Tests
                 });
             }
 
-            return new FirebaseAuth(new FirebaseAuth.FirebaseAuthArgs()
-            {
-                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(tokenVerifier),
-                UserManager = new Lazy<FirebaseUserManager>(userManager),
-                IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
-                TokenFactory = new Lazy<FirebaseTokenFactory>(),
-            });
+            var authArgs = FirebaseAuth.Args.CreateDefault();
+            authArgs.SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(tokenVerifier);
+            authArgs.UserManager = new Lazy<FirebaseUserManager>(userManager);
+            return new FirebaseAuth(authArgs);
         }
 
         private void CheckException(

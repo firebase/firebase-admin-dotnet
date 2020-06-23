@@ -36,6 +36,13 @@ namespace FirebaseAdmin.Auth
             new Dictionary<string, ErrorInfo>()
             {
                 {
+                    "CONFIGURATION_NOT_FOUND",
+                    new ErrorInfo(
+                        ErrorCode.NotFound,
+                        AuthErrorCode.ConfigurationNotFound,
+                        "No identity provider configuration found for the given identifier")
+                },
+                {
                     "DUPLICATE_EMAIL",
                     new ErrorInfo(
                         ErrorCode.AlreadyExists,
