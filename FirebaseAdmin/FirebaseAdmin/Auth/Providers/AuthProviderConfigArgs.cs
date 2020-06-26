@@ -15,7 +15,7 @@
 namespace FirebaseAdmin.Auth.Providers
 {
     /// <summary>
-    /// The base Auth provider configuration interface.
+    /// The base auth provider configuration interface.
     /// <para>
     /// Auth provider configuration support requires Google Cloud's Identity Platform (GCIP). To
     /// learn more about GCIP, including pricing and features, see the
@@ -35,7 +35,7 @@ namespace FirebaseAdmin.Auth.Providers
         public string ProviderId { get; set; }
 
         /// <summary>
-        /// Gets or sets the The user-friendly display name of the configuration. This name is
+        /// Gets or sets the user-friendly display name of the configuration. This name is
         /// also used as the provider label in the Cloud Console.
         /// </summary>
         public string DisplayName { get; set; }

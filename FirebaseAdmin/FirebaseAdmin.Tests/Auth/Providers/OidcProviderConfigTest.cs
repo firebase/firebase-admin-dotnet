@@ -274,7 +274,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         {
             public IEnumerator<object[]> GetEnumerator()
             {
-                // { InvalidInput, ExpectedError }
+                // {
+                //    1st element: InvalidInput,
+                //    2nd element: ExpectedError,
+                // }
                 yield return new object[]
                 {
                     new OidcProviderConfigArgs(),
