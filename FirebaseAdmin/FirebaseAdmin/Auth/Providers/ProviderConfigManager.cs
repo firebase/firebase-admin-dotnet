@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -123,6 +124,32 @@ namespace FirebaseAdmin.Auth.Providers
             return args.CreateAuthProviderConfig(response.Body);
         }
 
+        internal async Task<T> UpdateProviderConfigAsync<T>(
+            AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
+            where T : AuthProviderConfig
+        {
+            args.ThrowIfNull(nameof(args));
+            var providerId = args.ValidateProviderId();
+            var body = args.ToUpdateRequest();
+            var updateMask = this.CreateUpdateMask(body);
+            if (updateMask.Count == 0)
+            {
+                throw new ArgumentException("At least one field must be specified for update.");
+            }
+
+            var query = new Dictionary<string, object>()
+            {
+                { "updateMask", string.Join(",", updateMask) },
+            };
+
+            var request = this.CreateHttpRequestMessage(
+                new HttpMethod("PATCH"), $"oauthIdpConfigs/{providerId}", body, query);
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<JObject>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return args.CreateAuthProviderConfig(response.Body);
+        }
+
         private static string EncodeQueryParams(IDictionary<string, object> queryParams)
         {
             var queryString = string.Empty;
@@ -158,6 +185,34 @@ namespace FirebaseAdmin.Auth.Providers
 
             request.Headers.Add(ClientVersionHeader, ClientVersion);
             return request;
+        }
+
+        private IList<string> CreateUpdateMask(AuthProviderConfig.Request request)
+        {
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(request);
+            var dictionary = JObject.Parse(json);
+            var mask = this.CreateUpdateMask(dictionary);
+            mask.Sort();
+            return mask;
+        }
+
+        private List<string> CreateUpdateMask(JObject dictionary)
+        {
+            var mask = new List<string>();
+            foreach (var entry in dictionary)
+            {
+                if (entry.Value.Type == JTokenType.Object)
+                {
+                    var childMask = this.CreateUpdateMask((JObject)entry.Value);
+                    mask.AddRange(childMask.Select((item) => $"{entry.Key}.{item}"));
+                }
+                else
+                {
+                    mask.Add(entry.Key);
+                }
+            }
+
+            return mask;
         }
 
         internal sealed class Args

@@ -1208,8 +1208,8 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
         /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
         /// invalid.</exception>
-        /// <exception cref="FirebaseAuthException">If the specified provider config does not
-        /// exist.</exception>
+        /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
+        /// the provider configuration.</exception>
         /// <param name="args">Arguments that describe the new provider configuration.</param>
         /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to be created.</typeparam>
         public async Task<T> CreateProviderConfigAsync<T>(AuthProviderConfigArgs<T> args)
@@ -1225,8 +1225,8 @@ namespace FirebaseAdmin.Auth
         /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
         /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
         /// invalid.</exception>
-        /// <exception cref="FirebaseAuthException">If the specified provider config does not
-        /// exist.</exception>
+        /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
+        /// the provider configuration.</exception>
         /// <param name="args">Arguments that describe the new provider configuration.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -1238,6 +1238,47 @@ namespace FirebaseAdmin.Auth
             var providerConfigManager = this.IfNotDeleted(
                 () => this.providerConfigManager.Value);
             return await providerConfigManager.CreateProviderConfigAsync(args, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates an existing OIDC auth provider configuration.
+        /// </summary>
+        /// <returns>A task that completes with the updated <see cref="OidcProviderConfig"/>.
+        /// </returns>
+        /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
+        /// invalid.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist or if an unexpected error occurs while performing the update.</exception>
+        /// <param name="args">Properties to be updated in the provider configuration.</param>
+        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to be updated.</typeparam>
+        public async Task<T> UpdateProviderConfigAsync<T>(AuthProviderConfigArgs<T> args)
+        where T : AuthProviderConfig
+        {
+            return await this.UpdateProviderConfigAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates an existing OIDC auth provider configuration.
+        /// </summary>
+        /// <returns>A task that completes with the updated <see cref="OidcProviderConfig"/>.
+        /// </returns>
+        /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
+        /// invalid.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist or if an unexpected error occurs while performing the update.</exception>
+        /// <param name="args">Properties to be updated in the provider configuration.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to be updated.</typeparam>
+        public async Task<T> UpdateProviderConfigAsync<T>(
+            AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
+            where T : AuthProviderConfig
+        {
+            var providerConfigManager = this.IfNotDeleted(
+                () => this.providerConfigManager.Value);
+            return await providerConfigManager.UpdateProviderConfigAsync(args, cancellationToken)
                 .ConfigureAwait(false);
         }
 

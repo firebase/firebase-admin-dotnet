@@ -61,6 +61,8 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
+        private static readonly HttpMethod PatchMethod = new HttpMethod("PATCH");
+
         [Fact]
         public async Task GetConfig()
         {
@@ -242,6 +244,123 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(exception.InnerException);
         }
 
+        [Fact]
+        public async Task UpdateConfig()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = OidcProviderConfigResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var args = new OidcProviderConfigArgs()
+            {
+                ProviderId = "oidc.provider",
+                DisplayName = "oidcProviderName",
+                Enabled = true,
+                ClientId = "CLIENT_ID",
+                Issuer = "https://oidc.com/issuer",
+            };
+
+            var provider = await auth.UpdateProviderConfigAsync(args);
+
+            this.AssertOidcProviderConfig(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(PatchMethod, request.Method);
+            var mask = "clientId,displayName,enabled,issuer";
+            Assert.Equal(
+                $"/v2/projects/project1/oauthIdpConfigs/oidc.provider?updateMask={mask}",
+                request.Url.PathAndQuery);
+            this.AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Equal(4, body.Count);
+            Assert.Equal("oidcProviderName", body["displayName"]);
+            Assert.True((bool)body["enabled"]);
+            Assert.Equal("CLIENT_ID", body["clientId"]);
+            Assert.Equal("https://oidc.com/issuer", body["issuer"]);
+        }
+
+        [Fact]
+        public async Task UpdateConfigMinimal()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = OidcProviderConfigResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var args = new OidcProviderConfigArgs()
+            {
+                ProviderId = "oidc.minimal-provider",
+                ClientId = "CLIENT_ID",
+            };
+
+            var provider = await auth.UpdateProviderConfigAsync(args);
+
+            this.AssertOidcProviderConfig(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(PatchMethod, request.Method);
+            Assert.Equal(
+                "/v2/projects/project1/oauthIdpConfigs/oidc.minimal-provider?updateMask=clientId",
+                request.Url.PathAndQuery);
+            this.AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Single(body);
+            Assert.Equal("CLIENT_ID", body["clientId"]);
+        }
+
+        [Fact]
+        public async Task UpdateConfigNullArgs()
+        {
+            var auth = CreateFirebaseAuth();
+
+            await Assert.ThrowsAsync<ArgumentNullException>(
+                () => auth.UpdateProviderConfigAsync(null as OidcProviderConfigArgs));
+        }
+
+        [Theory]
+        [ClassData(typeof(InvalidUpdateArgs))]
+        public async Task UpdateConfigInvalidArgs(OidcProviderConfigArgs args, string expected)
+        {
+            var auth = CreateFirebaseAuth();
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.UpdateProviderConfigAsync(args));
+            Assert.Equal(expected, exception.Message);
+        }
+
+        [Fact]
+        public async Task UpdateConfigNotFoundError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                Response = ConfigNotFoundResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var args = new OidcProviderConfigArgs()
+            {
+                ProviderId = "oidc.provider",
+                ClientId = "CLIENT_ID",
+            };
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => auth.UpdateProviderConfigAsync(args));
+
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.ConfigurationNotFound, exception.AuthErrorCode);
+            Assert.Equal(
+                "No identity provider configuration found for the given identifier "
+                + "(CONFIGURATION_NOT_FOUND).",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
         internal static FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
         {
             var providerConfigManager = new ProviderConfigManager(new ProviderConfigManager.Args
@@ -322,6 +441,75 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                     {
                         ProviderId = "oidc.provider",
                         ClientId = "CLIENT_ID",
+                        Issuer = "not a url",
+                    },
+                    "Malformed issuer string: not a url",
+                };
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+        }
+
+        public class InvalidUpdateArgs : IEnumerable<object[]>
+        {
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                // {
+                //    1st element: InvalidInput,
+                //    2nd element: ExpectedError,
+                // }
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs(),
+                    "OIDC provider ID must have the prefix 'oidc.'.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = string.Empty,
+                    },
+                    "OIDC provider ID must have the prefix 'oidc.'.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                    },
+                    "OIDC provider ID must have the prefix 'oidc.'.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
+                    },
+                    "At least one field must be specified for update.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
+                        ClientId = string.Empty,
+                    },
+                    "Client ID must not be empty.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
+                        Issuer = string.Empty,
+                    },
+                    "Issuer must not be empty.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
                         Issuer = "not a url",
                     },
                     "Malformed issuer string: not a url",
