@@ -499,7 +499,6 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.VibrateTimingsMillis, copy.VibrateTimingsMillis);
             Assert.Equal(original.DefaultVibrateTimings, copy.DefaultVibrateTimings);
             Assert.Equal(original.DefaultSound, copy.DefaultSound);
-            var origColor = original.LightSettings.Color;
             Assert.Equal(original.LightSettings.Color.Red, copy.LightSettings.Color.Red);
             Assert.Equal(original.LightSettings.Color.Blue, copy.LightSettings.Color.Blue);
             Assert.Equal(original.LightSettings.Color.Green, copy.LightSettings.Color.Green);
