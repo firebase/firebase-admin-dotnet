@@ -50,6 +50,8 @@ namespace FirebaseAdmin.Auth.Providers
 
         internal abstract AuthProviderConfig.Request ToCreateRequest();
 
+        internal abstract AuthProviderConfig.Request ToUpdateRequest();
+
         internal abstract T CreateAuthProviderConfig(string json);
     }
 }

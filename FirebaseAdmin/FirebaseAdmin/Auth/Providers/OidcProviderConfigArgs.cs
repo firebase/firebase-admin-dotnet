@@ -94,6 +94,39 @@ namespace FirebaseAdmin.Auth.Providers
             return req;
         }
 
+        internal override AuthProviderConfig.Request ToUpdateRequest()
+        {
+            var req = new OidcProviderConfig.Request()
+            {
+                DisplayName = this.DisplayName,
+                Enabled = this.Enabled,
+                ClientId = this.ClientId,
+                Issuer = this.Issuer,
+            };
+
+            if (req.ClientId != null)
+            {
+                if (req.ClientId == string.Empty)
+                {
+                    throw new ArgumentException("Client ID must not be empty.");
+                }
+            }
+
+            if (req.Issuer != null)
+            {
+                if (req.Issuer == string.Empty)
+                {
+                    throw new ArgumentException("Issuer must not be empty.");
+                }
+                else if (!Uri.IsWellFormedUriString(req.Issuer, UriKind.Absolute))
+                {
+                    throw new ArgumentException($"Malformed issuer string: {req.Issuer}");
+                }
+            }
+
+            return req;
+        }
+
         internal override OidcProviderConfig CreateAuthProviderConfig(string json)
         {
             var model = NewtonsoftJsonSerializer.Instance
