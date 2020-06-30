@@ -19,6 +19,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
+using Google.Api.Gax;
+using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
@@ -35,11 +37,11 @@ namespace FirebaseAdmin.Auth.Providers
     /// </summary>
     internal sealed class ProviderConfigManager : IDisposable
     {
-        private const string ClientVersionHeader = "X-Client-Version";
+        internal const string ClientVersionHeader = "X-Client-Version";
+
+        internal static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
         private const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/v2/projects/{0}";
-
-        private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
         private readonly string baseUrl;
@@ -150,17 +152,25 @@ namespace FirebaseAdmin.Auth.Providers
             return args.CreateAuthProviderConfig(response.Body);
         }
 
+        internal PagedAsyncEnumerable<AuthProviderConfigs<OidcProviderConfig>, OidcProviderConfig>
+            ListOidcProviderConfigsAsync(ListProviderConfigsOptions options)
+        {
+            var request = new ListOidcProviderConfigsRequest(
+                this.baseUrl, this.httpClient, options);
+            return new RestPagedAsyncEnumerable
+                <
+                    ListProviderConfigsRequest<OidcProviderConfig>,
+                    AuthProviderConfigs<OidcProviderConfig>,
+                    OidcProviderConfig
+                >(() => request, new ListProviderConfigsPageManager<OidcProviderConfig>());
+        }
+
         private static string EncodeQueryParams(IDictionary<string, object> queryParams)
         {
             var queryString = string.Empty;
             if (queryParams != null && queryParams.Count > 0)
             {
-                var list = new List<string>();
-                foreach (var entry in queryParams)
-                {
-                    list.Add($"{entry.Key}={entry.Value}");
-                }
-
+                var list = queryParams.Select(kvp => $"{kvp.Key}={kvp.Value}");
                 queryString = "?" + string.Join("&", list);
             }
 

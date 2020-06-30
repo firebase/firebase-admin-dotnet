@@ -15,6 +15,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -54,6 +55,24 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 ""message"": ""UNKNOWN""
             }
         }";
+
+        private static readonly IList<string> ListConfigsResponses = new List<string>()
+        {
+            $@"{{
+                ""nextPageToken"": ""token"",
+                ""oauthIdpConfigs"": [
+                    {OidcProviderConfigResponse},
+                    {OidcProviderConfigResponse},
+                    {OidcProviderConfigResponse}
+                ]
+            }}",
+            $@"{{
+                ""oauthIdpConfigs"": [
+                    {OidcProviderConfigResponse},
+                    {OidcProviderConfigResponse}
+                ]
+            }}",
+        };
 
         private static readonly string ClientVersion =
             $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
@@ -361,6 +380,222 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(exception.InnerException);
         }
 
+        [Fact]
+        public async Task ListConfigs()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var configs = new List<OidcProviderConfig>();
+
+            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
+            var enumerator = pagedEnumerable.GetEnumerator();
+            while (await enumerator.MoveNext())
+            {
+                configs.Add(enumerator.Current);
+            }
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertOidcProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("100", query["pageSize"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("100", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+
+            Assert.All(handler.Requests, this.AssertClientVersionHeader);
+        }
+
+        [Fact]
+        public void ListOidcForEach()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var configs = new List<OidcProviderConfig>();
+
+            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
+            foreach (var user in pagedEnumerable.ToEnumerable())
+            {
+                configs.Add(user);
+            }
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertOidcProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("100", query["pageSize"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("100", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+
+            Assert.All(handler.Requests, this.AssertClientVersionHeader);
+        }
+
+        [Fact]
+        public async Task ListOidcByPages()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var configs = new List<OidcProviderConfig>();
+
+            // Read page 1.
+            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
+            var configPage = await pagedEnumerable.ReadPageAsync(3);
+
+            Assert.Equal(3, configPage.Count());
+            Assert.Equal("token", configPage.NextPageToken);
+
+            Assert.Single(handler.Requests);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("3", query["pageSize"]);
+            configs.AddRange(configPage);
+
+            // Read page 2.
+            pagedEnumerable = auth.ListOidcProviderConfigsAsync(new ListProviderConfigsOptions()
+            {
+                PageToken = configPage.NextPageToken,
+            });
+            configPage = await pagedEnumerable.ReadPageAsync(3);
+
+            Assert.Equal(2, configPage.Count());
+            Assert.Null(configPage.NextPageToken);
+
+            Assert.Equal(2, handler.Requests.Count);
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+            configs.AddRange(configPage);
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertOidcProviderConfig);
+        }
+
+        [Fact]
+        public async Task ListOidcAsRawResponses()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var configs = new List<OidcProviderConfig>();
+            var tokens = new List<string>();
+
+            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
+            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
+            while (await responses.MoveNext())
+            {
+                configs.AddRange(responses.Current.ProviderConfigs);
+                tokens.Add(responses.Current.NextPageToken);
+                Assert.Equal(tokens.Count, handler.Requests.Count);
+            }
+
+            Assert.Equal(new List<string>() { "token", null }, tokens);
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertOidcProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("100", query["pageSize"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("100", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+        }
+
+        [Fact]
+        public void ListOidcOptions()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var configs = new List<OidcProviderConfig>();
+            var customOptions = new ListProviderConfigsOptions()
+            {
+                PageSize = 3,
+                PageToken = "custom-token",
+            };
+
+            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(customOptions);
+            foreach (var user in pagedEnumerable.ToEnumerable())
+            {
+                configs.Add(user);
+            }
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertOidcProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = this.ExtractQueryParams(handler.Requests[0]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["pageSize"]);
+            Assert.Equal("custom-token", query["pageToken"]);
+
+            query = this.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+
+            Assert.All(handler.Requests, this.AssertClientVersionHeader);
+        }
+
+        [Theory]
+        [ClassData(typeof(InvalidListOptions))]
+        public void ListOidcInvalidOptions(ListProviderConfigsOptions options, string expected)
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
+
+            var exception = Assert.Throws<ArgumentException>(
+                () => auth.ListOidcProviderConfigsAsync(options));
+
+            Assert.Equal(expected, exception.Message);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public async Task ListOidcReadPageSizeTooLarge()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await pagedEnumerable.ReadPageAsync(101));
+
+            Assert.Empty(handler.Requests);
+        }
+
         internal static FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
         {
             var providerConfigManager = new ProviderConfigManager(new ProviderConfigManager.Args
@@ -387,6 +622,12 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         private void AssertClientVersionHeader(MockMessageHandler.IncomingRequest request)
         {
             Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
+        }
+
+        private IDictionary<string, string> ExtractQueryParams(MockMessageHandler.IncomingRequest req)
+        {
+            return req.Url.Query.Substring(1).Split('&').ToDictionary(
+                entry => entry.Split('=')[0], entry => entry.Split('=')[1]);
         }
 
         public class InvalidCreateArgs : IEnumerable<object[]>
@@ -513,6 +754,51 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         Issuer = "not a url",
                     },
                     "Malformed issuer string: not a url",
+                };
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+        }
+
+        public class InvalidListOptions : IEnumerable<object[]>
+        {
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                // {
+                //    1st element: InvalidInput,
+                //    2nd element: ExpectedError,
+                // }
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageSize = 101,
+                    },
+                    "Page size must not exceed 100.",
+                };
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageSize = 0,
+                    },
+                    "Page size must be positive.",
+                };
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageSize = -1,
+                    },
+                    "Page size must be positive.",
+                };
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageToken = string.Empty,
+                    },
+                    "Page token must not be empty.",
                 };
             }
 
