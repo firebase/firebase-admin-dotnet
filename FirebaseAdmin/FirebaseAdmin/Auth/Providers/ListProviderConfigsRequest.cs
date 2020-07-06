@@ -114,7 +114,7 @@ namespace FirebaseAdmin.Auth.Providers
         {
             if (pageSize > MaxListResults)
             {
-                throw new ArgumentException("Page size must not exceed 100.");
+                throw new ArgumentException($"Page size must not exceed {MaxListResults}.");
             }
             else if (pageSize <= 0)
             {
