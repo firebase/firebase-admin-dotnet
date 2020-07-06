@@ -46,12 +46,10 @@ namespace FirebaseAdmin.Auth.Providers
         /// </summary>
         public bool? Enabled { get; set; }
 
-        internal abstract string ValidateProviderId();
-
         internal abstract AuthProviderConfig.Request ToCreateRequest();
 
         internal abstract AuthProviderConfig.Request ToUpdateRequest();
 
-        internal abstract T CreateAuthProviderConfig(string json);
+        internal abstract ProviderConfigClient<T> GetClient();
     }
 }

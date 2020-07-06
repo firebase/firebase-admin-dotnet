@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -56,17 +55,6 @@ namespace FirebaseAdmin.Auth.Providers
         /// </para>
         /// </summary>
         public string Issuer { get; set; }
-
-        internal override string ValidateProviderId()
-        {
-            var providerId = this.ProviderId ?? string.Empty;
-            if (!providerId.StartsWith("oidc."))
-            {
-                throw new ArgumentException("OIDC provider ID must have the prefix 'oidc.'.");
-            }
-
-            return providerId;
-        }
 
         internal override AuthProviderConfig.Request ToCreateRequest()
         {
@@ -127,11 +115,9 @@ namespace FirebaseAdmin.Auth.Providers
             return req;
         }
 
-        internal override OidcProviderConfig CreateAuthProviderConfig(string json)
+        internal override ProviderConfigClient<OidcProviderConfig> GetClient()
         {
-            var model = NewtonsoftJsonSerializer.Instance
-                .Deserialize<OidcProviderConfig.Request>(json);
-            return new OidcProviderConfig(model);
+            return OidcProviderConfigClient.Instance;
         }
     }
 }
