@@ -641,7 +641,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 yield return new object[]
                 {
                     new OidcProviderConfigArgs(),
-                    "OIDC provider ID must have the prefix 'oidc.'.",
+                    "Provider ID cannot be null or empty.",
                 };
                 yield return new object[]
                 {
@@ -649,7 +649,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                     {
                         ProviderId = string.Empty,
                     },
-                    "OIDC provider ID must have the prefix 'oidc.'.",
+                    "Provider ID cannot be null or empty.",
                 };
                 yield return new object[]
                 {
@@ -702,7 +702,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 yield return new object[]
                 {
                     new OidcProviderConfigArgs(),
-                    "OIDC provider ID must have the prefix 'oidc.'.",
+                    "Provider ID cannot be null or empty.",
                 };
                 yield return new object[]
                 {
@@ -710,7 +710,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                     {
                         ProviderId = string.Empty,
                     },
-                    "OIDC provider ID must have the prefix 'oidc.'.",
+                    "Provider ID cannot be null or empty.",
                 };
                 yield return new object[]
                 {
