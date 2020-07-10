@@ -1203,6 +1203,44 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Looks up a SAML auth provider configuration by the provided ID.
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="SamlProviderConfig"/>.</returns>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
+        /// contain the <c>saml.</c> prefix.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist.</exception>
+        /// <param name="providerId">The provider ID corresponding to the SAML provider config
+        /// to return.</param>
+        public async Task<SamlProviderConfig> GetSamlProviderConfigAsync(string providerId)
+        {
+            return await this.GetSamlProviderConfigAsync(providerId, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Looks up a SAML auth provider configuration by the provided ID.
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="SamlProviderConfig"/>.</returns>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
+        /// contain the <c>saml.</c> prefix.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist.</exception>
+        /// <param name="providerId">The provider ID corresponding to the SAML provider config
+        /// to return.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<SamlProviderConfig> GetSamlProviderConfigAsync(
+            string providerId, CancellationToken cancellationToken)
+        {
+            var providerConfigManager = this.IfNotDeleted(
+                () => this.providerConfigManager.Value);
+            return await providerConfigManager
+                .GetSamlProviderConfigAsync(providerId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Creates a new OIDC auth provider configuration.
         /// </summary>
         /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>

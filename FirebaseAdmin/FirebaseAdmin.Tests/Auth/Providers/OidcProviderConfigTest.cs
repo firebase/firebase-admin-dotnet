@@ -44,12 +44,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             ""enabled"": true
         }";
 
-        private const string ConfigNotFoundResponse = @"{
-            ""error"": {
-                ""message"": ""CONFIGURATION_NOT_FOUND""
-            }
-        }";
-
         private const string UnknownErrorResponse = @"{
             ""error"": {
                 ""message"": ""UNKNOWN""
@@ -74,12 +68,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             }}",
         };
 
-        private static readonly string ClientVersion =
-            $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
-
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
-
         private static readonly HttpMethod PatchMethod = new HttpMethod("PATCH");
 
         [Fact]
@@ -89,7 +77,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = OidcProviderConfigResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
 
             var provider = await auth.GetOidcProviderConfigAsync("oidc.provider");
 
@@ -100,14 +88,14 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal(
                 "/v2/projects/project1/oauthIdpConfigs/oidc.provider",
                 request.Url.PathAndQuery);
-            this.AssertClientVersionHeader(request);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
         }
 
         [Theory]
         [MemberData(nameof(InvalidStrings))]
         public async Task GetConfigNoProviderId(string providerId)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.GetOidcProviderConfigAsync(providerId));
@@ -117,7 +105,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         [Fact]
         public async Task GetConfigInvalidProviderId()
         {
-            var auth = CreateFirebaseAuth();
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.GetOidcProviderConfigAsync("saml.provider"));
@@ -130,9 +118,9 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
-                Response = ConfigNotFoundResponse,
+                Response = ProviderConfigTestUtils.ConfigNotFoundResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 () => auth.GetOidcProviderConfigAsync("oidc.provider"));
@@ -153,7 +141,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = OidcProviderConfigResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var args = new OidcProviderConfigArgs()
             {
                 ProviderId = "oidc.provider",
@@ -172,7 +160,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal(
                 "/v2/projects/project1/oauthIdpConfigs?oauthIdpConfigId=oidc.provider",
                 request.Url.PathAndQuery);
-            this.AssertClientVersionHeader(request);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -190,7 +178,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = OidcProviderConfigResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var args = new OidcProviderConfigArgs()
             {
                 ProviderId = "oidc.minimal-provider",
@@ -207,7 +195,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal(
                 "/v2/projects/project1/oauthIdpConfigs?oauthIdpConfigId=oidc.minimal-provider",
                 request.Url.PathAndQuery);
-            this.AssertClientVersionHeader(request);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -219,7 +207,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         [Fact]
         public async Task CreateConfigNullArgs()
         {
-            var auth = CreateFirebaseAuth();
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
 
             await Assert.ThrowsAsync<ArgumentNullException>(
                 () => auth.CreateProviderConfigAsync(null as OidcProviderConfigArgs));
@@ -229,7 +217,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         [ClassData(typeof(InvalidCreateArgs))]
         public async Task CreateConfigInvalidArgs(OidcProviderConfigArgs args, string expected)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.CreateProviderConfigAsync(args));
@@ -244,7 +232,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 StatusCode = HttpStatusCode.InternalServerError,
                 Response = UnknownErrorResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var args = new OidcProviderConfigArgs()
             {
                 ProviderId = "oidc.provider",
@@ -270,7 +258,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = OidcProviderConfigResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var args = new OidcProviderConfigArgs()
             {
                 ProviderId = "oidc.provider",
@@ -290,7 +278,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal(
                 $"/v2/projects/project1/oauthIdpConfigs/oidc.provider?updateMask={mask}",
                 request.Url.PathAndQuery);
-            this.AssertClientVersionHeader(request);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -308,7 +296,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = OidcProviderConfigResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var args = new OidcProviderConfigArgs()
             {
                 ProviderId = "oidc.minimal-provider",
@@ -324,7 +312,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal(
                 "/v2/projects/project1/oauthIdpConfigs/oidc.minimal-provider?updateMask=clientId",
                 request.Url.PathAndQuery);
-            this.AssertClientVersionHeader(request);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -335,7 +323,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         [Fact]
         public async Task UpdateConfigNullArgs()
         {
-            var auth = CreateFirebaseAuth();
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
 
             await Assert.ThrowsAsync<ArgumentNullException>(
                 () => auth.UpdateProviderConfigAsync(null as OidcProviderConfigArgs));
@@ -345,7 +333,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         [ClassData(typeof(InvalidUpdateArgs))]
         public async Task UpdateConfigInvalidArgs(OidcProviderConfigArgs args, string expected)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.UpdateProviderConfigAsync(args));
@@ -358,9 +346,9 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
-                Response = ConfigNotFoundResponse,
+                Response = ProviderConfigTestUtils.ConfigNotFoundResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var args = new OidcProviderConfigArgs()
             {
                 ProviderId = "oidc.provider",
@@ -387,7 +375,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = ListConfigsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var configs = new List<OidcProviderConfig>();
 
             var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
@@ -410,7 +398,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal("100", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
 
-            Assert.All(handler.Requests, this.AssertClientVersionHeader);
+            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
         }
 
         [Fact]
@@ -420,7 +408,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = ListConfigsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var configs = new List<OidcProviderConfig>();
 
             var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
@@ -442,7 +430,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal("100", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
 
-            Assert.All(handler.Requests, this.AssertClientVersionHeader);
+            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
         }
 
         [Fact]
@@ -452,7 +440,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = ListConfigsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var configs = new List<OidcProviderConfig>();
 
             // Read page 1.
@@ -496,7 +484,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = ListConfigsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var configs = new List<OidcProviderConfig>();
             var tokens = new List<string>();
 
@@ -531,7 +519,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = ListConfigsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var configs = new List<OidcProviderConfig>();
             var customOptions = new ListProviderConfigsOptions()
             {
@@ -559,7 +547,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal("3", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
 
-            Assert.All(handler.Requests, this.AssertClientVersionHeader);
+            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
         }
 
         [Theory]
@@ -570,7 +558,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = ListConfigsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
 
             var exception = Assert.Throws<ArgumentException>(
@@ -587,27 +575,13 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             {
                 Response = ListConfigsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await pagedEnumerable.ReadPageAsync(101));
 
             Assert.Empty(handler.Requests);
-        }
-
-        internal static FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
-        {
-            var providerConfigManager = new ProviderConfigManager(new ProviderConfigManager.Args
-            {
-                Credential = MockCredential,
-                ProjectId = "project1",
-                ClientFactory = new MockHttpClientFactory(handler ?? new MockMessageHandler()),
-                RetryOptions = RetryOptions.NoBackOff,
-            });
-            var args = FirebaseAuth.Args.CreateDefault();
-            args.ProviderConfigManager = new Lazy<ProviderConfigManager>(providerConfigManager);
-            return new FirebaseAuth(args);
         }
 
         private void AssertOidcProviderConfig(OidcProviderConfig provider)
@@ -617,11 +591,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.True(provider.Enabled);
             Assert.Equal("CLIENT_ID", provider.ClientId);
             Assert.Equal("https://oidc.com/issuer", provider.Issuer);
-        }
-
-        private void AssertClientVersionHeader(MockMessageHandler.IncomingRequest request)
-        {
-            Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
         }
 
         private IDictionary<string, string> ExtractQueryParams(MockMessageHandler.IncomingRequest req)
