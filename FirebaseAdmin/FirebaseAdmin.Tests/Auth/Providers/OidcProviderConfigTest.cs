@@ -20,8 +20,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
-using FirebaseAdmin.Util;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -42,12 +40,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             ""issuer"": ""https://oidc.com/issuer"",
             ""displayName"": ""oidcProviderName"",
             ""enabled"": true
-        }";
-
-        private const string UnknownErrorResponse = @"{
-            ""error"": {
-                ""message"": ""UNKNOWN""
-            }
         }";
 
         private static readonly IList<string> ListConfigsResponses = new List<string>()
@@ -230,7 +222,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
-                Response = UnknownErrorResponse,
+                Response = ProviderConfigTestUtils.UnknownErrorResponse,
             };
             var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
             var args = new OidcProviderConfigArgs()
