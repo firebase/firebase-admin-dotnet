@@ -74,6 +74,14 @@ namespace FirebaseAdmin.Auth.Providers
                 .ConfigureAwait(false);
         }
 
+        internal async Task<SamlProviderConfig> GetSamlProviderConfigAsync(
+            string providerId, CancellationToken cancellationToken)
+        {
+            return await SamlProviderConfigClient.Instance
+                .GetProviderConfigAsync(this.apiClient, providerId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         internal async Task<T> CreateProviderConfigAsync<T>(
             AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
             where T : AuthProviderConfig
