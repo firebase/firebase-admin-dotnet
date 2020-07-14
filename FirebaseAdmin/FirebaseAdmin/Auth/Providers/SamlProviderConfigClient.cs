@@ -13,10 +13,12 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Api.Gax;
+using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -42,12 +44,26 @@ namespace FirebaseAdmin.Auth.Providers
             return new SamlProviderConfig(response);
         }
 
-        internal override Task<SamlProviderConfig> CreateProviderConfigAsync(
+        internal override async Task<SamlProviderConfig> CreateProviderConfigAsync(
             ApiClient client,
             AuthProviderConfigArgs<SamlProviderConfig> args,
             CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var query = new Dictionary<string, object>()
+            {
+                { "inboundSamlConfigId", this.ValidateProviderId(args.ProviderId) },
+            };
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                RequestUri = BuildUri("inboundSamlConfigs", query),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(
+                    args.ToCreateRequest()),
+            };
+            var response = await client
+                .SendAndDeserializeAsync<SamlProviderConfig.Request>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return new SamlProviderConfig(response);
         }
 
         internal override Task<SamlProviderConfig> UpdateProviderConfigAsync(

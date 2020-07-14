@@ -13,12 +13,15 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
+using Google.Apis.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Providers.Tests
@@ -113,6 +116,132 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(exception.InnerException);
         }
 
+        [Fact]
+        public async Task CreateConfig()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = SamlProviderConfigResponse,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var args = new SamlProviderConfigArgs()
+            {
+                ProviderId = "saml.provider",
+                DisplayName = "samlProviderName",
+                Enabled = true,
+                IdpEntityId = "IDP_ENTITY_ID",
+                SsoUrl = "https://example.com/login",
+                X509Certificates = new List<string>() { "CERT1", "CERT2" },
+                RpEntityId = "RP_ENTITY_ID",
+                CallbackUrl = "https://projectId.firebaseapp.com/__/auth/handler",
+            };
+
+            var provider = await auth.CreateProviderConfigAsync(args);
+
+            this.AssertSamlProviderConfig(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal(
+                "/v2/projects/project1/inboundSamlConfigs?inboundSamlConfigId=saml.provider",
+                request.Url.PathAndQuery);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Equal(4, body.Count);
+            Assert.Equal("samlProviderName", body["displayName"]);
+            Assert.True((bool)body["enabled"]);
+            this.AssertIdpConfig((JObject)body["idpConfig"]);
+            this.AssertSpConfig((JObject)body["spConfig"]);
+        }
+
+        [Fact]
+        public async Task CreateConfigMinimal()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = SamlProviderConfigResponse,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var args = new SamlProviderConfigArgs()
+            {
+                ProviderId = "saml.minimal-provider",
+                IdpEntityId = "IDP_ENTITY_ID",
+                SsoUrl = "https://example.com/login",
+                X509Certificates = new List<string>() { "CERT1", "CERT2" },
+                RpEntityId = "RP_ENTITY_ID",
+                CallbackUrl = "https://projectId.firebaseapp.com/__/auth/handler",
+            };
+
+            var provider = await auth.CreateProviderConfigAsync(args);
+
+            this.AssertSamlProviderConfig(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal(
+                "/v2/projects/project1/inboundSamlConfigs?inboundSamlConfigId=saml.minimal-provider",
+                request.Url.PathAndQuery);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Equal(2, body.Count);
+            this.AssertIdpConfig((JObject)body["idpConfig"]);
+            this.AssertSpConfig((JObject)body["spConfig"]);
+        }
+
+        [Fact]
+        public async Task CreateConfigNullArgs()
+        {
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+
+            await Assert.ThrowsAsync<ArgumentNullException>(
+                () => auth.CreateProviderConfigAsync(null as SamlProviderConfigArgs));
+        }
+
+        [Theory]
+        [ClassData(typeof(InvalidCreateArgs))]
+        public async Task CreateConfigInvalidArgs(SamlProviderConfigArgs args, string expected)
+        {
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.CreateProviderConfigAsync(args));
+            Assert.Equal(expected, exception.Message);
+        }
+
+        [Fact]
+        public async Task CreateConfigUnknownError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = ProviderConfigTestUtils.UnknownErrorResponse,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var args = new SamlProviderConfigArgs()
+            {
+                ProviderId = "saml.minimal-provider",
+                IdpEntityId = "IDP_ENTITY_ID",
+                SsoUrl = "https://example.com/login",
+                X509Certificates = new List<string>() { "CERT1", "CERT2" },
+                RpEntityId = "RP_ENTITY_ID",
+                CallbackUrl = "https://projectId.firebaseapp.com/__/auth/handler",
+            };
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => auth.CreateProviderConfigAsync(args));
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Null(exception.AuthErrorCode);
+            Assert.StartsWith(
+                "Unexpected HTTP response with status: 500 (InternalServerError)",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
         private void AssertSamlProviderConfig(SamlProviderConfig provider)
         {
             Assert.Equal("saml.provider", provider.ProviderId);
@@ -126,6 +255,154 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal("RP_ENTITY_ID", provider.RpEntityId);
             Assert.Equal(
               "https://projectId.firebaseapp.com/__/auth/handler", provider.CallbackUrl);
+        }
+
+        private void AssertIdpConfig(JObject idpConfig)
+        {
+            Assert.Equal(3, idpConfig.Count);
+            Assert.Equal("IDP_ENTITY_ID", idpConfig["idpEntityId"]);
+            Assert.Equal("https://example.com/login", idpConfig["ssoUrl"]);
+            var certs = idpConfig["idpCertificates"].Select((token) => (JObject)token);
+            Assert.Equal(2, certs.Count());
+            Assert.Equal("CERT1", certs.ElementAt(0)["x509Certificate"]);
+            Assert.Equal("CERT2", certs.ElementAt(1)["x509Certificate"]);
+        }
+
+        private void AssertSpConfig(JObject spConfig)
+        {
+            Assert.Equal(2, spConfig.Count);
+            Assert.Equal("RP_ENTITY_ID", spConfig["spEntityId"]);
+            Assert.Equal(
+                "https://projectId.firebaseapp.com/__/auth/handler", spConfig["callbackUri"]);
+        }
+
+        public class InvalidCreateArgs : IEnumerable<object[]>
+        {
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                // {
+                //    1st element: InvalidInput,
+                //    2nd element: ExpectedError,
+                // }
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs(),
+                    "Provider ID cannot be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = string.Empty,
+                    },
+                    "Provider ID cannot be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
+                    },
+                    "SAML provider ID must have the prefix 'saml.'.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                    },
+                    "IDP entity ID must not be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                    },
+                    "SSO URL must not be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "not a url",
+                    },
+                    "Malformed SSO URL: not a url",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "https://example.com/login",
+                    },
+                    "X509 certificates must not be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "https://example.com/login",
+                        X509Certificates = new List<string>(),
+                    },
+                    "X509 certificates must not be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "https://example.com/login",
+                        X509Certificates = new List<string>() { string.Empty },
+                    },
+                    "X509 certificates must not contain null or empty values.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "https://example.com/login",
+                        X509Certificates = new List<string>() { "CERT" },
+                    },
+                    "RP entity ID must not be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "https://example.com/login",
+                        X509Certificates = new List<string>() { "CERT" },
+                        RpEntityId = "RP_ENTITY_ID",
+                    },
+                    "Callback URL must not be null or empty.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "https://example.com/login",
+                        X509Certificates = new List<string>() { "CERT" },
+                        RpEntityId = "RP_ENTITY_ID",
+                        CallbackUrl = "not a url",
+                    },
+                    "Malformed callback URL: not a url",
+                };
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         }
     }
 }

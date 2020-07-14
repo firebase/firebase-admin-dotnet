@@ -29,6 +29,12 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             }
         }";
 
+        internal const string UnknownErrorResponse = @"{
+            ""error"": {
+                ""message"": ""UNKNOWN""
+            }
+        }";
+
         private static readonly string ClientVersion =
             $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
