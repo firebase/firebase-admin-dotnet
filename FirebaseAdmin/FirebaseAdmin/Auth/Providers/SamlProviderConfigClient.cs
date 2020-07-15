@@ -13,12 +13,9 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Api.Gax;
-using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -30,78 +27,11 @@ namespace FirebaseAdmin.Auth.Providers
 
         private SamlProviderConfigClient() { }
 
-        internal override async Task<SamlProviderConfig> GetProviderConfigAsync(
-            ApiClient client, string providerId, CancellationToken cancellationToken)
-        {
-            var request = new HttpRequestMessage()
-            {
-                Method = HttpMethod.Get,
-                RequestUri = BuildUri($"inboundSamlConfigs/{this.ValidateProviderId(providerId)}"),
-            };
-            var response = await client
-                .SendAndDeserializeAsync<SamlProviderConfig.Request>(request, cancellationToken)
-                .ConfigureAwait(false);
-            return new SamlProviderConfig(response);
-        }
+        protected override string ResourcePath => "inboundSamlConfigs";
 
-        internal override async Task<SamlProviderConfig> CreateProviderConfigAsync(
-            ApiClient client,
-            AuthProviderConfigArgs<SamlProviderConfig> args,
-            CancellationToken cancellationToken)
-        {
-            var query = new Dictionary<string, object>()
-            {
-                { "inboundSamlConfigId", this.ValidateProviderId(args.ProviderId) },
-            };
-            var request = new HttpRequestMessage()
-            {
-                Method = HttpMethod.Post,
-                RequestUri = BuildUri("inboundSamlConfigs", query),
-                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(
-                    args.ToCreateRequest()),
-            };
-            var response = await client
-                .SendAndDeserializeAsync<SamlProviderConfig.Request>(request, cancellationToken)
-                .ConfigureAwait(false);
-            return new SamlProviderConfig(response);
-        }
+        protected override string ProviderIdParam => "inboundSamlConfigId";
 
-        internal override async Task<SamlProviderConfig> UpdateProviderConfigAsync(
-            ApiClient client,
-            AuthProviderConfigArgs<SamlProviderConfig> args,
-            CancellationToken cancellationToken)
-        {
-            var providerId = this.ValidateProviderId(args.ProviderId);
-            var content = args.ToUpdateRequest();
-            var updateMask = CreateUpdateMask(content);
-            if (updateMask.Count == 0)
-            {
-                throw new ArgumentException("At least one field must be specified for update.");
-            }
-
-            var query = new Dictionary<string, object>()
-            {
-                { "updateMask", string.Join(",", updateMask) },
-            };
-            var request = new HttpRequestMessage()
-            {
-                Method = Patch,
-                RequestUri = BuildUri($"inboundSamlConfigs/{providerId}", query),
-                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(content),
-            };
-            var response = await client
-                .SendAndDeserializeAsync<SamlProviderConfig.Request>(request, cancellationToken)
-                .ConfigureAwait(false);
-            return new SamlProviderConfig(response);
-        }
-
-        internal override PagedAsyncEnumerable<AuthProviderConfigs<SamlProviderConfig>, SamlProviderConfig>
-            ListProviderConfigsAsync(ApiClient client, ListProviderConfigsOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        private string ValidateProviderId(string providerId)
+        protected override string ValidateProviderId(string providerId)
         {
             if (string.IsNullOrEmpty(providerId))
             {
@@ -114,6 +44,21 @@ namespace FirebaseAdmin.Auth.Providers
             }
 
             return providerId;
+        }
+
+        protected override async Task<SamlProviderConfig> SendAndDeserializeAsync(
+            ApiClient client, HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = await client
+                .SendAndDeserializeAsync<SamlProviderConfig.Request>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return new SamlProviderConfig(response);
+        }
+
+        protected override AbstractListRequest CreateListRequest(
+            ApiClient client, ListProviderConfigsOptions options)
+        {
+            throw new NotImplementedException();
         }
     }
 }
