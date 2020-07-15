@@ -60,8 +60,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             }}",
         };
 
-        private static readonly HttpMethod PatchMethod = new HttpMethod("PATCH");
-
         [Fact]
         public async Task GetConfig()
         {
@@ -265,7 +263,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             this.AssertOidcProviderConfig(provider);
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
-            Assert.Equal(PatchMethod, request.Method);
+            Assert.Equal(ProviderConfigTestUtils.PatchMethod, request.Method);
             var mask = "clientId,displayName,enabled,issuer";
             Assert.Equal(
                 $"/v2/projects/project1/oauthIdpConfigs/oidc.provider?updateMask={mask}",
@@ -300,7 +298,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             this.AssertOidcProviderConfig(provider);
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
-            Assert.Equal(PatchMethod, request.Method);
+            Assert.Equal(ProviderConfigTestUtils.PatchMethod, request.Method);
             Assert.Equal(
                 "/v2/projects/project1/oauthIdpConfigs/oidc.minimal-provider?updateMask=clientId",
                 request.Url.PathAndQuery);

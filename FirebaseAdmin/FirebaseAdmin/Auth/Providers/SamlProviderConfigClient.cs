@@ -66,12 +66,33 @@ namespace FirebaseAdmin.Auth.Providers
             return new SamlProviderConfig(response);
         }
 
-        internal override Task<SamlProviderConfig> UpdateProviderConfigAsync(
+        internal override async Task<SamlProviderConfig> UpdateProviderConfigAsync(
             ApiClient client,
             AuthProviderConfigArgs<SamlProviderConfig> args,
             CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var providerId = this.ValidateProviderId(args.ProviderId);
+            var content = args.ToUpdateRequest();
+            var updateMask = CreateUpdateMask(content);
+            if (updateMask.Count == 0)
+            {
+                throw new ArgumentException("At least one field must be specified for update.");
+            }
+
+            var query = new Dictionary<string, object>()
+            {
+                { "updateMask", string.Join(",", updateMask) },
+            };
+            var request = new HttpRequestMessage()
+            {
+                Method = Patch,
+                RequestUri = BuildUri($"inboundSamlConfigs/{providerId}", query),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(content),
+            };
+            var response = await client
+                .SendAndDeserializeAsync<SamlProviderConfig.Request>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return new SamlProviderConfig(response);
         }
 
         internal override PagedAsyncEnumerable<AuthProviderConfigs<SamlProviderConfig>, SamlProviderConfig>

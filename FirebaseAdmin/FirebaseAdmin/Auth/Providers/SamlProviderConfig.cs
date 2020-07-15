@@ -90,6 +90,12 @@ namespace FirebaseAdmin.Auth.Providers
 
             [JsonProperty("idpCertificates")]
             internal IEnumerable<IdpCertificate> IdpCertificates { get; set; }
+
+            internal bool HasValues
+            {
+                get => this.IdpEntityId != null || this.SsoUrl != null ||
+                    this.IdpCertificates != null;
+            }
         }
 
         internal sealed class IdpCertificate
@@ -105,6 +111,11 @@ namespace FirebaseAdmin.Auth.Providers
 
             [JsonProperty("callbackUri")]
             internal string CallbackUri { get; set; }
+
+            internal bool HasValues
+            {
+                get => this.SpEntityId != null || this.CallbackUri != null;
+            }
         }
     }
 }

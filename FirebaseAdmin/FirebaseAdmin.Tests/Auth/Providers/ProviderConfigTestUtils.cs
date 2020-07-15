@@ -35,6 +35,8 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             }
         }";
 
+        internal static readonly HttpMethod PatchMethod = new HttpMethod("PATCH");
+
         private static readonly string ClientVersion =
             $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
