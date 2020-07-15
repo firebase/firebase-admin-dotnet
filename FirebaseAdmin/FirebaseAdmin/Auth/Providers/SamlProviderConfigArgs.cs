@@ -72,7 +72,7 @@ namespace FirebaseAdmin.Auth.Providers
             {
                 throw new ArgumentException("SSO URL must not be null or empty.");
             }
-            else if (!Uri.IsWellFormedUriString(req.IdpConfig.SsoUrl, UriKind.Absolute))
+            else if (!IsWellFormedUriString(req.IdpConfig.SsoUrl))
             {
                 throw new ArgumentException($"Malformed SSO URL: {req.IdpConfig.SsoUrl}");
             }
@@ -97,7 +97,7 @@ namespace FirebaseAdmin.Auth.Providers
             {
                 throw new ArgumentException("Callback URL must not be null or empty.");
             }
-            else if (!Uri.IsWellFormedUriString(req.SpConfig.CallbackUri, UriKind.Absolute))
+            else if (!IsWellFormedUriString(req.SpConfig.CallbackUri))
             {
                 throw new ArgumentException($"Malformed callback URL: {req.SpConfig.CallbackUri}");
             }
@@ -107,7 +107,26 @@ namespace FirebaseAdmin.Auth.Providers
 
         internal override AuthProviderConfig.Request ToUpdateRequest()
         {
-            throw new NotImplementedException();
+            var req = this.ToRequest();
+            if (req.IdpConfig.HasValues)
+            {
+                this.ValidateIdpConfigForUpdate(req.IdpConfig);
+            }
+            else
+            {
+                req.IdpConfig = null;
+            }
+
+            if (req.SpConfig.HasValues)
+            {
+                this.ValidateSpConfigForUpdate(req.SpConfig);
+            }
+            else
+            {
+                req.SpConfig = null;
+            }
+
+            return req;
         }
 
         internal override ProviderConfigClient<SamlProviderConfig> GetClient()
@@ -137,6 +156,53 @@ namespace FirebaseAdmin.Auth.Providers
                     CallbackUri = this.CallbackUrl,
                 },
             };
+        }
+
+        private void ValidateIdpConfigForUpdate(SamlProviderConfig.IdpConfig idpConfig)
+        {
+            if (idpConfig.IdpEntityId == string.Empty)
+            {
+                throw new ArgumentException("IDP entity ID must not be empty.");
+            }
+
+            var ssoUrl = idpConfig.SsoUrl;
+            if (ssoUrl == string.Empty)
+            {
+                throw new ArgumentException("SSO URL must not be empty.");
+            }
+            else if (ssoUrl != null && !IsWellFormedUriString(ssoUrl))
+            {
+                throw new ArgumentException($"Malformed SSO URL: {ssoUrl}");
+            }
+
+            var certs = idpConfig.IdpCertificates;
+            if (certs?.Count() == 0)
+            {
+                throw new ArgumentException("X509 certificates must not be empty.");
+            }
+            else if (certs?.Any((cert) => string.IsNullOrEmpty(cert.X509Certificate)) ?? false)
+            {
+                throw new ArgumentException(
+                    "X509 certificates must not contain null or empty values.");
+            }
+        }
+
+        private void ValidateSpConfigForUpdate(SamlProviderConfig.SpConfig spConfig)
+        {
+            if (spConfig.SpEntityId == string.Empty)
+            {
+                throw new ArgumentException("RP entity ID must not be empty.");
+            }
+
+            var callbackUri = spConfig.CallbackUri;
+            if (callbackUri == string.Empty)
+            {
+                throw new ArgumentException("Callback URL must not be empty.");
+            }
+            else if (callbackUri != null && !IsWellFormedUriString(callbackUri))
+            {
+                throw new ArgumentException($"Malformed callback URL: {callbackUri}");
+            }
         }
     }
 }

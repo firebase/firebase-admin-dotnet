@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace FirebaseAdmin.Auth.Providers
 {
     /// <summary>
@@ -45,6 +47,11 @@ namespace FirebaseAdmin.Auth.Providers
         /// disabled. A user cannot sign in using a disabled provider.
         /// </summary>
         public bool? Enabled { get; set; }
+
+        internal static bool IsWellFormedUriString(string uri)
+        {
+            return Uri.IsWellFormedUriString(uri, UriKind.Absolute);
+        }
 
         internal abstract AuthProviderConfig.Request ToCreateRequest();
 

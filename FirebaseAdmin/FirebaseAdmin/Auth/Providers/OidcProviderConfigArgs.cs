@@ -74,7 +74,7 @@ namespace FirebaseAdmin.Auth.Providers
             {
                 throw new ArgumentException("Issuer must not be null or empty.");
             }
-            else if (!Uri.IsWellFormedUriString(req.Issuer, UriKind.Absolute))
+            else if (!IsWellFormedUriString(req.Issuer))
             {
                 throw new ArgumentException($"Malformed issuer string: {req.Issuer}");
             }
@@ -92,24 +92,18 @@ namespace FirebaseAdmin.Auth.Providers
                 Issuer = this.Issuer,
             };
 
-            if (req.ClientId != null)
+            if (req.ClientId == string.Empty)
             {
-                if (req.ClientId == string.Empty)
-                {
-                    throw new ArgumentException("Client ID must not be empty.");
-                }
+                throw new ArgumentException("Client ID must not be empty.");
             }
 
-            if (req.Issuer != null)
+            if (req.Issuer == string.Empty)
             {
-                if (req.Issuer == string.Empty)
-                {
-                    throw new ArgumentException("Issuer must not be empty.");
-                }
-                else if (!Uri.IsWellFormedUriString(req.Issuer, UriKind.Absolute))
-                {
-                    throw new ArgumentException($"Malformed issuer string: {req.Issuer}");
-                }
+                throw new ArgumentException("Issuer must not be empty.");
+            }
+            else if (req.Issuer != null && !IsWellFormedUriString(req.Issuer))
+            {
+                throw new ArgumentException($"Malformed issuer string: {req.Issuer}");
             }
 
             return req;
