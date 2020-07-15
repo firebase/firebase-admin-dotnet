@@ -493,6 +493,17 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         ProviderId = "saml.provider",
                         IdpEntityId = "IDP_ENTITY_ID",
                         SsoUrl = "https://example.com/login",
+                        X509Certificates = new List<string>() { null },
+                    },
+                    "X509 certificates must not contain null or empty values.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        IdpEntityId = "IDP_ENTITY_ID",
+                        SsoUrl = "https://example.com/login",
                         X509Certificates = new List<string>() { "CERT" },
                     },
                     "RP entity ID must not be null or empty.",
@@ -606,6 +617,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                     {
                         ProviderId = "saml.provider",
                         X509Certificates = new List<string>() { string.Empty },
+                    },
+                    "X509 certificates must not contain null or empty values.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider",
+                        X509Certificates = new List<string>() { null },
                     },
                     "X509 certificates must not contain null or empty values.",
                 };
