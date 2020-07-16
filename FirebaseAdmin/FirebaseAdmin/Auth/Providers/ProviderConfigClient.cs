@@ -39,21 +39,84 @@ namespace FirebaseAdmin.Auth.Providers
     internal abstract class ProviderConfigClient<T>
     where T : AuthProviderConfig
     {
-        protected static readonly HttpMethod Patch = new HttpMethod("PATCH");
+        private static readonly HttpMethod Patch = new HttpMethod("PATCH");
 
-        internal abstract Task<T> GetProviderConfigAsync(
-            ApiClient client, string providerId, CancellationToken cancellationToken);
+        protected abstract string ResourcePath { get; }
 
-        internal abstract Task<T> CreateProviderConfigAsync(
-            ApiClient client, AuthProviderConfigArgs<T> args, CancellationToken cancellationToken);
+        protected abstract string ProviderIdParam { get; }
 
-        internal abstract Task<T> UpdateProviderConfigAsync(
-            ApiClient client, AuthProviderConfigArgs<T> args, CancellationToken cancellationToken);
+        internal async Task<T> GetProviderConfigAsync(
+            ApiClient client, string providerId, CancellationToken cancellationToken)
+        {
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Get,
+                RequestUri = BuildUri($"{this.ResourcePath}/{this.ValidateProviderId(providerId)}"),
+            };
+            return await this.SendAndDeserializeAsync(client, request, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
-        internal abstract PagedAsyncEnumerable<AuthProviderConfigs<T>, T>
-            ListProviderConfigsAsync(ApiClient client, ListProviderConfigsOptions options);
+        internal async Task<T> CreateProviderConfigAsync(
+            ApiClient client, AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
+        {
+            var query = new Dictionary<string, object>()
+            {
+                { this.ProviderIdParam, this.ValidateProviderId(args.ProviderId) },
+            };
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                RequestUri = BuildUri(this.ResourcePath, query),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(
+                    args.ToCreateRequest()),
+            };
+            return await this.SendAndDeserializeAsync(client, request, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
-        protected static IList<string> CreateUpdateMask(AuthProviderConfig.Request request)
+        internal async Task<T> UpdateProviderConfigAsync(
+            ApiClient client, AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
+        {
+            var providerId = this.ValidateProviderId(args.ProviderId);
+            var content = args.ToUpdateRequest();
+            var updateMask = CreateUpdateMask(content);
+            if (updateMask.Count == 0)
+            {
+                throw new ArgumentException("At least one field must be specified for update.");
+            }
+
+            var query = new Dictionary<string, object>()
+            {
+                { "updateMask", string.Join(",", updateMask) },
+            };
+            var request = new HttpRequestMessage()
+            {
+                Method = Patch,
+                RequestUri = BuildUri($"{this.ResourcePath}/{providerId}", query),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(content),
+            };
+            return await this.SendAndDeserializeAsync(client, request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        internal PagedAsyncEnumerable<AuthProviderConfigs<T>, T>
+            ListProviderConfigsAsync(ApiClient client, ListProviderConfigsOptions options)
+        {
+            var request = this.CreateListRequest(client, options);
+            return new RestPagedAsyncEnumerable
+                <AbstractListRequest, AuthProviderConfigs<T>, T>(() => request, new PageManager());
+        }
+
+        protected abstract string ValidateProviderId(string providerId);
+
+        protected abstract Task<T> SendAndDeserializeAsync(
+            ApiClient client, HttpRequestMessage request, CancellationToken cancellationToken);
+
+        protected abstract AbstractListRequest CreateListRequest(
+            ApiClient client, ListProviderConfigsOptions options);
+
+        private static IList<string> CreateUpdateMask(AuthProviderConfig.Request request)
         {
             var json = NewtonsoftJsonSerializer.Instance.Serialize(request);
             var dictionary = JObject.Parse(json);
@@ -62,7 +125,7 @@ namespace FirebaseAdmin.Auth.Providers
             return mask;
         }
 
-        protected static Uri BuildUri(string path, IDictionary<string, object> queryParams = null)
+        private static Uri BuildUri(string path, IDictionary<string, object> queryParams = null)
         {
             var uriString = $"{path}{EncodeQueryParams(queryParams)}";
             return new Uri(uriString, UriKind.Relative);
@@ -219,7 +282,7 @@ namespace FirebaseAdmin.Auth.Providers
         /// <summary>
         /// A Google API client utility for paging through a sequence of provider configurations.
         /// </summary>
-        protected sealed class PageManager
+        private class PageManager
         : IPageManager<AbstractListRequest, AuthProviderConfigs<T>, T>
         {
             public void SetPageSize(AbstractListRequest request, int pageSize)
