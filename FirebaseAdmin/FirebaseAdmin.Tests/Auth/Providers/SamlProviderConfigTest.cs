@@ -52,6 +52,24 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             },
         }";
 
+        private static readonly IList<string> ListConfigsResponses = new List<string>()
+        {
+            $@"{{
+                ""nextPageToken"": ""token"",
+                ""inboundSamlConfigs"": [
+                    {SamlProviderConfigResponse},
+                    {SamlProviderConfigResponse},
+                    {SamlProviderConfigResponse}
+                ]
+            }}",
+            $@"{{
+                ""inboundSamlConfigs"": [
+                    {SamlProviderConfigResponse},
+                    {SamlProviderConfigResponse}
+                ]
+            }}",
+        };
+
         [Fact]
         public async Task GetConfig()
         {
@@ -345,10 +363,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 Response = ProviderConfigTestUtils.ConfigNotFoundResponse,
             };
             var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
-            var args = new OidcProviderConfigArgs()
+            var args = new SamlProviderConfigArgs()
             {
-                ProviderId = "oidc.provider",
-                ClientId = "CLIENT_ID",
+                ProviderId = "saml.provider",
+                IdpEntityId = "IDP_ENTITY_ID",
             };
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
@@ -362,6 +380,221 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public async Task ListConfigs()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var configs = new List<SamlProviderConfig>();
+
+            var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
+            var enumerator = pagedEnumerable.GetEnumerator();
+            while (await enumerator.MoveNext())
+            {
+                configs.Add(enumerator.Current);
+            }
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertSamlProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("100", query["pageSize"]);
+
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("100", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+
+            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
+        }
+
+        [Fact]
+        public void ListSamlForEach()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var configs = new List<SamlProviderConfig>();
+
+            var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
+            foreach (var user in pagedEnumerable.ToEnumerable())
+            {
+                configs.Add(user);
+            }
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertSamlProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("100", query["pageSize"]);
+
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("100", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+
+            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
+        }
+
+        [Fact]
+        public async Task ListSamlByPages()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var configs = new List<SamlProviderConfig>();
+
+            // Read page 1.
+            var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
+            var configPage = await pagedEnumerable.ReadPageAsync(3);
+
+            Assert.Equal(3, configPage.Count());
+            Assert.Equal("token", configPage.NextPageToken);
+
+            Assert.Single(handler.Requests);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("3", query["pageSize"]);
+            configs.AddRange(configPage);
+
+            // Read page 2.
+            pagedEnumerable = auth.ListSamlProviderConfigsAsync(new ListProviderConfigsOptions()
+            {
+                PageToken = configPage.NextPageToken,
+            });
+            configPage = await pagedEnumerable.ReadPageAsync(3);
+
+            Assert.Equal(2, configPage.Count());
+            Assert.Null(configPage.NextPageToken);
+
+            Assert.Equal(2, handler.Requests.Count);
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+            configs.AddRange(configPage);
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertSamlProviderConfig);
+        }
+
+        [Fact]
+        public async Task ListSamlAsRawResponses()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var configs = new List<SamlProviderConfig>();
+            var tokens = new List<string>();
+
+            var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
+            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
+            while (await responses.MoveNext())
+            {
+                configs.AddRange(responses.Current.ProviderConfigs);
+                tokens.Add(responses.Current.NextPageToken);
+                Assert.Equal(tokens.Count, handler.Requests.Count);
+            }
+
+            Assert.Equal(new List<string>() { "token", null }, tokens);
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertSamlProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
+            Assert.Single(query);
+            Assert.Equal("100", query["pageSize"]);
+
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("100", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+        }
+
+        [Fact]
+        public void ListSamlOptions()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var configs = new List<SamlProviderConfig>();
+            var customOptions = new ListProviderConfigsOptions()
+            {
+                PageSize = 3,
+                PageToken = "custom-token",
+            };
+
+            var pagedEnumerable = auth.ListSamlProviderConfigsAsync(customOptions);
+            foreach (var user in pagedEnumerable.ToEnumerable())
+            {
+                configs.Add(user);
+            }
+
+            Assert.Equal(5, configs.Count);
+            Assert.All(configs, this.AssertSamlProviderConfig);
+
+            Assert.Equal(2, handler.Requests.Count);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["pageSize"]);
+            Assert.Equal("custom-token", query["pageToken"]);
+
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
+            Assert.Equal(2, query.Count);
+            Assert.Equal("3", query["pageSize"]);
+            Assert.Equal("token", query["pageToken"]);
+
+            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
+        }
+
+        [Theory]
+        [ClassData(typeof(ProviderConfigTestUtils.InvalidListOptions))]
+        public void ListSamlInvalidOptions(ListProviderConfigsOptions options, string expected)
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+
+            var exception = Assert.Throws<ArgumentException>(
+                () => auth.ListSamlProviderConfigsAsync(options));
+
+            Assert.Equal(expected, exception.Message);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
+        public async Task ListSamlReadPageSizeTooLarge()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = ListConfigsResponses,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await pagedEnumerable.ReadPageAsync(101));
+
+            Assert.Empty(handler.Requests);
         }
 
         private void AssertSamlProviderConfig(SamlProviderConfig provider)

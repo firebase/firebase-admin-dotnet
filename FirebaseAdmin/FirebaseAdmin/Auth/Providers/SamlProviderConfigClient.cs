@@ -13,9 +13,12 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -58,7 +61,47 @@ namespace FirebaseAdmin.Auth.Providers
         protected override AbstractListRequest CreateListRequest(
             ApiClient client, ListProviderConfigsOptions options)
         {
-            throw new NotImplementedException();
+            return new ListRequest(client, options);
+        }
+
+        private sealed class ListRequest : AbstractListRequest
+        {
+            internal ListRequest(ApiClient client, ListProviderConfigsOptions options)
+            : base(client, options) { }
+
+            public override string MethodName => "ListSamlProviderConfigs";
+
+            public override string RestPath => "inboundSamlConfigs";
+
+            public override async Task<AuthProviderConfigs<SamlProviderConfig>> ExecuteAsync(
+                CancellationToken cancellationToken)
+            {
+                var request = this.CreateRequest();
+                var response = await this.ApiClient
+                    .SendAndDeserializeAsync<ListResponse>(request, cancellationToken)
+                    .ConfigureAwait(false);
+                var configs = response.Configs?.Select(config => new SamlProviderConfig(config));
+                return new AuthProviderConfigs<SamlProviderConfig>
+                {
+                    NextPageToken = response.NextPageToken,
+                    ProviderConfigs = configs,
+                };
+            }
+        }
+
+        private sealed class ListResponse
+        {
+            /// <summary>
+            /// Gets or sets the next page link.
+            /// </summary>
+            [JsonProperty("nextPageToken")]
+            public string NextPageToken { get; set; }
+
+            /// <summary>
+            /// Gets or sets the users.
+            /// </summary>
+            [JsonProperty("inboundSamlConfigs")]
+            public IEnumerable<SamlProviderConfig.Request> Configs { get; set; }
         }
     }
 }

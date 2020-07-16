@@ -379,11 +379,11 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertOidcProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = this.ExtractQueryParams(handler.Requests[0]);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
             Assert.Single(query);
             Assert.Equal("100", query["pageSize"]);
 
-            query = this.ExtractQueryParams(handler.Requests[1]);
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
             Assert.Equal(2, query.Count);
             Assert.Equal("100", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
@@ -411,11 +411,11 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertOidcProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = this.ExtractQueryParams(handler.Requests[0]);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
             Assert.Single(query);
             Assert.Equal("100", query["pageSize"]);
 
-            query = this.ExtractQueryParams(handler.Requests[1]);
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
             Assert.Equal(2, query.Count);
             Assert.Equal("100", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
@@ -441,7 +441,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal("token", configPage.NextPageToken);
 
             Assert.Single(handler.Requests);
-            var query = this.ExtractQueryParams(handler.Requests[0]);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
             Assert.Single(query);
             Assert.Equal("3", query["pageSize"]);
             configs.AddRange(configPage);
@@ -457,7 +457,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(configPage.NextPageToken);
 
             Assert.Equal(2, handler.Requests.Count);
-            query = this.ExtractQueryParams(handler.Requests[1]);
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
             Assert.Equal(2, query.Count);
             Assert.Equal("3", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
@@ -492,11 +492,11 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertOidcProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = this.ExtractQueryParams(handler.Requests[0]);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
             Assert.Single(query);
             Assert.Equal("100", query["pageSize"]);
 
-            query = this.ExtractQueryParams(handler.Requests[1]);
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
             Assert.Equal(2, query.Count);
             Assert.Equal("100", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
@@ -527,12 +527,12 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertOidcProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = this.ExtractQueryParams(handler.Requests[0]);
+            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
             Assert.Equal(2, query.Count);
             Assert.Equal("3", query["pageSize"]);
             Assert.Equal("custom-token", query["pageToken"]);
 
-            query = this.ExtractQueryParams(handler.Requests[1]);
+            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
             Assert.Equal(2, query.Count);
             Assert.Equal("3", query["pageSize"]);
             Assert.Equal("token", query["pageToken"]);
@@ -541,7 +541,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [ClassData(typeof(InvalidListOptions))]
+        [ClassData(typeof(ProviderConfigTestUtils.InvalidListOptions))]
         public void ListOidcInvalidOptions(ListProviderConfigsOptions options, string expected)
         {
             var handler = new MockMessageHandler()
@@ -549,7 +549,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 Response = ListConfigsResponses,
             };
             var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
-            var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
 
             var exception = Assert.Throws<ArgumentException>(
                 () => auth.ListOidcProviderConfigsAsync(options));
@@ -581,12 +580,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.True(provider.Enabled);
             Assert.Equal("CLIENT_ID", provider.ClientId);
             Assert.Equal("https://oidc.com/issuer", provider.Issuer);
-        }
-
-        private IDictionary<string, string> ExtractQueryParams(MockMessageHandler.IncomingRequest req)
-        {
-            return req.Url.Query.Substring(1).Split('&').ToDictionary(
-                entry => entry.Split('=')[0], entry => entry.Split('=')[1]);
         }
 
         public class InvalidCreateArgs : IEnumerable<object[]>
@@ -713,51 +706,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         Issuer = "not a url",
                     },
                     "Malformed issuer string: not a url",
-                };
-            }
-
-            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-        }
-
-        public class InvalidListOptions : IEnumerable<object[]>
-        {
-            public IEnumerator<object[]> GetEnumerator()
-            {
-                // {
-                //    1st element: InvalidInput,
-                //    2nd element: ExpectedError,
-                // }
-                yield return new object[]
-                {
-                    new ListProviderConfigsOptions()
-                    {
-                        PageSize = 101,
-                    },
-                    "Page size must not exceed 100.",
-                };
-                yield return new object[]
-                {
-                    new ListProviderConfigsOptions()
-                    {
-                        PageSize = 0,
-                    },
-                    "Page size must be positive.",
-                };
-                yield return new object[]
-                {
-                    new ListProviderConfigsOptions()
-                    {
-                        PageSize = -1,
-                    },
-                    "Page size must be positive.",
-                };
-                yield return new object[]
-                {
-                    new ListProviderConfigsOptions()
-                    {
-                        PageToken = string.Empty,
-                    },
-                    "Page token must not be empty.",
                 };
             }
 
