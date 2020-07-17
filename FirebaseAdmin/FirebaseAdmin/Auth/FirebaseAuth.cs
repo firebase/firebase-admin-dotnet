@@ -1260,7 +1260,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Creates a new auth provider configuration.
         /// </summary>
-        /// <returns>A task that completes with a <see cref="AuthProviderConfig"/>.</returns>
+        /// <returns>A task that completes with an <see cref="AuthProviderConfig"/>.</returns>
         /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
         /// invalid.</exception>
         /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
