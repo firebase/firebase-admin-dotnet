@@ -100,6 +100,29 @@ namespace FirebaseAdmin.Auth.Providers
                 .ConfigureAwait(false);
         }
 
+        internal async Task DeleteProviderConfigAsync(
+            string providerId, CancellationToken cancellationToken)
+        {
+            providerId.ThrowIfNullOrEmpty(nameof(providerId));
+            if (providerId.StartsWith("oidc."))
+            {
+                await OidcProviderConfigClient.Instance
+                    .DeleteProviderConfigAsync(this.apiClient, providerId, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else if (providerId.StartsWith("saml."))
+            {
+                await SamlProviderConfigClient.Instance
+                    .DeleteProviderConfigAsync(this.apiClient, providerId, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                throw new ArgumentException(
+                    "Provider ID must have 'oidc.' or 'saml.' as the prefix.");
+            }
+        }
+
         internal PagedAsyncEnumerable<AuthProviderConfigs<OidcProviderConfig>, OidcProviderConfig>
             ListOidcProviderConfigsAsync(ListProviderConfigsOptions options)
         {

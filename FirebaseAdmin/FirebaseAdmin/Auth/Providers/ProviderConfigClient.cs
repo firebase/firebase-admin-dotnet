@@ -100,6 +100,18 @@ namespace FirebaseAdmin.Auth.Providers
                 .ConfigureAwait(false);
         }
 
+        internal async Task DeleteProviderConfigAsync(
+            ApiClient client, string providerId, CancellationToken cancellationToken)
+        {
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Delete,
+                RequestUri = BuildUri($"{this.ResourcePath}/{this.ValidateProviderId(providerId)}"),
+            };
+            await client.SendAndDeserializeAsync<object>(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         internal PagedAsyncEnumerable<AuthProviderConfigs<T>, T>
             ListProviderConfigsAsync(ApiClient client, ListProviderConfigsOptions options)
         {
