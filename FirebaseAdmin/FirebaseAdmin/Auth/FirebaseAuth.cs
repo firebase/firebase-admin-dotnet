@@ -1339,6 +1339,24 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Gets an async enumerable to iterate or page through SAML provider configurations
+        /// starting from the specified page token. If the page token is null or unspecified,
+        /// iteration starts from the first page. See
+        /// <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
+        /// Page Streaming</a> for more details on how to use this API.
+        /// </summary>
+        /// <param name="options">The options to control the starting point and page size. Pass null
+        /// to list from the beginning with default settings.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{AuthProviderConfigs, SamlProviderConfig}"/> instance.</returns>
+        public PagedAsyncEnumerable<AuthProviderConfigs<SamlProviderConfig>, SamlProviderConfig>
+            ListSamlProviderConfigsAsync(ListProviderConfigsOptions options)
+        {
+            var providerConfigManager = this.IfNotDeleted(
+                () => this.providerConfigManager.Value);
+            return providerConfigManager.ListSamlProviderConfigsAsync(options);
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()

@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
@@ -60,6 +63,58 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         internal static void AssertClientVersionHeader(MockMessageHandler.IncomingRequest request)
         {
             Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
+        }
+
+        internal static IDictionary<string, string> ExtractQueryParams(
+            MockMessageHandler.IncomingRequest req)
+        {
+            return req.Url.Query.Substring(1).Split('&').ToDictionary(
+                entry => entry.Split('=')[0], entry => entry.Split('=')[1]);
+        }
+
+        public class InvalidListOptions : IEnumerable<object[]>
+        {
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                // {
+                //    1st element: InvalidInput,
+                //    2nd element: ExpectedError,
+                // }
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageSize = 101,
+                    },
+                    "Page size must not exceed 100.",
+                };
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageSize = 0,
+                    },
+                    "Page size must be positive.",
+                };
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageSize = -1,
+                    },
+                    "Page size must be positive.",
+                };
+                yield return new object[]
+                {
+                    new ListProviderConfigsOptions()
+                    {
+                        PageToken = string.Empty,
+                    },
+                    "Page token must not be empty.",
+                };
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         }
     }
 }

@@ -107,6 +107,13 @@ namespace FirebaseAdmin.Auth.Providers
                 this.apiClient, options);
         }
 
+        internal PagedAsyncEnumerable<AuthProviderConfigs<SamlProviderConfig>, SamlProviderConfig>
+            ListSamlProviderConfigsAsync(ListProviderConfigsOptions options)
+        {
+            return SamlProviderConfigClient.Instance.ListProviderConfigsAsync(
+                this.apiClient, options);
+        }
+
         internal sealed class Args
         {
             internal HttpClientFactory ClientFactory { get; set; }
