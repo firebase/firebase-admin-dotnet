@@ -1241,9 +1241,9 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Creates a new OIDC auth provider configuration.
+        /// Creates a new auth provider configuration.
         /// </summary>
-        /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
+        /// <returns>A task that completes with an <see cref="AuthProviderConfig"/>.</returns>
         /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
         /// invalid.</exception>
         /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
@@ -1258,9 +1258,9 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Creates a new OIDC auth provider configuration.
+        /// Creates a new auth provider configuration.
         /// </summary>
-        /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
+        /// <returns>A task that completes with an <see cref="AuthProviderConfig"/>.</returns>
         /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
         /// invalid.</exception>
         /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
@@ -1280,9 +1280,9 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Updates an existing OIDC auth provider configuration.
+        /// Updates an existing auth provider configuration.
         /// </summary>
-        /// <returns>A task that completes with the updated <see cref="OidcProviderConfig"/>.
+        /// <returns>A task that completes with the updated <see cref="AuthProviderConfig"/>.
         /// </returns>
         /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
         /// invalid.</exception>
@@ -1298,9 +1298,9 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Updates an existing OIDC auth provider configuration.
+        /// Updates an existing auth provider configuration.
         /// </summary>
-        /// <returns>A task that completes with the updated <see cref="OidcProviderConfig"/>.
+        /// <returns>A task that completes with the updated <see cref="AuthProviderConfig"/>.
         /// </returns>
         /// <exception cref="ArgumentException">If <paramref name="args"/> is null or
         /// invalid.</exception>
@@ -1321,15 +1321,52 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Deletes the specified auth provider configuration.
+        /// </summary>
+        /// <returns>A task that completes when the provider configuration is deleted.</returns>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
+        /// contain either the <c>oidc.</c> or <c>saml.</c> prefix.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist.</exception>
+        /// <param name="providerId">ID of the provider configuration to delete.</param>
+        public async Task DeleteProviderConfigAsync(string providerId)
+        {
+            await this.DeleteProviderConfigAsync(providerId, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the specified auth provider configuration.
+        /// </summary>
+        /// <returns>A task that completes when the provider configuration is deleted.</returns>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
+        /// contain either the <c>oidc.</c> or <c>saml.</c> prefix.</exception>
+        /// <exception cref="FirebaseAuthException">If the specified provider config does not
+        /// exist.</exception>
+        /// <param name="providerId">ID of the provider configuration to delete.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task DeleteProviderConfigAsync(
+            string providerId, CancellationToken cancellationToken)
+        {
+            var providerConfigManager = this.IfNotDeleted(
+                () => this.providerConfigManager.Value);
+            await providerConfigManager
+                .DeleteProviderConfigAsync(providerId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Gets an async enumerable to iterate or page through OIDC provider configurations
         /// starting from the specified page token. If the page token is null or unspecified,
         /// iteration starts from the first page. See
         /// <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
         /// Page Streaming</a> for more details on how to use this API.
         /// </summary>
-        /// <param name="options">The options to control the starting point and page size. Pass null
-        /// to list from the beginning with default settings.</param>
-        /// <returns>A <see cref="PagedAsyncEnumerable{AuthProviderConfigs, OidcProviderConfig}"/> instance.</returns>
+        /// <param name="options">The options to control the starting point and page size. Pass
+        /// null to list from the beginning with default settings.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{AuthProviderConfigs, OidcProviderConfig}"/>
+        /// instance.</returns>
         public PagedAsyncEnumerable<AuthProviderConfigs<OidcProviderConfig>, OidcProviderConfig>
             ListOidcProviderConfigsAsync(ListProviderConfigsOptions options)
         {
@@ -1345,9 +1382,10 @@ namespace FirebaseAdmin.Auth
         /// <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
         /// Page Streaming</a> for more details on how to use this API.
         /// </summary>
-        /// <param name="options">The options to control the starting point and page size. Pass null
-        /// to list from the beginning with default settings.</param>
-        /// <returns>A <see cref="PagedAsyncEnumerable{AuthProviderConfigs, SamlProviderConfig}"/> instance.</returns>
+        /// <param name="options">The options to control the starting point and page size. Pass
+        /// null to list from the beginning with default settings.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{AuthProviderConfigs, SamlProviderConfig}"/>
+        /// instance.</returns>
         public PagedAsyncEnumerable<AuthProviderConfigs<SamlProviderConfig>, SamlProviderConfig>
             ListSamlProviderConfigsAsync(ListProviderConfigsOptions options)
         {

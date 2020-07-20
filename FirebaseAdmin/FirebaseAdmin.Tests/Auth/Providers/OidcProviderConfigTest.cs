@@ -359,6 +359,70 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Fact]
+        public async Task DeleteConfig()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+
+            await auth.DeleteProviderConfigAsync("oidc.provider");
+
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(HttpMethod.Delete, request.Method);
+            Assert.Equal(
+                "/v2/projects/project1/oauthIdpConfigs/oidc.provider",
+                request.Url.PathAndQuery);
+            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public async Task DeleteConfigNoProviderId(string providerId)
+        {
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.DeleteProviderConfigAsync(providerId));
+        }
+
+        [Fact]
+        public async Task DeleteConfigInvalidProviderId()
+        {
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.DeleteProviderConfigAsync("unknown.provider"));
+            Assert.Equal(
+                "Provider ID must have 'oidc.' or 'saml.' as the prefix.",
+                exception.Message);
+        }
+
+        [Fact]
+        public async Task DeleteConfigNotFoundError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                Response = ProviderConfigTestUtils.ConfigNotFoundResponse,
+            };
+            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => auth.DeleteProviderConfigAsync("oidc.provider"));
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.ConfigurationNotFound, exception.AuthErrorCode);
+            Assert.Equal(
+                "No identity provider configuration found for the given identifier "
+                + "(CONFIGURATION_NOT_FOUND).",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
         public async Task ListConfigs()
         {
             var handler = new MockMessageHandler()
