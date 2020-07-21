@@ -37,6 +37,7 @@ namespace FirebaseAdmin.IntegrationTests
         {
             var config = this.fixture.ProviderConfig;
 
+            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
             Assert.Equal("SAML_DISPLAY_NAME", config.DisplayName);
             Assert.True(config.Enabled);
             Assert.Equal("IDP_ENTITY_ID", config.IdpEntityId);
@@ -53,6 +54,7 @@ namespace FirebaseAdmin.IntegrationTests
             var config = await FirebaseAuth.DefaultInstance.GetSamlProviderConfigAsync(
                 this.fixture.ProviderId);
 
+            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
             Assert.Equal("SAML_DISPLAY_NAME", config.DisplayName);
             Assert.True(config.Enabled);
             Assert.Equal("IDP_ENTITY_ID", config.IdpEntityId);
@@ -80,6 +82,7 @@ namespace FirebaseAdmin.IntegrationTests
             }
 
             Assert.NotNull(config);
+            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
             Assert.Equal("SAML_DISPLAY_NAME", config.DisplayName);
             Assert.True(config.Enabled);
             Assert.Equal("IDP_ENTITY_ID", config.IdpEntityId);
@@ -110,6 +113,7 @@ namespace FirebaseAdmin.IntegrationTests
 
             var config = await FirebaseAuth.DefaultInstance.UpdateProviderConfigAsync(args);
 
+            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
             Assert.Equal("UPDATED_SAML_DISPLAY_NAME", config.DisplayName);
             Assert.False(config.Enabled);
             Assert.Equal("UPDATED_IDP_ENTITY_ID", config.IdpEntityId);
