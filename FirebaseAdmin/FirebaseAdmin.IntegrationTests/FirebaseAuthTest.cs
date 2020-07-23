@@ -879,7 +879,7 @@ namespace FirebaseAdmin.IntegrationTests
         }
 
         /**
-         * The {@code batchDelete} endpoint is currently rate limited to 1qps. Use this test helper
+         * The <c>batchDelete</c> endpoint is currently rate limited to 1qps. Use this test helper
          * to ensure you don't run into quota exceeded errors.
          */
         // TODO(rsgowman): When/if the rate limit is relaxed, eliminate this helper.

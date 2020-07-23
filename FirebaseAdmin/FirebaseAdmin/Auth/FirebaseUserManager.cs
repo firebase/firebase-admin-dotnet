@@ -42,7 +42,7 @@ namespace FirebaseAdmin.Auth
 
         internal static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
-        private const string IdTooklitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
+        private const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
 
         /** Maximum allowed number of users to batch get at one time. */
         private const int MaxGetAccountsBatchSize = 100;
@@ -72,7 +72,7 @@ namespace FirebaseAdmin.Auth
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
                     RetryOptions = args.RetryOptions,
                 });
-            this.baseUrl = string.Format(IdTooklitUrl, args.ProjectId);
+            this.baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
             this.clock = args.Clock ?? SystemClock.Default;
         }
 
