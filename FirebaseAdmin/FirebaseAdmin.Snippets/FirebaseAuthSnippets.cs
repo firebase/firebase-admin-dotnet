@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Hash;
+using FirebaseAdmin.Auth.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -686,6 +687,154 @@ namespace FirebaseAdmin.Snippets
             // using custom SMTP server.
             SendCustomEmail(email, displayName, link);
             // [END sign_in_with_email_link]
+        }
+
+        internal static async Task CreateSamlProviderConfig()
+        {
+            // [START create_saml_provider]
+            var args = new SamlProviderConfigArgs()
+            {
+                DisplayName = "SAML provider name",
+                Enabled = true,
+                ProviderId = "saml.myProvider",
+                IdpEntityId = "IDP_ENTITY_ID",
+                SsoUrl = "https://example.com/saml/sso/1234/",
+                X509Certificates = new List<string>()
+                {
+                    "-----BEGIN CERTIFICATE-----\nCERT1...\n-----END CERTIFICATE-----",
+                    "-----BEGIN CERTIFICATE-----\nCERT2...\n-----END CERTIFICATE-----",
+                },
+                RpEntityId = "RP_ENTITY_ID",
+                CallbackUrl = "https://project-id.firebaseapp.com/__/auth/handler",
+            };
+            SamlProviderConfig saml = await FirebaseAuth.DefaultInstance
+                .CreateProviderConfigAsync(args);
+            Console.WriteLine($"Created new SAML provider: {saml.ProviderId}");
+            // [END create_saml_provider]
+        }
+
+        internal static async Task UpdateSamlProviderConfig()
+        {
+            // [START update_saml_provider]
+            var args = new SamlProviderConfigArgs()
+            {
+                ProviderId = "saml.myProvider",
+                X509Certificates = new List<string>()
+                {
+                    "-----BEGIN CERTIFICATE-----\nCERT2...\n-----END CERTIFICATE-----",
+                    "-----BEGIN CERTIFICATE-----\nCERT3...\n-----END CERTIFICATE-----",
+                },
+            };
+            SamlProviderConfig saml = await FirebaseAuth.DefaultInstance
+                .UpdateProviderConfigAsync(args);
+            Console.WriteLine($"Updated SAML provider: {saml.ProviderId}");
+            // [END update_saml_provider]
+        }
+
+        internal static async Task GetSamlProviderConfig()
+        {
+            // [START get_saml_provider]
+            SamlProviderConfig saml = await FirebaseAuth.DefaultInstance
+                .GetSamlProviderConfigAsync("saml.myProvider");
+            Console.WriteLine($"{saml.DisplayName}: {saml.Enabled}");
+            // [END get_saml_provider]
+        }
+
+        internal static async Task DeleteSamlProviderConfig()
+        {
+            // [START delete_saml_provider]
+            await FirebaseAuth.DefaultInstance.DeleteProviderConfigAsync("saml.myProvider");
+            // [END delete_saml_provider]
+        }
+
+        internal static async Task ListSamlProviderConfigs()
+        {
+            // [START list_saml_providers]
+            var listOptions = new ListProviderConfigsOptions()
+            {
+                PageToken = "nextPageToken",
+            };
+            IAsyncEnumerator<SamlProviderConfig> enumerator = FirebaseAuth.DefaultInstance
+                .ListSamlProviderConfigsAsync(listOptions)
+                .GetEnumerator();
+
+            while (await enumerator.MoveNext())
+            {
+                SamlProviderConfig saml = enumerator.Current;
+                Console.WriteLine(saml.ProviderId);
+            }
+
+            // [END list_saml_providers]
+        }
+
+        internal static async Task CreateOidcProviderConfig()
+        {
+            // [START create_oidc_provider]
+            var args = new OidcProviderConfigArgs()
+            {
+                DisplayName = "OIDC provider name",
+                Enabled = true,
+                ProviderId = "oidc.myProvider",
+                ClientId = "CLIENT_ID2",
+                Issuer = "https://oidc.com/CLIENT_ID2",
+            };
+            OidcProviderConfig oidc = await FirebaseAuth.DefaultInstance
+                .CreateProviderConfigAsync(args);
+            Console.WriteLine($"Created new OIDC provider: {oidc.ProviderId}");
+            // [END create_oidc_provider]
+        }
+
+        internal static async Task UpdateOidcProviderConfig()
+        {
+            // [START update_oidc_provider]
+            var args = new OidcProviderConfigArgs()
+            {
+                DisplayName = "OIDC provider name",
+                Enabled = true,
+                ProviderId = "oidc.myProvider",
+                ClientId = "CLIENT_ID",
+                Issuer = "https://oidc.com",
+            };
+            OidcProviderConfig oidc = await FirebaseAuth.DefaultInstance
+                .UpdateProviderConfigAsync(args);
+            Console.WriteLine($"Updated OIDC provider: {oidc.ProviderId}");
+            // [END update_oidc_provider]
+        }
+
+        internal static async Task GetOidcProviderConfig()
+        {
+            // [START get_oidc_provider]
+            OidcProviderConfig oidc = await FirebaseAuth.DefaultInstance
+                .GetOidcProviderConfigAsync("oidc.myProvider");
+            Console.WriteLine($"{oidc.DisplayName}: {oidc.Enabled}");
+            // [END get_oidc_provider]
+        }
+
+        internal static async Task DeleteOidcProviderConfig()
+        {
+            // [START delete_oidc_provider]
+            await FirebaseAuth.DefaultInstance.DeleteProviderConfigAsync("oidc.myProvider");
+            // [END delete_oidc_provider]
+        }
+
+        internal static async Task ListOidcProviderConfigs()
+        {
+            // [START list_oidc_providers]
+            var listOptions = new ListProviderConfigsOptions()
+            {
+                PageToken = "nextPageToken",
+            };
+            IAsyncEnumerator<OidcProviderConfig> enumerator = FirebaseAuth.DefaultInstance
+                .ListOidcProviderConfigsAsync(listOptions)
+                .GetEnumerator();
+
+            while (await enumerator.MoveNext())
+            {
+                OidcProviderConfig saml = enumerator.Current;
+                Console.WriteLine(saml.ProviderId);
+            }
+
+            // [END list_oidc_providers]
         }
 
         // Place holder method to make the compiler happy. This is referenced by all email action
