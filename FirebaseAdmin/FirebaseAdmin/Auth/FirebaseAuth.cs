@@ -1172,8 +1172,7 @@ namespace FirebaseAdmin.Auth
         /// contain the <c>oidc.</c> prefix.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
-        /// <param name="providerId">The provider ID corresponding to the OIDC provider config
-        /// to return.</param>
+        /// <param name="providerId">The ID of the OIDC provider config to return.</param>
         public async Task<OidcProviderConfig> GetOidcProviderConfigAsync(string providerId)
         {
             return await this.GetOidcProviderConfigAsync(providerId, default(CancellationToken))
@@ -1188,8 +1187,7 @@ namespace FirebaseAdmin.Auth
         /// contain the <c>oidc.</c> prefix.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
-        /// <param name="providerId">The provider ID corresponding to the OIDC provider config
-        /// to return.</param>
+        /// <param name="providerId">The ID of the OIDC provider config to return.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         public async Task<OidcProviderConfig> GetOidcProviderConfigAsync(
@@ -1210,8 +1208,7 @@ namespace FirebaseAdmin.Auth
         /// contain the <c>saml.</c> prefix.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
-        /// <param name="providerId">The provider ID corresponding to the SAML provider config
-        /// to return.</param>
+        /// <param name="providerId">The ID of the SAML provider config to return.</param>
         public async Task<SamlProviderConfig> GetSamlProviderConfigAsync(string providerId)
         {
             return await this.GetSamlProviderConfigAsync(providerId, default(CancellationToken))
@@ -1226,8 +1223,7 @@ namespace FirebaseAdmin.Auth
         /// contain the <c>saml.</c> prefix.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
-        /// <param name="providerId">The provider ID corresponding to the SAML provider config
-        /// to return.</param>
+        /// <param name="providerId">The ID of the SAML provider config to return.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         public async Task<SamlProviderConfig> GetSamlProviderConfigAsync(
@@ -1249,7 +1245,7 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
         /// the provider configuration.</exception>
         /// <param name="args">Arguments that describe the new provider configuration.</param>
-        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to be created.</typeparam>
+        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to create.</typeparam>
         public async Task<T> CreateProviderConfigAsync<T>(AuthProviderConfigArgs<T> args)
         where T : AuthProviderConfig
         {
@@ -1268,7 +1264,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="args">Arguments that describe the new provider configuration.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to be created.</typeparam>
+        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to create.</typeparam>
         public async Task<T> CreateProviderConfigAsync<T>(
             AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
             where T : AuthProviderConfig
@@ -1289,7 +1285,7 @@ namespace FirebaseAdmin.Auth
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist or if an unexpected error occurs while performing the update.</exception>
         /// <param name="args">Properties to be updated in the provider configuration.</param>
-        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to be updated.</typeparam>
+        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to update.</typeparam>
         public async Task<T> UpdateProviderConfigAsync<T>(AuthProviderConfigArgs<T> args)
         where T : AuthProviderConfig
         {
@@ -1309,7 +1305,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="args">Properties to be updated in the provider configuration.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
-        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to be updated.</typeparam>
+        /// <typeparam name="T">Type of <see cref="AuthProviderConfig"/> to update.</typeparam>
         public async Task<T> UpdateProviderConfigAsync<T>(
             AuthProviderConfigArgs<T> args, CancellationToken cancellationToken)
             where T : AuthProviderConfig

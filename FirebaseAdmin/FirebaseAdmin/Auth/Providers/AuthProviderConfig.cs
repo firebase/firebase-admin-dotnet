@@ -41,7 +41,7 @@ namespace FirebaseAdmin.Auth.Providers
         public string ProviderId { get; }
 
         /// <summary>
-        /// Gets the The user-friendly display name of the configuration. This name is also used
+        /// Gets the user-friendly display name of the configuration. This name is also used
         /// as the provider label in the Cloud Console.
         /// </summary>
         public string DisplayName { get; }

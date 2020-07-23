@@ -47,12 +47,12 @@ namespace FirebaseAdmin.Auth.Providers
         /// <c>id_token</c> authentication flow.</description>
         /// </item>
         /// <item>
-        /// <description>To retrieve the public signing keys via <c>jwks_uri</c> to verify the
-        /// OIDC provider's ID token signature.</description>
+        /// <description>To retrieve the public signing keys from <c>jwks_uri</c>, which is used
+        /// to verify the signature of the ID token.</description>
         /// </item>
         /// <item>
-        /// <description>To determine the <c>claims_supported</c> to construct the user attributes
-        /// to be returned in the additional user info response.</description>
+        /// <description>To determine the <c>claims_supported</c>, which are passed through in
+        /// the additional user info response.</description>
         /// </item>
         /// </list>
         /// <para>

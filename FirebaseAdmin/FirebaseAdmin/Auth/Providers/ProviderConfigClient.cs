@@ -175,8 +175,8 @@ namespace FirebaseAdmin.Auth.Providers
         }
 
         /// <summary>
-        /// A class for making batch get requests to list a specific type of auth provider
-        /// configurations. An instance of this class is used by the Google API client to provide
+        /// A class for making batch GET requests to list a specific type of auth provider
+        /// configuration. An instance of this class is used by the Google API client to provide
         /// pagination support.
         /// </summary>
         protected abstract class AbstractListRequest
