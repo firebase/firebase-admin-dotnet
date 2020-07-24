@@ -18,7 +18,7 @@ using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Providers;
 using Xunit;
 
-namespace FirebaseAdmin.IntegrationTests
+namespace FirebaseAdmin.IntegrationTests.Auth
 {
     [TestCaseOrderer(
         "FirebaseAdmin.IntegrationTests.TestRankOrderer", "FirebaseAdmin.IntegrationTests")]
