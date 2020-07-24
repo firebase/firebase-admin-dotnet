@@ -830,8 +830,8 @@ namespace FirebaseAdmin.Snippets
 
             while (await enumerator.MoveNext())
             {
-                OidcProviderConfig saml = enumerator.Current;
-                Console.WriteLine(saml.ProviderId);
+                OidcProviderConfig oidc = enumerator.Current;
+                Console.WriteLine(oidc.ProviderId);
             }
 
             // [END list_oidc_providers]
