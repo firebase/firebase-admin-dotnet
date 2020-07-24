@@ -26,7 +26,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
     /// accounts created, and deletes them on dispose. Other user accounts created outside this
     /// class can be marked for deletion using the <see cref="AddUid(string)"/> method. This class
     /// deletes user accounts in an idempotent manner. Therefore it's safe to delete any of the
-    /// user accounts created by this class before this instance is disposed.
+    /// user accounts created by this class before this instance is disposed. This class is not
+    /// thread safe. Any concurrent usage should be synchronized accordingly.
     /// <summary>
     public sealed class TemporaryUserBuilder : IDisposable
     {
@@ -64,7 +65,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             // Make sure we never create more than 1000 users in a single instance.
             // This allows us to delete all user accounts with a single call to DeleteUsers().
             // Should not ever occur in practice.
-            if (this.userIds.Count() == 1000)
+            if (this.userIds.Count() >= 1000)
             {
                 throw new InvalidOperationException("Maximum number of users reached.");
             }
