@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Auth.Providers;
 using Google.Api.Gax;
 using Google.Apis.Util;
@@ -33,6 +34,7 @@ namespace FirebaseAdmin.Auth
         private readonly Lazy<FirebaseTokenVerifier> sessionCookieVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
         private readonly Lazy<ProviderConfigManager> providerConfigManager;
+        private readonly Lazy<TenantManager> tenantManager;
         private readonly object authLock = new object();
         private bool deleted;
 
@@ -46,6 +48,7 @@ namespace FirebaseAdmin.Auth
             this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
             this.providerConfigManager = args.ProviderConfigManager.ThrowIfNull(
                 nameof(args.ProviderConfigManager));
+            this.tenantManager = args.TenantManager.ThrowIfNull(nameof(args.TenantManager));
         }
 
         /// <summary>
@@ -65,6 +68,11 @@ namespace FirebaseAdmin.Auth
                 return GetAuth(app);
             }
         }
+
+        /// <summary>
+        /// Gets the <see cref="TenantManager"/> instance associated with the current project.
+        /// </summary>
+        public TenantManager TenantManager => this.tenantManager.Value;
 
         /// <summary>
         /// Returns the auth instance for the specified app.
@@ -1401,6 +1409,7 @@ namespace FirebaseAdmin.Auth
                 this.tokenFactory.DisposeIfCreated();
                 this.userManager.DisposeIfCreated();
                 this.providerConfigManager.DisposeIfCreated();
+                this.tenantManager.DisposeIfCreated();
             }
         }
 
@@ -1438,6 +1447,8 @@ namespace FirebaseAdmin.Auth
 
             internal Lazy<ProviderConfigManager> ProviderConfigManager { get; set; }
 
+            internal Lazy<TenantManager> TenantManager { get; set; }
+
             internal static Args Create(FirebaseApp app)
             {
                 return new Args()
@@ -1452,6 +1463,8 @@ namespace FirebaseAdmin.Auth
                         () => FirebaseUserManager.Create(app), true),
                     ProviderConfigManager = new Lazy<ProviderConfigManager>(
                         () => Providers.ProviderConfigManager.Create(app), true),
+                    TenantManager = new Lazy<TenantManager>(
+                        () => Multitenancy.TenantManager.Create(app), true),
                 };
             }
 
@@ -1464,6 +1477,7 @@ namespace FirebaseAdmin.Auth
                     SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
                     UserManager = new Lazy<FirebaseUserManager>(),
                     ProviderConfigManager = new Lazy<ProviderConfigManager>(),
+                    TenantManager = new Lazy<TenantManager>(),
                 };
             }
         }
