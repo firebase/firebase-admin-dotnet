@@ -78,6 +78,13 @@ namespace FirebaseAdmin.Auth
                         "The user with the provided phone number already exists")
                 },
                 {
+                    "TENANT_NOT_FOUND",
+                    new ErrorInfo(
+                        ErrorCode.NotFound,
+                        AuthErrorCode.TenantNotFound,
+                        "No tenant found for the given identifier")
+                },
+                {
                     "USER_NOT_FOUND",
                     new ErrorInfo(
                         ErrorCode.NotFound,
