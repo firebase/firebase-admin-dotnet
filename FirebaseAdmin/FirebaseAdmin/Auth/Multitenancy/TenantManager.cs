@@ -13,12 +13,15 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
+using Google.Apis.Json;
+using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth.Multitenancy
 {
@@ -99,9 +102,114 @@ namespace FirebaseAdmin.Auth.Multitenancy
                 Method = HttpMethod.Get,
                 RequestUri = new Uri($"{this.baseUrl}/tenants/{tenantId}"),
             };
-            var args = await this.SendAndDeserializeAsync<Tenant.Args>(request, cancellationToken)
+            var args = await this.SendAndDeserializeAsync<TenantArgs>(request, cancellationToken)
                 .ConfigureAwait(false);
             return new Tenant(args);
+        }
+
+        /// <summary>
+        /// Creates a new tenant.
+        /// </summary>
+        /// <param name="args">Arguments that describe the new tenant configuration.</param>
+        /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.
+        /// </exception>
+        /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
+        /// the tenant.</exception>
+        public async Task<Tenant> CreateTenantAsync(TenantArgs args)
+        {
+            return await this.CreateTenantAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new tenant.
+        /// </summary>
+        /// <param name="args">Arguments that describe the new tenant configuration.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.
+        /// </exception>
+        /// <exception cref="FirebaseAuthException">If an unexpected error occurs while creating
+        /// the tenant.</exception>
+        public async Task<Tenant> CreateTenantAsync(
+            TenantArgs args, CancellationToken cancellationToken)
+        {
+            args.ThrowIfNull(nameof(args));
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri($"{this.baseUrl}/tenants"),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(args),
+            };
+            var resp = await this.SendAndDeserializeAsync<TenantArgs>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return new Tenant(resp);
+        }
+
+        /// <summary>
+        /// Updates an existing tenant.
+        /// </summary>
+        /// <param name="tenantId">ID of the tenant to be updated.</param>
+        /// <param name="args">Properties to be updated in the tenant.</param>
+        /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
+        /// <exception cref="ArgumentException">If <paramref name="tenantId"/> is null or empty,
+        /// or if <paramref name="args"/> does not contain any values.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.
+        /// </exception>
+        /// <exception cref="FirebaseAuthException">If an unexpected error occurs while updating
+        /// the tenant.</exception>
+        public async Task<Tenant> UpdateTenantAsync(string tenantId, TenantArgs args)
+        {
+            return await this.UpdateTenantAsync(tenantId, args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates an existing tenant.
+        /// </summary>
+        /// <param name="tenantId">ID of the tenant to be updated.</param>
+        /// <param name="args">Properties to be updated in the tenant.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
+        /// <exception cref="ArgumentException">If <paramref name="tenantId"/> is null or empty,
+        /// or if <paramref name="args"/> does not contain any values.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.
+        /// </exception>
+        /// <exception cref="FirebaseAuthException">If an unexpected error occurs while updating
+        /// the tenant.</exception>
+        public async Task<Tenant> UpdateTenantAsync(
+            string tenantId, TenantArgs args, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(tenantId))
+            {
+                throw new ArgumentException("Tenant ID cannot be null or empty.");
+            }
+
+            var updateMask = HttpUtils.CreateUpdateMask(args.ThrowIfNull(nameof(args)));
+            if (updateMask.Count == 0)
+            {
+                throw new ArgumentException("At least one field must be specified for update.");
+            }
+
+            var queryString = HttpUtils.EncodeQueryParams(new Dictionary<string, object>()
+            {
+                { "updateMask", string.Join(",", updateMask) },
+            });
+
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpUtils.Patch,
+                RequestUri = new Uri($"{this.baseUrl}/tenants/{tenantId}{queryString}"),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(args),
+            };
+            var resp = await this.SendAndDeserializeAsync<TenantArgs>(request, cancellationToken)
+                .ConfigureAwait(false);
+            return new Tenant(resp);
         }
 
         /// <summary>

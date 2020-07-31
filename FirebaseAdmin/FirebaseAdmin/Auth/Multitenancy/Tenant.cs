@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using Google.Apis.Util;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth.Multitenancy
 {
@@ -39,9 +38,9 @@ namespace FirebaseAdmin.Auth.Multitenancy
     /// </summary>
     public sealed class Tenant
     {
-        private readonly Args args;
+        private readonly TenantArgs args;
 
-        internal Tenant(Args args)
+        internal Tenant(TenantArgs args)
         {
             this.args = args.ThrowIfNull(nameof(args));
         }
@@ -59,32 +58,17 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// <summary>
         /// Gets a value indicating whether the email sign-in provider is enabled.
         /// </summary>
-        public bool PasswordSignUpAllowed => args.PasswordSignUpAllowed;
+        public bool PasswordSignUpAllowed => args.PasswordSignUpAllowed ?? false;
 
         /// <summary>
         /// Gets a value indicating whether the email link sign-in is enabled.
         /// </summary>
-        public bool EmailLinkSignInEnabled => args.EmailLinkSignInEnabled;
+        public bool EmailLinkSignInEnabled => args.EmailLinkSignInEnabled ?? false;
 
         private string ExtractResourceId(string resourceName)
         {
             var segments = resourceName.Split('/');
             return segments[segments.Length - 1];
-        }
-
-        internal sealed class Args
-        {
-            [JsonProperty("name")]
-            internal string Name { get; set; }
-
-            [JsonProperty("displayName")]
-            internal string DisplayName { get; set; }
-
-            [JsonProperty("allowPasswordSignup")]
-            internal bool PasswordSignUpAllowed { get; set; }
-
-            [JsonProperty("enableEmailLinkSignin")]
-            internal bool EmailLinkSignInEnabled { get; set; }
         }
     }
 }
