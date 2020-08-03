@@ -14,14 +14,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
+using Google.Api.Gax;
+using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Util;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth.Multitenancy
 {
@@ -213,6 +218,66 @@ namespace FirebaseAdmin.Auth.Multitenancy
         }
 
         /// <summary>
+        /// Deletes the tenant corresponding to the given <paramref name="tenantId"/>.
+        /// </summary>
+        /// <param name="tenantId">A tenant identifier string.</param>
+        /// <returns>A task that completes when the tenant is deleted.</returns>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null or empty.
+        /// </exception>
+        /// <exception cref="FirebaseAuthException">If a tenant cannot be found with the specified
+        /// ID.</exception>
+        public async Task DeleteTenantAsync(string tenantId)
+        {
+            await this.DeleteTenantAsync(tenantId, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the tenant corresponding to the given <paramref name="tenantId"/>.
+        /// </summary>
+        /// <param name="tenantId">A tenant identifier string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes when the tenant is deleted.</returns>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null or empty.
+        /// </exception>
+        /// <exception cref="FirebaseAuthException">If a tenant cannot be found with the specified
+        /// ID.</exception>
+        public async Task DeleteTenantAsync(string tenantId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(tenantId))
+            {
+                throw new ArgumentException("Tenant ID cannot be null or empty.");
+            }
+
+            var request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Delete,
+                RequestUri = new Uri($"{this.baseUrl}/tenants/{tenantId}"),
+            };
+            await this.SendAndDeserializeAsync<object>(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets an async enumerable to iterate or page through tenants
+        /// starting from the specified page token. If the page token is null or unspecified,
+        /// iteration starts from the first page. See
+        /// <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
+        /// Page Streaming</a> for more details on how to use this API.
+        /// </summary>
+        /// <param name="options">The options to control the starting point and page size. Pass
+        /// null to list from the beginning with default settings.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{TenantsPage, Tenant}"/>
+        /// instance.</returns>
+        public PagedAsyncEnumerable<TenantsPage, Tenant> ListTenantsAsync(ListTenantsOptions options)
+        {
+            var request = new ListTenantsRequest(this.baseUrl, this.httpClient, options);
+            return new RestPagedAsyncEnumerable
+                <ListTenantsRequest, TenantsPage, Tenant>(() => request, new PageManager());
+        }
+
+        /// <summary>
         /// Cleans up and invalidates this instance. For internal use only.
         /// </summary>
         void IDisposable.Dispose()
@@ -265,6 +330,73 @@ namespace FirebaseAdmin.Auth.Multitenancy
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
                 };
             }
+        }
+
+        private sealed class PageManager : IPageManager<ListTenantsRequest, TenantsPage, Tenant>
+        {
+            public void SetPageSize(ListTenantsRequest request, int pageSize)
+            {
+                request.SetPageSize(pageSize);
+            }
+
+            public void SetPageToken(ListTenantsRequest request, string pageToken)
+            {
+                request.SetPageToken(pageToken);
+            }
+
+            public IEnumerable<Tenant> GetResources(TenantsPage response)
+            {
+                return response?.Tenants;
+            }
+
+            public string GetNextPageToken(TenantsPage response)
+            {
+                return string.IsNullOrEmpty(response.NextPageToken) ?
+                    null : response.NextPageToken;
+            }
+        }
+
+        private sealed class ListTenantsRequest
+        : ListResourcesRequest<TenantsPage, FirebaseAuthException>
+        {
+            internal ListTenantsRequest(
+                string baseUrl,
+                ErrorHandlingHttpClient<FirebaseAuthException> httpClient,
+                ListTenantsOptions options)
+            : base(baseUrl, httpClient, options?.PageToken, options?.PageSize) { }
+
+            public override string RestPath => "tenants";
+
+            public override HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
+            {
+                var request = base.CreateRequest(overrideGZipEnabled);
+                request.Headers.Add(ClientVersionHeader, ClientVersion);
+                return request;
+            }
+
+            public override async Task<TenantsPage> ExecuteAsync(
+                CancellationToken cancellationToken)
+            {
+                var request = this.CreateRequest();
+                var response = await this.HttpClient
+                    .SendAndDeserializeAsync<ListResponse>(request, cancellationToken)
+                    .ConfigureAwait(false);
+                var tenants = response.Result.Tenants?.Select(args => new Tenant(args));
+                return new TenantsPage
+                {
+                    NextPageToken = response.Result.NextPageToken,
+                    Tenants = tenants,
+                };
+            }
+        }
+
+        private sealed class ListResponse
+        {
+            [JsonProperty("nextPageToken")]
+            public string NextPageToken { get; set; }
+
+            [JsonProperty("tenants")]
+            public IEnumerable<TenantArgs> Tenants { get; set; }
         }
     }
 }
