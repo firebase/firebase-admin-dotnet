@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class HttpPublicKeySourceTest
     {

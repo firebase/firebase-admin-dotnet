@@ -14,7 +14,7 @@
 
 using Google.Apis.Util;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
     internal sealed class FirebaseTokenVerifierArgs
     {

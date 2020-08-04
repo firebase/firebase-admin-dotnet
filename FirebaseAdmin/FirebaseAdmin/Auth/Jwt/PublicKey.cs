@@ -20,7 +20,7 @@ using RSAKey = System.Security.Cryptography.RSACryptoServiceProvider;
 #error Unsupported target
 #endif
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
     /// Represents an RSA public key, which can be used to verify signatures.
