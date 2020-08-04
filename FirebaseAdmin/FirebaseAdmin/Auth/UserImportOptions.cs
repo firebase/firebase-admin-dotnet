@@ -33,7 +33,7 @@ namespace FirebaseAdmin.Auth
         /// Retrieves properties of the password hashing algorithm.
         /// </summary>
         /// <returns>Dictionary containing key/values for password hashing properties.</returns>
-        internal IReadOnlyDictionary<string, object> GetHashProperties()
+        internal Dictionary<string, object> GetHashProperties()
         {
             if (this.Hash == null)
             {

@@ -13,15 +13,14 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
-    // TODO(rsgowman): This class is expected to also be used for the
-    // ImportUsersAsync() method... once that exists.
-
     /// <summary>
-    /// Represents an error encountered while deleting users via the
-    /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> API.
+    /// Represents an error encountered while performing a batch operation such as
+    /// <see cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> or
+    /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/>.
     /// </summary>
     public sealed class ErrorInfo
     {
@@ -31,15 +30,18 @@ namespace FirebaseAdmin.Auth
             this.Reason = reason;
         }
 
+        internal ErrorInfo() { }
+
         /// <summary>
-        /// Gets the index of the user that was unable to be deleted in the list passed to the
-        /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> method.
+        /// Gets the index of the entry that caused the error.
         /// </summary>
-        public int Index { get; }
+        [JsonProperty("index")]
+        public int Index { get; internal set; }
 
         /// <summary>
         /// Gets a string describing the error.
         /// </summary>
-        public string Reason { get; }
+        [JsonProperty("message")]
+        public string Reason { get; internal set; }
     }
 }

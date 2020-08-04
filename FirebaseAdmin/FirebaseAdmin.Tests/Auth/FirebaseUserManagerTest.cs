@@ -18,7 +18,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Hash;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
@@ -1869,6 +1871,183 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(3600, request["validDuration"]);
 
             this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task ImportUsers()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var users = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs() { Uid = "user2" },
+            };
+
+            var result = await auth.ImportUsersAsync(users);
+
+            Assert.Equal(2, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
+
+            Assert.Equal(1, handler.Requests.Count);
+            var expected = new JObject()
+            {
+                {
+                    "users", new JArray()
+                    {
+                        new JObject() { { "localId", "user1" } },
+                        new JObject() { { "localId", "user2" } },
+                    }
+                },
+            };
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.True(JToken.DeepEquals(expected, request));
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task ImportUsersError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{
+                    ""error"": [
+                        {""index"": 1, ""message"": ""test error""}
+                    ]
+                }",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var usersList = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs() { Uid = "user2" },
+            };
+
+            var result = await auth.ImportUsersAsync(usersList);
+
+            Assert.Equal(1, result.SuccessCount);
+            Assert.Equal(1, result.FailureCount);
+            var error = Assert.Single(result.Errors);
+            Assert.Equal(1, error.Index);
+            Assert.Equal("test error", error.Reason);
+
+            Assert.Equal(1, handler.Requests.Count);
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task ImportUsersWithPassword()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var auth = this.CreateFirebaseAuth(handler);
+            var password = Encoding.UTF8.GetBytes("password");
+            var usersList = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs()
+                {
+                    Uid = "user2",
+                    PasswordHash = password,
+                },
+            };
+
+            var result = await auth.ImportUsersAsync(usersList, new UserImportOptions()
+            {
+                Hash = new Bcrypt(),
+            });
+
+            Assert.Equal(2, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
+
+            Assert.Equal(1, handler.Requests.Count);
+            var expected = new JObject()
+            {
+                {
+                    "users", new JArray()
+                    {
+                        new JObject() { { "localId", "user1" } },
+                        new JObject()
+                        {
+                            { "localId", "user2" },
+                            { "passwordHash", JwtUtils.UrlSafeBase64Encode(password) },
+                        },
+                    }
+                },
+                { "hashAlgorithm", "BCRYPT" },
+            };
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.True(JToken.DeepEquals(expected, request));
+            this.AssertClientVersion(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task ImportUsersMissingHash()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var usersList = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs()
+                {
+                    Uid = "user2",
+                    PasswordHash = Encoding.UTF8.GetBytes("password"),
+                },
+            };
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(usersList));
+
+            Assert.Equal(
+                "UserImportHash option is required when at least one user has a password.",
+                exception.Message);
+        }
+
+        [Fact]
+        public async Task ImportUsersEmpty()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(new List<ImportUserRecordArgs>()));
+
+            Assert.Equal("Users must not be null or empty.", exception.Message);
+        }
+
+        [Fact]
+        public async Task ImportUsersNull()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(null));
+
+            Assert.Equal("Users must not be null or empty.", exception.Message);
+        }
+
+        [Fact]
+        public async Task ImportUsersExceedLimit()
+        {
+            var auth = this.CreateFirebaseAuth(new MockMessageHandler());
+            var users = new List<ImportUserRecordArgs>();
+            for (int i = 0; i < 1001; i++)
+            {
+                users.Add(new ImportUserRecordArgs() { Uid = $"user{i}" });
+            }
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(users));
+
+            Assert.Equal("Users list must not contain more than 1000 items.", exception.Message);
         }
 
         [Fact]

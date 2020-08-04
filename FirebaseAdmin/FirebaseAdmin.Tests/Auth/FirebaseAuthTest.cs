@@ -162,25 +162,6 @@ namespace FirebaseAdmin.Auth.Tests
                 async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
         }
 
-        [Fact]
-        public async Task ImportUsersPasswordNoHash()
-        {
-            var args = new ImportUserRecordArgs()
-            {
-                Uid = "123",
-                Email = "example@gmail.com",
-                PasswordSalt = Encoding.ASCII.GetBytes("abc"),
-                PasswordHash = Encoding.ASCII.GetBytes("def"),
-            };
-
-            var usersLst = new List<ImportUserRecordArgs>()
-            {
-                args,
-            };
-            await Assert.ThrowsAsync<NullReferenceException>(
-                async () => await FirebaseAuth.DefaultInstance.ImportUsersAsync(usersLst));
-        }
-
         public void Dispose()
         {
             FirebaseApp.DeleteAll();
