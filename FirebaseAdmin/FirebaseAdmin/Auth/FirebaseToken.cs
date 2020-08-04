@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {

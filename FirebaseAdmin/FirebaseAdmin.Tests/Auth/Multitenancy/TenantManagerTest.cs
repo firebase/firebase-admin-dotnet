@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Multitenancy.Tests
@@ -42,6 +44,12 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
         private const string TenantNotFoundResponse = @"{
             ""error"": {
                 ""message"": ""TENANT_NOT_FOUND""
+            }
+        }";
+
+        private const string UnknownErrorResponse = @"{
+            ""error"": {
+                ""message"": ""UNKNOWN""
             }
         }";
 
@@ -93,6 +101,214 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 () => auth.TenantManager.GetTenantAsync("tenant1"));
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.TenantNotFound, exception.AuthErrorCode);
+            Assert.Equal(
+                "No tenant found for the given identifier (TENANT_NOT_FOUND).",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public async Task CreateTenant()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = TenantResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var args = new TenantArgs()
+            {
+                DisplayName = "Test Tenant",
+                PasswordSignUpAllowed = true,
+                EmailLinkSignInEnabled = true,
+            };
+
+            var provider = await auth.TenantManager.CreateTenantAsync(args);
+
+            AssertTenant(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal("/v2/projects/project1/tenants", request.Url.PathAndQuery);
+            AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Equal(3, body.Count);
+            Assert.Equal("Test Tenant", body["displayName"]);
+            Assert.True((bool)body["allowPasswordSignup"]);
+            Assert.True((bool)body["enableEmailLinkSignin"]);
+        }
+
+        [Fact]
+        public async Task CreateTenantMinimal()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = TenantResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+
+            var provider = await auth.TenantManager.CreateTenantAsync(new TenantArgs());
+
+            AssertTenant(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal("/v2/projects/project1/tenants", request.Url.PathAndQuery);
+            AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Empty(body);
+        }
+
+        [Fact]
+        public async Task CreateTenantNullArgs()
+        {
+            var auth = CreateFirebaseAuth();
+
+            await Assert.ThrowsAsync<ArgumentNullException>(
+                () => auth.TenantManager.CreateTenantAsync(null));
+        }
+
+        [Fact]
+        public async Task CreateTenantError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = UnknownErrorResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => auth.TenantManager.CreateTenantAsync(new TenantArgs()));
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Null(exception.AuthErrorCode);
+            Assert.StartsWith(
+                "Unexpected HTTP response with status: 500 (InternalServerError)",
+                exception.Message);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Null(exception.InnerException);
+        }
+
+        [Fact]
+        public async Task UpdateTenant()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = TenantResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var args = new TenantArgs()
+            {
+                DisplayName = "Test Tenant",
+                PasswordSignUpAllowed = true,
+                EmailLinkSignInEnabled = true,
+            };
+
+            var provider = await auth.TenantManager.UpdateTenantAsync("tenant1", args);
+
+            AssertTenant(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(HttpUtils.Patch, request.Method);
+            var mask = "allowPasswordSignup,displayName,enableEmailLinkSignin";
+            Assert.Equal(
+                $"/v2/projects/project1/tenants/tenant1?updateMask={mask}",
+                request.Url.PathAndQuery);
+            AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Equal(3, body.Count);
+            Assert.Equal("Test Tenant", body["displayName"]);
+            Assert.True((bool)body["allowPasswordSignup"]);
+            Assert.True((bool)body["enableEmailLinkSignin"]);
+        }
+
+        [Fact]
+        public async Task UpdateTenantMinimal()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = TenantResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var args = new TenantArgs()
+            {
+                DisplayName = "Test Tenant",
+            };
+
+            var provider = await auth.TenantManager.UpdateTenantAsync("tenant1", args);
+
+            AssertTenant(provider);
+            Assert.Equal(1, handler.Requests.Count);
+            var request = handler.Requests[0];
+            Assert.Equal(HttpUtils.Patch, request.Method);
+            Assert.Equal(
+                "/v2/projects/project1/tenants/tenant1?updateMask=displayName",
+                request.Url.PathAndQuery);
+            AssertClientVersionHeader(request);
+
+            var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.Single(body);
+            Assert.Equal("Test Tenant", body["displayName"]);
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public async Task UpdateTenantNoId(string tenantId)
+        {
+            var auth = CreateFirebaseAuth();
+            var args = new TenantArgs()
+            {
+                DisplayName = "Test Tenant",
+            };
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.TenantManager.UpdateTenantAsync(tenantId, args));
+            Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
+        }
+
+        [Fact]
+        public async Task UpdateTenantNullArgs()
+        {
+            var auth = CreateFirebaseAuth();
+
+            await Assert.ThrowsAsync<ArgumentNullException>(
+                () => auth.TenantManager.UpdateTenantAsync("tenant1", null));
+        }
+
+        [Fact]
+        public async Task UpdateTenantEmptyArgs()
+        {
+            var auth = CreateFirebaseAuth();
+
+            await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.TenantManager.UpdateTenantAsync("tenant1", new TenantArgs()));
+        }
+
+        [Fact]
+        public async Task UpdateTenantError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                Response = TenantNotFoundResponse,
+            };
+            var auth = CreateFirebaseAuth(handler);
+            var args = new TenantArgs()
+            {
+                DisplayName = "Test Tenant",
+            };
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => auth.TenantManager.UpdateTenantAsync("tenant1", args));
             Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.TenantNotFound, exception.AuthErrorCode);
             Assert.Equal(

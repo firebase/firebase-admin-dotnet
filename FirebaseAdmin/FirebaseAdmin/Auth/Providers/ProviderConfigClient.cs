@@ -19,13 +19,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Api.Gax.Rest;
 using Google.Apis.Discovery;
 using Google.Apis.Json;
 using Google.Apis.Requests;
 using Google.Apis.Services;
-using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -39,8 +39,6 @@ namespace FirebaseAdmin.Auth.Providers
     internal abstract class ProviderConfigClient<T>
     where T : AuthProviderConfig
     {
-        private static readonly HttpMethod Patch = new HttpMethod("PATCH");
-
         protected abstract string ResourcePath { get; }
 
         protected abstract string ProviderIdParam { get; }
@@ -80,7 +78,7 @@ namespace FirebaseAdmin.Auth.Providers
         {
             var providerId = this.ValidateProviderId(args.ProviderId);
             var content = args.ToUpdateRequest();
-            var updateMask = CreateUpdateMask(content);
+            var updateMask = HttpUtils.CreateUpdateMask(content);
             if (updateMask.Count == 0)
             {
                 throw new ArgumentException("At least one field must be specified for update.");
@@ -92,7 +90,7 @@ namespace FirebaseAdmin.Auth.Providers
             };
             var request = new HttpRequestMessage()
             {
-                Method = Patch,
+                Method = HttpUtils.Patch,
                 RequestUri = BuildUri($"{this.ResourcePath}/{providerId}", query),
                 Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(content),
             };
@@ -128,50 +126,10 @@ namespace FirebaseAdmin.Auth.Providers
         protected abstract AbstractListRequest CreateListRequest(
             ApiClient client, ListProviderConfigsOptions options);
 
-        private static IList<string> CreateUpdateMask(AuthProviderConfig.Request request)
-        {
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(request);
-            var dictionary = JObject.Parse(json);
-            var mask = CreateUpdateMask(dictionary);
-            mask.Sort();
-            return mask;
-        }
-
         private static Uri BuildUri(string path, IDictionary<string, object> queryParams = null)
         {
-            var uriString = $"{path}{EncodeQueryParams(queryParams)}";
+            var uriString = $"{path}{HttpUtils.EncodeQueryParams(queryParams)}";
             return new Uri(uriString, UriKind.Relative);
-        }
-
-        private static string EncodeQueryParams(IDictionary<string, object> queryParams)
-        {
-            var queryString = string.Empty;
-            if (queryParams != null && queryParams.Count > 0)
-            {
-                var list = queryParams.Select(kvp => $"{kvp.Key}={kvp.Value}");
-                queryString = "?" + string.Join("&", list);
-            }
-
-            return queryString;
-        }
-
-        private static List<string> CreateUpdateMask(JObject dictionary)
-        {
-            var mask = new List<string>();
-            foreach (var entry in dictionary)
-            {
-                if (entry.Value.Type == JTokenType.Object)
-                {
-                    var childMask = CreateUpdateMask((JObject)entry.Value);
-                    mask.AddRange(childMask.Select((item) => $"{entry.Key}.{item}"));
-                }
-                else
-                {
-                    mask.Add(entry.Key);
-                }
-            }
-
-            return mask;
         }
 
         /// <summary>
