@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FirebaseAdmin.Auth.Jwt;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth

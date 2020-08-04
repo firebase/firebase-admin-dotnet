@@ -16,7 +16,7 @@ using System;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class FirebaseTokenVerifierTest : IDisposable
     {

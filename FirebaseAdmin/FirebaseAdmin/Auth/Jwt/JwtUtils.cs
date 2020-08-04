@@ -18,7 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Json;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
     /// A collection of utilities for encoding and decoding JWTs.

@@ -18,11 +18,10 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class ServiceAccountSignerTest
     {

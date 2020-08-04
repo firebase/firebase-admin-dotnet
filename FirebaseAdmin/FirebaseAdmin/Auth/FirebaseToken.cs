@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -22,7 +23,7 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class FirebaseToken
     {
-        internal FirebaseToken(FirebaseTokenArgs args)
+        internal FirebaseToken(Args args)
         {
             this.Issuer = args.Issuer;
             this.Subject = args.Subject;
@@ -71,5 +72,26 @@ namespace FirebaseAdmin.Auth
         /// access custom claims of the token.
         /// </summary>
         public IReadOnlyDictionary<string, object> Claims { get; private set; }
+
+        internal sealed class Args
+        {
+            [JsonProperty("iss")]
+            public string Issuer { get; set; }
+
+            [JsonProperty("sub")]
+            public string Subject { get; set; }
+
+            [JsonProperty("aud")]
+            public string Audience { get; set; }
+
+            [JsonProperty("exp")]
+            public long ExpirationTimeSeconds { get; set; }
+
+            [JsonProperty("iat")]
+            public long IssuedAtTimeSeconds { get; set; }
+
+            [JsonIgnore]
+            public IReadOnlyDictionary<string, object> Claims { get; set; }
+        }
     }
 }

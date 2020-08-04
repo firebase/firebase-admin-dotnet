@@ -14,19 +14,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using FirebaseAdmin.Auth;
 using FirebaseAdmin.Tests;
 using Google.Apis.Auth;
-using Google.Apis.Util;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class FirebaseTokenFactoryTest
     {
