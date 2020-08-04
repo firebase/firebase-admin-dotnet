@@ -72,6 +72,7 @@ namespace FirebaseAdmin.Auth.Tests
                 async () => await auth.SetCustomUserClaimsAsync("user", null));
             await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await auth.GetOidcProviderConfigAsync("oidc.provider"));
+            Assert.Throws<InvalidOperationException>(() => auth.TenantManager);
         }
 
         [Fact]

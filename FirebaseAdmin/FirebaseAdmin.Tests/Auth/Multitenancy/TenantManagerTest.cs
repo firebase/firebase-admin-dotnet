@@ -603,6 +603,51 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Empty(handler.Requests);
         }
 
+        [Fact]
+        public void AuthForTenant()
+        {
+            var auth = CreateFirebaseAuth();
+
+            var tenantAwareAuth = auth.TenantManager.AuthForTenant("tenant1");
+
+            Assert.Equal("tenant1", tenantAwareAuth.TenantId);
+        }
+
+        [Fact]
+        public void AuthForTenantCaching()
+        {
+            var auth = CreateFirebaseAuth();
+
+            var tenantAwareAuth1 = auth.TenantManager.AuthForTenant("tenant1");
+            var tenantAwareAuth2 = auth.TenantManager.AuthForTenant("tenant1");
+
+            Assert.Same(tenantAwareAuth1, tenantAwareAuth2);
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public void AuthForTenantNoTenantId(string tenantId)
+        {
+            var auth = CreateFirebaseAuth();
+
+            var exception = Assert.Throws<ArgumentException>(
+                () => auth.TenantManager.AuthForTenant(tenantId));
+            Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
+        }
+
+        [Fact]
+        public async Task UseAfterDelete()
+        {
+            var auth = CreateFirebaseAuth();
+            var tenantManager = auth.TenantManager;
+            (auth as IFirebaseService).Delete();
+
+            await Assert.ThrowsAsync<ObjectDisposedException>(
+                () => tenantManager.GetTenantAsync("tenant1"));
+            Assert.Throws<ObjectDisposedException>(
+                () => tenantManager.AuthForTenant("tenant1"));
+        }
+
         private static FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
         {
             var tenantManager = new TenantManager(new TenantManager.Args
