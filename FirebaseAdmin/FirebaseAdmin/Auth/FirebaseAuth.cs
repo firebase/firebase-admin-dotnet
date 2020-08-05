@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Auth.Providers;
 using Google.Api.Gax;

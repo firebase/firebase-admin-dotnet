@@ -21,7 +21,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
     /// An <see cref="ISigner"/> implementation that uses the

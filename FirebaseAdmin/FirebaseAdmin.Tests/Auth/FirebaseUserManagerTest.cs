@@ -19,6 +19,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;

@@ -28,7 +28,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class IdTokenVerificationTest
     {
@@ -43,6 +43,14 @@ namespace FirebaseAdmin.Auth.Tests
 
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
+
+        [Fact]
+        public void NoProjectId()
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens(null, KeySource, Clock);
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+        }
 
         [Fact]
         public async Task ValidToken()
@@ -359,6 +367,18 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(1, handler.Calls);
         }
 
+        [Fact]
+        public async Task VerifyIdTokenCancel()
+        {
+            var auth = this.CreateFirebaseAuth();
+            var canceller = new CancellationTokenSource();
+            canceller.Cancel();
+            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => auth.VerifyIdTokenAsync(idToken, canceller.Token));
+        }
+
         /// <summary>
         /// Creates a mock ID token for testing purposes. By default the created token has an issue
         /// time 10 minutes ago, and an expirty time 50 minutes into the future. All header and
@@ -458,6 +478,7 @@ namespace FirebaseAdmin.Auth.Tests
         public Task<IReadOnlyList<PublicKey>> GetPublicKeysAsync(
             CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             return Task.FromResult(this.rsa);
         }
     }

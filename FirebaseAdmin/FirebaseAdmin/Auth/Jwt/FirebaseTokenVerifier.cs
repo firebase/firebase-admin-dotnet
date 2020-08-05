@@ -25,7 +25,7 @@ using Google.Apis.Auth;
 using Google.Apis.Http;
 using Google.Apis.Util;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
     /// A helper class that can be used to verify signed Firebase tokens (e.g. ID tokens).
@@ -127,7 +127,7 @@ namespace FirebaseAdmin.Auth
             }
 
             var header = JwtUtils.Decode<JsonWebSignature.Header>(segments[0]);
-            var payload = JwtUtils.Decode<FirebaseTokenArgs>(segments[1]);
+            var payload = JwtUtils.Decode<FirebaseToken.Args>(segments[1]);
             var projectIdMessage = $"Make sure the {this.shortName} comes from the same Firebase "
                 + "project as the credential used to initialize this SDK.";
             var verifyTokenMessage = $"See {this.url} for details on how to retrieve a value "

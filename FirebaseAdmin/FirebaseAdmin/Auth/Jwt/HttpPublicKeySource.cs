@@ -32,7 +32,7 @@ using RSAKey = System.Security.Cryptography.RSACryptoServiceProvider;
 #error Unsupported target
 #endif
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
     /// An <see cref="IPublicKeySource"/> implementation that retrieves public keys from a remote

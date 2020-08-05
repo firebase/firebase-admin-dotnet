@@ -16,7 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
     /// Represents an object can be used to cryptographically sign data. Mainly used for signing

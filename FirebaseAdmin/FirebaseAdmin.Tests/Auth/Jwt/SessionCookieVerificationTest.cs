@@ -23,7 +23,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class SessionCookieVerificationTest
     {
@@ -35,6 +35,14 @@ namespace FirebaseAdmin.Auth.Tests
         private static readonly IClock Clock = new MockClock();
 
         private static readonly ISigner Signer = IdTokenVerificationTest.CreateTestSigner();
+
+        [Fact]
+        public void NoProjectId()
+        {
+            var args = FirebaseTokenVerifierArgs.ForSessionCookies(null, KeySource, Clock);
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+        }
 
         [Fact]
         public async Task ValidSessionCookie()

@@ -24,7 +24,7 @@ using Google.Apis.Http;
 using Google.Apis.Json;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class IAMSignerTest
     {

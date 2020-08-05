@@ -20,6 +20,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Jwt;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -123,31 +124,6 @@ namespace FirebaseAdmin.Auth.Tests
                 + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
                 + "more details on creating custom tokens.";
             Assert.Equal(errorMessage, ex.Message);
-        }
-
-        [Fact]
-        public async Task VerifyIdTokenNoProjectId()
-        {
-            FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
-            await Assert.ThrowsAsync<ArgumentException>(
-                async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken));
-        }
-
-        [Fact]
-        public async Task VerifyIdTokenCancel()
-        {
-            FirebaseApp.Create(new AppOptions()
-            {
-                Credential = MockCredential,
-                ProjectId = "test-project",
-            });
-            var canceller = new CancellationTokenSource();
-            canceller.Cancel();
-            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
-                    idToken, canceller.Token));
         }
 
         [Fact]

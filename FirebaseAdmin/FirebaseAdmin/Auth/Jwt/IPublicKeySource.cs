@@ -13,28 +13,22 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt
 {
-    internal sealed class FirebaseTokenArgs
+    /// <summary>
+    /// An object that can be used to retrieve a set of RSA public keys for verifying signatures.
+    /// </summary>
+    internal interface IPublicKeySource
     {
-        [JsonProperty("iss")]
-        public string Issuer { get; set; }
-
-        [JsonProperty("sub")]
-        public string Subject { get; set; }
-
-        [JsonProperty("aud")]
-        public string Audience { get; set; }
-
-        [JsonProperty("exp")]
-        public long ExpirationTimeSeconds { get; set; }
-
-        [JsonProperty("iat")]
-        public long IssuedAtTimeSeconds { get; set; }
-
-        [JsonIgnore]
-        public IReadOnlyDictionary<string, object> Claims { get; set; }
+        /// <summary>
+        /// Returns a set of public keys.
+        /// </summary>
+        /// <returns>A task that completes with a list of public keys.</returns>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        Task<IReadOnlyList<PublicKey>> GetPublicKeysAsync(CancellationToken cancellationToken);
     }
 }
