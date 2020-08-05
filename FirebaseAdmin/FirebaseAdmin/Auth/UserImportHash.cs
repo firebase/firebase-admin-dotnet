@@ -50,13 +50,8 @@ namespace FirebaseAdmin.Auth
         /// Retrieves the properties of the chosen hashing algorithm.
         /// </summary>
         /// <returns>Dictionary containing the specified properties of the hashing algorithm.</returns>
-        internal IReadOnlyDictionary<string, object> GetProperties()
+        internal Dictionary<string, object> GetProperties()
         {
-            if (string.IsNullOrEmpty(this.hashName))
-            {
-                throw new ArgumentException("User import hash name must not be null or empty.");
-            }
-
             var options = this.GetHashConfiguration();
             var properties = new Dictionary<string, object>();
             foreach (var entry in options)

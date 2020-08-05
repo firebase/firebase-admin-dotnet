@@ -812,7 +812,7 @@ namespace FirebaseAdmin.Auth
         {
           var request = new UserImportRequest(users, options);
           var userManager = this.IfNotDeleted(() => this.userManager.Value);
-          return await userManager.ImportUsersAsync(request, cancellationToken);
+          return await userManager.ImportUsersAsync(users, options, cancellationToken);
         }
 
         /// <summary>

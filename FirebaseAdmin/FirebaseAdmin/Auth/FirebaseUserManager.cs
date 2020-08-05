@@ -230,23 +230,14 @@ namespace FirebaseAdmin.Auth
         }
 
         internal async Task<UserImportResult> ImportUsersAsync(
-          UserImportRequest request,
-          CancellationToken cancellationToken)
+            IEnumerable<ImportUserRecordArgs> users,
+            UserImportOptions options,
+            CancellationToken cancellationToken)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException("The UserImportRequest request should not be null");
-            }
-
+            var request = new UserImportRequest(users, options);
             var response = await this.PostAndDeserializeAsync<UploadAccountResponse>(
                 "accounts:batchCreate", request, cancellationToken).ConfigureAwait(false);
-            var uploadAccountResponse = response.Result;
-            if (uploadAccountResponse == null)
-            {
-                throw new FirebaseAuthException(ErrorCode.Internal, "Failed to import users.");
-            }
-
-            return new UserImportResult(request.GetUsersCount(), uploadAccountResponse.Errors);
+            return new UserImportResult(request.UserCount, response.Result.Errors);
         }
 
         /// <summary>
@@ -439,11 +430,8 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         internal sealed class UploadAccountResponse
         {
-            /// <summary>
-            /// Gets the list of errors populated after a user import request by the identity toolkit.
-            /// </summary>
             [JsonProperty("error")]
-            public IReadOnlyList<ErrorInfo> Errors { get; }
+            internal List<ErrorInfo> Errors { get; set; }
         }
 
         /// <summary>
