@@ -52,9 +52,16 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
         private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
+        private readonly IDictionary<string, TenantAwareFirebaseAuth> tenants =
+            new Dictionary<string, TenantAwareFirebaseAuth>();
+
+        private readonly object tenantsLock = new object();
+
         private readonly string baseUrl;
 
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
+
+        private bool disposed;
 
         internal TenantManager(Args args)
         {
@@ -278,11 +285,53 @@ namespace FirebaseAdmin.Auth.Multitenancy
         }
 
         /// <summary>
+        /// Gets a <see cref="TenantAwareFirebaseAuth"/> instance scoped to the specified tenant.
+        /// </summary>
+        /// <param name="tenantId">A tenant identifier string.</param>
+        /// <returns>An object that can be used to perform tenant-aware operations.</returns>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null or empty.
+        /// </exception>
+        public TenantAwareFirebaseAuth AuthForTenant(string tenantId)
+        {
+            if (string.IsNullOrEmpty(tenantId))
+            {
+                throw new ArgumentException("Tenant ID cannot be null or empty.");
+            }
+
+            TenantAwareFirebaseAuth auth;
+            lock (this.tenantsLock)
+            {
+                if (this.disposed)
+                {
+                    throw new ObjectDisposedException("TenantManager instance already disposed.");
+                }
+
+                if (!this.tenants.TryGetValue(tenantId, out auth))
+                {
+                    auth = TenantAwareFirebaseAuth.Create(tenantId);
+                    this.tenants[tenantId] = auth;
+                }
+            }
+
+            return auth;
+        }
+
+        /// <summary>
         /// Cleans up and invalidates this instance. For internal use only.
         /// </summary>
         void IDisposable.Dispose()
         {
             this.httpClient.Dispose();
+            lock (this.tenantsLock)
+            {
+                this.disposed = true;
+                foreach (var auth in this.tenants.Values)
+                {
+                    (auth as IFirebaseService).Delete();
+                }
+
+                this.tenants.Clear();
+            }
         }
 
         internal static TenantManager Create(FirebaseApp app)

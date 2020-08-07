@@ -28,7 +28,7 @@ namespace FirebaseAdmin.Auth
     /// This is the entry point to all server-side Firebase Authentication operations. You can
     /// get an instance of this class via <c>FirebaseAuth.DefaultInstance</c>.
     /// </summary>
-    public sealed class FirebaseAuth : IFirebaseService
+    public sealed class FirebaseAuth : AbstractFirebaseAuth
     {
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
@@ -36,12 +36,10 @@ namespace FirebaseAdmin.Auth
         private readonly Lazy<FirebaseUserManager> userManager;
         private readonly Lazy<ProviderConfigManager> providerConfigManager;
         private readonly Lazy<TenantManager> tenantManager;
-        private readonly object authLock = new object();
-        private bool deleted;
 
         internal FirebaseAuth(Args args)
+        : base(args)
         {
-            args.ThrowIfNull(nameof(args));
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
             this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
             this.sessionCookieVerifier = args.SessionCookieVerifier.ThrowIfNull(
@@ -73,7 +71,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the <see cref="TenantManager"/> instance associated with the current project.
         /// </summary>
-        public TenantManager TenantManager => this.tenantManager.Value;
+        public TenantManager TenantManager => this.IfNotDeleted(() => this.tenantManager.Value);
 
         /// <summary>
         /// Returns the auth instance for the specified app.
@@ -1402,16 +1400,12 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
-        void IFirebaseService.Delete()
+        internal override void Cleanup()
         {
-            lock (this.authLock)
-            {
-                this.deleted = true;
-                this.tokenFactory.DisposeIfCreated();
-                this.userManager.DisposeIfCreated();
-                this.providerConfigManager.DisposeIfCreated();
-                this.tenantManager.DisposeIfCreated();
-            }
+            this.tokenFactory.DisposeIfCreated();
+            this.userManager.DisposeIfCreated();
+            this.providerConfigManager.DisposeIfCreated();
+            this.tenantManager.DisposeIfCreated();
         }
 
         private async Task<bool> IsRevokedAsync(
@@ -1423,20 +1417,7 @@ namespace FirebaseAdmin.Auth
             return token.IssuedAtTimeSeconds < cutoff;
         }
 
-        private TResult IfNotDeleted<TResult>(Func<TResult> func)
-        {
-            lock (this.authLock)
-            {
-                if (this.deleted)
-                {
-                    throw new InvalidOperationException("Cannot invoke after deleting the app.");
-                }
-
-                return func();
-            }
-        }
-
-        internal sealed class Args
+        internal sealed new class Args : AbstractFirebaseAuth.Args
         {
             internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
 
