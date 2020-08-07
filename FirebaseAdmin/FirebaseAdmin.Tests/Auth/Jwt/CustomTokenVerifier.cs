@@ -39,11 +39,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         internal static CustomTokenVerifier FromDefaultServiceAccount(string tenantId = null)
         {
-            return new ServiceAccountSignedTokenVerifier(ClientEmail, PublicKey, tenantId);
+            return new RSACustomTokenVerifier(ClientEmail, PublicKey, tenantId);
         }
 
-        internal void VerifyCustomToken(
-            string token, string uid, IDictionary<string, object> claims = null)
+        internal void Verify(string token, string uid, IDictionary<string, object> claims = null)
         {
             string[] segments = token.Split(".");
             Assert.Equal(3, segments.Length);
@@ -81,12 +80,11 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         protected abstract void AssertSignature(string tokenData, string signature);
 
-        private sealed class ServiceAccountSignedTokenVerifier : CustomTokenVerifier
+        private sealed class RSACustomTokenVerifier : CustomTokenVerifier
         {
             private readonly RSA rsa;
 
-            internal ServiceAccountSignedTokenVerifier(
-                string issuer, byte[] publicKey, string tenantId)
+            internal RSACustomTokenVerifier(string issuer, byte[] publicKey, string tenantId)
             : base(issuer, tenantId)
             {
                 var x509cert = new X509Certificate2(publicKey);

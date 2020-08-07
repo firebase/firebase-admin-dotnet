@@ -22,14 +22,9 @@ using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
-    /// <summary>
-    /// Unit tests for the <see cref="FirebaseTokenFactory"/> class. These tests verify the core
-    /// functionality of the above class, and do not verify how it's integrated with user-facing
-    /// APIs like <see cref="FirebaseAuth"/>.
-    /// </summary>
     public class FirebaseTokenFactoryTest
     {
-        public static readonly IEnumerable<object[]> TenantIds = new List<object[]>()
+        public static readonly IEnumerable<object[]> TenantIds = new List<object[]>
         {
             new object[] { null },
             new object[] { "tenant1" },
@@ -44,8 +39,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         public async Task CreateCustomToken(string tenantId)
         {
             var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+
             var token = await factory.CreateCustomTokenAsync("user1");
-            MockSignedTokenVerifier.ForTenant(tenantId).VerifyCustomToken(token, "user1");
+
+            MockCustomTokenVerifier.WithTenant(tenantId).Verify(token, "user1");
         }
 
         [Theory]
@@ -53,9 +50,11 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         public async Task CreateCustomTokenWithEmptyClaims(string tenantId)
         {
             var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+
             var token = await factory.CreateCustomTokenAsync(
                 "user1", new Dictionary<string, object>());
-            MockSignedTokenVerifier.ForTenant(tenantId).VerifyCustomToken(token, "user1");
+
+            MockCustomTokenVerifier.WithTenant(tenantId).Verify(token, "user1");
         }
 
         [Theory]
@@ -69,15 +68,18 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 { "package", "gold" },
                 { "magicNumber", 42L },
             };
+
             var token = await factory.CreateCustomTokenAsync("user2", developerClaims);
-            MockSignedTokenVerifier.ForTenant(tenantId)
-                .VerifyCustomToken(token, "user2", developerClaims);
+
+            MockCustomTokenVerifier.WithTenant(tenantId).Verify(token, "user2", developerClaims);
         }
 
-        [Fact]
-        public async Task InvalidUid()
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public async Task InvalidUid(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock);
+            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await factory.CreateCustomTokenAsync(null));
             await Assert.ThrowsAsync<ArgumentException>(
@@ -86,18 +88,20 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 async () => await factory.CreateCustomTokenAsync(new string('a', 129)));
         }
 
-        [Fact]
-        public async Task ReservedClaims()
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public async Task ReservedClaims(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(new MockSigner(), Clock);
+            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
             foreach (var key in FirebaseTokenFactory.ReservedClaims)
             {
                 var developerClaims = new Dictionary<string, object>()
                 {
                     { key, "value" },
                 };
+
                 await Assert.ThrowsAsync<ArgumentException>(
-                    async () => await factory.CreateCustomTokenAsync("user", developerClaims));
+                    () => factory.CreateCustomTokenAsync("user", developerClaims));
             }
         }
 
@@ -153,19 +157,19 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             public void Dispose() { }
         }
 
-        private sealed class MockSignedTokenVerifier : CustomTokenVerifier
+        private sealed class MockCustomTokenVerifier : CustomTokenVerifier
         {
             private readonly string expectedSignature;
 
-            private MockSignedTokenVerifier(string issuer, string signature, string tenantId)
+            private MockCustomTokenVerifier(string issuer, string signature, string tenantId)
             : base(issuer, tenantId)
             {
                 this.expectedSignature = signature;
             }
 
-            internal static MockSignedTokenVerifier ForTenant(string tenantId)
+            internal static MockCustomTokenVerifier WithTenant(string tenantId)
             {
-                return new MockSignedTokenVerifier(
+                return new MockCustomTokenVerifier(
                     MockSigner.KeyIdString, MockSigner.Signature, tenantId);
             }
 

@@ -30,16 +30,13 @@ namespace FirebaseAdmin.Auth
             new object[] { TenantAwareFirebaseAuthTestConfig.DefaultInstance },
         };
 
-        private static readonly GoogleCredential ServiceAccount =
-            GoogleCredential.FromFile("./resources/service_account.json");
-
         [Theory]
         [MemberData(nameof(TestConfigs))]
         public async Task CreateCustomToken(TestConfig config)
         {
-            var token = await config.GetAuth().CreateCustomTokenAsync("user1");
+            var token = await config.CreateAuth().CreateCustomTokenAsync("user1");
 
-            config.TokenVerifier.VerifyCustomToken(token, "user1");
+            config.AssertCustomToken(token, "user1");
         }
 
         [Theory]
@@ -53,9 +50,9 @@ namespace FirebaseAdmin.Auth
                 { "magicNumber", 42L },
             };
 
-            var token = await config.GetAuth().CreateCustomTokenAsync("user2", developerClaims);
+            var token = await config.CreateAuth().CreateCustomTokenAsync("user2", developerClaims);
 
-            config.TokenVerifier.VerifyCustomToken(token, "user2", developerClaims);
+            config.AssertCustomToken(token, "user2", developerClaims);
         }
 
         [Theory]
@@ -64,7 +61,7 @@ namespace FirebaseAdmin.Auth
         {
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
-            var auth = config.GetAuth();
+            var auth = config.CreateAuth();
 
             await Assert.ThrowsAsync<OperationCanceledException>(
                 () => auth.CreateCustomTokenAsync("user1", canceller.Token));
@@ -74,12 +71,12 @@ namespace FirebaseAdmin.Auth
         [MemberData(nameof(TestConfigs))]
         public async Task CreateCustomTokenInvalidCredential(TestConfig config)
         {
-            var options = new AppOptions()
+            var options = new AppOptions
             {
                 Credential = GoogleCredential.FromAccessToken("test-token"),
                 ProjectId = "project1",
             };
-            var auth = config.GetAuth(options);
+            var auth = config.CreateAuth(options);
 
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(
                 () => auth.CreateCustomTokenAsync("user1"));
@@ -101,15 +98,21 @@ namespace FirebaseAdmin.Auth
         {
             protected static readonly AppOptions DefaultOptions = new AppOptions
             {
-                Credential = ServiceAccount,
+                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
             };
 
             internal abstract CustomTokenVerifier TokenVerifier { get; }
 
-            internal abstract AbstractFirebaseAuth GetAuth(AppOptions options = null);
+            internal abstract AbstractFirebaseAuth CreateAuth(AppOptions options = null);
+
+            internal void AssertCustomToken(
+                string token, string uid, Dictionary<string, object> claims = null)
+            {
+                this.TokenVerifier.Verify(token, uid, claims);
+            }
         }
 
-        internal sealed class FirebaseAuthTestConfig : TestConfig
+        private sealed class FirebaseAuthTestConfig : TestConfig
         {
             internal static readonly FirebaseAuthTestConfig DefaultInstance =
                 new FirebaseAuthTestConfig();
@@ -117,14 +120,14 @@ namespace FirebaseAdmin.Auth
             internal override CustomTokenVerifier TokenVerifier =>
                 CustomTokenVerifier.FromDefaultServiceAccount();
 
-            internal override AbstractFirebaseAuth GetAuth(AppOptions options)
+            internal override AbstractFirebaseAuth CreateAuth(AppOptions options = null)
             {
                 FirebaseApp.Create(options ?? DefaultOptions);
                 return FirebaseAuth.DefaultInstance;
             }
         }
 
-        internal sealed class TenantAwareFirebaseAuthTestConfig : TestConfig
+        private sealed class TenantAwareFirebaseAuthTestConfig : TestConfig
         {
             internal static readonly TenantAwareFirebaseAuthTestConfig DefaultInstance =
                 new TenantAwareFirebaseAuthTestConfig();
@@ -132,7 +135,7 @@ namespace FirebaseAdmin.Auth
             internal override CustomTokenVerifier TokenVerifier =>
                 CustomTokenVerifier.FromDefaultServiceAccount("tenant1");
 
-            internal override AbstractFirebaseAuth GetAuth(AppOptions options)
+            internal override AbstractFirebaseAuth CreateAuth(AppOptions options = null)
             {
                 FirebaseApp.Create(options ?? DefaultOptions);
                 return FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant("tenant1");
