@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using FirebaseAdmin.Auth.Jwt;
 
 namespace FirebaseAdmin.Auth.Multitenancy
 {
@@ -37,11 +38,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// </summary>
         public string TenantId { get; }
 
-        internal static TenantAwareFirebaseAuth Create(string tenantId)
+        internal static TenantAwareFirebaseAuth Create(FirebaseApp app, string tenantId)
         {
-            var args = new Args()
+            var args = new Args
             {
                 TenantId = tenantId,
+                TokenFactory = new Lazy<FirebaseTokenFactory>(
+                    () => FirebaseTokenFactory.Create(app, tenantId), true),
             };
             return new TenantAwareFirebaseAuth(args);
         }

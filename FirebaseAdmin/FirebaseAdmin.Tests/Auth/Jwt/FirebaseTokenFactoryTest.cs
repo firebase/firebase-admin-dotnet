@@ -18,37 +18,51 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
-using Google.Apis.Auth;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
+    /// <summary>
+    /// Unit tests for the <see cref="FirebaseTokenFactory"/> class. These tests verify the core
+    /// functionality of the above class, and do not verify how it's integrated with user-facing
+    /// APIs like <see cref="FirebaseAuth"/>.
+    /// </summary>
     public class FirebaseTokenFactoryTest
     {
-        [Fact]
-        public async Task CreateCustomToken()
+        public static readonly IEnumerable<object[]> TenantIds = new List<object[]>()
         {
-            var clock = new MockClock();
-            var factory = new FirebaseTokenFactory(new MockSigner(), clock);
+            new object[] { null },
+            new object[] { "tenant1" },
+        };
+
+        private static readonly MockClock Clock = new MockClock();
+
+        private static readonly MockSigner Signer = new MockSigner();
+
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public async Task CreateCustomToken(string tenantId)
+        {
+            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
             var token = await factory.CreateCustomTokenAsync("user1");
-            VerifyCustomToken(token, "user1", null);
+            MockSignedTokenVerifier.ForTenant(tenantId).VerifyCustomToken(token, "user1");
         }
 
-        [Fact]
-        public async Task CreateCustomTokenWithEmptyClaims()
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public async Task CreateCustomTokenWithEmptyClaims(string tenantId)
         {
-            var clock = new MockClock();
-            var factory = new FirebaseTokenFactory(new MockSigner(), clock);
+            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
             var token = await factory.CreateCustomTokenAsync(
                 "user1", new Dictionary<string, object>());
-            VerifyCustomToken(token, "user1", null);
+            MockSignedTokenVerifier.ForTenant(tenantId).VerifyCustomToken(token, "user1");
         }
 
-        [Fact]
-        public async Task CreateCustomTokenWithClaims()
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public async Task CreateCustomTokenWithClaims(string tenantId)
         {
-            var clock = new MockClock();
-            var factory = new FirebaseTokenFactory(new MockSigner(), clock);
+            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
             var developerClaims = new Dictionary<string, object>()
             {
                 { "admin", true },
@@ -56,13 +70,14 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 { "magicNumber", 42L },
             };
             var token = await factory.CreateCustomTokenAsync("user2", developerClaims);
-            VerifyCustomToken(token, "user2", developerClaims);
+            MockSignedTokenVerifier.ForTenant(tenantId)
+                .VerifyCustomToken(token, "user2", developerClaims);
         }
 
         [Fact]
         public async Task InvalidUid()
         {
-            var factory = new FirebaseTokenFactory(new MockSigner(), new MockClock());
+            var factory = new FirebaseTokenFactory(Signer, Clock);
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await factory.CreateCustomTokenAsync(null));
             await Assert.ThrowsAsync<ArgumentException>(
@@ -74,7 +89,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [Fact]
         public async Task ReservedClaims()
         {
-            var factory = new FirebaseTokenFactory(new MockSigner(), new MockClock());
+            var factory = new FirebaseTokenFactory(new MockSigner(), Clock);
             foreach (var key in FirebaseTokenFactory.ReservedClaims)
             {
                 var developerClaims = new Dictionary<string, object>()
@@ -86,58 +101,78 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             }
         }
 
-        private static void VerifyCustomToken(
-            string token, string uid, Dictionary<string, object> claims)
+        [Fact]
+        public void NullSigner()
         {
-            string[] segments = token.Split(".");
-            Assert.Equal(3, segments.Length);
+            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(null, Clock));
+        }
 
-            // verify header
-            var header = JwtUtils.Decode<GoogleJsonWebSignature.Header>(segments[0]);
-            Assert.Equal("JWT", header.Type);
-            Assert.Equal("RS256", header.Algorithm);
+        [Fact]
+        public void NullClock()
+        {
+            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(Signer, null));
+        }
 
-            // verify payload
-            var payload = JwtUtils.Decode<FirebaseTokenFactory.CustomTokenPayload>(segments[1]);
-            Assert.Equal(MockSigner.KeyIdString, payload.Issuer);
-            Assert.Equal(MockSigner.KeyIdString, payload.Subject);
-            Assert.Equal(uid, payload.Uid);
-            Assert.Equal(FirebaseTokenFactory.FirebaseAudience, payload.Audience);
-            if (claims == null)
+        [Fact]
+        public void EmptyTenantId()
+        {
+            Assert.Throws<ArgumentException>(
+                () => new FirebaseTokenFactory(Signer, Clock, string.Empty));
+        }
+
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public void TenantId(string tenantId)
+        {
+            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            if (tenantId == null)
             {
-                Assert.Null(payload.Claims);
+                Assert.Null(factory.TenantId);
             }
             else
             {
-                Assert.Equal(claims.Count, payload.Claims.Count);
-                foreach (var entry in claims)
-                {
-                    object value;
-                    Assert.True(payload.Claims.TryGetValue(entry.Key, out value));
-                    Assert.Equal(entry.Value, value);
-                }
+                Assert.Equal(tenantId, factory.TenantId);
+            }
+        }
+
+        private sealed class MockSigner : ISigner
+        {
+            public const string KeyIdString = "mock-key-id";
+            public const string Signature = "signature";
+
+            public Task<string> GetKeyIdAsync(CancellationToken cancellationToken)
+            {
+                return Task.FromResult(KeyIdString);
             }
 
-            // verify mock signature
-            Assert.Equal(MockSigner.Signature, JwtUtils.Base64Decode(segments[2]));
+            public Task<byte[]> SignDataAsync(byte[] data, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(Encoding.UTF8.GetBytes(Signature));
+            }
+
+            public void Dispose() { }
         }
-    }
 
-    internal sealed class MockSigner : ISigner
-    {
-        public const string KeyIdString = "mock-key-id";
-        public const string Signature = "signature";
-
-        public Task<string> GetKeyIdAsync(CancellationToken cancellationToken)
+        private sealed class MockSignedTokenVerifier : CustomTokenVerifier
         {
-            return Task.FromResult(KeyIdString);
-        }
+            private readonly string expectedSignature;
 
-        public Task<byte[]> SignDataAsync(byte[] data, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(Encoding.UTF8.GetBytes(Signature));
-        }
+            private MockSignedTokenVerifier(string issuer, string signature, string tenantId)
+            : base(issuer, tenantId)
+            {
+                this.expectedSignature = signature;
+            }
 
-        public void Dispose() { }
+            internal static MockSignedTokenVerifier ForTenant(string tenantId)
+            {
+                return new MockSignedTokenVerifier(
+                    MockSigner.KeyIdString, MockSigner.Signature, tenantId);
+            }
+
+            protected override void AssertSignature(string tokenData, string signature)
+            {
+                Assert.Equal(this.expectedSignature, JwtUtils.Base64Decode(signature));
+            }
+        }
     }
 }

@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -57,6 +56,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
         private readonly object tenantsLock = new object();
 
+        private readonly FirebaseApp app;
+
         private readonly string baseUrl;
 
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
@@ -68,10 +69,10 @@ namespace FirebaseAdmin.Auth.Multitenancy
             if (string.IsNullOrEmpty(args.ProjectId))
             {
                 throw new ArgumentException(
-                    "Must initialize FirebaseApp with a project ID to manage provider"
-                    + " configurations.");
+                    "Must initialize FirebaseApp with a project ID to manage tenants.");
             }
 
+            this.app = args.App;
             this.baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 args.ToHttpClientArgs());
@@ -308,7 +309,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
                 if (!this.tenants.TryGetValue(tenantId, out auth))
                 {
-                    auth = TenantAwareFirebaseAuth.Create(tenantId);
+                    auth = TenantAwareFirebaseAuth.Create(this.app, tenantId);
                     this.tenants[tenantId] = auth;
                 }
             }
@@ -336,8 +337,9 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
         internal static TenantManager Create(FirebaseApp app)
         {
-            var args = new Args
+            var args = new Args()
             {
+                App = app,
                 ClientFactory = app.Options.HttpClientFactory,
                 Credential = app.Options.Credential,
                 ProjectId = app.GetProjectId(),
@@ -359,6 +361,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
         internal sealed class Args
         {
+            internal FirebaseApp App { get; set; }
+
             internal HttpClientFactory ClientFactory { get; set; }
 
             internal GoogleCredential Credential { get; set; }

@@ -30,7 +30,6 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class FirebaseAuth : AbstractFirebaseAuth
     {
-        private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
         private readonly Lazy<FirebaseTokenVerifier> sessionCookieVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
@@ -40,7 +39,6 @@ namespace FirebaseAdmin.Auth
         internal FirebaseAuth(Args args)
         : base(args)
         {
-            this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
             this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
             this.sessionCookieVerifier = args.SessionCookieVerifier.ThrowIfNull(
                 nameof(args.SessionCookieVerifier));
@@ -89,154 +87,8 @@ namespace FirebaseAdmin.Auth
 
             return app.GetOrInit<FirebaseAuth>(typeof(FirebaseAuth).Name, () =>
             {
-                return new FirebaseAuth(Args.Create(app));
+                return FirebaseAuth.Create(app);
             });
-        }
-
-        /// <summary>
-        /// Creates a Firebase custom token for the given user ID. This token can then be sent
-        /// back to a client application to be used with the
-        /// <a href="https://firebase.google.com/docs/auth/admin/create-custom-tokens#sign_in_using_custom_tokens_on_clients">
-        /// signInWithCustomToken</a> authentication API.
-        /// <para>
-        /// This method attempts to generate a token using:
-        /// <list type="number">
-        /// <item>
-        /// <description>the private key of <see cref="FirebaseApp"/>'s service account
-        /// credentials, if provided at initialization.</description>
-        /// </item>
-        /// <item>
-        /// <description>the IAM service if a service accound ID was specified via
-        /// <see cref="AppOptions"/></description>
-        /// </item>
-        /// <item>
-        /// <description>the local metadata server if the code is deployed in a GCP-managed
-        /// environment.</description>
-        /// </item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <returns>A task that completes with a Firebase custom token.</returns>
-        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
-        /// than 128 characters.</exception>
-        /// <exception cref="InvalidOperationException">If no service account can be discovered
-        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
-        /// token.</exception>
-        /// <param name="uid">The UID to store in the token. This identifies the user to other
-        /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
-        /// 128 characters.</param>
-        public async Task<string> CreateCustomTokenAsync(string uid)
-        {
-            return await this.CreateCustomTokenAsync(uid, default(CancellationToken))
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Creates a Firebase custom token for the given user ID. This token can then be sent
-        /// back to a client application to be used with the
-        /// <a href="https://firebase.google.com/docs/auth/admin/create-custom-tokens#sign_in_using_custom_tokens_on_clients">
-        /// signInWithCustomToken</a> authentication API.
-        /// <para>
-        /// This method attempts to generate a token using:
-        /// <list type="number">
-        /// <item>
-        /// <description>the private key of <see cref="FirebaseApp"/>'s service account
-        /// credentials, if provided at initialization.</description>
-        /// </item>
-        /// <item>
-        /// <description>the IAM service if a service accound ID was specified via
-        /// <see cref="AppOptions"/></description>
-        /// </item>
-        /// <item>
-        /// <description>the local metadata server if the code is deployed in a GCP-managed
-        /// environment.</description>
-        /// </item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <returns>A task that completes with a Firebase custom token.</returns>
-        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
-        /// than 128 characters.</exception>
-        /// <exception cref="InvalidOperationException">If no service account can be discovered
-        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
-        /// token.</exception>
-        /// <param name="uid">The UID to store in the token. This identifies the user to other
-        /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
-        /// 128 characters.</param>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
-        /// operation.</param>
-        public async Task<string> CreateCustomTokenAsync(
-            string uid, CancellationToken cancellationToken)
-        {
-            return await this.CreateCustomTokenAsync(uid, null, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Creates a Firebase custom token for the given user ID containing the specified
-        /// additional claims. This token can then be sent back to a client application to be used
-        /// with the
-        /// <a href="https://firebase.google.com/docs/auth/admin/create-custom-tokens#sign_in_using_custom_tokens_on_clients">
-        /// signInWithCustomToken</a> authentication API.
-        /// <para>This method uses the same mechanisms as
-        /// <see cref="CreateCustomTokenAsync(string)"/> to sign custom tokens.</para>
-        /// </summary>
-        /// <returns>A task that completes with a Firebase custom token.</returns>
-        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
-        /// than 128 characters. Or, if <paramref name="developerClaims"/> contains any standard
-        /// JWT claims.</exception>
-        /// <exception cref="InvalidOperationException">If no service account can be discovered
-        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
-        /// token.</exception>
-        /// <param name="uid">The UID to store in the token. This identifies the user to other
-        /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
-        /// 128 characters.</param>
-        /// <param name="developerClaims">Additional claims to be stored in the token, and made
-        /// available to Firebase security rules. These must be serializable to JSON, and must not
-        /// contain any standard JWT claims.</param>
-        public async Task<string> CreateCustomTokenAsync(
-            string uid, IDictionary<string, object> developerClaims)
-        {
-            return await this.CreateCustomTokenAsync(uid, developerClaims, default(CancellationToken))
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Creates a Firebase custom token for the given user ID containing the specified
-        /// additional claims. This token can then be sent back to a client application to be used
-        /// with the
-        /// <a href="https://firebase.google.com/docs/auth/admin/create-custom-tokens#sign_in_using_custom_tokens_on_clients">
-        /// signInWithCustomToken</a> authentication API.
-        /// <para>This method uses the same mechanisms as
-        /// <see cref="CreateCustomTokenAsync(string)"/> to sign custom tokens.</para>
-        /// </summary>
-        /// <returns>A task that completes with a Firebase custom token.</returns>
-        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
-        /// than 128 characters. Or, if <paramref name="developerClaims"/> contains any standard
-        /// JWT claims.</exception>
-        /// <exception cref="InvalidOperationException">If no service account can be discovered
-        /// from either the <see cref="AppOptions"/> or the deployment environment.</exception>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating a custom
-        /// token.</exception>
-        /// <param name="uid">The UID to store in the token. This identifies the user to other
-        /// Firebase services (Realtime Database, Firebase Auth, etc.). Must not be longer than
-        /// 128 characters.</param>
-        /// <param name="developerClaims">Additional claims to be stored in the token, and made
-        /// available to Firebase security rules. These must be serializable to JSON, and must not
-        /// contain any standard JWT claims.</param>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
-        /// operation.</param>
-        public async Task<string> CreateCustomTokenAsync(
-            string uid,
-            IDictionary<string, object> developerClaims,
-            CancellationToken cancellationToken)
-        {
-            var tokenFactory = this.IfNotDeleted(() => this.tokenFactory.Value);
-            return await tokenFactory.CreateCustomTokenAsync(
-                uid, developerClaims, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1402,10 +1254,29 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         internal override void Cleanup()
         {
-            this.tokenFactory.DisposeIfCreated();
             this.userManager.DisposeIfCreated();
             this.providerConfigManager.DisposeIfCreated();
             this.tenantManager.DisposeIfCreated();
+        }
+
+        private static FirebaseAuth Create(FirebaseApp app)
+        {
+            var args = new Args
+            {
+                TokenFactory = new Lazy<FirebaseTokenFactory>(
+                    () => FirebaseTokenFactory.Create(app), true),
+                IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
+                    () => FirebaseTokenVerifier.CreateIDTokenVerifier(app), true),
+                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
+                    () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app), true),
+                UserManager = new Lazy<FirebaseUserManager>(
+                    () => FirebaseUserManager.Create(app), true),
+                ProviderConfigManager = new Lazy<ProviderConfigManager>(
+                    () => Providers.ProviderConfigManager.Create(app), true),
+                TenantManager = new Lazy<TenantManager>(
+                    () => Multitenancy.TenantManager.Create(app), true),
+            };
+            return new FirebaseAuth(args);
         }
 
         private async Task<bool> IsRevokedAsync(
@@ -1419,8 +1290,6 @@ namespace FirebaseAdmin.Auth
 
         internal sealed new class Args : AbstractFirebaseAuth.Args
         {
-            internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
-
             internal Lazy<FirebaseTokenVerifier> IdTokenVerifier { get; set; }
 
             internal Lazy<FirebaseTokenVerifier> SessionCookieVerifier { get; set; }
@@ -1430,25 +1299,6 @@ namespace FirebaseAdmin.Auth
             internal Lazy<ProviderConfigManager> ProviderConfigManager { get; set; }
 
             internal Lazy<TenantManager> TenantManager { get; set; }
-
-            internal static Args Create(FirebaseApp app)
-            {
-                return new Args()
-                {
-                    TokenFactory = new Lazy<FirebaseTokenFactory>(
-                        () => FirebaseTokenFactory.Create(app), true),
-                    IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
-                        () => FirebaseTokenVerifier.CreateIDTokenVerifier(app), true),
-                    SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
-                        () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app), true),
-                    UserManager = new Lazy<FirebaseUserManager>(
-                        () => FirebaseUserManager.Create(app), true),
-                    ProviderConfigManager = new Lazy<ProviderConfigManager>(
-                        () => Providers.ProviderConfigManager.Create(app), true),
-                    TenantManager = new Lazy<TenantManager>(
-                        () => Multitenancy.TenantManager.Create(app), true),
-                };
-            }
 
             internal static Args CreateDefault()
             {
