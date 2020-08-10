@@ -87,7 +87,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void NoProjectId()
+        public void UserManagerNoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
 
@@ -96,6 +96,19 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(
                 "Must initialize FirebaseApp with a project ID to manage users.",
+                ex.Message);
+        }
+
+        [Fact]
+        public void TenantManagerNoProjectId()
+        {
+            FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+
+            var ex = Assert.Throws<ArgumentException>(
+                () => FirebaseAuth.DefaultInstance.TenantManager);
+
+            Assert.Equal(
+                "Must initialize FirebaseApp with a project ID to manage tenants.",
                 ex.Message);
         }
 

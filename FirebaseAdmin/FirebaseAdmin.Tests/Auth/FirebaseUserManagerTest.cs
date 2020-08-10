@@ -1904,6 +1904,36 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(5, handler.Calls);
         }
 
+        [Fact]
+        public void NoProjectId()
+        {
+            var args = CreateArgs(new MockMessageHandler());
+            args.ProjectId = null;
+
+            Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
+        }
+
+        [Fact]
+        public void EmptyTenantId()
+        {
+            var args = CreateArgs(new MockMessageHandler());
+            args.TenantId = string.Empty;
+
+            Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
+        }
+
+        private static FirebaseUserManager.Args CreateArgs(HttpMessageHandler handler)
+        {
+            return new FirebaseUserManager.Args
+            {
+                Credential = MockCredential,
+                ProjectId = MockProjectId,
+                ClientFactory = new MockHttpClientFactory(handler),
+                RetryOptions = RetryOptions.NoBackOff,
+                Clock = MockClock,
+            };
+        }
+
         public abstract class TestConfig
         {
             protected static readonly AppOptions DefaultOptions = new AppOptions
@@ -1934,14 +1964,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             internal override AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler)
             {
-                var userManager = new FirebaseUserManager(new FirebaseUserManager.Args
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = new MockHttpClientFactory(handler),
-                    RetryOptions = RetryOptions.NoBackOff,
-                    Clock = MockClock,
-                });
+                var userManager = new FirebaseUserManager(CreateArgs(handler));
                 var args = FirebaseAuth.Args.CreateDefault();
                 args.UserManager = new Lazy<FirebaseUserManager>(userManager);
                 return new FirebaseAuth(args);
@@ -1957,18 +1980,13 @@ namespace FirebaseAdmin.Auth.Tests
 
             internal override AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler)
             {
-                var userManager = new FirebaseUserManager(new FirebaseUserManager.Args
-                {
-                    Credential = MockCredential,
-                    ProjectId = MockProjectId,
-                    ClientFactory = new MockHttpClientFactory(handler),
-                    RetryOptions = RetryOptions.NoBackOff,
-                    Clock = MockClock,
-                    TenantId = "tenant1",
-                });
-                var args = TenantAwareFirebaseAuth.Args.CreateDefault("tenant1");
-                args.UserManager = new Lazy<FirebaseUserManager>(userManager);
-                return new TenantAwareFirebaseAuth(args);
+                var args = CreateArgs(handler);
+                args.TenantId = "tenant1";
+                var userManager = new FirebaseUserManager(args);
+
+                var authArgs = TenantAwareFirebaseAuth.Args.CreateDefault("tenant1");
+                authArgs.UserManager = new Lazy<FirebaseUserManager>(userManager);
+                return new TenantAwareFirebaseAuth(authArgs);
             }
         }
     }
