@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth;
 using Google.Apis.Util;
+using Newtonsoft.Json;
 
 [assembly: InternalsVisibleToAttribute("FirebaseAdmin.Tests,PublicKey=" +
 "002400000480000094000000060200000024000052534131000400000100010081328559eaab41" +
@@ -62,13 +63,26 @@ namespace FirebaseAdmin.Auth.Jwt
         private readonly ISigner signer;
         private readonly IClock clock;
 
-        public FirebaseTokenFactory(ISigner signer, IClock clock)
+        internal FirebaseTokenFactory(ISigner signer, IClock clock, string tenantId = null)
         {
+            if (tenantId == string.Empty)
+            {
+                throw new ArgumentException("Tenant ID must not be empty.");
+            }
+
             this.signer = signer.ThrowIfNull(nameof(signer));
             this.clock = clock.ThrowIfNull(nameof(clock));
+            this.TenantId = tenantId;
         }
 
-        public static FirebaseTokenFactory Create(FirebaseApp app)
+        internal string TenantId { get; }
+
+        public void Dispose()
+        {
+            this.signer.Dispose();
+        }
+
+        internal static FirebaseTokenFactory Create(FirebaseApp app, string tenantId = null)
         {
             ISigner signer = null;
             var serviceAccount = app.Options.Credential.ToServiceAccountCredential();
@@ -90,10 +104,10 @@ namespace FirebaseAdmin.Auth.Jwt
                 signer = FixedAccountIAMSigner.Create(app);
             }
 
-            return new FirebaseTokenFactory(signer, SystemClock.Default);
+            return new FirebaseTokenFactory(signer, SystemClock.Default, tenantId);
         }
 
-        public async Task<string> CreateCustomTokenAsync(
+        internal async Task<string> CreateCustomTokenAsync(
             string uid,
             IDictionary<string, object> developerClaims = null,
             CancellationToken cancellationToken = default(CancellationToken))
@@ -135,6 +149,7 @@ namespace FirebaseAdmin.Auth.Jwt
                 Audience = FirebaseAudience,
                 IssuedAtTimeSeconds = issued,
                 ExpirationTimeSeconds = issued + TokenDurationSeconds,
+                TenantId = this.TenantId,
             };
 
             if (developerClaims != null && developerClaims.Count > 0)
@@ -146,17 +161,15 @@ namespace FirebaseAdmin.Auth.Jwt
                 header, payload, this.signer, cancellationToken).ConfigureAwait(false);
         }
 
-        public void Dispose()
-        {
-            this.signer.Dispose();
-        }
-
         internal class CustomTokenPayload : JsonWebToken.Payload
         {
-            [Newtonsoft.Json.JsonPropertyAttribute("uid")]
+            [JsonPropertyAttribute("uid")]
             public string Uid { get; set; }
 
-            [Newtonsoft.Json.JsonPropertyAttribute("claims")]
+            [JsonPropertyAttribute("tenant_id")]
+            public string TenantId { get; set; }
+
+            [JsonPropertyAttribute("claims")]
             public IDictionary<string, object> Claims { get; set; }
         }
     }

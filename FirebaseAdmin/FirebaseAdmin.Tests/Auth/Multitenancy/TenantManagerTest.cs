@@ -620,8 +620,10 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 
             var tenantAwareAuth1 = auth.TenantManager.AuthForTenant("tenant1");
             var tenantAwareAuth2 = auth.TenantManager.AuthForTenant("tenant1");
+            var tenantAwareAuth3 = auth.TenantManager.AuthForTenant("tenant2");
 
             Assert.Same(tenantAwareAuth1, tenantAwareAuth2);
+            Assert.NotSame(tenantAwareAuth1, tenantAwareAuth3);
         }
 
         [Theory]
@@ -640,6 +642,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
         {
             var auth = CreateFirebaseAuth();
             var tenantManager = auth.TenantManager;
+
             (auth as IFirebaseService).Delete();
 
             await Assert.ThrowsAsync<ObjectDisposedException>(
