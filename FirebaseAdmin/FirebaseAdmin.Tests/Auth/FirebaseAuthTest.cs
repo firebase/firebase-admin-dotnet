@@ -74,23 +74,29 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void NoTenantId()
         {
-            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+            var app = FirebaseApp.Create(new AppOptions
+                {
+                    Credential = MockCredential,
+                    ProjectId = "project1",
+                });
 
             FirebaseAuth auth = FirebaseAuth.DefaultInstance;
 
             Assert.Null(auth.TokenFactory.TenantId);
+            Assert.Null(auth.UserManager.TenantId);
         }
 
         [Fact]
-        public async Task SetCustomUserClaimsNoProjectId()
+        public void NoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            var customClaims = new Dictionary<string, object>()
-            {
-                { "admin", true },
-            };
-            await Assert.ThrowsAsync<ArgumentException>(
-                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
+
+            var ex = Assert.Throws<ArgumentException>(
+                () => FirebaseAuth.DefaultInstance.UserManager);
+
+            Assert.Equal(
+                "Must initialize FirebaseApp with a project ID to manage users.",
+                ex.Message);
         }
 
         [Fact]

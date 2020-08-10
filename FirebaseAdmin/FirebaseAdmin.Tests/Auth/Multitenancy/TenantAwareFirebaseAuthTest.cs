@@ -20,11 +20,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
 {
     public class TenantAwareFirebaseAuthTest : IDisposable
     {
+        private const string MockTenantId = "tenant1";
+
         [Fact]
         public void UseAfterDelete()
         {
             var app = CreateFirebaseApp();
-            var auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant("tenant1");
+            var auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant(MockTenantId);
 
             app.Delete();
 
@@ -36,10 +38,11 @@ namespace FirebaseAdmin.Auth.Multitenancy
         {
             var app = CreateFirebaseApp();
 
-            var auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant("tenant1");
+            var auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant(MockTenantId);
 
-            Assert.Equal("tenant1", auth.TenantId);
-            Assert.Equal("tenant1", auth.TokenFactory.TenantId);
+            Assert.Equal(MockTenantId, auth.TenantId);
+            Assert.Equal(MockTenantId, auth.TokenFactory.TenantId);
+            Assert.Equal(MockTenantId, auth.UserManager.TenantId);
         }
 
         public void Dispose()

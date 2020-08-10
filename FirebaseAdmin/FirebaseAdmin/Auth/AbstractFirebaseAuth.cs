@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
+using Google.Api.Gax;
 using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth
@@ -29,16 +30,21 @@ namespace FirebaseAdmin.Auth
     {
         private readonly object authLock = new object();
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
+        private readonly Lazy<FirebaseUserManager> userManager;
         private bool deleted;
 
         internal AbstractFirebaseAuth(Args args)
         {
             args.ThrowIfNull(nameof(args));
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
+            this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
         }
 
         internal FirebaseTokenFactory TokenFactory =>
             this.IfNotDeleted(() => this.tokenFactory.Value);
+
+        internal FirebaseUserManager UserManager =>
+            this.IfNotDeleted(() => this.userManager.Value);
 
         /// <summary>
         /// Creates a Firebase custom token for the given user ID. This token can then be sent
@@ -186,6 +192,660 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// </summary>
+        /// <param name="args">Attributes to add to the new user account.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the newly created user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating the user account.</exception>
+        public async Task<UserRecord> CreateUserAsync(UserRecordArgs args)
+        {
+            return await this.CreateUserAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// </summary>
+        /// <param name="args">Attributes to add to the new user account.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the newly created user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while creating the user account.</exception>
+        public async Task<UserRecord> CreateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken)
+        {
+            var uid = await this.UserManager.CreateUserAsync(args, cancellationToken)
+                .ConfigureAwait(false);
+            return await this.UserManager.GetUserByIdAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user who's
+        /// user ID was specified in <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">The user ID for the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified user ID.</returns>
+        /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified user ID.</exception>
+        public async Task<UserRecord> GetUserAsync(string uid)
+        {
+            return await this.GetUserAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user who's
+        /// user ID was specified in <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">The user ID for the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified user ID.</returns>
+        /// <exception cref="ArgumentException">If user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified user ID.</exception>
+        public async Task<UserRecord> GetUserAsync(
+            string uid, CancellationToken cancellationToken)
+        {
+            return await this.UserManager.GetUserByIdAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="email"/>.
+        /// </summary>
+        /// <param name="email">The email of the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified email.</returns>
+        /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified email.</exception>
+        public async Task<UserRecord> GetUserByEmailAsync(string email)
+        {
+            return await this.GetUserByEmailAsync(email, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="email"/>.
+        /// </summary>
+        /// <param name="email">The email of the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified email.</returns>
+        /// <exception cref="ArgumentException">If the email argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified email.</exception>
+        public async Task<UserRecord> GetUserByEmailAsync(
+            string email, CancellationToken cancellationToken)
+        {
+            return await this.UserManager.GetUserByEmailAsync(email, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="phoneNumber"/>.
+        /// </summary>
+        /// <param name="phoneNumber">The phone number of the user who's data is to be retrieved.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified phone number.</returns>
+        /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified phone number.</exception>
+        public async Task<UserRecord> GetUserByPhoneNumberAsync(string phoneNumber)
+        {
+            return await this.GetUserByPhoneNumberAsync(phoneNumber, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets a <see cref="UserRecord"/> object containing information about the user identified by
+        /// <paramref name="phoneNumber"/>.
+        /// </summary>
+        /// <param name="phoneNumber">The phone number of the user who's data is to be retrieved.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// a user with the specified phone number.</returns>
+        /// <exception cref="ArgumentException">If the phone number argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If a user cannot be found with the specified phone number.</exception>
+        public async Task<UserRecord> GetUserByPhoneNumberAsync(
+            string phoneNumber, CancellationToken cancellationToken)
+        {
+            return await this.UserManager.GetUserByPhoneNumberAsync(phoneNumber, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets the user data corresponding to the specified identifiers.
+        /// <para>
+        /// There are no ordering guarantees; in particular, the nth entry in the users result list
+        /// is not guaranteed to correspond to the nth entry in the input parameters list.
+        /// </para>
+        /// <para>
+        /// A maximum of 100 identifiers may be supplied. If more than 100 identifiers are specified,
+        /// this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// </summary>
+        /// <param name="identifiers">The identifiers used to indicate which user records should be
+        /// returned. Must have 100 entries or fewer.</param>
+        /// <returns>A task that resolves to the corresponding user records.</returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 100 identifiers are specified.</exception>
+        public async Task<GetUsersResult> GetUsersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers)
+        {
+            return await this.GetUsersAsync(identifiers, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets the user data corresponding to the specified identifiers.
+        /// <para>
+        /// There are no ordering guarantees; in particular, the nth entry in the users result list
+        /// is not guaranteed to correspond to the nth entry in the input parameters list.
+        /// </para>
+        /// <para>
+        /// A maximum of 100 identifiers may be supplied. If more than 100 identifiers are specified,
+        /// this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// </summary>
+        /// <param name="identifiers">The identifiers used to indicate which user records should be
+        /// returned. Must have 100 entries or fewer.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that resolves to the corresponding user records.</returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 100 identifiers are specified.</exception>
+        public async Task<GetUsersResult> GetUsersAsync(
+            IReadOnlyCollection<UserIdentifier> identifiers, CancellationToken cancellationToken)
+        {
+            GetAccountInfoResponse response = await this.UserManager
+                .GetAccountInfoByIdentifiersAsync(identifiers, cancellationToken)
+                .ConfigureAwait(false);
+
+            return new GetUsersResult(response, identifiers);
+        }
+
+        /// <summary>
+        /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
+        /// </summary>
+        /// <param name="args">The attributes to update.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the updated user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while updating the user account.</exception>
+        public async Task<UserRecord> UpdateUserAsync(UserRecordArgs args)
+        {
+            return await this.UpdateUserAsync(args, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates an existing user account with the attributes contained in the specified <see cref="UserRecordArgs"/>.
+        /// The <see cref="UserRecordArgs.Uid"/> property must be specified.
+        /// </summary>
+        /// <param name="args">The attributes to update.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="UserRecord"/> representing
+        /// the updated user account.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.</exception>
+        /// <exception cref="ArgumentException">If any of the values in <paramref name="args"/> are invalid.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while updating the user account.</exception>
+        public async Task<UserRecord> UpdateUserAsync(
+            UserRecordArgs args, CancellationToken cancellationToken)
+        {
+            var uid = await this.UserManager.UpdateUserAsync(args, cancellationToken)
+                .ConfigureAwait(false);
+            return await this.UserManager.GetUserByIdAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Revokes all refresh tokens for the specified user.
+        ///
+        /// <para>Updates the user's <c>tokensValidAfterTimestamp</c> to the current UTC time expressed in
+        /// seconds since the epoch and truncated to 1 second accuracy. It is important that
+        /// the server on which this is called has its clock set correctly and synchronized.</para>
+        ///
+        /// <para>While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// for existing sessions from getting minted, existing ID tokens may remain active until
+        /// their natural expiration (one hour).</para>
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <returns>A task that completes when the user's refresh tokens have been revoked.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while revoking the tokens.</exception>
+        public async Task RevokeRefreshTokensAsync(string uid)
+        {
+            await this.RevokeRefreshTokensAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Revokes all refresh tokens for the specified user.
+        ///
+        /// <para>Updates the user's <c>tokensValidAfterTimestamp</c> to the current UTC time expressed in
+        /// seconds since the epoch and truncated to 1 second accuracy. It is important that
+        /// the server on which this is called has its clock set correctly and synchronized.</para>
+        ///
+        /// <para>While this will revoke all sessions for a specified user and disable any new ID tokens
+        /// for existing sessions from getting minted, existing ID tokens may remain active until
+        /// their natural expiration (one hour).</para>
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes when the user's refresh tokens have been revoked.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while revoking the tokens.</exception>
+        public async Task RevokeRefreshTokensAsync(string uid, CancellationToken cancellationToken)
+        {
+            await this.UserManager.RevokeRefreshTokensAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the user identified by the specified <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <returns>A task that completes when the user account has been deleted.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while deleting the user.</exception>
+        public async Task DeleteUserAsync(string uid)
+        {
+            await this.DeleteUserAsync(uid, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the user identified by the specified <paramref name="uid"/>.
+        /// </summary>
+        /// <param name="uid">A user ID string.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes when the user account has been deleted.</returns>
+        /// <exception cref="ArgumentException">If the user ID argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while deleting the user.</exception>
+        public async Task DeleteUserAsync(string uid, CancellationToken cancellationToken)
+        {
+            await this.UserManager.DeleteUserAsync(uid, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the users specified by the given identifiers.
+        /// <para>
+        /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
+        /// Non-existing users will be considered to be successfully deleted, and will therefore be
+        /// counted in the `DeleteUserResult.SuccessCount` value.
+        /// </para>
+        /// <para>
+        /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are
+        /// specified, this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// <para>
+        /// This API is currently rate limited at the server to 1 QPS. If you exceed this, you may
+        /// get a quota exceeded error. Therefore, if you want to delete more than 1000 users, you
+        /// may need to add a delay to ensure you don't go over this limit.
+        /// </para>
+        /// </summary>
+        /// <param name="uids">The uids of the users to be deleted. Must have 1000 or fewer entries.
+        /// </param>
+        /// <returns>A task that resolves to the total number of successful/failed
+        /// deletions, as well as the array of errors that correspond to the failed deletions.
+        /// </returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 1000 identifiers are specified.</exception>
+        public async Task<DeleteUsersResult> DeleteUsersAsync(IReadOnlyList<string> uids)
+        {
+            return await this.DeleteUsersAsync(uids, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the users specified by the given identifiers.
+        /// <para>
+        /// Deleting a non-existing user won't generate an error. (i.e. this method is idempotent.)
+        /// Non-existing users will be considered to be successfully deleted, and will therefore be
+        /// counted in the `DeleteUserResult.SuccessCount` value.
+        /// </para>
+        /// <para>
+        /// A maximum of 1000 identifiers may be supplied. If more than 1000 identifiers are
+        /// specified, this method throws an <c>ArgumentException</c>.
+        /// </para>
+        /// <para>
+        /// This API is currently rate limited at the server to 1 QPS. If you exceed this, you may
+        /// get a quota exceeded error. Therefore, if you want to delete more than 1000 users, you
+        /// may need to add a delay to ensure you don't go over this limit.
+        /// </para>
+        /// </summary>
+        /// <param name="uids">The uids of the users to be deleted. Must have 1000 or fewer entries.
+        /// </param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that resolves to the total number of successful/failed
+        /// deletions, as well as the array of errors that correspond to the failed deletions.
+        /// </returns>
+        /// <exception cref="ArgumentException">If any of the identifiers are invalid or if more
+        /// than 1000 identifiers are specified.</exception>
+        public async Task<DeleteUsersResult> DeleteUsersAsync(IReadOnlyList<string> uids, CancellationToken cancellationToken)
+        {
+            return await this.UserManager.DeleteUsersAsync(uids, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Imports the provided list of users into Firebase Auth. You can import a maximum of
+        /// 1000 users at a time. This operation is optimized for bulk imports and does not
+        /// check identifier uniqueness, which could result in duplications.
+        ///
+        /// <para><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
+        /// passwords. See <a cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
+        /// FirebaseAuth.ImportUsersAsync</a>.</para>
+        /// </summary>
+        /// <param name="users"> A non-empty list of users to be imported. Length
+        /// must not exceed 1000.</param>
+        /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
+        /// <exception cref="ArgumentException">If the users list is null, empty or has more than
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
+        public async Task<UserImportResult> ImportUsersAsync(
+          IEnumerable<ImportUserRecordArgs> users)
+        {
+          return await this.ImportUsersAsync(users, default(CancellationToken)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Imports the provided list of users into Firebase Auth. You can import a maximum of
+        /// 1000 users at a time. This operation is optimized for bulk imports and does not
+        /// check identifier uniqueness, which could result in duplications.
+        ///
+        /// <para><a cref="UserImportOptions">UserImportOptions</a> is required to import users with
+        /// passwords. See <a cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs}, UserImportOptions, CancellationToken)">
+        /// FirebaseAuth.ImportUsersAsync</a>.</para>
+        /// </summary>
+        /// <param name="users"> A non-empty list of users to be imported. Length
+        /// must not exceed 1000.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
+        /// <exception cref="ArgumentException">If the users list is null, empty or has more than
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
+        public async Task<UserImportResult> ImportUsersAsync(
+          IEnumerable<ImportUserRecordArgs> users,
+          CancellationToken cancellationToken)
+        {
+          return await this.ImportUsersAsync(users, null, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Imports the provided list of users into Firebase Auth. You can import a maximum of
+        /// 1000 users at a time. This operation is optimized for bulk imports and does not
+        /// check identifier uniqueness, which could result in duplications.</summary>
+        /// <param name="users"> A non-empty list of users to be imported.
+        /// Length must not exceed 1000.</param>
+        /// <param name="options"> A <a cref="UserImportOptions">UserImportOptions</a> instance or
+        /// null. Required when importing users with passwords.</param>
+        /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
+        /// <exception cref="ArgumentException">If the users list is null, empty or has more than
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
+        public async Task<UserImportResult> ImportUsersAsync(
+            IEnumerable<ImportUserRecordArgs> users,
+            UserImportOptions options)
+        {
+          return await this.ImportUsersAsync(users, options, default(CancellationToken)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Imports the provided list of users into Firebase Auth. You can import a maximum of
+        /// 1000 users at a time. This operation is optimized for bulk imports and does not
+        /// check identifier uniqueness, which could result in duplications.</summary>
+        /// <param name="users"> A non-empty list of users to be imported.
+        /// Length must not exceed 1000.</param>
+        /// <param name="options"> A <a cref="UserImportOptions">UserImportOptions</a> instance or
+        /// null. Required when importing users with passwords.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns> A <a cref="UserImportResult">UserImportResult</a> instance.</returns>
+        /// <exception cref="ArgumentException">If the users list is null, empty or has more than
+        /// 1000 elements. Or if at least one user specifies a password, with no hashing algorithm
+        /// set.</exception>
+        /// <exception cref="FirebaseAuthException">If an error occurs while importing users.</exception>
+        public async Task<UserImportResult> ImportUsersAsync(
+            IEnumerable<ImportUserRecordArgs> users,
+            UserImportOptions options,
+            CancellationToken cancellationToken)
+        {
+          var request = new UserImportRequest(users, options);
+          return await this.UserManager.ImportUsersAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Sets the specified custom claims on an existing user account. A null claims value
+        /// removes any claims currently set on the user account. The claims must serialize into
+        /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
+        /// </summary>
+        /// <returns>A task that completes when the claims have been set.</returns>
+        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
+        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
+        /// characters.</exception>
+        /// <exception cref="FirebaseAuthException">
+        /// If an error occurs while setting custom claims. </exception>
+        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
+        /// or longer than 128 characters.
+        /// </param>
+        /// <param name="claims">The claims to be stored on the user account, and made
+        /// available to Firebase security rules. These must be serializable to JSON, and the
+        /// serialized claims should not be larger than 1000 characters.</param>
+        public async Task SetCustomUserClaimsAsync(
+            string uid, IReadOnlyDictionary<string, object> claims)
+        {
+            await this.SetCustomUserClaimsAsync(uid, claims, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sets the specified custom claims on an existing user account. A null claims value
+        /// removes any claims currently set on the user account. The claims should serialize into
+        /// a valid JSON string. The serialized claims must not be larger than 1000 characters.
+        /// </summary>
+        /// <returns>A task that completes when the claims have been set.</returns>
+        /// <exception cref="ArgumentException">If <paramref name="uid"/> is null, empty or longer
+        /// than 128 characters. Or, if the serialized <paramref name="claims"/> is larger than 1000
+        /// characters.</exception>
+        /// <exception cref="FirebaseAuthException">
+        /// If an error occurs while setting custom claims. </exception>
+        /// <param name="uid">The user ID string for the custom claims will be set. Must not be null
+        /// or longer than 128 characters.
+        /// </param>
+        /// <param name="claims">The claims to be stored on the user account, and made
+        /// available to Firebase security rules. These must be serializable to JSON, and after
+        /// serialization it should not be larger than 1000 characters.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task SetCustomUserClaimsAsync(
+            string uid, IReadOnlyDictionary<string, object> claims, CancellationToken cancellationToken)
+        {
+            var user = new UserRecordArgs()
+            {
+                Uid = uid,
+                CustomClaims = claims,
+            };
+
+            await this.UserManager.UpdateUserAsync(user, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets an async enumerable to iterate or page through users starting from the specified
+        /// page token. If the page token is null or unspecified, iteration starts from the first
+        /// page. See <a href="https://googleapis.github.io/google-cloud-dotnet/docs/guides/page-streaming.html">
+        /// Page Streaming</a> for more details on how to use this API.
+        /// </summary>
+        /// <param name="options">The options to control the starting point and page size. Pass null
+        /// to list from the beginning with default settings.</param>
+        /// <returns>A <see cref="PagedAsyncEnumerable{ExportedUserRecords, ExportedUserRecord}"/> instance.</returns>
+        public PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsersAsync(
+            ListUsersOptions options)
+        {
+            return this.UserManager.ListUsers(options);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verified.</param>
+        /// <returns>A task that completes with the email verification link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(string email)
+        {
+            return await this.GenerateEmailVerificationLinkAsync(email, null)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verifed.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the email verification link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GenerateEmailVerificationLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email verification flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user to be verified.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the email verification reset link.</returns>
+        public async Task<string> GenerateEmailVerificationLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var request = EmailActionLinkRequest.EmailVerificationLinkRequest(email, settings);
+            return await this.UserManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for password reset flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <param name="email">The email of the user whose password is to be reset.</param>
+        /// <returns>A task that completes with the password reset link.</returns>
+        public async Task<string> GeneratePasswordResetLinkAsync(string email)
+        {
+            return await this.GeneratePasswordResetLinkAsync(email, null)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for password reset flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <param name="email">The email of the user whose password is to be reset.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the password reset link.</returns>
+        public async Task<string> GeneratePasswordResetLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GeneratePasswordResetLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for password reset flows for the specified
+        /// email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while setting custom claims.</exception>
+        /// <param name="email">The email of the user whose password is to be reset.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the password reset link.</returns>
+        public async Task<string> GeneratePasswordResetLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var request = EmailActionLinkRequest.PasswordResetLinkRequest(email, settings);
+            return await this.UserManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email link sign-in flows for the
+        /// specified email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user signing in.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <returns>A task that completes with the email sign in link.</returns>
+        public async Task<string> GenerateSignInWithEmailLinkAsync(
+            string email, ActionCodeSettings settings)
+        {
+            return await this.GenerateSignInWithEmailLinkAsync(email, settings, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Generates the out-of-band email action link for email link sign-in flows for the
+        /// specified email address.
+        /// </summary>
+        /// <exception cref="FirebaseAuthException">If an error occurs while generating the link.</exception>
+        /// <param name="email">The email of the user signing in.</param>
+        /// <param name="settings">The action code settings object that defines whether
+        /// the link is to be handled by a mobile app and the additional state information to be
+        /// passed in the deep link.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with the email sign in link.</returns>
+        public async Task<string> GenerateSignInWithEmailLinkAsync(
+            string email, ActionCodeSettings settings, CancellationToken cancellationToken)
+        {
+            var request = EmailActionLinkRequest.EmailSignInLinkRequest(email, settings);
+            return await this.UserManager.GenerateEmailActionLinkAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes this <see cref="FirebaseAuth"/> service instance.
         /// </summary>
         void IFirebaseService.Delete()
@@ -194,6 +854,7 @@ namespace FirebaseAdmin.Auth
             {
                 this.deleted = true;
                 this.tokenFactory.DisposeIfCreated();
+                this.userManager.DisposeIfCreated();
                 this.Cleanup();
             }
         }
@@ -216,6 +877,8 @@ namespace FirebaseAdmin.Auth
         internal class Args
         {
             internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
+
+            internal Lazy<FirebaseUserManager> UserManager { get; set; }
         }
     }
 }

@@ -19,7 +19,7 @@ namespace FirebaseAdmin.Auth
     /// <summary>
     /// Used for looking up an account by email.
     ///
-    /// See <see cref="FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
+    /// See <see cref="AbstractFirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
     /// </summary>
     public sealed class EmailIdentifier : UserIdentifier
     {
