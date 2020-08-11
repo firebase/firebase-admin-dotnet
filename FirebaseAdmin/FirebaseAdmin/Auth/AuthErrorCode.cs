@@ -93,5 +93,10 @@ namespace FirebaseAdmin.Auth
         /// No tenant found for the given identifier.
         /// </summary>
         TenantNotFound,
+
+        /// <summary>
+        /// Incorrect tenant ID.
+        /// </summary>
+        TenantIdMismatch,
     }
 }

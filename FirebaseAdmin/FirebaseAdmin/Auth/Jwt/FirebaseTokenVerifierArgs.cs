@@ -20,6 +20,8 @@ namespace FirebaseAdmin.Auth.Jwt
     {
         public string ProjectId { get; set; }
 
+        public string TenantId { get; set; }
+
         public string ShortName { get; set; }
 
         public string Operation { get; set; }
@@ -37,11 +39,15 @@ namespace FirebaseAdmin.Auth.Jwt
         public AuthErrorCode ExpiredTokenCode { get; set; }
 
         internal static FirebaseTokenVerifierArgs ForIdTokens(
-            string projectId, IPublicKeySource keySource, IClock clock = null)
+            string projectId,
+            IPublicKeySource keySource,
+            IClock clock = null,
+            string tenantId = null)
         {
             return new FirebaseTokenVerifierArgs()
             {
                 ProjectId = projectId,
+                TenantId = tenantId,
                 ShortName = "ID token",
                 Operation = "VerifyIdTokenAsync()",
                 Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
@@ -54,11 +60,15 @@ namespace FirebaseAdmin.Auth.Jwt
         }
 
         internal static FirebaseTokenVerifierArgs ForSessionCookies(
-            string projectId, IPublicKeySource keySource, IClock clock = null)
+            string projectId,
+            IPublicKeySource keySource,
+            IClock clock = null,
+            string tenantId = null)
         {
             return new FirebaseTokenVerifierArgs()
             {
                 ProjectId = projectId,
+                TenantId = tenantId,
                 ShortName = "session cookie",
                 Operation = "VerifySessionCookieAsync()",
                 Url = "https://firebase.google.com/docs/auth/admin/manage-cookies",

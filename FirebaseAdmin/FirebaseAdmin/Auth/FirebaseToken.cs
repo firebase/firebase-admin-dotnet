@@ -32,66 +32,82 @@ namespace FirebaseAdmin.Auth
             this.IssuedAtTimeSeconds = args.IssuedAtTimeSeconds;
             this.Uid = args.Subject;
             this.Claims = args.Claims;
+            this.TenantId = args.Firebase?.Tenant;
         }
 
         /// <summary>
         /// Gets the issuer claim that identifies the principal that issued the JWT.
         /// </summary>
-        public string Issuer { get; private set; }
+        public string Issuer { get; }
 
         /// <summary>
         /// Gets the subject claim identifying the principal that is the subject of the JWT.
         /// </summary>
-        public string Subject { get; private set; }
+        public string Subject { get; }
 
         /// <summary>
         /// Gets the audience claim that identifies the audience that the JWT is intended for.
         /// </summary>
-        public string Audience { get; private set; }
+        public string Audience { get; }
 
         /// <summary>
         /// Gets the expiration time claim that identifies the expiration time (in seconds)
         /// on or after which the token MUST NOT be accepted for processing.
         /// </summary>
-        public long ExpirationTimeSeconds { get; private set; }
+        public long ExpirationTimeSeconds { get; }
 
         /// <summary>
         /// Gets the issued at claim that identifies the time (in seconds) at which the JWT was
         /// issued.
         /// </summary>
-        public long IssuedAtTimeSeconds { get; private set; }
+        public long IssuedAtTimeSeconds { get; }
 
         /// <summary>
         /// Gets the User ID of the user to which this ID token belongs. This is same as
         /// <see cref="Subject"/>.
         /// </summary>
-        public string Uid { get; private set; }
+        public string Uid { get; }
+
+        /// <summary>
+        /// Gets the ID of the tenant the user belongs to, if available. Returns null if the ID
+        /// token is not scoped to a tenant.
+        /// </summary>
+        public string TenantId { get; }
 
         /// <summary>
         /// Gets all other claims present in the JWT as a readonly dictionary. This can be used to
         /// access custom claims of the token.
         /// </summary>
-        public IReadOnlyDictionary<string, object> Claims { get; private set; }
+        public IReadOnlyDictionary<string, object> Claims { get; }
 
         internal sealed class Args
         {
             [JsonProperty("iss")]
-            public string Issuer { get; set; }
+            internal string Issuer { get; set; }
 
             [JsonProperty("sub")]
-            public string Subject { get; set; }
+            internal string Subject { get; set; }
 
             [JsonProperty("aud")]
-            public string Audience { get; set; }
+            internal string Audience { get; set; }
 
             [JsonProperty("exp")]
-            public long ExpirationTimeSeconds { get; set; }
+            internal long ExpirationTimeSeconds { get; set; }
 
             [JsonProperty("iat")]
-            public long IssuedAtTimeSeconds { get; set; }
+            internal long IssuedAtTimeSeconds { get; set; }
+
+            [JsonProperty("firebase")]
+            internal FirebaseInfo Firebase { get; set; }
 
             [JsonIgnore]
-            public IReadOnlyDictionary<string, object> Claims { get; set; }
+            internal IReadOnlyDictionary<string, object> Claims { get; set; }
+        }
+
+        internal sealed class FirebaseInfo
+        {
+            [JsonProperty("tenant")]
+            internal string Tenant { get; set; }
         }
     }
 }
