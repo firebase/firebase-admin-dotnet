@@ -513,7 +513,6 @@ namespace FirebaseAdmin.Auth.Tests
             }
 
             Assert.Equal(2, handler.Requests.Count);
-            Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts:batchGet?maxResults=1000", handler.Requests[0]);
             config.AssertRequest(
                 "accounts:batchGet?maxResults=1000&nextPageToken=token", handler.Requests[1]);
