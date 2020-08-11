@@ -61,8 +61,10 @@ namespace FirebaseAdmin.Auth
 
         public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
         {
-            var queryParameters = string.Join("&", this.RequestParameters.Select(
-                kvp => $"{kvp.Key}={kvp.Value.DefaultValue}"));
+            var orderedParams = this.RequestParameters
+                .OrderBy(kpv => kpv.Key)
+                .Select(kvp => $"{kvp.Key}={kvp.Value.DefaultValue}");
+            var queryParameters = string.Join("&", orderedParams);
             var request = new HttpRequestMessage()
             {
                 Method = System.Net.Http.HttpMethod.Get,

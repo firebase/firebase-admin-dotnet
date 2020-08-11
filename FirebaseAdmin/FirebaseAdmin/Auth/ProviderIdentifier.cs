@@ -20,7 +20,7 @@ namespace FirebaseAdmin.Auth
     /// <summary>
     /// Used for looking up an account by provider.
     ///
-    /// See <see cref="FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
+    /// See <see cref="AbstractFirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
     /// </summary>
     public sealed class ProviderIdentifier : UserIdentifier
     {

@@ -62,6 +62,12 @@ namespace FirebaseAdmin.Auth
                     "Must initialize FirebaseApp with a project ID to manage users.");
             }
 
+            this.TenantId = args.TenantId;
+            if (this.TenantId == string.Empty)
+            {
+                throw new ArgumentException("Tenant ID must not be empty.");
+            }
+
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
                 {
@@ -72,22 +78,33 @@ namespace FirebaseAdmin.Auth
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
                     RetryOptions = args.RetryOptions,
                 });
-            this.baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
             this.clock = args.Clock ?? SystemClock.Default;
+            var baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
+            if (this.TenantId != null)
+            {
+                this.baseUrl = $"{baseUrl}/tenants/{this.TenantId}";
+            }
+            else
+            {
+                this.baseUrl = baseUrl;
+            }
         }
+
+        internal string TenantId { get; }
 
         public void Dispose()
         {
             this.httpClient.Dispose();
         }
 
-        internal static FirebaseUserManager Create(FirebaseApp app)
+        internal static FirebaseUserManager Create(FirebaseApp app, string tenantId = null)
         {
             var args = new Args
             {
                 ClientFactory = app.Options.HttpClientFactory,
                 Credential = app.Options.Credential,
                 ProjectId = app.GetProjectId(),
+                TenantId = tenantId,
                 RetryOptions = RetryOptions.Default,
             };
 
@@ -428,6 +445,8 @@ namespace FirebaseAdmin.Auth
             internal GoogleCredential Credential { get; set; }
 
             internal string ProjectId { get; set; }
+
+            internal string TenantId { get; set; }
 
             internal RetryOptions RetryOptions { get; set; }
 

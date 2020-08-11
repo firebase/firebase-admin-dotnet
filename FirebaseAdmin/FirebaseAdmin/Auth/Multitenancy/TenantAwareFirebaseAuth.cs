@@ -23,7 +23,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
     /// </summary>
     public sealed class TenantAwareFirebaseAuth : AbstractFirebaseAuth
     {
-        private TenantAwareFirebaseAuth(Args args)
+        internal TenantAwareFirebaseAuth(Args args)
         : base(args)
         {
             this.TenantId = args.TenantId;
@@ -45,6 +45,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
                 TenantId = tenantId,
                 TokenFactory = new Lazy<FirebaseTokenFactory>(
                     () => FirebaseTokenFactory.Create(app, tenantId), true),
+                UserManager = new Lazy<FirebaseUserManager>(
+                    () => FirebaseUserManager.Create(app, tenantId), true),
             };
             return new TenantAwareFirebaseAuth(args);
         }
@@ -52,6 +54,16 @@ namespace FirebaseAdmin.Auth.Multitenancy
         internal new class Args : AbstractFirebaseAuth.Args
         {
             public string TenantId { get; set; }
+
+            internal static Args CreateDefault(string tenantId)
+            {
+                return new Args()
+                {
+                    TokenFactory = new Lazy<FirebaseTokenFactory>(),
+                    UserManager = new Lazy<FirebaseUserManager>(),
+                    TenantId = tenantId,
+                };
+            }
         }
     }
 }

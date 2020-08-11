@@ -21,7 +21,7 @@ namespace FirebaseAdmin.Auth
 
     /// <summary>
     /// Represents an error encountered while deleting users via the
-    /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> API.
+    /// <see cref="AbstractFirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> API.
     /// </summary>
     public sealed class ErrorInfo
     {
@@ -33,7 +33,7 @@ namespace FirebaseAdmin.Auth
 
         /// <summary>
         /// Gets the index of the user that was unable to be deleted in the list passed to the
-        /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> method.
+        /// <see cref="AbstractFirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> method.
         /// </summary>
         public int Index { get; }
 
