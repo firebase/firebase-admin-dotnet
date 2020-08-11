@@ -42,6 +42,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
             Assert.Equal(MockTenantId, auth.TenantId);
             Assert.Equal(MockTenantId, auth.TokenFactory.TenantId);
+            Assert.Equal(MockTenantId, auth.IdTokenVerifier.TenantId);
             Assert.Equal(MockTenantId, auth.UserManager.TenantId);
         }
 

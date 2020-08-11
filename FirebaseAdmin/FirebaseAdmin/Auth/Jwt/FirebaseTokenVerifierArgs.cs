@@ -60,15 +60,11 @@ namespace FirebaseAdmin.Auth.Jwt
         }
 
         internal static FirebaseTokenVerifierArgs ForSessionCookies(
-            string projectId,
-            IPublicKeySource keySource,
-            IClock clock = null,
-            string tenantId = null)
+            string projectId, IPublicKeySource keySource, IClock clock = null)
         {
             return new FirebaseTokenVerifierArgs()
             {
                 ProjectId = projectId,
-                TenantId = tenantId,
                 ShortName = "session cookie",
                 Operation = "VerifySessionCookieAsync()",
                 Url = "https://firebase.google.com/docs/auth/admin/manage-cookies",

@@ -90,7 +90,8 @@ namespace FirebaseAdmin.Auth.Jwt
 
         internal string TenantId { get; }
 
-        internal static FirebaseTokenVerifier CreateIDTokenVerifier(FirebaseApp app)
+        internal static FirebaseTokenVerifier CreateIDTokenVerifier(
+            FirebaseApp app, string tenantId = null)
         {
             var projectId = app.GetProjectId();
             if (string.IsNullOrEmpty(projectId))
@@ -101,7 +102,8 @@ namespace FirebaseAdmin.Auth.Jwt
 
             var keySource = new HttpPublicKeySource(
                 IdTokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
-            var args = FirebaseTokenVerifierArgs.ForIdTokens(projectId, keySource);
+            var args = FirebaseTokenVerifierArgs.ForIdTokens(
+                projectId, keySource, tenantId: tenantId);
             return new FirebaseTokenVerifier(args);
         }
 
