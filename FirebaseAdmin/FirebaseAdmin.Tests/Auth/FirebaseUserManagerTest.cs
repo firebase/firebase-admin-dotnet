@@ -19,10 +19,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
-using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
@@ -34,16 +32,13 @@ namespace FirebaseAdmin.Auth.Tests
     {
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
-            new object[] { FirebaseAuthTestConfig.DefaultInstance },
-            new object[] { TenantAwareFirebaseAuthTestConfig.DefaultInstance },
+            new object[] { FirebaseAuthTestConfig.Instance },
+            new object[] { TenantAwareFirebaseAuthTestConfig.Instance },
         };
 
         private const string MockProjectId = "project1";
         private const string CreateUserResponse = @"{""localId"": ""user1""}";
         private const string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
-
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
 
         private static readonly IClock MockClock = new MockClock();
 
@@ -68,7 +63,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserById(TestConfig config)
+        public async Task GetUserById(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -100,7 +95,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByIdWithProperties(TestConfig config)
+        public async Task GetUserByIdWithProperties(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -182,7 +177,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByIdUserNotFound(TestConfig config)
+        public async Task GetUserByIdUserNotFound(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -202,7 +197,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByIdNull(TestConfig config)
+        public async Task GetUserByIdNull(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserAsync(null));
@@ -210,7 +205,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByIdEmpty(TestConfig config)
+        public async Task GetUserByIdEmpty(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserAsync(string.Empty));
@@ -218,7 +213,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByEmail(TestConfig config)
+        public async Task GetUserByEmail(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -250,7 +245,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByEmailUserNotFound(TestConfig config)
+        public async Task GetUserByEmailUserNotFound(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -270,7 +265,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByEmailNull(TestConfig config)
+        public async Task GetUserByEmailNull(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByEmailAsync(null));
@@ -278,7 +273,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByEmailEmpty(TestConfig config)
+        public async Task GetUserByEmailEmpty(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByEmailAsync(string.Empty));
@@ -286,7 +281,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByPhoneNumber(TestConfig config)
+        public async Task GetUserByPhoneNumber(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -318,7 +313,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByPhoneNumberUserNotFound(TestConfig config)
+        public async Task GetUserByPhoneNumberUserNotFound(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -338,7 +333,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByPhoneNumberNull(TestConfig config)
+        public async Task GetUserByPhoneNumberNull(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByPhoneNumberAsync(null));
@@ -346,7 +341,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUserByPhoneNumberEmpty(TestConfig config)
+        public async Task GetUserByPhoneNumberEmpty(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             await Assert.ThrowsAsync<ArgumentException>(() => auth.GetUserByPhoneNumberAsync(string.Empty));
@@ -354,7 +349,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUsersExceeds100(TestConfig config)
+        public async Task GetUsersExceeds100(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             var identifiers = new List<UserIdentifier>();
@@ -368,7 +363,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUsersEmpty(TestConfig config)
+        public async Task GetUsersEmpty(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             var identifiers = new List<UserIdentifier>();
@@ -380,7 +375,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUsersAllNonExisting(TestConfig config)
+        public async Task GetUsersAllNonExisting(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -400,7 +395,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task GetUsersMultipleIdentifierTypes(TestConfig config)
+        public async Task GetUsersMultipleIdentifierTypes(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -453,7 +448,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsers(TestConfig config)
+        public async Task ListUsers(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -487,7 +482,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListUsersForEach(TestConfig config)
+        public void ListUsersForEach(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -520,7 +515,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListUsersCustomOptions(TestConfig config)
+        public void ListUsersCustomOptions(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -555,7 +550,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersReadPage(TestConfig config)
+        public async Task ListUsersReadPage(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -589,7 +584,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersByPages(TestConfig config)
+        public async Task ListUsersByPages(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -631,7 +626,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersReadLargePageSize(TestConfig config)
+        public async Task ListUsersReadLargePageSize(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -653,7 +648,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersAsRawResponses(TestConfig config)
+        public async Task ListUsersAsRawResponses(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -690,7 +685,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersReadPageSizeTooLarge(TestConfig config)
+        public async Task ListUsersReadPageSizeTooLarge(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -707,7 +702,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListUsersOptionsPageSizeTooLarge(TestConfig config)
+        public void ListUsersOptionsPageSizeTooLarge(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -725,7 +720,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListUsersOptionsPageSizeTooSmall(TestConfig config)
+        public void ListUsersOptionsPageSizeTooSmall(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -747,7 +742,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListUsersOptionsPageTokenEmpty(TestConfig config)
+        public void ListUsersOptionsPageTokenEmpty(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -765,7 +760,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersHttpError(TestConfig config)
+        public async Task ListUsersHttpError(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -792,7 +787,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersIntermittentHttpError(TestConfig config)
+        public async Task ListUsersIntermittentHttpError(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -828,7 +823,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ListUsersNonJsonResponse(TestConfig config)
+        public async Task ListUsersNonJsonResponse(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -854,7 +849,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUser(TestConfig config)
+        public async Task CreateUser(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -874,7 +869,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserWithArgs(TestConfig config)
+        public async Task CreateUserWithArgs(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -910,7 +905,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserWithExplicitDefaults(TestConfig config)
+        public async Task CreateUserWithExplicitDefaults(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -941,7 +936,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserEmptyUid(TestConfig config)
+        public async Task CreateUserEmptyUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -957,7 +952,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserLongUid(TestConfig config)
+        public async Task CreateUserLongUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -973,7 +968,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserEmptyEmail(TestConfig config)
+        public async Task CreateUserEmptyEmail(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -989,7 +984,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserInvalidEmail(TestConfig config)
+        public async Task CreateUserInvalidEmail(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1005,7 +1000,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserEmptyPhoneNumber(TestConfig config)
+        public async Task CreateUserEmptyPhoneNumber(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1021,7 +1016,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserInvalidPhoneNumber(TestConfig config)
+        public async Task CreateUserInvalidPhoneNumber(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1040,7 +1035,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserEmptyPhotoUrl(TestConfig config)
+        public async Task CreateUserEmptyPhotoUrl(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1056,7 +1051,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserInvalidPhotoUrl(TestConfig config)
+        public async Task CreateUserInvalidPhotoUrl(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1072,7 +1067,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserShortPassword(TestConfig config)
+        public async Task CreateUserShortPassword(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1088,7 +1083,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task CreateUserIncorrectResponse(TestConfig config)
+        public async Task CreateUserIncorrectResponse(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1109,7 +1104,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUser(TestConfig config)
+        public async Task UpdateUser(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1158,7 +1153,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserPartial(TestConfig config)
+        public async Task UpdateUserPartial(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1184,7 +1179,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserRemoveAttributes(TestConfig config)
+        public async Task UpdateUserRemoveAttributes(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1213,7 +1208,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserRemoveProviders(TestConfig config)
+        public async Task UpdateUserRemoveProviders(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1241,7 +1236,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserSetCustomClaims(TestConfig config)
+        public async Task UpdateUserSetCustomClaims(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1266,7 +1261,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task LargeClaimsUnderLimit(TestConfig config)
+        public async Task LargeClaimsUnderLimit(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1282,7 +1277,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task EmptyClaims(TestConfig config)
+        public async Task EmptyClaims(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1298,7 +1293,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task NullClaims(TestConfig config)
+        public async Task NullClaims(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1314,7 +1309,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ReservedClaims(TestConfig config)
+        public void ReservedClaims(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1333,7 +1328,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void UpdateUserNoUid(TestConfig config)
+        public void UpdateUserNoUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1347,7 +1342,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void UpdateUserInvalidUid(TestConfig config)
+        public void UpdateUserInvalidUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1362,7 +1357,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserEmptyUid(TestConfig config)
+        public async Task UpdateUserEmptyUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1377,7 +1372,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserEmptyEmail(TestConfig config)
+        public async Task UpdateUserEmptyEmail(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1394,7 +1389,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserInvalidEmail(TestConfig config)
+        public async Task UpdateUserInvalidEmail(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1411,7 +1406,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserEmptyPhoneNumber(TestConfig config)
+        public async Task UpdateUserEmptyPhoneNumber(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1428,7 +1423,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserInvalidPhoneNumber(TestConfig config)
+        public async Task UpdateUserInvalidPhoneNumber(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1448,7 +1443,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserEmptyPhotoUrl(TestConfig config)
+        public async Task UpdateUserEmptyPhotoUrl(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1465,7 +1460,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserInvalidPhotoUrl(TestConfig config)
+        public async Task UpdateUserInvalidPhotoUrl(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1482,7 +1477,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserShortPassword(TestConfig config)
+        public async Task UpdateUserShortPassword(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1499,7 +1494,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void EmptyNameClaims(TestConfig config)
+        public void EmptyNameClaims(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1514,7 +1509,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void LargeClaimsOverLimit(TestConfig config)
+        public void LargeClaimsOverLimit(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1529,7 +1524,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserIncorrectResponseObject(TestConfig config)
+        public async Task UpdateUserIncorrectResponseObject(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1553,7 +1548,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserIncorrectResponseUid(TestConfig config)
+        public async Task UpdateUserIncorrectResponseUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1577,7 +1572,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserHttpError(TestConfig config)
+        public async Task UpdateUserHttpError(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1604,7 +1599,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task DeleteUser(TestConfig config)
+        public async Task DeleteUser(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1619,7 +1614,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task DeleteUserNotFound(TestConfig config)
+        public async Task DeleteUserNotFound(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1643,7 +1638,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task DeleteUsersExceeds1000(TestConfig config)
+        public async Task DeleteUsersExceeds1000(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             var uids = new List<string>();
@@ -1657,7 +1652,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task DeleteUsersInvalidId(TestConfig config)
+        public async Task DeleteUsersInvalidId(AuthTestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
             var uids = new List<string>() { "too long " + new string('.', 128) };
@@ -1668,7 +1663,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task DeleteUsersIndexesErrorsCorrectly(TestConfig config)
+        public async Task DeleteUsersIndexesErrorsCorrectly(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1705,7 +1700,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task DeleteUsersSuccess(TestConfig config)
+        public async Task DeleteUsersSuccess(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1723,7 +1718,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task RevokeRefreshTokens(TestConfig config)
+        public async Task RevokeRefreshTokens(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1744,7 +1739,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void RevokeRefreshTokensNoUid(TestConfig config)
+        public void RevokeRefreshTokensNoUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1757,7 +1752,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void RevokeRefreshTokensInvalidUid(TestConfig config)
+        public void RevokeRefreshTokensInvalidUid(AuthTestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1771,7 +1766,7 @@ namespace FirebaseAdmin.Auth.Tests
         public void CreateSessionCookieNoIdToken()
         {
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)FirebaseAuthTestConfig.Instance.CreateAuth(handler);
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromHours(1),
@@ -1787,7 +1782,7 @@ namespace FirebaseAdmin.Auth.Tests
         public void CreateSessionCookieNoOptions()
         {
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)FirebaseAuthTestConfig.Instance.CreateAuth(handler);
 
             Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await auth.CreateSessionCookieAsync("idToken", null));
@@ -1797,7 +1792,7 @@ namespace FirebaseAdmin.Auth.Tests
         public void CreateSessionCookieNoExpiresIn()
         {
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)FirebaseAuthTestConfig.Instance.CreateAuth(handler);
 
             Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync(
@@ -1808,7 +1803,7 @@ namespace FirebaseAdmin.Auth.Tests
         public void CreateSessionCookieExpiresInTooLow()
         {
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)FirebaseAuthTestConfig.Instance.CreateAuth(handler);
             var fiveMinutesInSeconds = TimeSpan.FromMinutes(5).TotalSeconds;
             var options = new SessionCookieOptions()
             {
@@ -1823,7 +1818,7 @@ namespace FirebaseAdmin.Auth.Tests
         public void CreateSessionCookieExpiresInTooHigh()
         {
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)FirebaseAuthTestConfig.Instance.CreateAuth(handler);
             var fourteenDaysInSeconds = TimeSpan.FromDays(14).TotalSeconds;
             var options = new SessionCookieOptions()
             {
@@ -1843,7 +1838,7 @@ namespace FirebaseAdmin.Auth.Tests
                     ""sessionCookie"": ""cookie""
                 }",
             };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)FirebaseAuthTestConfig.Instance.CreateAuth(handler);
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromHours(1),
@@ -1858,13 +1853,13 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("idToken", request["idToken"]);
             Assert.Equal(3600, request["validDuration"]);
 
-            FirebaseAuthTestConfig.DefaultInstance.AssertRequest(
+            FirebaseAuthTestConfig.Instance.AssertRequest(
                 ":createSessionCookie", Assert.Single(handler.Requests));
         }
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task ServiceUnvailable(TestConfig config)
+        public async Task ServiceUnvailable(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1885,7 +1880,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task TransportError(TestConfig config)
+        public async Task TransportError(AuthTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1906,7 +1901,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void NoProjectId()
         {
-            var args = CreateArgs(new MockMessageHandler());
+            var args = CreateArgs();
             args.ProjectId = null;
 
             Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
@@ -1915,77 +1910,54 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void EmptyTenantId()
         {
-            var args = CreateArgs(new MockMessageHandler());
+            var args = CreateArgs();
             args.TenantId = string.Empty;
 
             Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
         }
 
-        private static FirebaseUserManager.Args CreateArgs(HttpMessageHandler handler)
+        private static FirebaseUserManager.Args CreateArgs()
         {
             return new FirebaseUserManager.Args
             {
-                Credential = MockCredential,
                 ProjectId = MockProjectId,
-                ClientFactory = new MockHttpClientFactory(handler),
+                ClientFactory = new MockHttpClientFactory(new MockMessageHandler()),
                 RetryOptions = RetryOptions.NoBackOff,
                 Clock = MockClock,
             };
         }
 
-        public abstract class TestConfig
+        private sealed class FirebaseAuthTestConfig
+        : AuthTestConfig.MyFirebaseAuthTestConfig
         {
-            protected static readonly AppOptions DefaultOptions = new AppOptions
+            internal static readonly FirebaseAuthTestConfig Instance = new FirebaseAuthTestConfig();
+
+            private protected override ConfigContext InitConfig()
             {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
-            };
-
-            internal abstract string BaseUrl { get; }
-
-            internal abstract AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler);
-
-            internal void AssertRequest(
-                string expectedPath, MockMessageHandler.IncomingRequest request)
-            {
-                Assert.Equal($"{this.BaseUrl}/{expectedPath}", request.Url.PathAndQuery);
-                Assert.Equal(
-                    FirebaseUserManager.ClientVersion,
-                    request.Headers.GetValues(FirebaseUserManager.ClientVersionHeader).First());
+                return new ConfigContext
+                {
+                    ProjectId = MockProjectId,
+                    RetryOptions = RetryOptions.NoBackOff,
+                    Clock = MockClock,
+                };
             }
         }
 
-        private sealed class FirebaseAuthTestConfig : TestConfig
+        private sealed class TenantAwareFirebaseAuthTestConfig
+        : AuthTestConfig.MyTenantAwareFirebaseAuthTestConfig
         {
-            internal static readonly FirebaseAuthTestConfig DefaultInstance =
-                new FirebaseAuthTestConfig();
-
-            internal override string BaseUrl => $"/v1/projects/{MockProjectId}";
-
-            internal override AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler)
-            {
-                var userManager = new FirebaseUserManager(CreateArgs(handler));
-                var args = FirebaseAuth.Args.CreateDefault();
-                args.UserManager = new Lazy<FirebaseUserManager>(userManager);
-                return new FirebaseAuth(args);
-            }
-        }
-
-        private sealed class TenantAwareFirebaseAuthTestConfig : TestConfig
-        {
-            internal static readonly TenantAwareFirebaseAuthTestConfig DefaultInstance =
+            internal static readonly TenantAwareFirebaseAuthTestConfig Instance =
                 new TenantAwareFirebaseAuthTestConfig();
 
-            internal override string BaseUrl => $"/v1/projects/{MockProjectId}/tenants/tenant1";
-
-            internal override AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler)
+            private protected override ConfigContext InitConfig()
             {
-                var args = CreateArgs(handler);
-                args.TenantId = "tenant1";
-                var userManager = new FirebaseUserManager(args);
-
-                var authArgs = TenantAwareFirebaseAuth.Args.CreateDefault("tenant1");
-                authArgs.UserManager = new Lazy<FirebaseUserManager>(userManager);
-                return new TenantAwareFirebaseAuth(authArgs);
+                return new ConfigContext
+                {
+                    ProjectId = MockProjectId,
+                    RetryOptions = RetryOptions.NoBackOff,
+                    Clock = MockClock,
+                    TenantId = "tenant1",
+                };
             }
         }
     }
