@@ -255,6 +255,29 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
+        public async Task CustomToken(TestConfig config)
+        {
+            var header = new Dictionary<string, object>()
+            {
+                { "kid", string.Empty },
+            };
+            var payload = new Dictionary<string, object>()
+            {
+                { "aud", FirebaseTokenFactory.FirebaseAudience },
+            };
+            var idToken = await config.CreateTestTokenAsync(header, payload);
+            var auth = config.CreateAuth();
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.VerifyIdTokenAsync(idToken));
+
+            var expectedMessage = "VerifyIdTokenAsync() expects an ID token, but was given "
+                + "a custom token.";
+            this.CheckException(exception, expectedMessage);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
         public async Task InvalidAudience(TestConfig config)
         {
             var payload = new Dictionary<string, object>()
@@ -492,6 +515,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         {
             protected abstract string BaseUrl { get; }
 
+            /// <summary>
+            /// Creates an instance of <c>AbstractFirebaseAuth</c> for testing. If specified, the
+            /// HTTP message handler is used to respond to user management API calls.
+            /// </summary>
             internal AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
             {
                 var tokenVerifier = new FirebaseTokenVerifier(this.CreateTokenVerifierArgs());
@@ -499,6 +526,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 return this.CreateAuth(tokenVerifier, userManager);
             }
 
+            /// <summary>
+            /// Creates an ID token for testing with the given header and payload claims. The
+            /// returned ID token is guaranteed to contain the <c>firebase</c> claim.
+            /// </summary>
             internal async Task<string> CreateTestTokenAsync(
                 Dictionary<string, object> headerOverrides = null,
                 Dictionary<string, object> payloadOverrides = null)
@@ -515,7 +546,11 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     headerOverrides, payloadCopy);
             }
 
-            internal virtual void AssertFirebaseToken(
+            /// <summary>
+            /// Asserts that the given <c>FirebaseToken</c> is correctly populated, and contains
+            /// the expected claims.
+            /// </summary>
+            internal void AssertFirebaseToken(
                 FirebaseToken decoded, IDictionary<string, object> expected = null)
             {
                 Assert.Equal(ProjectId, decoded.Audience);
@@ -540,6 +575,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 {
                     Assert.Equal("firebase", Assert.Single(decoded.Claims).Key);
                 }
+
+                this.AssertDecodedToken(decoded);
             }
 
             internal void AssertRequest(MockMessageHandler.IncomingRequest request)
@@ -547,15 +584,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 Assert.Equal($"{this.BaseUrl}/accounts:lookup", request.Url.PathAndQuery);
             }
 
-            internal virtual IDictionary<string, object> GetFirebaseClaims() =>
+            private protected virtual IDictionary<string, object> GetFirebaseClaims() =>
                 new Dictionary<string, object>();
 
-            internal abstract FirebaseTokenVerifierArgs CreateTokenVerifierArgs();
-
-            internal abstract AbstractFirebaseAuth CreateAuth(
-                FirebaseTokenVerifier verifier, FirebaseUserManager userManager);
-
-            internal virtual FirebaseUserManager.Args CreateUserManagerArgs(
+            private protected virtual FirebaseUserManager.Args CreateUserManagerArgs(
                 HttpMessageHandler handler)
             {
                 return new FirebaseUserManager.Args
@@ -566,6 +598,13 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     RetryOptions = RetryOptions.NoBackOff,
                 };
             }
+
+            private protected abstract FirebaseTokenVerifierArgs CreateTokenVerifierArgs();
+
+            private protected abstract AbstractFirebaseAuth CreateAuth(
+                FirebaseTokenVerifier verifier, FirebaseUserManager userManager);
+
+            private protected abstract void AssertDecodedToken(FirebaseToken decoded);
         }
 
         private sealed class FirebaseAuthTestConfig : TestConfig
@@ -575,18 +614,23 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             protected override string BaseUrl => $"/v1/projects/{ProjectId}";
 
-            internal override FirebaseTokenVerifierArgs CreateTokenVerifierArgs()
+            private protected override FirebaseTokenVerifierArgs CreateTokenVerifierArgs()
             {
                 return FirebaseTokenVerifierArgs.ForIdTokens(ProjectId, KeySource, Clock);
             }
 
-            internal override AbstractFirebaseAuth CreateAuth(
+            private protected override AbstractFirebaseAuth CreateAuth(
                 FirebaseTokenVerifier tokenVerifier, FirebaseUserManager userManager)
             {
                 var authArgs = FirebaseAuth.Args.CreateDefault();
                 authArgs.IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(tokenVerifier);
                 authArgs.UserManager = new Lazy<FirebaseUserManager>(userManager);
                 return new FirebaseAuth(authArgs);
+            }
+
+            private protected override void AssertDecodedToken(FirebaseToken decoded)
+            {
+                Assert.Null(decoded.TenantId);
             }
         }
 
@@ -597,14 +641,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             protected override string BaseUrl => $"/v1/projects/{ProjectId}/tenants/{TenantId}";
 
-            internal override void AssertFirebaseToken(
-                FirebaseToken decoded, IDictionary<string, object> claims = null)
-            {
-                base.AssertFirebaseToken(decoded, claims);
-                Assert.Equal(TenantId, decoded.TenantId);
-            }
-
-            internal override IDictionary<string, object> GetFirebaseClaims()
+            private protected override IDictionary<string, object> GetFirebaseClaims()
             {
                 return new Dictionary<string, object>
                 {
@@ -612,13 +649,21 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 };
             }
 
-            internal override FirebaseTokenVerifierArgs CreateTokenVerifierArgs()
+            private protected override FirebaseUserManager.Args CreateUserManagerArgs(
+                HttpMessageHandler handler)
+            {
+                var args = base.CreateUserManagerArgs(handler);
+                args.TenantId = TenantId;
+                return args;
+            }
+
+            private protected override FirebaseTokenVerifierArgs CreateTokenVerifierArgs()
             {
                 return FirebaseTokenVerifierArgs.ForIdTokens(
                     ProjectId, KeySource, Clock, TenantId);
             }
 
-            internal override AbstractFirebaseAuth CreateAuth(
+            private protected override AbstractFirebaseAuth CreateAuth(
                 FirebaseTokenVerifier tokenVerifier, FirebaseUserManager userManager)
             {
                 var authArgs = TenantAwareFirebaseAuth.Args.CreateDefault(TenantId);
@@ -627,12 +672,9 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 return new TenantAwareFirebaseAuth(authArgs);
             }
 
-            internal override FirebaseUserManager.Args CreateUserManagerArgs(
-                HttpMessageHandler handler)
+            private protected override void AssertDecodedToken(FirebaseToken decoded)
             {
-                var args = base.CreateUserManagerArgs(handler);
-                args.TenantId = TenantId;
-                return args;
+                Assert.Equal(TenantId, decoded.TenantId);
             }
         }
     }
