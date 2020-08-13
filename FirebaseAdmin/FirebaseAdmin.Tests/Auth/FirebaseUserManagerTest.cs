@@ -32,15 +32,12 @@ namespace FirebaseAdmin.Auth.Tests
     {
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
-            new object[] { new TestConfig() },
-            new object[] { new TestConfig("tenant1") },
+            new object[] { TestConfig.ForFirebaseAuth() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
         };
 
-        private const string MockProjectId = "project1";
         private const string CreateUserResponse = @"{""localId"": ""user1""}";
         private const string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
-
-        private static readonly IClock MockClock = new MockClock();
 
         private static readonly IList<string> ListUsersResponse = new List<string>()
         {
@@ -1732,7 +1729,7 @@ namespace FirebaseAdmin.Auth.Tests
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
-            Assert.Equal(MockClock.UnixTimestamp(), request["validSince"]);
+            Assert.Equal(TestConfig.Clock.UnixTimestamp(), request["validSince"]);
 
             config.AssertRequest("accounts:update", Assert.Single(handler.Requests));
         }
@@ -1765,7 +1762,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieNoIdToken()
         {
-            var config = new TestConfig();
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
             var options = new SessionCookieOptions()
@@ -1782,7 +1779,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieNoOptions()
         {
-            var config = new TestConfig();
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
 
@@ -1793,7 +1790,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieNoExpiresIn()
         {
-            var config = new TestConfig();
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
 
@@ -1805,7 +1802,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieExpiresInTooLow()
         {
-            var config = new TestConfig();
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
             var fiveMinutesInSeconds = TimeSpan.FromMinutes(5).TotalSeconds;
@@ -1821,7 +1818,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieExpiresInTooHigh()
         {
-            var config = new TestConfig();
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
             var fourteenDaysInSeconds = TimeSpan.FromDays(14).TotalSeconds;
@@ -1837,7 +1834,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task CreateSessionCookie()
         {
-            var config = new TestConfig();
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler()
             {
                 Response = @"{
@@ -1925,41 +1922,59 @@ namespace FirebaseAdmin.Auth.Tests
         {
             return new FirebaseUserManager.Args
             {
-                ProjectId = MockProjectId,
+                ProjectId = TestConfig.MockProjectId,
                 ClientFactory = new MockHttpClientFactory(new MockMessageHandler()),
                 RetryOptions = RetryOptions.NoBackOff,
-                Clock = MockClock,
+                Clock = TestConfig.Clock,
             };
         }
 
         public class TestConfig
         {
-            private readonly string tenantId;
+            internal const string MockProjectId = "project1";
 
-            public TestConfig(string tenantId = null)
+            internal static readonly IClock Clock = new MockClock();
+
+            private readonly string tenantId;
+            private readonly AuthBuilder authBuilder;
+
+            private TestConfig(string tenantId = null)
             {
                 this.tenantId = tenantId;
-            }
-
-            private AuthBuilder AuthBuilder => new AuthBuilder
+                this.authBuilder = new AuthBuilder
                 {
                     ProjectId = MockProjectId,
-                    Clock = MockClock,
+                    Clock = Clock,
                     RetryOptions = RetryOptions.NoBackOff,
                     TenantId = tenantId,
                 };
+            }
+
+            public static TestConfig ForFirebaseAuth()
+            {
+                return new TestConfig();
+            }
+
+            public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
+            {
+                return new TestConfig(tenantId);
+            }
 
             public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
             {
-                return this.AuthBuilder.Build(TestOptions.WithUserManagerRequestHandler(handler));
+                var options = new TestOptions
+                {
+                    UserManagerRequestHandler = handler,
+                };
+                return this.authBuilder.Build(options);
             }
 
             internal void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
-                Assert.Equal(
-                    this.AuthBuilder.BuildRequestPath("v1", expectedSuffix),
-                    request.Url.PathAndQuery);
+                var tenantInfo = this.tenantId != null ? $"/tenants/{this.tenantId}" : string.Empty;
+                var expectedPath = $"/v1/projects/{MockProjectId}{tenantInfo}/{expectedSuffix}";
+                Assert.Equal(expectedPath, request.Url.PathAndQuery);
             }
         }
     }

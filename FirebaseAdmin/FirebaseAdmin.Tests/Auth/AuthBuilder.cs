@@ -21,6 +21,12 @@ using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth.Tests
 {
+    /// <summary>
+    /// An abstraction for creating instances of <see cref="AbstractFirebaseAuth"/> for testing.
+    /// When a tenant ID is configured creates <see cref="TenantAwareFirebaseAuth"/> instances.
+    /// Otherwise creates <see cref="FirebaseAuth"/> instances. Test cases can further customize
+    /// the components of <c>AbstractFirebaseAuth</c> to initialize via <see cref="TestOptions"/>.
+    /// </summary>
     public sealed class AuthBuilder
     {
         internal IClock Clock { get; set; }
@@ -47,12 +53,6 @@ namespace FirebaseAdmin.Auth.Tests
                 this.PopulateArgs(args, options);
                 return new FirebaseAuth(args);
             }
-        }
-
-        public string BuildRequestPath(string prefix, string suffix)
-        {
-            var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
-            return $"/{prefix}/projects/{this.ProjectId}{tenantInfo}/{suffix}";
         }
 
         private void PopulateArgs(AbstractFirebaseAuth.Args args, TestOptions options)

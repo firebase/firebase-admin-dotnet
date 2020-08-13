@@ -21,15 +21,15 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public sealed class MockTokenBuilder
     {
-        public string ProjectId { get; set; }
+        internal string ProjectId { get; set; }
 
-        public string TenantId { get; set; }
+        internal string TenantId { get; set; }
 
-        public string Uid { get; set; }
+        internal string Uid { get; set; }
 
-        public string IssuerPrefix { get; set; }
+        internal string IssuerPrefix { get; set; }
 
-        public IClock Clock { get; set; }
+        internal IClock Clock { get; set; }
 
         internal ISigner Signer { get; set; }
 
@@ -51,13 +51,17 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 }
             }
 
+            var uid = this.Uid.ThrowIfNullOrEmpty(nameof(this.Uid));
+            var issuerPrefix = this.IssuerPrefix.ThrowIfNullOrEmpty(nameof(this.IssuerPrefix));
+            var projectId = this.ProjectId.ThrowIfNullOrEmpty(nameof(this.ProjectId));
+            var clock = this.Clock.ThrowIfNull(nameof(this.Clock));
             var payload = new Dictionary<string, object>()
             {
-                { "sub", this.Uid },
-                { "iss", $"{this.IssuerPrefix}/{this.ProjectId}" },
-                { "aud", this.ProjectId },
-                { "iat", this.Clock.UnixTimestamp() - (60 * 10) },
-                { "exp", this.Clock.UnixTimestamp() + (60 * 50) },
+                { "sub", uid },
+                { "iss", $"{issuerPrefix}/{projectId}" },
+                { "aud", projectId },
+                { "iat", clock.UnixTimestamp() - (60 * 10) },
+                { "exp", clock.UnixTimestamp() + (60 * 50) },
             };
             if (this.TenantId != null)
             {
@@ -75,7 +79,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 }
             }
 
-            return await JwtUtils.CreateSignedJwtAsync(header, payload, this.Signer);
+            var signer = this.Signer.ThrowIfNull(nameof(this.Signer));
+            return await JwtUtils.CreateSignedJwtAsync(header, payload, signer);
         }
 
         public void AssertFirebaseToken(
@@ -93,30 +98,20 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(
                 this.Clock.UnixTimestamp() + (60 * 50), decoded.ExpirationTimeSeconds);
 
-            if (expectedClaims != null)
+            expectedClaims = expectedClaims ?? new Dictionary<string, object>();
+            if (this.TenantId != null)
             {
-                if (this.TenantId != null)
-                {
-                    Assert.Contains(decoded.Claims, (kvp) => kvp.Key == "firebase");
-                    Assert.Equal(expectedClaims.Count + 1, decoded.Claims.Count);
-                }
-                else
-                {
-                    Assert.Equal(expectedClaims.Count, decoded.Claims.Count);
-                }
-
-                foreach (var entry in expectedClaims)
-                {
-                    Assert.Equal(entry.Value, decoded.Claims[entry.Key]);
-                }
-            }
-            else if (this.TenantId != null)
-            {
-                Assert.Equal("firebase", Assert.Single(decoded.Claims).Key);
+                Assert.Equal(expectedClaims.Count + 1, decoded.Claims.Count);
+                Assert.Contains(decoded.Claims, (kvp) => kvp.Key == "firebase");
             }
             else
             {
-                Assert.Empty(decoded.Claims);
+                Assert.Equal(expectedClaims.Count, decoded.Claims.Count);
+            }
+
+            foreach (var entry in expectedClaims)
+            {
+                Assert.Equal(entry.Value, decoded.Claims[entry.Key]);
             }
 
             Assert.Equal(this.TenantId, decoded.TenantId);

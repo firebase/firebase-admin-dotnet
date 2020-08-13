@@ -30,15 +30,11 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
     {
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
-            new object[] { new TestConfig() },
-            new object[] { new TestConfig("test-tenant") },
+            new object[] { TestConfig.ForFirebaseAuth() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("test-tenant") },
         };
 
         private const long ClockSkewSeconds = 5 * 60;
-
-        private const string ProjectId = "test-project";
-
-        private static readonly IClock Clock = new MockClock();
 
         private static readonly TestOptions WithIdTokenVerifier =
             new TestOptions { IdTokenVerifier = true };
@@ -152,7 +148,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task Expired(TestConfig config)
         {
-            var expiryTime = Clock.UnixTimestamp() - (ClockSkewSeconds + 1);
+            var expiryTime = TestConfig.Clock.UnixTimestamp() - (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
                 { "exp", expiryTime },
@@ -164,7 +160,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 async () => await auth.VerifyIdTokenAsync(idToken));
 
             var expectedMessage = $"Firebase ID token expired at {expiryTime}. "
-                + $"Expected to be greater than {Clock.UnixTimestamp()}.";
+                + $"Expected to be greater than {TestConfig.Clock.UnixTimestamp()}.";
             this.CheckException(exception, expectedMessage, AuthErrorCode.ExpiredIdToken);
         }
 
@@ -172,7 +168,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task ExpiryTimeInAcceptableRange(TestConfig config)
         {
-            var expiryTimeSeconds = Clock.UnixTimestamp() - ClockSkewSeconds;
+            var expiryTimeSeconds = TestConfig.Clock.UnixTimestamp() - ClockSkewSeconds;
             var payload = new Dictionary<string, object>()
             {
                 { "exp", expiryTimeSeconds },
@@ -190,7 +186,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task InvalidIssuedAt(TestConfig config)
         {
-            var issuedAt = Clock.UnixTimestamp() + (ClockSkewSeconds + 1);
+            var issuedAt = TestConfig.Clock.UnixTimestamp() + (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
                 { "iat", issuedAt },
@@ -209,7 +205,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task IssuedAtInAcceptableRange(TestConfig config)
         {
-            var issuedAtSeconds = Clock.UnixTimestamp() + ClockSkewSeconds;
+            var issuedAtSeconds = TestConfig.Clock.UnixTimestamp() + ClockSkewSeconds;
             var payload = new Dictionary<string, object>()
             {
                 { "iat", issuedAtSeconds },
@@ -331,7 +327,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     ""users"": [
                         {{
                             ""localId"": ""testuser"",
-                            ""validSince"": {Clock.UnixTimestamp()}
+                            ""validSince"": {TestConfig.Clock.UnixTimestamp()}
                         }}
                     ]
                 }}",
@@ -452,8 +448,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         {
             var tokenBuilder = new MockTokenBuilder
                 {
-                    ProjectId = ProjectId,
-                    Clock = Clock,
+                    ProjectId = TestConfig.ProjectId,
+                    Clock = TestConfig.Clock,
                     Signer = JwtTestUtils.DefaultSigner,
                     IssuerPrefix = "https://securetoken.google.com",
                     Uid = "testuser",
@@ -476,14 +472,18 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         public class TestConfig
         {
-            private readonly string tenantId;
+            internal const string ProjectId = "test-project";
 
-            public TestConfig(string tenantId = null)
+            internal static readonly IClock Clock = new MockClock();
+
+            private readonly string tenantId;
+            private readonly AuthBuilder authBuilder;
+            private readonly MockTokenBuilder tokenBuilder;
+
+            private TestConfig(string tenantId = null)
             {
                 this.tenantId = tenantId;
-            }
-
-            private AuthBuilder AuthBuilder => new AuthBuilder
+                this.authBuilder = new AuthBuilder
                 {
                     ProjectId = ProjectId,
                     Clock = Clock,
@@ -491,8 +491,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     RetryOptions = RetryOptions.NoBackOff,
                     TenantId = tenantId,
                 };
-
-            private MockTokenBuilder TokenBuilder => new MockTokenBuilder
+                this.tokenBuilder = new MockTokenBuilder
                 {
                     ProjectId = ProjectId,
                     Clock = Clock,
@@ -501,6 +500,17 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     Uid = "testuser",
                     TenantId = this.tenantId,
                 };
+            }
+
+            public static TestConfig ForFirebaseAuth()
+            {
+                return new TestConfig();
+            }
+
+            public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
+            {
+                return new TestConfig(tenantId);
+            }
 
             public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
             {
@@ -509,28 +519,28 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     UserManagerRequestHandler = handler,
                     IdTokenVerifier = true,
                 };
-                return this.AuthBuilder.Build(options);
+                return this.authBuilder.Build(options);
             }
 
             public async Task<string> CreateIdTokenAsync(
                 IDictionary<string, object> headerOverrides = null,
                 IDictionary<string, object> payloadOverrides = null)
             {
-                return await this.TokenBuilder.CreateTokenAsync(headerOverrides, payloadOverrides);
+                return await this.tokenBuilder.CreateTokenAsync(headerOverrides, payloadOverrides);
             }
 
             public void AssertFirebaseToken(
                 FirebaseToken token, IDictionary<string, object> expectedClaims = null)
             {
-                this.TokenBuilder.AssertFirebaseToken(token, expectedClaims);
+                this.tokenBuilder.AssertFirebaseToken(token, expectedClaims);
             }
 
             internal void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
-                Assert.Equal(
-                    this.AuthBuilder.BuildRequestPath("v1", expectedSuffix),
-                    request.Url.PathAndQuery);
+                var tenantInfo = this.tenantId != null ? $"/tenants/{this.tenantId}" : string.Empty;
+                var expectedPath = $"/v1/projects/{ProjectId}{tenantInfo}/{expectedSuffix}";
+                Assert.Equal(expectedPath, request.Url.PathAndQuery);
             }
         }
     }
