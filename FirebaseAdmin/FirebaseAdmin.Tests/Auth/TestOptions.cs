@@ -17,21 +17,21 @@ using System.Net.Http;
 namespace FirebaseAdmin.Auth.Tests
 {
     /// <summary>
-    /// Configuration options for a test case executed using <see cref="AuthTestConfig"/>.
+    /// Configuration options for a test case executed using <see cref="AuthBuilder"/>.
     /// Test cases can request which features of <see cref="AbstractFirebaseAuth"/> to initialize
     /// using these options.
     /// </summary>
     public sealed class TestOptions
     {
-        public HttpMessageHandler UserManagerHandler { get; set; }
+        public HttpMessageHandler UserManagerRequestHandler { get; set; }
 
         public bool IdTokenVerifier { get; set; }
 
-        public static TestOptions WithUserManagerHandler(HttpMessageHandler handler)
+        public static TestOptions WithUserManagerRequestHandler(HttpMessageHandler handler)
         {
             return new TestOptions
             {
-                UserManagerHandler = handler,
+                UserManagerRequestHandler = handler,
             };
         }
     }
