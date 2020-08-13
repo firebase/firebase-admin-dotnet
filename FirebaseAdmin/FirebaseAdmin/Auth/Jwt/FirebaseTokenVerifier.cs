@@ -78,11 +78,20 @@ namespace FirebaseAdmin.Auth.Jwt
             {
                 this.articledShortName = $"a {this.shortName}";
             }
+
+            this.TenantId = args.TenantId;
+            if (this.TenantId == string.Empty)
+            {
+                throw new ArgumentException("Tenant ID must not be empty.");
+            }
         }
 
-        public string ProjectId { get; }
+        internal string ProjectId { get; }
 
-        internal static FirebaseTokenVerifier CreateIDTokenVerifier(FirebaseApp app)
+        internal string TenantId { get; }
+
+        internal static FirebaseTokenVerifier CreateIDTokenVerifier(
+            FirebaseApp app, string tenantId = null)
         {
             var projectId = app.GetProjectId();
             if (string.IsNullOrEmpty(projectId))
@@ -93,7 +102,8 @@ namespace FirebaseAdmin.Auth.Jwt
 
             var keySource = new HttpPublicKeySource(
                 IdTokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
-            var args = FirebaseTokenVerifierArgs.ForIdTokens(projectId, keySource);
+            var args = FirebaseTokenVerifierArgs.ForIdTokens(
+                projectId, keySource, tenantId: tenantId);
             return new FirebaseTokenVerifier(args);
         }
 
@@ -189,6 +199,12 @@ namespace FirebaseAdmin.Auth.Jwt
             else if (payload.Subject.Length > 128)
             {
                 error = $"Firebase {this.shortName} has a subject claim longer than 128 characters.";
+            }
+            else if (this.TenantId != payload.Firebase?.Tenant)
+            {
+                error = $"Firebase {this.shortName} has incorrect tenant ID. Expected "
+                    + $"{this.TenantId} but got {payload.Firebase?.Tenant}";
+                errorCode = AuthErrorCode.TenantIdMismatch;
             }
 
             if (error != null)

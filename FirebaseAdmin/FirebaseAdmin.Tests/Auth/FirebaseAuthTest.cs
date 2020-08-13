@@ -83,6 +83,7 @@ namespace FirebaseAdmin.Auth.Tests
             FirebaseAuth auth = FirebaseAuth.DefaultInstance;
 
             Assert.Null(auth.TokenFactory.TenantId);
+            Assert.Null(auth.IdTokenVerifier.TenantId);
             Assert.Null(auth.UserManager.TenantId);
         }
 

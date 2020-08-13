@@ -30,6 +30,7 @@ namespace FirebaseAdmin.Auth
     {
         private readonly object authLock = new object();
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
+        private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
         private bool deleted;
 
@@ -37,11 +38,15 @@ namespace FirebaseAdmin.Auth
         {
             args.ThrowIfNull(nameof(args));
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
+            this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
             this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
         }
 
         internal FirebaseTokenFactory TokenFactory =>
             this.IfNotDeleted(() => this.tokenFactory.Value);
+
+        internal FirebaseTokenVerifier IdTokenVerifier =>
+            this.IfNotDeleted(() => this.idTokenVerifier.Value);
 
         internal FirebaseUserManager UserManager =>
             this.IfNotDeleted(() => this.userManager.Value);
@@ -189,6 +194,128 @@ namespace FirebaseAdmin.Auth
         {
             return await this.TokenFactory.CreateCustomTokenAsync(
                 uid, developerClaims, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The backend server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken)
+        {
+            return await this.VerifyIdTokenAsync(idToken, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The backend server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(
+            string idToken, CancellationToken cancellationToken)
+        {
+            return await this.VerifyIdTokenAsync(idToken, false, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        ///
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The backend server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        ///
+        /// <para>If <c>checkRevoked</c> is set to true, this method performs an additional check
+        /// to see if the ID token has been revoked since it was issued. This requires making an
+        /// additional remote API call.</para>
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were revoked.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken, bool checkRevoked)
+        {
+            return await this.VerifyIdTokenAsync(idToken, checkRevoked, default(CancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Parses and verifies a Firebase ID token.
+        ///
+        /// <para>A Firebase client app can identify itself to a trusted backend server by sending
+        /// its Firebase ID Token (accessible via the <c>getIdToken()</c> API in the Firebase
+        /// client SDK) with its requests. The backend server can then use this method
+        /// to verify that the token is valid. This method ensures that the token is correctly
+        /// signed, has not expired, and it was issued against the Firebase project associated with
+        /// this <c>FirebaseAuth</c> instance.</para>
+        ///
+        /// <para>If <c>checkRevoked</c> is set to true, this method performs an additional check
+        /// to see if the ID token has been revoked since it was issued. This requires making an
+        /// additional remote API call.</para>
+        ///
+        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens">Verify
+        /// ID Tokens</a> for code samples and detailed documentation.</para>
+        /// </summary>
+        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
+        /// the verified and decoded ID token.</returns>
+        /// <exception cref="ArgumentException">If ID token argument is null or empty.</exception>
+        /// <exception cref="FirebaseAuthException">If the ID token fails to verify.</exception>
+        /// <param name="idToken">A Firebase ID token string to parse and verify.</param>
+        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were revoked.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        public async Task<FirebaseToken> VerifyIdTokenAsync(
+            string idToken, bool checkRevoked, CancellationToken cancellationToken)
+        {
+            var decodedToken = await this.IdTokenVerifier
+                .VerifyTokenAsync(idToken, cancellationToken)
+                .ConfigureAwait(false);
+            if (checkRevoked)
+            {
+                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken);
+                if (revoked)
+                {
+                    throw new FirebaseAuthException(
+                        ErrorCode.InvalidArgument,
+                        "Firebase ID token has been revoked.",
+                        AuthErrorCode.RevokedIdToken);
+                }
+            }
+
+            return decodedToken;
         }
 
         /// <summary>
@@ -861,6 +988,16 @@ namespace FirebaseAdmin.Auth
 
         internal virtual void Cleanup() { }
 
+        // TODO(hkj): Make this private once session cookie support is in this class.
+        internal async Task<bool> IsRevokedAsync(
+            FirebaseToken token, CancellationToken cancellationToken)
+        {
+            var user = await this.GetUserAsync(token.Uid, cancellationToken);
+            var cutoff = user.TokensValidAfterTimestamp.Subtract(UserRecord.UnixEpoch)
+                .TotalSeconds;
+            return token.IssuedAtTimeSeconds < cutoff;
+        }
+
         internal TResult IfNotDeleted<TResult>(Func<TResult> func)
         {
             lock (this.authLock)
@@ -877,6 +1014,8 @@ namespace FirebaseAdmin.Auth
         internal class Args
         {
             internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
+
+            internal Lazy<FirebaseTokenVerifier> IdTokenVerifier { get; set; }
 
             internal Lazy<FirebaseUserManager> UserManager { get; set; }
         }

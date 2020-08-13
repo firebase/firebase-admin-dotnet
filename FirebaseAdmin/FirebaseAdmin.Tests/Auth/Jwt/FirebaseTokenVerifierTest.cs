@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -20,8 +21,17 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class FirebaseTokenVerifierTest : IDisposable
     {
+        public static readonly IEnumerable<object[]> InvalidStrings = new List<object[]>
+        {
+            new object[] { null },
+            new object[] { string.Empty },
+        };
+
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
+
+        private static readonly IPublicKeySource KeySource = new FileSystemPublicKeySource(
+            "./resources/public_cert.pem");
 
         [Fact]
         public void NoProjectId()
@@ -83,6 +93,85 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             {
                 Environment.SetEnvironmentVariable("GOOGLE_CLOUD_PROJECT", string.Empty);
             }
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public void InvalidProjectId(string projectId)
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens(projectId, KeySource);
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+        }
+
+        [Fact]
+        public void NullKeySource()
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", null);
+
+            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenVerifier(args));
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public void InvalidShortName(string shortName)
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            args.ShortName = shortName;
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public void InvalidIssuer(string issuer)
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            args.Issuer = issuer;
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public void InvalidOperation(string operation)
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            args.Operation = operation;
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public void InvalidUrl(string url)
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            args.Url = url;
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+        }
+
+        [Fact]
+        public void TenantId()
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens(
+                "test-project", KeySource, tenantId: "test-tenant");
+
+            var verifier = new FirebaseTokenVerifier(args);
+
+            Assert.Equal("test-tenant", verifier.TenantId);
+        }
+
+        [Fact]
+        public void EmptyTenantId()
+        {
+            var args = FirebaseTokenVerifierArgs.ForIdTokens(
+                "test-project", KeySource, tenantId: string.Empty);
+
+            var ex = Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+
+            Assert.Equal("Tenant ID must not be empty.", ex.Message);
         }
 
         public void Dispose()
