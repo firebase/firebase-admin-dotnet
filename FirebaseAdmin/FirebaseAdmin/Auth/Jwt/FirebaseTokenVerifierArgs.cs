@@ -38,27 +38,6 @@ namespace FirebaseAdmin.Auth.Jwt
 
         public AuthErrorCode ExpiredTokenCode { get; set; }
 
-        internal static FirebaseTokenVerifierArgs ForIdTokens(
-            string projectId,
-            IPublicKeySource keySource,
-            IClock clock = null,
-            string tenantId = null)
-        {
-            return new FirebaseTokenVerifierArgs()
-            {
-                ProjectId = projectId,
-                TenantId = tenantId,
-                ShortName = "ID token",
-                Operation = "VerifyIdTokenAsync()",
-                Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
-                Issuer = "https://securetoken.google.com/",
-                Clock = clock ?? SystemClock.Default,
-                PublicKeySource = keySource,
-                InvalidTokenCode = AuthErrorCode.InvalidIdToken,
-                ExpiredTokenCode = AuthErrorCode.ExpiredIdToken,
-            };
-        }
-
         internal static FirebaseTokenVerifierArgs ForSessionCookies(
             string projectId, IPublicKeySource keySource, IClock clock = null)
         {

@@ -22,7 +22,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth;
-using Google.Apis.Http;
 using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth.Jwt
@@ -66,7 +65,7 @@ namespace FirebaseAdmin.Auth.Jwt
             this.operation = args.Operation.ThrowIfNullOrEmpty(nameof(args.Operation));
             this.url = args.Url.ThrowIfNullOrEmpty(nameof(args.Url));
             this.issuer = args.Issuer.ThrowIfNullOrEmpty(nameof(args.Issuer));
-            this.clock = args.Clock.ThrowIfNull(nameof(args.Clock));
+            this.clock = args.Clock ?? SystemClock.Default;
             this.keySource = args.PublicKeySource.ThrowIfNull(nameof(args.PublicKeySource));
             this.invalidTokenCode = args.InvalidTokenCode;
             this.expiredIdTokenCode = args.ExpiredTokenCode;
@@ -90,7 +89,7 @@ namespace FirebaseAdmin.Auth.Jwt
 
         internal string TenantId { get; }
 
-        internal static FirebaseTokenVerifier CreateIDTokenVerifier(
+        internal static FirebaseTokenVerifier CreateIdTokenVerifier(
             FirebaseApp app, string tenantId = null)
         {
             var projectId = app.GetProjectId();
@@ -102,8 +101,28 @@ namespace FirebaseAdmin.Auth.Jwt
 
             var keySource = new HttpPublicKeySource(
                 IdTokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
-            var args = FirebaseTokenVerifierArgs.ForIdTokens(
-                projectId, keySource, tenantId: tenantId);
+            return CreateIdTokenVerifier(projectId, keySource, tenantId: tenantId);
+        }
+
+        internal static FirebaseTokenVerifier CreateIdTokenVerifier(
+            string projectId,
+            IPublicKeySource keySource,
+            IClock clock = null,
+            string tenantId = null)
+        {
+            var args = new FirebaseTokenVerifierArgs
+            {
+                ProjectId = projectId,
+                TenantId = tenantId,
+                ShortName = "ID token",
+                Operation = "VerifyIdTokenAsync()",
+                Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
+                Issuer = "https://securetoken.google.com/",
+                Clock = clock,
+                PublicKeySource = keySource,
+                InvalidTokenCode = AuthErrorCode.InvalidIdToken,
+                ExpiredTokenCode = AuthErrorCode.ExpiredIdToken,
+            };
             return new FirebaseTokenVerifier(args);
         }
 

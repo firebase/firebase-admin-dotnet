@@ -1928,13 +1928,13 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         private sealed class FirebaseAuthTestConfig
-        : AuthTestConfig.MyFirebaseAuthTestConfig
+        : AuthTestConfig.AbstractFirebaseAuthTestConfig
         {
             internal static readonly FirebaseAuthTestConfig Instance = new FirebaseAuthTestConfig();
 
-            private protected override ConfigContext InitConfig()
+            private protected override Context Init()
             {
-                return new ConfigContext
+                return new Context
                 {
                     ProjectId = MockProjectId,
                     RetryOptions = RetryOptions.NoBackOff,
@@ -1944,14 +1944,14 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         private sealed class TenantAwareFirebaseAuthTestConfig
-        : AuthTestConfig.MyTenantAwareFirebaseAuthTestConfig
+        : AuthTestConfig.AbstractTenantAwareFirebaseAuthTestConfig
         {
             internal static readonly TenantAwareFirebaseAuthTestConfig Instance =
                 new TenantAwareFirebaseAuthTestConfig();
 
-            private protected override ConfigContext InitConfig()
+            private protected override Context Init()
             {
-                return new ConfigContext
+                return new Context
                 {
                     ProjectId = MockProjectId,
                     RetryOptions = RetryOptions.NoBackOff,

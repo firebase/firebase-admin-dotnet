@@ -464,7 +464,7 @@ namespace FirebaseAdmin.Auth
                 TokenFactory = new Lazy<FirebaseTokenFactory>(
                     () => FirebaseTokenFactory.Create(app), true),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
-                    () => FirebaseTokenVerifier.CreateIDTokenVerifier(app), true),
+                    () => FirebaseTokenVerifier.CreateIdTokenVerifier(app), true),
                 SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
                     () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app), true),
                 UserManager = new Lazy<FirebaseUserManager>(
