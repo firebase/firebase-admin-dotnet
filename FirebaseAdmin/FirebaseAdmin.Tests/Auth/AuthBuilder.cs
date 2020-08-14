@@ -66,6 +66,12 @@ namespace FirebaseAdmin.Auth.Tests
                 args.IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
                     this.CreateIdTokenVerifier());
             }
+
+            if (options.SessionCookieVerifier)
+            {
+                args.SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
+                    this.CreateSessionCookieVerifier());
+            }
         }
 
         private FirebaseUserManager CreateUserManager(TestOptions options)
@@ -84,6 +90,12 @@ namespace FirebaseAdmin.Auth.Tests
         private FirebaseTokenVerifier CreateIdTokenVerifier()
         {
             return FirebaseTokenVerifier.CreateIdTokenVerifier(
+                this.ProjectId, this.KeySource, this.Clock, this.TenantId);
+        }
+
+        private FirebaseTokenVerifier CreateSessionCookieVerifier()
+        {
+            return FirebaseTokenVerifier.CreateSessionCookieVerifier(
                 this.ProjectId, this.KeySource, this.Clock, this.TenantId);
         }
     }

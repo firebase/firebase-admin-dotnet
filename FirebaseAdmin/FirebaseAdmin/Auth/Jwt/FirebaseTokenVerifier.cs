@@ -126,7 +126,8 @@ namespace FirebaseAdmin.Auth.Jwt
             return new FirebaseTokenVerifier(args);
         }
 
-        internal static FirebaseTokenVerifier CreateSessionCookieVerifier(FirebaseApp app)
+        internal static FirebaseTokenVerifier CreateSessionCookieVerifier(
+            FirebaseApp app, string tenantId = null)
         {
             var projectId = app.GetProjectId();
             if (string.IsNullOrEmpty(projectId))
@@ -137,7 +138,28 @@ namespace FirebaseAdmin.Auth.Jwt
 
             var keySource = new HttpPublicKeySource(
                 SessionCookieCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
-            var args = FirebaseTokenVerifierArgs.ForSessionCookies(projectId, keySource);
+            return CreateSessionCookieVerifier(projectId, keySource, tenantId: tenantId);
+        }
+
+        internal static FirebaseTokenVerifier CreateSessionCookieVerifier(
+            string projectId,
+            IPublicKeySource keySource,
+            IClock clock = null,
+            string tenantId = null)
+        {
+            var args = new FirebaseTokenVerifierArgs()
+            {
+                ProjectId = projectId,
+                TenantId = tenantId,
+                ShortName = "session cookie",
+                Operation = "VerifySessionCookieAsync()",
+                Url = "https://firebase.google.com/docs/auth/admin/manage-cookies",
+                Issuer = "https://session.firebase.google.com/",
+                Clock = clock,
+                PublicKeySource = keySource,
+                InvalidTokenCode = AuthErrorCode.InvalidSessionCookie,
+                ExpiredTokenCode = AuthErrorCode.ExpiredSessionCookie,
+            };
             return new FirebaseTokenVerifier(args);
         }
 

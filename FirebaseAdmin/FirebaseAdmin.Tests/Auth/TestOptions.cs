@@ -26,5 +26,7 @@ namespace FirebaseAdmin.Auth.Tests
         public HttpMessageHandler UserManagerRequestHandler { get; set; }
 
         public bool IdTokenVerifier { get; set; }
+
+        public bool SessionCookieVerifier { get; set; }
     }
 }

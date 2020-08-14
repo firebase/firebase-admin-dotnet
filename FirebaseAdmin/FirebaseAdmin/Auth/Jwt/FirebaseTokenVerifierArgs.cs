@@ -37,22 +37,5 @@ namespace FirebaseAdmin.Auth.Jwt
         public AuthErrorCode InvalidTokenCode { get; set; }
 
         public AuthErrorCode ExpiredTokenCode { get; set; }
-
-        internal static FirebaseTokenVerifierArgs ForSessionCookies(
-            string projectId, IPublicKeySource keySource, IClock clock = null)
-        {
-            return new FirebaseTokenVerifierArgs()
-            {
-                ProjectId = projectId,
-                ShortName = "session cookie",
-                Operation = "VerifySessionCookieAsync()",
-                Url = "https://firebase.google.com/docs/auth/admin/manage-cookies",
-                Issuer = "https://session.firebase.google.com/",
-                Clock = clock ?? SystemClock.Default,
-                PublicKeySource = keySource,
-                InvalidTokenCode = AuthErrorCode.InvalidSessionCookie,
-                ExpiredTokenCode = AuthErrorCode.ExpiredSessionCookie,
-            };
-        }
     }
 }

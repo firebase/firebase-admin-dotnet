@@ -20,8 +20,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Tests;
 using FirebaseAdmin.Tests;
-using FirebaseAdmin.Util;
-using Google.Apis.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
@@ -35,9 +33,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         };
 
         private const long ClockSkewSeconds = 5 * 60;
-
-        private static readonly TestOptions WithIdTokenVerifier =
-            new TestOptions { IdTokenVerifier = true };
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
@@ -148,7 +143,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task Expired(TestConfig config)
         {
-            var expiryTime = TestConfig.Clock.UnixTimestamp() - (ClockSkewSeconds + 1);
+            var expiryTime = JwtTestUtils.Clock.UnixTimestamp() - (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
                 { "exp", expiryTime },
@@ -160,7 +155,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 async () => await auth.VerifyIdTokenAsync(idToken));
 
             var expectedMessage = $"Firebase ID token expired at {expiryTime}. "
-                + $"Expected to be greater than {TestConfig.Clock.UnixTimestamp()}.";
+                + $"Expected to be greater than {JwtTestUtils.Clock.UnixTimestamp()}.";
             this.CheckException(exception, expectedMessage, AuthErrorCode.ExpiredIdToken);
         }
 
@@ -168,7 +163,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task ExpiryTimeInAcceptableRange(TestConfig config)
         {
-            var expiryTimeSeconds = TestConfig.Clock.UnixTimestamp() - ClockSkewSeconds;
+            var expiryTimeSeconds = JwtTestUtils.Clock.UnixTimestamp() - ClockSkewSeconds;
             var payload = new Dictionary<string, object>()
             {
                 { "exp", expiryTimeSeconds },
@@ -178,15 +173,14 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             var decoded = await auth.VerifyIdTokenAsync(idToken);
 
-            Assert.Equal("testuser", decoded.Uid);
-            Assert.Equal(expiryTimeSeconds, decoded.ExpirationTimeSeconds);
+            config.AssertFirebaseToken(decoded, payload);
         }
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
         public async Task InvalidIssuedAt(TestConfig config)
         {
-            var issuedAt = TestConfig.Clock.UnixTimestamp() + (ClockSkewSeconds + 1);
+            var issuedAt = JwtTestUtils.Clock.UnixTimestamp() + (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
                 { "iat", issuedAt },
@@ -205,7 +199,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task IssuedAtInAcceptableRange(TestConfig config)
         {
-            var issuedAtSeconds = TestConfig.Clock.UnixTimestamp() + ClockSkewSeconds;
+            var issuedAtSeconds = JwtTestUtils.Clock.UnixTimestamp() + ClockSkewSeconds;
             var payload = new Dictionary<string, object>()
             {
                 { "iat", issuedAtSeconds },
@@ -215,8 +209,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             var decoded = await auth.VerifyIdTokenAsync(idToken);
 
-            Assert.Equal("testuser", decoded.Uid);
-            Assert.Equal(issuedAtSeconds, decoded.IssuedAtTimeSeconds);
+            config.AssertFirebaseToken(decoded, payload);
         }
 
         [Theory]
@@ -257,6 +250,21 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             var expectedMessage = "VerifyIdTokenAsync() expects an ID token, but was given "
                 + "a custom token.";
+            this.CheckException(exception, expectedMessage);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task SessionCookie(TestConfig config)
+        {
+            var tokenBuilder = JwtTestUtils.SessionCookieBuilder(config.TenantId);
+            var sessionCookie = await tokenBuilder.CreateTokenAsync();
+            var auth = config.CreateAuth();
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.VerifyIdTokenAsync(sessionCookie));
+
+            var expectedMessage = "Firebase ID token has incorrect issuer (iss) claim.";
             this.CheckException(exception, expectedMessage);
         }
 
@@ -327,7 +335,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     ""users"": [
                         {{
                             ""localId"": ""testuser"",
-                            ""validSince"": {TestConfig.Clock.UnixTimestamp()}
+                            ""validSince"": {JwtTestUtils.Clock.UnixTimestamp()}
                         }}
                     ]
                 }}",
@@ -345,7 +353,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             var expectedMessage = "Firebase ID token has been revoked.";
             this.CheckException(exception, expectedMessage, AuthErrorCode.RevokedIdToken);
             Assert.Equal(1, handler.Calls);
-            config.AssertRequest("accounts:lookup", handler.Requests[0]);
+            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
         }
 
         [Theory]
@@ -369,7 +377,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(1, handler.Calls);
-            config.AssertRequest("accounts:lookup", handler.Requests[0]);
+            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
         }
 
         [Theory]
@@ -395,7 +403,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Null(exception.InnerException);
             Assert.NotNull(exception.HttpResponse);
             Assert.Equal(1, handler.Calls);
-            config.AssertRequest("accounts:lookup", handler.Requests[0]);
+            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
         }
 
         [Theory]
@@ -434,30 +442,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage, AuthErrorCode.TenantIdMismatch);
         }
 
-        // TODO(hkj): Remove the following method once the session cookie tests have been
-        // refactored.
-
-        /// <summary>
-        /// Creates a mock ID token for testing purposes. By default the created token has an issue
-        /// time 10 minutes ago, and an expirty time 50 minutes into the future. All header and
-        /// payload claims can be overridden if needed.
-        /// </summary>
-        internal static async Task<string> CreateTestTokenAsync(
-            Dictionary<string, object> headerOverrides = null,
-            Dictionary<string, object> payloadOverrides = null)
-        {
-            var tokenBuilder = new MockTokenBuilder
-                {
-                    ProjectId = TestConfig.ProjectId,
-                    Clock = TestConfig.Clock,
-                    Signer = JwtTestUtils.DefaultSigner,
-                    IssuerPrefix = "https://securetoken.google.com",
-                    Uid = "testuser",
-                };
-            return await tokenBuilder.CreateTokenAsync(
-                headerOverrides, payloadOverrides);
-        }
-
         private void CheckException(
             FirebaseAuthException exception,
             string prefix,
@@ -472,35 +456,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         public class TestConfig
         {
-            internal const string ProjectId = "test-project";
-
-            internal static readonly IClock Clock = new MockClock();
-
-            private readonly string tenantId;
             private readonly AuthBuilder authBuilder;
             private readonly MockTokenBuilder tokenBuilder;
 
             private TestConfig(string tenantId = null)
             {
-                this.tenantId = tenantId;
-                this.authBuilder = new AuthBuilder
-                {
-                    ProjectId = ProjectId,
-                    Clock = Clock,
-                    KeySource = JwtTestUtils.DefaultKeySource,
-                    RetryOptions = RetryOptions.NoBackOff,
-                    TenantId = tenantId,
-                };
-                this.tokenBuilder = new MockTokenBuilder
-                {
-                    ProjectId = ProjectId,
-                    Clock = Clock,
-                    Signer = JwtTestUtils.DefaultSigner,
-                    IssuerPrefix = "https://securetoken.google.com",
-                    Uid = "testuser",
-                    TenantId = this.tenantId,
-                };
+                this.tokenBuilder = JwtTestUtils.IdTokenBuilder(tenantId);
+                this.authBuilder = JwtTestUtils.AuthBuilderForTokenVerification(tenantId);
             }
+
+            public string TenantId => this.authBuilder.TenantId;
 
             public static TestConfig ForFirebaseAuth()
             {
@@ -533,14 +498,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 FirebaseToken token, IDictionary<string, object> expectedClaims = null)
             {
                 this.tokenBuilder.AssertFirebaseToken(token, expectedClaims);
-            }
-
-            internal void AssertRequest(
-                string expectedSuffix, MockMessageHandler.IncomingRequest request)
-            {
-                var tenantInfo = this.tenantId != null ? $"/tenants/{this.tenantId}" : string.Empty;
-                var expectedPath = $"/v1/projects/{ProjectId}{tenantInfo}/{expectedSuffix}";
-                Assert.Equal(expectedPath, request.Url.PathAndQuery);
             }
         }
     }
