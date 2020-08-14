@@ -84,39 +84,6 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Creates a new Firebase session cookie from the given ID token and options. The returned JWT can
-        /// be set as a server-side session cookie with a custom cookie policy.
-        /// </summary>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating the cookie.</exception>
-        /// <param name="idToken">The Firebase ID token to exchange for a session cookie.</param>
-        /// <param name="options">Additional options required to create the cookie.</param>
-        /// <returns>A task that completes with the Firebase session cookie.</returns>
-        public async Task<string> CreateSessionCookieAsync(
-            string idToken, SessionCookieOptions options)
-        {
-            return await this.CreateSessionCookieAsync(idToken, options, default(CancellationToken))
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Creates a new Firebase session cookie from the given ID token and options. The returned JWT can
-        /// be set as a server-side session cookie with a custom cookie policy.
-        /// </summary>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating the cookie.</exception>
-        /// <param name="idToken">The Firebase ID token to exchange for a session cookie.</param>
-        /// <param name="options">Additional options required to create the cookie.</param>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
-        /// operation.</param>
-        /// <returns>A task that completes with the Firebase session cookie.</returns>
-        public async Task<string> CreateSessionCookieAsync(
-            string idToken, SessionCookieOptions options, CancellationToken cancellationToken)
-        {
-            return await this.UserManager
-                .CreateSessionCookieAsync(idToken, options, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
         /// Looks up an OIDC auth provider configuration by the provided ID.
         /// </summary>
         /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
