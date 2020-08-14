@@ -29,17 +29,13 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
     {
         private const long ClockSkewSeconds = 5 * 60;
 
-        private static readonly IPublicKeySource KeySource = new FileSystemPublicKeySource(
-            "./resources/public_cert.pem");
-
         private static readonly IClock Clock = new MockClock();
-
-        private static readonly ISigner Signer = IdTokenVerificationTest.CreateTestSigner();
 
         [Fact]
         public void NoProjectId()
         {
-            var args = FirebaseTokenVerifierArgs.ForSessionCookies(null, KeySource, Clock);
+            var args = FirebaseTokenVerifierArgs.ForSessionCookies(
+                null, JwtTestUtils.DefaultKeySource, Clock);
 
             Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
         }
@@ -416,13 +412,14 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 }
             }
 
-            return await JwtUtils.CreateSignedJwtAsync(header, payload, Signer);
+            return await JwtUtils.CreateSignedJwtAsync(
+                header, payload, JwtTestUtils.DefaultSigner);
         }
 
         private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
         {
             var args = FirebaseTokenVerifierArgs.ForSessionCookies(
-                "test-project", KeySource, Clock);
+                "test-project", JwtTestUtils.DefaultKeySource, Clock);
             var tokenVerifier = new FirebaseTokenVerifier(args);
 
             FirebaseUserManager userManager = null;

@@ -19,10 +19,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
-using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
@@ -34,18 +32,12 @@ namespace FirebaseAdmin.Auth.Tests
     {
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
-            new object[] { FirebaseAuthTestConfig.DefaultInstance },
-            new object[] { TenantAwareFirebaseAuthTestConfig.DefaultInstance },
+            new object[] { TestConfig.ForFirebaseAuth() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
         };
 
-        private const string MockProjectId = "project1";
         private const string CreateUserResponse = @"{""localId"": ""user1""}";
         private const string GetUserResponse = @"{""users"": [{""localId"": ""user1""}]}";
-
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
-
-        private static readonly IClock MockClock = new MockClock();
 
         private static readonly IList<string> ListUsersResponse = new List<string>()
         {
@@ -1737,7 +1729,7 @@ namespace FirebaseAdmin.Auth.Tests
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
-            Assert.Equal(MockClock.UnixTimestamp(), request["validSince"]);
+            Assert.Equal(TestConfig.Clock.UnixTimestamp(), request["validSince"]);
 
             config.AssertRequest("accounts:update", Assert.Single(handler.Requests));
         }
@@ -1770,8 +1762,9 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieNoIdToken()
         {
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)config.CreateAuth(handler);
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromHours(1),
@@ -1786,8 +1779,9 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieNoOptions()
         {
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)config.CreateAuth(handler);
 
             Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await auth.CreateSessionCookieAsync("idToken", null));
@@ -1796,8 +1790,9 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieNoExpiresIn()
         {
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)config.CreateAuth(handler);
 
             Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync(
@@ -1807,8 +1802,9 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieExpiresInTooLow()
         {
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)config.CreateAuth(handler);
             var fiveMinutesInSeconds = TimeSpan.FromMinutes(5).TotalSeconds;
             var options = new SessionCookieOptions()
             {
@@ -1822,8 +1818,9 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void CreateSessionCookieExpiresInTooHigh()
         {
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)config.CreateAuth(handler);
             var fourteenDaysInSeconds = TimeSpan.FromDays(14).TotalSeconds;
             var options = new SessionCookieOptions()
             {
@@ -1837,13 +1834,14 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public async Task CreateSessionCookie()
         {
+            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler()
             {
                 Response = @"{
                     ""sessionCookie"": ""cookie""
                 }",
             };
-            var auth = (FirebaseAuth)FirebaseAuthTestConfig.DefaultInstance.CreateAuth(handler);
+            var auth = (FirebaseAuth)config.CreateAuth(handler);
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromHours(1),
@@ -1858,8 +1856,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("idToken", request["idToken"]);
             Assert.Equal(3600, request["validDuration"]);
 
-            FirebaseAuthTestConfig.DefaultInstance.AssertRequest(
-                ":createSessionCookie", Assert.Single(handler.Requests));
+            config.AssertRequest(":createSessionCookie", Assert.Single(handler.Requests));
         }
 
         [Theory]
@@ -1906,7 +1903,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void NoProjectId()
         {
-            var args = CreateArgs(new MockMessageHandler());
+            var args = CreateArgs();
             args.ProjectId = null;
 
             Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
@@ -1915,77 +1912,69 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void EmptyTenantId()
         {
-            var args = CreateArgs(new MockMessageHandler());
+            var args = CreateArgs();
             args.TenantId = string.Empty;
 
             Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
         }
 
-        private static FirebaseUserManager.Args CreateArgs(HttpMessageHandler handler)
+        private static FirebaseUserManager.Args CreateArgs()
         {
             return new FirebaseUserManager.Args
             {
-                Credential = MockCredential,
-                ProjectId = MockProjectId,
-                ClientFactory = new MockHttpClientFactory(handler),
+                ProjectId = TestConfig.MockProjectId,
+                ClientFactory = new MockHttpClientFactory(new MockMessageHandler()),
                 RetryOptions = RetryOptions.NoBackOff,
-                Clock = MockClock,
+                Clock = TestConfig.Clock,
             };
         }
 
-        public abstract class TestConfig
+        public class TestConfig
         {
-            protected static readonly AppOptions DefaultOptions = new AppOptions
+            internal const string MockProjectId = "project1";
+
+            internal static readonly IClock Clock = new MockClock();
+
+            private readonly string tenantId;
+            private readonly AuthBuilder authBuilder;
+
+            private TestConfig(string tenantId = null)
             {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
-            };
+                this.tenantId = tenantId;
+                this.authBuilder = new AuthBuilder
+                {
+                    ProjectId = MockProjectId,
+                    Clock = Clock,
+                    RetryOptions = RetryOptions.NoBackOff,
+                    TenantId = tenantId,
+                };
+            }
 
-            internal abstract string BaseUrl { get; }
+            public static TestConfig ForFirebaseAuth()
+            {
+                return new TestConfig();
+            }
 
-            internal abstract AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler);
+            public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
+            {
+                return new TestConfig(tenantId);
+            }
+
+            public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
+            {
+                var options = new TestOptions
+                {
+                    UserManagerRequestHandler = handler,
+                };
+                return this.authBuilder.Build(options);
+            }
 
             internal void AssertRequest(
-                string expectedPath, MockMessageHandler.IncomingRequest request)
+                string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
-                Assert.Equal($"{this.BaseUrl}/{expectedPath}", request.Url.PathAndQuery);
-                Assert.Equal(
-                    FirebaseUserManager.ClientVersion,
-                    request.Headers.GetValues(FirebaseUserManager.ClientVersionHeader).First());
-            }
-        }
-
-        private sealed class FirebaseAuthTestConfig : TestConfig
-        {
-            internal static readonly FirebaseAuthTestConfig DefaultInstance =
-                new FirebaseAuthTestConfig();
-
-            internal override string BaseUrl => $"/v1/projects/{MockProjectId}";
-
-            internal override AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler)
-            {
-                var userManager = new FirebaseUserManager(CreateArgs(handler));
-                var args = FirebaseAuth.Args.CreateDefault();
-                args.UserManager = new Lazy<FirebaseUserManager>(userManager);
-                return new FirebaseAuth(args);
-            }
-        }
-
-        private sealed class TenantAwareFirebaseAuthTestConfig : TestConfig
-        {
-            internal static readonly TenantAwareFirebaseAuthTestConfig DefaultInstance =
-                new TenantAwareFirebaseAuthTestConfig();
-
-            internal override string BaseUrl => $"/v1/projects/{MockProjectId}/tenants/tenant1";
-
-            internal override AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler)
-            {
-                var args = CreateArgs(handler);
-                args.TenantId = "tenant1";
-                var userManager = new FirebaseUserManager(args);
-
-                var authArgs = TenantAwareFirebaseAuth.Args.CreateDefault("tenant1");
-                authArgs.UserManager = new Lazy<FirebaseUserManager>(userManager);
-                return new TenantAwareFirebaseAuth(authArgs);
+                var tenantInfo = this.tenantId != null ? $"/tenants/{this.tenantId}" : string.Empty;
+                var expectedPath = $"/v1/projects/{MockProjectId}{tenantInfo}/{expectedSuffix}";
+                Assert.Equal(expectedPath, request.Url.PathAndQuery);
             }
         }
     }

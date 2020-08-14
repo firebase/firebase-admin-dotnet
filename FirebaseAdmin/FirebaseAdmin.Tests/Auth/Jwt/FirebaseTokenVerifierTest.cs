@@ -30,9 +30,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
 
-        private static readonly IPublicKeySource KeySource = new FileSystemPublicKeySource(
-            "./resources/public_cert.pem");
-
         [Fact]
         public void NoProjectId()
         {
@@ -40,7 +37,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             {
                 Credential = MockCredential,
             });
-            Assert.Throws<ArgumentException>(() => FirebaseTokenVerifier.CreateIDTokenVerifier(app));
+            Assert.Throws<ArgumentException>(() => FirebaseTokenVerifier.CreateIdTokenVerifier(app));
             Assert.Throws<ArgumentException>(() => FirebaseTokenVerifier.CreateSessionCookieVerifier(app));
         }
 
@@ -52,7 +49,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 Credential = MockCredential,
                 ProjectId = "explicit-project-id",
             });
-            var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
+            var verifier = FirebaseTokenVerifier.CreateIdTokenVerifier(app);
             Assert.Equal("explicit-project-id", verifier.ProjectId);
 
             verifier = FirebaseTokenVerifier.CreateSessionCookieVerifier(app);
@@ -66,7 +63,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             {
                 Credential = GoogleCredential.FromFile("./resources/service_account.json"),
             });
-            var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
+            var verifier = FirebaseTokenVerifier.CreateIdTokenVerifier(app);
             Assert.Equal("test-project", verifier.ProjectId);
 
             verifier = FirebaseTokenVerifier.CreateSessionCookieVerifier(app);
@@ -83,7 +80,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 {
                     Credential = MockCredential,
                 });
-                var verifier = FirebaseTokenVerifier.CreateIDTokenVerifier(app);
+                var verifier = FirebaseTokenVerifier.CreateIdTokenVerifier(app);
                 Assert.Equal("env-project-id", verifier.ProjectId);
 
                 verifier = FirebaseTokenVerifier.CreateSessionCookieVerifier(app);
@@ -99,7 +96,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(InvalidStrings))]
         public void InvalidProjectId(string projectId)
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens(projectId, KeySource);
+            var args = FullyPopulatedArgs();
+            args.ProjectId = projectId;
 
             Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
         }
@@ -107,7 +105,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [Fact]
         public void NullKeySource()
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", null);
+            var args = FullyPopulatedArgs();
+            args.PublicKeySource = null;
 
             Assert.Throws<ArgumentNullException>(() => new FirebaseTokenVerifier(args));
         }
@@ -116,7 +115,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(InvalidStrings))]
         public void InvalidShortName(string shortName)
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            var args = FullyPopulatedArgs();
             args.ShortName = shortName;
 
             Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
@@ -126,7 +125,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(InvalidStrings))]
         public void InvalidIssuer(string issuer)
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            var args = FullyPopulatedArgs();
             args.Issuer = issuer;
 
             Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
@@ -136,7 +135,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(InvalidStrings))]
         public void InvalidOperation(string operation)
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            var args = FullyPopulatedArgs();
             args.Operation = operation;
 
             Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
@@ -146,28 +145,40 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(InvalidStrings))]
         public void InvalidUrl(string url)
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens("test-project", KeySource);
+            var args = FullyPopulatedArgs();
             args.Url = url;
 
             Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
         }
 
         [Fact]
-        public void TenantId()
+        public void ProjectId()
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens(
-                "test-project", KeySource, tenantId: "test-tenant");
+            var args = FullyPopulatedArgs();
 
             var verifier = new FirebaseTokenVerifier(args);
 
+            Assert.Equal("test-project", verifier.ProjectId);
+            Assert.Null(verifier.TenantId);
+        }
+
+        [Fact]
+        public void TenantId()
+        {
+            var args = FullyPopulatedArgs();
+            args.TenantId = "test-tenant";
+
+            var verifier = new FirebaseTokenVerifier(args);
+
+            Assert.Equal("test-project", verifier.ProjectId);
             Assert.Equal("test-tenant", verifier.TenantId);
         }
 
         [Fact]
         public void EmptyTenantId()
         {
-            var args = FirebaseTokenVerifierArgs.ForIdTokens(
-                "test-project", KeySource, tenantId: string.Empty);
+            var args = FullyPopulatedArgs();
+            args.TenantId = string.Empty;
 
             var ex = Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
 
@@ -177,6 +188,19 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         public void Dispose()
         {
             FirebaseApp.DeleteAll();
+        }
+
+        private static FirebaseTokenVerifierArgs FullyPopulatedArgs()
+        {
+            return new FirebaseTokenVerifierArgs
+            {
+                ProjectId = "test-project",
+                ShortName = "short name",
+                Operation = "VerifyToken()",
+                Url = "https://firebase.google.com",
+                Issuer = "https://firebase.google.com/",
+                PublicKeySource = JwtTestUtils.DefaultKeySource,
+            };
         }
     }
 }
