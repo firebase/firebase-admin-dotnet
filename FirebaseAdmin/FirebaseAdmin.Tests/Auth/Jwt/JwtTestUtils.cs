@@ -79,13 +79,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             };
         }
 
-        public static string RevocationCheckRequestPath(
-            string expectedSuffix, string tenantId = null)
-        {
-            var tenantInfo = tenantId != null ? $"/tenants/{tenantId}" : string.Empty;
-            return $"/v1/projects/{ProjectId}{tenantInfo}/{expectedSuffix}";
-        }
-
         public static void AssertRevocationCheckRequest(string tenantId, Uri uri)
         {
             var tenantInfo = tenantId != null ? $"/tenants/{tenantId}" : string.Empty;
