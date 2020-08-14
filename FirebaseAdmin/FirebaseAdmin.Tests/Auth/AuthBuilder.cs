@@ -43,16 +43,14 @@ namespace FirebaseAdmin.Auth.Tests
         {
             if (this.TenantId != null)
             {
-                var args = TenantAwareFirebaseAuth.Args.CreateDefault(this.TenantId);
-                this.PopulateArgs(args, options);
-                return new TenantAwareFirebaseAuth(args);
+                var tenantArgs = TenantAwareFirebaseAuth.Args.CreateDefault(this.TenantId);
+                this.PopulateArgs(tenantArgs, options);
+                return new TenantAwareFirebaseAuth(tenantArgs);
             }
-            else
-            {
-                var args = FirebaseAuth.Args.CreateDefault();
-                this.PopulateArgs(args, options);
-                return new FirebaseAuth(args);
-            }
+
+            var args = FirebaseAuth.Args.CreateDefault();
+            this.PopulateArgs(args, options);
+            return new FirebaseAuth(args);
         }
 
         private void PopulateArgs(AbstractFirebaseAuth.Args args, TestOptions options)
