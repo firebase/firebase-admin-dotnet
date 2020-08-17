@@ -41,16 +41,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// </summary>
         public string TenantId { get; }
 
-        /// <summary>
-        /// Creates a new Firebase session cookie from the given ID token and options. The returned JWT can
-        /// be set as a server-side session cookie with a custom cookie policy.
-        /// </summary>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating the cookie.</exception>
-        /// <param name="idToken">The Firebase ID token to exchange for a session cookie.</param>
-        /// <param name="options">Additional options required to create the cookie.</param>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
-        /// operation.</param>
-        /// <returns>A task that completes with the Firebase session cookie.</returns>
+        /// <inheritdoc/>
         public override async Task<string> CreateSessionCookieAsync(
             string idToken, SessionCookieOptions options, CancellationToken cancellationToken)
         {
