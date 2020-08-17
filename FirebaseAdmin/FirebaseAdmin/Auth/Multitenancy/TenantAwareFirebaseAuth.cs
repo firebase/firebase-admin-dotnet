@@ -47,6 +47,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
                     () => FirebaseTokenFactory.Create(app, tenantId), true),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
                     () => FirebaseTokenVerifier.CreateIdTokenVerifier(app, tenantId), true),
+                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
+                    () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app, tenantId), true),
                 UserManager = new Lazy<FirebaseUserManager>(
                     () => FirebaseUserManager.Create(app, tenantId), true),
             };
@@ -63,6 +65,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
                 {
                     TokenFactory = new Lazy<FirebaseTokenFactory>(),
                     IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
+                    SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
                     UserManager = new Lazy<FirebaseUserManager>(),
                     TenantId = tenantId,
                 };

@@ -90,15 +90,27 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(this.ProjectId, decoded.Audience);
             Assert.Equal(this.Uid, decoded.Uid);
             Assert.Equal(this.Uid, decoded.Subject);
+            Assert.Equal(this.TenantId, decoded.TenantId);
 
             // The default test token created by CreateTokenAsync has an issue time 10 minutes
             // ago, and an expiry time 50 minutes in the future.
-            Assert.Equal(
-                this.Clock.UnixTimestamp() - (60 * 10), decoded.IssuedAtTimeSeconds);
-            Assert.Equal(
-                this.Clock.UnixTimestamp() + (60 * 50), decoded.ExpirationTimeSeconds);
+            expectedClaims = this.CopyClaims(expectedClaims);
+            object iat;
+            if (!expectedClaims.TryGetValue("iat", out iat))
+            {
+                iat = this.Clock.UnixTimestamp() - (60 * 10);
+            }
 
-            expectedClaims = expectedClaims ?? new Dictionary<string, object>();
+            object exp;
+            if (!expectedClaims.TryGetValue("exp", out exp))
+            {
+                exp = this.Clock.UnixTimestamp() + (60 * 50);
+            }
+
+            Assert.Equal((long)iat, decoded.IssuedAtTimeSeconds);
+            Assert.Equal((long)exp, decoded.ExpirationTimeSeconds);
+
+            this.RemoveStandardClaims(expectedClaims);
             if (this.TenantId != null)
             {
                 Assert.Equal(expectedClaims.Count + 1, decoded.Claims.Count);
@@ -113,8 +125,22 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             {
                 Assert.Equal(entry.Value, decoded.Claims[entry.Key]);
             }
+        }
 
-            Assert.Equal(this.TenantId, decoded.TenantId);
+        private IDictionary<string, object> CopyClaims(
+            IDictionary<string, object> claims)
+        {
+            return new Dictionary<string, object>(claims ?? new Dictionary<string, object>());
+        }
+
+        private void RemoveStandardClaims(IDictionary<string, object> claims)
+        {
+            // These are the only standard claims currently used in tests.
+            var standardClaims = new List<string> { "exp", "iat", "iss", "aud", "sub" };
+            foreach (var claim in standardClaims)
+            {
+                claims.Remove(claim);
+            }
         }
     }
 }

@@ -62,10 +62,9 @@ namespace FirebaseAdmin.Auth.Tests
             app.Delete();
 
             Assert.Throws<InvalidOperationException>(() => auth.TokenFactory);
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await auth.VerifyIdTokenAsync("user"));
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await auth.SetCustomUserClaimsAsync("user", null));
+            Assert.Throws<InvalidOperationException>(() => auth.IdTokenVerifier);
+            Assert.Throws<InvalidOperationException>(() => auth.SessionCookieVerifier);
+            Assert.Throws<InvalidOperationException>(() => auth.UserManager);
             await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await auth.GetOidcProviderConfigAsync("oidc.provider"));
             Assert.Throws<InvalidOperationException>(() => auth.TenantManager);
@@ -84,6 +83,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Null(auth.TokenFactory.TenantId);
             Assert.Null(auth.IdTokenVerifier.TenantId);
+            Assert.Null(auth.SessionCookieVerifier.TenantId);
             Assert.Null(auth.UserManager.TenantId);
         }
 

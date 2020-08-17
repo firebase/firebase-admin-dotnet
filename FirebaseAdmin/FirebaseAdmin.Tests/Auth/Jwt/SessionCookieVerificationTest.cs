@@ -17,59 +17,55 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Tests;
 using FirebaseAdmin.Tests;
-using FirebaseAdmin.Util;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class SessionCookieVerificationTest
     {
+        public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
+        {
+            new object[] { TestConfig.ForFirebaseAuth() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("test-tenant") },
+        };
+
         private const long ClockSkewSeconds = 5 * 60;
 
-        private static readonly IClock Clock = new MockClock();
-
-        [Fact]
-        public void NoProjectId()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ValidSessionCookie(TestConfig config)
         {
-            var args = FirebaseTokenVerifierArgs.ForSessionCookies(
-                null, JwtTestUtils.DefaultKeySource, Clock);
+            var cookie = await config.CreateSessionCookieAsync();
+            var auth = config.CreateAuth();
 
-            Assert.Throws<ArgumentException>(() => new FirebaseTokenVerifier(args));
+            var decoded = await auth.VerifySessionCookieAsync(cookie);
+
+            config.AssertFirebaseToken(decoded);
         }
 
-        [Fact]
-        public async Task ValidSessionCookie()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ValidSessionCookieWithClaims(TestConfig config)
         {
             var payload = new Dictionary<string, object>()
             {
                 { "foo", "bar" },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var decoded = await auth.VerifySessionCookieAsync(cookie);
 
-            Assert.Equal("testuser", decoded.Uid);
-            Assert.Equal("test-project", decoded.Audience);
-            Assert.Equal("testuser", decoded.Subject);
-
-            // The default test cookie has an issue time 10 minutes ago, and an expiry time 50
-            // minutes in the future.
-            Assert.Equal(Clock.UnixTimestamp() - (60 * 10), decoded.IssuedAtTimeSeconds);
-            Assert.Equal(Clock.UnixTimestamp() + (60 * 50), decoded.ExpirationTimeSeconds);
-            Assert.Single(decoded.Claims);
-            object value;
-            Assert.True(decoded.Claims.TryGetValue("foo", out value));
-            Assert.Equal("bar", value);
+            config.AssertFirebaseToken(decoded, payload);
         }
 
-        [Fact]
-        public async Task InvalidArgument()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task InvalidArgument(TestConfig config)
         {
-            var auth = this.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.VerifySessionCookieAsync(null));
@@ -77,10 +73,11 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 async () => await auth.VerifySessionCookieAsync(string.Empty));
         }
 
-        [Fact]
-        public async Task MalformedCookie()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task MalformedCookie(TestConfig config)
         {
-            var auth = this.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync("not-a-token"));
@@ -88,15 +85,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, "Incorrect number of segments in session cookie.");
         }
 
-        [Fact]
-        public async Task NoKid()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task NoKid(TestConfig config)
         {
             var header = new Dictionary<string, object>()
             {
                 { "kid", string.Empty },
             };
-            var cookie = await CreateSessionCookieAsync(headerOverrides: header);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(headerOverrides: header);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -104,15 +102,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, "Firebase session cookie has no 'kid' claim.");
         }
 
-        [Fact]
-        public async Task IncorrectKid()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task IncorrectKid(TestConfig config)
         {
             var header = new Dictionary<string, object>()
             {
                 { "kid", "incorrect-key-id" },
             };
-            var cookie = await CreateSessionCookieAsync(headerOverrides: header);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(headerOverrides: header);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -120,15 +119,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, "Failed to verify session cookie signature.");
         }
 
-        [Fact]
-        public async Task IncorrectAlgorithm()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task IncorrectAlgorithm(TestConfig config)
         {
             var header = new Dictionary<string, object>()
             {
                 { "alg", "HS256" },
             };
-            var cookie = await CreateSessionCookieAsync(headerOverrides: header);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(headerOverrides: header);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -138,52 +138,54 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage);
         }
 
-        [Fact]
-        public async Task Expired()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task Expired(TestConfig config)
         {
-            var expiryTime = Clock.UnixTimestamp() - (ClockSkewSeconds + 1);
+            var expiryTime = JwtTestUtils.Clock.UnixTimestamp() - (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
                 { "exp", expiryTime },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
 
             var expectedMessage = $"Firebase session cookie expired at {expiryTime}. "
-                + $"Expected to be greater than {Clock.UnixTimestamp()}.";
+                + $"Expected to be greater than {JwtTestUtils.Clock.UnixTimestamp()}.";
             this.CheckException(exception, expectedMessage, AuthErrorCode.ExpiredSessionCookie);
         }
 
-        [Fact]
-        public async Task ExpiryTimeInAcceptableRange()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ExpiryTimeInAcceptableRange(TestConfig config)
         {
-            var expiryTimeSeconds = Clock.UnixTimestamp() - ClockSkewSeconds;
+            var expiryTimeSeconds = JwtTestUtils.Clock.UnixTimestamp() - ClockSkewSeconds;
             var payload = new Dictionary<string, object>()
             {
                 { "exp", expiryTimeSeconds },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var decoded = await auth.VerifySessionCookieAsync(cookie);
 
-            Assert.Equal("testuser", decoded.Uid);
-            Assert.Equal(expiryTimeSeconds, decoded.ExpirationTimeSeconds);
+            config.AssertFirebaseToken(decoded, payload);
         }
 
-        [Fact]
-        public async Task InvalidIssuedAt()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task InvalidIssuedAt(TestConfig config)
         {
-            var issuedAt = Clock.UnixTimestamp() + (ClockSkewSeconds + 1);
+            var issuedAt = JwtTestUtils.Clock.UnixTimestamp() + (ClockSkewSeconds + 1);
             var payload = new Dictionary<string, object>()
             {
                 { "iat", issuedAt },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -193,32 +195,33 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage);
         }
 
-        [Fact]
-        public async Task IssuedAtInAcceptableRange()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task IssuedAtInAcceptableRange(TestConfig config)
         {
-            var issuedAtSeconds = Clock.UnixTimestamp() + ClockSkewSeconds;
+            var issuedAtSeconds = JwtTestUtils.Clock.UnixTimestamp() + ClockSkewSeconds;
             var payload = new Dictionary<string, object>()
             {
                 { "iat", issuedAtSeconds },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var decoded = await auth.VerifySessionCookieAsync(cookie);
 
-            Assert.Equal("testuser", decoded.Uid);
-            Assert.Equal(issuedAtSeconds, decoded.IssuedAtTimeSeconds);
+            config.AssertFirebaseToken(decoded, payload);
         }
 
-        [Fact]
-        public async Task InvalidIssuer()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task InvalidIssuer(TestConfig config)
         {
             var payload = new Dictionary<string, object>()
             {
                 { "iss", "wrong-issuer" },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -227,15 +230,13 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage);
         }
 
-        [Fact]
-        public async Task IdToken()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task IdToken(TestConfig config)
         {
-            var payload = new Dictionary<string, object>()
-            {
-                { "iss", "wrong-issuer" },
-            };
-            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
-            var auth = this.CreateFirebaseAuth();
+            var tokenBuilder = JwtTestUtils.IdTokenBuilder(config.TenantId);
+            var idToken = await tokenBuilder.CreateTokenAsync();
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(idToken));
@@ -244,15 +245,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage);
         }
 
-        [Fact]
-        public async Task InvalidAudience()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task InvalidAudience(TestConfig config)
         {
             var payload = new Dictionary<string, object>()
             {
                 { "aud", "wrong-audience" },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -262,15 +264,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage);
         }
 
-        [Fact]
-        public async Task EmptySubject()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task EmptySubject(TestConfig config)
         {
             var payload = new Dictionary<string, object>()
             {
                 { "sub", string.Empty },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -279,15 +282,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage);
         }
 
-        [Fact]
-        public async Task LongSubject()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task LongSubject(TestConfig config)
         {
             var payload = new Dictionary<string, object>()
             {
                 { "sub", new string('a', 129) },
             };
-            var cookie = await CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = this.CreateFirebaseAuth();
+            var cookie = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie));
@@ -297,22 +301,23 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage);
         }
 
-        [Fact]
-        public async Task RevokedToken()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task RevokedToken(TestConfig config)
         {
-            var cookie = await CreateSessionCookieAsync();
+            var cookie = await config.CreateSessionCookieAsync();
             var handler = new MockMessageHandler()
             {
                 Response = $@"{{
                     ""users"": [
                         {{
                             ""localId"": ""testuser"",
-                            ""validSince"": {Clock.UnixTimestamp()}
+                            ""validSince"": {JwtTestUtils.Clock.UnixTimestamp()}
                         }}
                     ]
                 }}",
             };
-            var auth = this.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             var decoded = await auth.VerifySessionCookieAsync(cookie);
 
@@ -325,12 +330,14 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             var expectedMessage = "Firebase session cookie has been revoked.";
             this.CheckException(exception, expectedMessage, AuthErrorCode.RevokedSessionCookie);
             Assert.Equal(1, handler.Calls);
+            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
         }
 
-        [Fact]
-        public async Task ValidUnrevokedToken()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ValidUnrevokedToken(TestConfig config)
         {
-            var cookie = await CreateSessionCookieAsync();
+            var cookie = await config.CreateSessionCookieAsync();
             var handler = new MockMessageHandler()
             {
                 Response = @"{
@@ -341,18 +348,20 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     ]
                 }",
             };
-            var auth = this.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             var decoded = await auth.VerifySessionCookieAsync(cookie, true);
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(1, handler.Calls);
+            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
         }
 
-        [Fact]
-        public async Task CheckRevokedError()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CheckRevokedError(TestConfig config)
         {
-            var cookie = await CreateSessionCookieAsync();
+            var cookie = await config.CreateSessionCookieAsync();
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
@@ -360,7 +369,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     ""error"": {""message"": ""USER_NOT_FOUND""}
                 }",
             };
-            var auth = this.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 async () => await auth.VerifySessionCookieAsync(cookie, true));
@@ -371,73 +380,30 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Null(exception.InnerException);
             Assert.NotNull(exception.HttpResponse);
             Assert.Equal(1, handler.Calls);
+            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
         }
 
-        /// <summary>
-        /// Creates a mock session cookie for testing purposes. By default the created cookie has
-        /// an issue time 10 minutes ago, and an expirty time 50 minutes into the future. All
-        /// header and payload claims can be overridden if needed.
-        /// </summary>
-        internal static async Task<string> CreateSessionCookieAsync(
-            Dictionary<string, object> headerOverrides = null,
-            Dictionary<string, object> payloadOverrides = null)
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task TenantIdMismatch(TestConfig config)
         {
-            var header = new Dictionary<string, object>()
-            {
-                { "alg", "RS256" },
-                { "typ", "jwt" },
-                { "kid", "test-key-id" },
-            };
-            if (headerOverrides != null)
-            {
-                foreach (var entry in headerOverrides)
-                {
-                    header[entry.Key] = entry.Value;
-                }
-            }
-
             var payload = new Dictionary<string, object>()
             {
-                { "sub", "testuser" },
-                { "iss", "https://session.firebase.google.com/test-project" },
-                { "aud", "test-project" },
-                { "iat", Clock.UnixTimestamp() - (60 * 10) },
-                { "exp", Clock.UnixTimestamp() + (60 * 50) },
+                {
+                    "firebase", new Dictionary<string, object>
+                    {
+                        { "tenant", "other-tenant" },
+                    }
+                },
             };
-            if (payloadOverrides != null)
-            {
-                foreach (var entry in payloadOverrides)
-                {
-                    payload[entry.Key] = entry.Value;
-                }
-            }
+            var idToken = await config.CreateSessionCookieAsync(payloadOverrides: payload);
+            var auth = config.CreateAuth();
 
-            return await JwtUtils.CreateSignedJwtAsync(
-                header, payload, JwtTestUtils.DefaultSigner);
-        }
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.VerifySessionCookieAsync(idToken));
 
-        private FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
-        {
-            var args = FirebaseTokenVerifierArgs.ForSessionCookies(
-                "test-project", JwtTestUtils.DefaultKeySource, Clock);
-            var tokenVerifier = new FirebaseTokenVerifier(args);
-
-            FirebaseUserManager userManager = null;
-            if (handler != null)
-            {
-                userManager = new FirebaseUserManager(new FirebaseUserManager.Args
-                {
-                    Credential = GoogleCredential.FromAccessToken("test-token"),
-                    ProjectId = "test-project",
-                    ClientFactory = new MockHttpClientFactory(handler),
-                    RetryOptions = RetryOptions.NoBackOff,
-                });
-            }
-
-            var authArgs = FirebaseAuth.Args.CreateDefault();
-            authArgs.SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(tokenVerifier);
-            authArgs.UserManager = new Lazy<FirebaseUserManager>(userManager);
-            return new FirebaseAuth(authArgs);
+            var expectedMessage = "Firebase session cookie has incorrect tenant ID.";
+            this.CheckException(exception, expectedMessage, AuthErrorCode.TenantIdMismatch);
         }
 
         private void CheckException(
@@ -450,6 +416,53 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(errorCode, exception.AuthErrorCode);
             Assert.Null(exception.InnerException);
             Assert.Null(exception.HttpResponse);
+        }
+
+        public class TestConfig
+        {
+            private readonly AuthBuilder authBuilder;
+            private readonly MockTokenBuilder tokenBuilder;
+
+            private TestConfig(string tenantId = null)
+            {
+                this.authBuilder = JwtTestUtils.AuthBuilderForTokenVerification(tenantId);
+                this.tokenBuilder = JwtTestUtils.SessionCookieBuilder(tenantId);
+            }
+
+            public string TenantId => this.authBuilder.TenantId;
+
+            public static TestConfig ForFirebaseAuth()
+            {
+                return new TestConfig();
+            }
+
+            public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
+            {
+                return new TestConfig(tenantId);
+            }
+
+            public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
+            {
+                var options = new TestOptions
+                {
+                    UserManagerRequestHandler = handler,
+                    SessionCookieVerifier = true,
+                };
+                return this.authBuilder.Build(options);
+            }
+
+            public async Task<string> CreateSessionCookieAsync(
+                IDictionary<string, object> headerOverrides = null,
+                IDictionary<string, object> payloadOverrides = null)
+            {
+                return await this.tokenBuilder.CreateTokenAsync(headerOverrides, payloadOverrides);
+            }
+
+            public void AssertFirebaseToken(
+                FirebaseToken token, IDictionary<string, object> expectedClaims = null)
+            {
+                this.tokenBuilder.AssertFirebaseToken(token, expectedClaims);
+            }
         }
     }
 }
