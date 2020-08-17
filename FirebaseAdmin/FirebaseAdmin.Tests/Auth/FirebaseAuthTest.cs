@@ -54,7 +54,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public async Task UseAfterDelete()
+        public void UseAfterDelete()
         {
             var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             var auth = FirebaseAuth.DefaultInstance;
@@ -65,8 +65,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Throws<InvalidOperationException>(() => auth.IdTokenVerifier);
             Assert.Throws<InvalidOperationException>(() => auth.SessionCookieVerifier);
             Assert.Throws<InvalidOperationException>(() => auth.UserManager);
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await auth.GetOidcProviderConfigAsync("oidc.provider"));
+            Assert.Throws<InvalidOperationException>(() => auth.ProviderConfigManager);
             Assert.Throws<InvalidOperationException>(() => auth.TenantManager);
         }
 
@@ -97,6 +96,19 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal(
                 "Must initialize FirebaseApp with a project ID to manage users.",
+                ex.Message);
+        }
+
+        [Fact]
+        public void ProviderConfigManagerNoProjectId()
+        {
+            FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+
+            var ex = Assert.Throws<ArgumentException>(
+                () => FirebaseAuth.DefaultInstance.ProviderConfigManager);
+
+            Assert.Equal(
+                "Must initialize FirebaseApp with a project ID to manage provider configurations.",
                 ex.Message);
         }
 

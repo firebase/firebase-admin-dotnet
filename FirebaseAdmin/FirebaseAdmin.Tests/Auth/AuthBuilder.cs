@@ -15,6 +15,7 @@
 using System;
 using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Multitenancy;
+using FirebaseAdmin.Auth.Providers;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Util;
@@ -61,6 +62,12 @@ namespace FirebaseAdmin.Auth.Tests
                     this.CreateUserManager(options));
             }
 
+            if (options.ProviderConfigRequestHandler != null)
+            {
+                args.ProviderConfigManager = new Lazy<ProviderConfigManager>(
+                    this.CreateProviderConfigManager(options));
+            }
+
             if (options.IdTokenVerifier)
             {
                 args.IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
@@ -85,6 +92,18 @@ namespace FirebaseAdmin.Auth.Tests
                 TenantId = this.TenantId,
             };
             return new FirebaseUserManager(args);
+        }
+
+        private ProviderConfigManager CreateProviderConfigManager(TestOptions options)
+        {
+            var args = new ProviderConfigManager.Args
+            {
+                RetryOptions = RetryOptions.NoBackOff,
+                ProjectId = this.ProjectId,
+                ClientFactory = new MockHttpClientFactory(options.ProviderConfigRequestHandler),
+                TenantId = this.TenantId,
+            };
+            return new ProviderConfigManager(args);
         }
 
         private FirebaseTokenVerifier CreateIdTokenVerifier()
