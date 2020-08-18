@@ -17,7 +17,9 @@ using System;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Options for the <see cref="FirebaseAuth.CreateSessionCookieAsync(string, SessionCookieOptions)"/> API.
+    /// Options for the
+    /// <see cref="AbstractFirebaseAuth.CreateSessionCookieAsync(string, SessionCookieOptions)"/>
+    /// API.
     /// </summary>
     public sealed class SessionCookieOptions
     {

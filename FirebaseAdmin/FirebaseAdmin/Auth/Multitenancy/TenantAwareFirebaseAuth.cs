@@ -13,7 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
+using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth.Multitenancy
 {
@@ -37,6 +40,17 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// Gets the tenant ID associated with this instance.
         /// </summary>
         public string TenantId { get; }
+
+        /// <inheritdoc/>
+        public override async Task<string> CreateSessionCookieAsync(
+            string idToken, SessionCookieOptions options, CancellationToken cancellationToken)
+        {
+            // As a minor optimization, validate options here before calling VerifyIdToken().
+            options.ThrowIfNull(nameof(options)).CopyAndValidate();
+            await this.VerifyIdTokenAsync(idToken, cancellationToken);
+            return await base.CreateSessionCookieAsync(idToken, options, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         internal static TenantAwareFirebaseAuth Create(FirebaseApp app, string tenantId)
         {

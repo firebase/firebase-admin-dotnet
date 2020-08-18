@@ -19,6 +19,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
+using FirebaseAdmin.Auth.Jwt.Tests;
+using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Json;
@@ -1759,12 +1761,12 @@ namespace FirebaseAdmin.Auth.Tests
                 async () => await auth.RevokeRefreshTokensAsync(uid));
         }
 
-        [Fact]
-        public void CreateSessionCookieNoIdToken()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public void CreateSessionCookieNoIdToken(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)config.CreateAuth(handler);
+            var auth = config.CreateAuthWithIdTokenVerifier(handler);
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromHours(1),
@@ -1776,87 +1778,108 @@ namespace FirebaseAdmin.Auth.Tests
                 async () => await auth.CreateSessionCookieAsync(string.Empty, options));
         }
 
-        [Fact]
-        public void CreateSessionCookieNoOptions()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public void CreateSessionCookieNoOptions(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)config.CreateAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await auth.CreateSessionCookieAsync("idToken", null));
         }
 
-        [Fact]
-        public void CreateSessionCookieNoExpiresIn()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public void CreateSessionCookieNoExpiresIn(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)config.CreateAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync(
                     "idToken", new SessionCookieOptions()));
         }
 
-        [Fact]
-        public void CreateSessionCookieExpiresInTooLow()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CreateSessionCookieExpiresInTooLow(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)config.CreateAuth(handler);
+            var auth = config.CreateAuth(handler);
             var fiveMinutesInSeconds = TimeSpan.FromMinutes(5).TotalSeconds;
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromSeconds(fiveMinutesInSeconds - 1),
             };
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync("idToken", options));
         }
 
-        [Fact]
-        public void CreateSessionCookieExpiresInTooHigh()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CreateSessionCookieExpiresInTooHigh(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
-            var auth = (FirebaseAuth)config.CreateAuth(handler);
+            var auth = config.CreateAuth(handler);
             var fourteenDaysInSeconds = TimeSpan.FromDays(14).TotalSeconds;
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromSeconds(fourteenDaysInSeconds + 1),
             };
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync("idToken", options));
         }
 
-        [Fact]
-        public async Task CreateSessionCookie()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CreateSessionCookie(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler()
             {
                 Response = @"{
                     ""sessionCookie"": ""cookie""
                 }",
             };
-            var auth = (FirebaseAuth)config.CreateAuth(handler);
+            var auth = config.CreateAuthWithIdTokenVerifier(handler);
+            var idToken = await CreateIdTokenAsync(config.TenantId);
             var options = new SessionCookieOptions()
             {
                 ExpiresIn = TimeSpan.FromHours(1),
             };
 
-            var result = await auth.CreateSessionCookieAsync("idToken", options);
+            var result = await auth.CreateSessionCookieAsync(idToken, options);
 
             Assert.Equal("cookie", result);
             Assert.Equal(1, handler.Requests.Count);
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
-            Assert.Equal("idToken", request["idToken"]);
+            Assert.Equal(idToken, request["idToken"]);
             Assert.Equal(3600, request["validDuration"]);
 
             config.AssertRequest(":createSessionCookie", Assert.Single(handler.Requests));
+        }
+
+        [Fact]
+        public async Task CreateSessionCookieTenantIdMismatch()
+        {
+            var config = TestConfig.ForTenantAwareFirebaseAuth("test-tenant");
+            var auth = (TenantAwareFirebaseAuth)config.CreateAuthWithIdTokenVerifier();
+            var idToken = await CreateIdTokenAsync("other-tenant");
+            var options = new SessionCookieOptions()
+            {
+                ExpiresIn = TimeSpan.FromHours(1),
+            };
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => auth.CreateSessionCookieAsync(idToken, options));
+
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.TenantIdMismatch, exception.AuthErrorCode);
+            Assert.Null(exception.InnerException);
+            Assert.Null(exception.HttpResponse);
         }
 
         [Theory]
@@ -1929,26 +1952,34 @@ namespace FirebaseAdmin.Auth.Tests
             };
         }
 
+        private static async Task<string> CreateIdTokenAsync(string tenantId)
+        {
+            var tokenBuilder = JwtTestUtils.IdTokenBuilder(tenantId);
+            tokenBuilder.ProjectId = TestConfig.MockProjectId;
+            return await tokenBuilder.CreateTokenAsync();
+        }
+
         public class TestConfig
         {
             internal const string MockProjectId = "project1";
 
             internal static readonly IClock Clock = new MockClock();
 
-            private readonly string tenantId;
             private readonly AuthBuilder authBuilder;
 
             private TestConfig(string tenantId = null)
             {
-                this.tenantId = tenantId;
                 this.authBuilder = new AuthBuilder
                 {
                     ProjectId = MockProjectId,
                     Clock = Clock,
                     RetryOptions = RetryOptions.NoBackOff,
+                    KeySource = JwtTestUtils.DefaultKeySource,
                     TenantId = tenantId,
                 };
             }
+
+            public string TenantId => this.authBuilder.TenantId;
 
             public static TestConfig ForFirebaseAuth()
             {
@@ -1969,10 +2000,21 @@ namespace FirebaseAdmin.Auth.Tests
                 return this.authBuilder.Build(options);
             }
 
+            public AbstractFirebaseAuth CreateAuthWithIdTokenVerifier(
+                HttpMessageHandler handler = null)
+            {
+                var options = new TestOptions
+                {
+                    UserManagerRequestHandler = handler,
+                    IdTokenVerifier = true,
+                };
+                return this.authBuilder.Build(options);
+            }
+
             internal void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
-                var tenantInfo = this.tenantId != null ? $"/tenants/{this.tenantId}" : string.Empty;
+                var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
                 var expectedPath = $"/v1/projects/{MockProjectId}{tenantInfo}/{expectedSuffix}";
                 Assert.Equal(expectedPath, request.Url.PathAndQuery);
             }
