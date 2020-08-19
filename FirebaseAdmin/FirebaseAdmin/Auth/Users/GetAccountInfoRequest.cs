@@ -15,17 +15,17 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     /// <summary>
     /// Represents a request to look up account information.
     /// </summary>
     internal sealed class GetAccountInfoRequest
     {
-        private IList<string> uids = new List<string>();
-        private IList<string> emails = new List<string>();
-        private IList<string> phoneNumbers = new List<string>();
-        private IList<FederatedUserId> federatedUserIds = new List<FederatedUserId>();
+        private readonly IList<string> uids = new List<string>();
+        private readonly IList<string> emails = new List<string>();
+        private readonly IList<string> phoneNumbers = new List<string>();
+        private readonly IList<FederatedUserId> federatedUserIds = new List<FederatedUserId>();
 
         public void AddUid(string uid)
         {

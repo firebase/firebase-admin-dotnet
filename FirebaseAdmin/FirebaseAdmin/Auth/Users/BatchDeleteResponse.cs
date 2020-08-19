@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     /// <summary>
     /// JSON data binding for `BatchDeleteResponse` messages sent by Google Identity Toolkit

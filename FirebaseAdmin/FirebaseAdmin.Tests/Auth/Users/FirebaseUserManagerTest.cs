@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Jwt.Tests;
 using FirebaseAdmin.Auth.Multitenancy;
+using FirebaseAdmin.Auth.Tests;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Json;
@@ -28,7 +29,7 @@ using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Users.Tests
 {
     public class FirebaseUserManagerTest
     {

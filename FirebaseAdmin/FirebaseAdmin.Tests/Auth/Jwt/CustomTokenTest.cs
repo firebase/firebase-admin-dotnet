@@ -16,11 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using FirebaseAdmin.Auth.Jwt.Tests;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class CustomTokenTest : IDisposable
     {

@@ -15,7 +15,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     internal sealed class EmailActionLinkRequest
     {

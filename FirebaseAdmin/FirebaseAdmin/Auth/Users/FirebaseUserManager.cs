@@ -28,7 +28,7 @@ using Newtonsoft.Json.Linq;
 
 using Gax = Google.Api.Gax;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     /// <summary>
     /// FirebaseUserManager provides methods for interacting with the

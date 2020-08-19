@@ -24,7 +24,7 @@ using Google.Apis.Discovery;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     /// <summary>
     /// Represents a request made using the Google API client to list all Firebase users in a

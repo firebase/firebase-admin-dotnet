@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using FirebaseAdmin.Auth.Users;
 
 namespace FirebaseAdmin.Auth
 {

@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     /// <summary>
     /// Encapsulates user import requests by specifying hashing properties for passwords and
