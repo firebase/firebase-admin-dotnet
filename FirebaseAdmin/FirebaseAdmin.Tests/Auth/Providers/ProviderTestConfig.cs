@@ -12,20 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using FirebaseAdmin.Auth.Tests;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
-using Google.Apis.Auth.OAuth2;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Providers.Tests
 {
-    internal sealed class ProviderConfigTestUtils
+    public class ProviderTestConfig
     {
+        public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
+        {
+            new object[] { ProviderTestConfig.ForFirebaseAuth() },
+            new object[] { ProviderTestConfig.ForTenantAwareFirebaseAuth("tenant1") },
+        };
+
+        public static readonly IEnumerable<object[]> InvalidProvierIds = new List<object[]>()
+        {
+            new object[] { ProviderTestConfig.ForFirebaseAuth(), null },
+            new object[] { ProviderTestConfig.ForFirebaseAuth(), string.Empty },
+            new object[] { ProviderTestConfig.ForTenantAwareFirebaseAuth("tenant1"), null },
+            new object[] { ProviderTestConfig.ForTenantAwareFirebaseAuth("tenant1"), string.Empty },
+        };
+
         internal const string ConfigNotFoundResponse = @"{
             ""error"": {
                 ""message"": ""CONFIGURATION_NOT_FOUND""
@@ -40,41 +53,69 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         internal static readonly HttpMethod PatchMethod = new HttpMethod("PATCH");
 
+        private const string MockProjectId = "project1";
+
         private static readonly string ClientVersion =
             $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
+        private readonly AuthBuilder authBuilder;
 
-        internal static FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
+        private ProviderTestConfig(string tenantId = null)
         {
-            var providerConfigManager = new ProviderConfigManager(new ProviderConfigManager.Args
+            this.authBuilder = new AuthBuilder
             {
-                Credential = MockCredential,
-                ProjectId = "project1",
-                ClientFactory = new MockHttpClientFactory(handler ?? new MockMessageHandler()),
+                ProjectId = MockProjectId,
                 RetryOptions = RetryOptions.NoBackOff,
-            });
-            var args = FirebaseAuth.Args.CreateDefault();
-            args.ProviderConfigManager = new Lazy<ProviderConfigManager>(providerConfigManager);
-            return new FirebaseAuth(args);
+                TenantId = tenantId,
+            };
         }
 
-        internal static void AssertClientVersionHeader(MockMessageHandler.IncomingRequest request)
+        public string TenantId => this.authBuilder.TenantId;
+
+        public static ProviderTestConfig ForFirebaseAuth()
         {
+            return new ProviderTestConfig();
+        }
+
+        public static ProviderTestConfig ForTenantAwareFirebaseAuth(string tenantId)
+        {
+            return new ProviderTestConfig(tenantId);
+        }
+
+        public static IEnumerator<object[]> WithTestConfigs(IEnumerator<object[]> args)
+        {
+            foreach (var config in TestConfigs)
+            {
+                while (args.MoveNext())
+                {
+                    yield return config.Concat(args.Current).ToArray();
+                }
+            }
+        }
+
+        public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
+        {
+            var options = new TestOptions
+            {
+                ProviderConfigRequestHandler = handler ?? new MockMessageHandler(),
+            };
+            return this.authBuilder.Build(options);
+        }
+
+        internal void AssertRequest(
+            string expectedSuffix, MockMessageHandler.IncomingRequest request)
+        {
+            var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
+            var expectedPath = $"/v2/projects/{MockProjectId}{tenantInfo}/{expectedSuffix}";
+            Assert.Equal(expectedPath, request.Url.PathAndQuery);
             Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
-        }
-
-        internal static IDictionary<string, string> ExtractQueryParams(
-            MockMessageHandler.IncomingRequest req)
-        {
-            return req.Url.Query.Substring(1).Split('&').ToDictionary(
-                entry => entry.Split('=')[0], entry => entry.Split('=')[1]);
         }
 
         public class InvalidListOptions : IEnumerable<object[]>
         {
-            public IEnumerator<object[]> GetEnumerator()
+            public IEnumerator<object[]> GetEnumerator() => WithTestConfigs(this.MakeEnumerator());
+
+            public IEnumerator<object[]> MakeEnumerator()
             {
                 // {
                 //    1st element: InvalidInput,

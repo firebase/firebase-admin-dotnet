@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
+using FirebaseAdmin.Auth.Providers;
 using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth.Multitenancy
@@ -65,6 +66,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
                     () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app, tenantId), true),
                 UserManager = new Lazy<FirebaseUserManager>(
                     () => FirebaseUserManager.Create(app, tenantId), true),
+                ProviderConfigManager = new Lazy<ProviderConfigManager>(
+                    () => Providers.ProviderConfigManager.Create(app, tenantId), true),
             };
             return new TenantAwareFirebaseAuth(args);
         }
@@ -81,6 +84,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
                     IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
                     SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
                     UserManager = new Lazy<FirebaseUserManager>(),
+                    ProviderConfigManager = new Lazy<ProviderConfigManager>(),
                     TenantId = tenantId,
                 };
             }

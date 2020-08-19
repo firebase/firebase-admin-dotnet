@@ -40,7 +40,9 @@ namespace FirebaseAdmin.Auth.Providers
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
 
         internal ApiClient(
-            string projectId, ErrorHandlingHttpClientArgs<FirebaseAuthException> args)
+            string projectId,
+            string tenantId,
+            ErrorHandlingHttpClientArgs<FirebaseAuthException> args)
         {
             if (string.IsNullOrEmpty(projectId))
             {
@@ -49,7 +51,16 @@ namespace FirebaseAdmin.Auth.Providers
                     + " configurations.");
             }
 
-            this.baseUrl = string.Format(IdToolkitUrl, projectId);
+            var baseUrl = string.Format(IdToolkitUrl, projectId);
+            if (tenantId != null)
+            {
+                this.baseUrl = $"{baseUrl}/tenants/{tenantId}";
+            }
+            else
+            {
+                this.baseUrl = baseUrl;
+            }
+
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(args);
         }
 

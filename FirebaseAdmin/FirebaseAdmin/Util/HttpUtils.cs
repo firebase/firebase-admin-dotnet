@@ -34,7 +34,8 @@ namespace FirebaseAdmin.Util
             var queryString = string.Empty;
             if (queryParams != null && queryParams.Count > 0)
             {
-                var list = queryParams.Select(kvp => $"{kvp.Key}={kvp.Value}");
+                var list = queryParams.OrderBy(kvp => kvp.Key)
+                    .Select(kvp => $"{kvp.Key}={kvp.Value}");
                 queryString = "?" + string.Join("&", list);
             }
 
