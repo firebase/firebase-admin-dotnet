@@ -43,7 +43,7 @@ namespace FirebaseAdmin.Auth
         /// <inheritdoc/>
         public override string ToString()
         {
-            return "ProviderIdentifier(" + this.providerId + ", " + this.providerUid + ")";
+            return $"ProviderIdentifier({this.providerId}, {this.providerUid})";
         }
 
         internal override void Populate(GetAccountInfoRequest payload)

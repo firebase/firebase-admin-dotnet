@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -338,8 +339,10 @@ namespace FirebaseAdmin.Auth.Users
             };
             var response = await this.PostAndDeserializeAsync<BatchDeleteResponse>(
                 "accounts:batchDelete", payload, cancellationToken).ConfigureAwait(false);
-
-            return new DeleteUsersResult(uids.Count, response.Result);
+            var errors = response.Result.Errors?
+                .Select((error) => new ErrorInfo(error.Index, error.Message))
+                .ToList();
+            return new DeleteUsersResult(uids.Count, errors);
         }
 
         internal async Task RevokeRefreshTokensAsync(string uid, CancellationToken cancellationToken)

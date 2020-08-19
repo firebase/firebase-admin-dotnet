@@ -60,7 +60,6 @@ namespace FirebaseAdmin.Auth.Jwt
             "nonce",
             "sub");
 
-        private readonly ISigner signer;
         private readonly IClock clock;
 
         internal FirebaseTokenFactory(ISigner signer, IClock clock, string tenantId = null)
@@ -70,16 +69,18 @@ namespace FirebaseAdmin.Auth.Jwt
                 throw new ArgumentException("Tenant ID must not be empty.");
             }
 
-            this.signer = signer.ThrowIfNull(nameof(signer));
             this.clock = clock.ThrowIfNull(nameof(clock));
+            this.Signer = signer.ThrowIfNull(nameof(signer));
             this.TenantId = tenantId;
         }
+
+        internal ISigner Signer { get; }
 
         internal string TenantId { get; }
 
         public void Dispose()
         {
-            this.signer.Dispose();
+            this.Signer.Dispose();
         }
 
         internal static FirebaseTokenFactory Create(FirebaseApp app, string tenantId = null)
@@ -140,7 +141,7 @@ namespace FirebaseAdmin.Auth.Jwt
             };
 
             var issued = (int)(this.clock.UtcNow - UnixEpoch).TotalSeconds;
-            var keyId = await this.signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
+            var keyId = await this.Signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
             var payload = new CustomTokenPayload()
             {
                 Uid = uid,
@@ -158,7 +159,7 @@ namespace FirebaseAdmin.Auth.Jwt
             }
 
             return await JwtUtils.CreateSignedJwtAsync(
-                header, payload, this.signer, cancellationToken).ConfigureAwait(false);
+                header, payload, this.Signer, cancellationToken).ConfigureAwait(false);
         }
 
         internal class CustomTokenPayload : JsonWebToken.Payload
