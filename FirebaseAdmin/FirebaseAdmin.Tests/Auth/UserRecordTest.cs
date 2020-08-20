@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using FirebaseAdmin.Auth.Users;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests

@@ -17,19 +17,19 @@ using System.Collections.Generic;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Represents the result of the
-    /// <a cref="o:FirebaseAuth.ImportUsersAsync">FirebaseAuth.ImportUsersAsync</a> API.
+    /// Represents the result of
+    /// <see cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/>.
     /// </summary>
     public sealed class UserImportResult
     {
         private readonly int users;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserImportResult"/> class based on supplied
-        /// users and <a cref="FirebaseUserManager.UploadAccountResponse">UploadAccountResponse</a> objects.
+        /// Initializes a new instance of the <see cref="UserImportResult"/> class from the
+        /// provided total user count and list of import errors.
         /// </summary>
-        /// <param name="users"> The number of users.</param>
-        /// <param name="errors"> Any errors generated from the post request.</param>
+        /// <param name="users">The number of users.</param>
+        /// <param name="errors">Any errors generated from the import operation.</param>
         internal UserImportResult(int users, IReadOnlyList<ErrorInfo> errors)
         {
             this.Errors = errors;

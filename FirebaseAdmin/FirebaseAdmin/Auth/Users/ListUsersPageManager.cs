@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using Google.Api.Gax.Rest;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     /// <summary>
     /// Utility for paging through user accounts using the Google API client.

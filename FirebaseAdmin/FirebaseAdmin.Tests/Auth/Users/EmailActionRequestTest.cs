@@ -24,7 +24,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Xunit;
 
-namespace FirebaseAdmin.Auth.Tests
+namespace FirebaseAdmin.Auth.Users.Tests
 {
     public class EmailActionRequestTest
     {

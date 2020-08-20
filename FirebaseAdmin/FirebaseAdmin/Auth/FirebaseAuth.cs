@@ -16,6 +16,7 @@ using System;
 using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Auth.Providers;
+using FirebaseAdmin.Auth.Users;
 using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth

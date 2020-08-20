@@ -14,6 +14,7 @@
 
 using System;
 using System.Text;
+using FirebaseAdmin.Auth.Users;
 
 namespace FirebaseAdmin.Auth
 {

@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace FirebaseAdmin.Auth
+namespace FirebaseAdmin.Auth.Users
 {
     /// <summary>
     /// JSON data binding for downloadAccountResponse messages sent by Google identity toolkit service.
