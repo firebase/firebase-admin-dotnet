@@ -48,7 +48,6 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
             Assert.Throws<InvalidOperationException>(() => auth.TokenFactory);
             Assert.Throws<InvalidOperationException>(() => auth.IdTokenVerifier);
-            Assert.Throws<InvalidOperationException>(() => auth.SessionCookieVerifier);
             Assert.Throws<InvalidOperationException>(() => auth.UserManager);
             Assert.Throws<InvalidOperationException>(() => auth.ProviderConfigManager);
         }
@@ -63,7 +62,6 @@ namespace FirebaseAdmin.Auth.Multitenancy
             Assert.Equal(MockTenantId, auth.TenantId);
             Assert.Equal(MockTenantId, auth.TokenFactory.TenantId);
             Assert.Equal(MockTenantId, auth.IdTokenVerifier.TenantId);
-            Assert.Equal(MockTenantId, auth.SessionCookieVerifier.TenantId);
             Assert.Equal(MockTenantId, auth.UserManager.TenantId);
             Assert.Equal(MockTenantId, auth.ProviderConfigManager.TenantId);
         }

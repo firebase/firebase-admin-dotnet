@@ -33,7 +33,6 @@ namespace FirebaseAdmin.Auth
         private readonly object authLock = new object();
         private readonly Lazy<FirebaseTokenFactory> tokenFactory;
         private readonly Lazy<FirebaseTokenVerifier> idTokenVerifier;
-        private readonly Lazy<FirebaseTokenVerifier> sessionCookieVerifier;
         private readonly Lazy<FirebaseUserManager> userManager;
         private readonly Lazy<ProviderConfigManager> providerConfigManager;
         private bool deleted;
@@ -43,8 +42,6 @@ namespace FirebaseAdmin.Auth
             args.ThrowIfNull(nameof(args));
             this.tokenFactory = args.TokenFactory.ThrowIfNull(nameof(args.TokenFactory));
             this.idTokenVerifier = args.IdTokenVerifier.ThrowIfNull(nameof(args.IdTokenVerifier));
-            this.sessionCookieVerifier = args.SessionCookieVerifier.ThrowIfNull(
-                nameof(args.SessionCookieVerifier));
             this.userManager = args.UserManager.ThrowIfNull(nameof(args.UserManager));
             this.providerConfigManager = args.ProviderConfigManager.ThrowIfNull(
                 nameof(args.ProviderConfigManager));
@@ -55,9 +52,6 @@ namespace FirebaseAdmin.Auth
 
         internal FirebaseTokenVerifier IdTokenVerifier =>
             this.IfNotDeleted(() => this.idTokenVerifier.Value);
-
-        internal FirebaseTokenVerifier SessionCookieVerifier =>
-            this.IfNotDeleted(() => this.sessionCookieVerifier.Value);
 
         internal FirebaseUserManager UserManager =>
             this.IfNotDeleted(() => this.userManager.Value);
@@ -987,141 +981,6 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
-        /// Creates a new Firebase session cookie from the given ID token and options. The returned JWT can
-        /// be set as a server-side session cookie with a custom cookie policy.
-        /// </summary>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating the cookie.</exception>
-        /// <param name="idToken">The Firebase ID token to exchange for a session cookie.</param>
-        /// <param name="options">Additional options required to create the cookie.</param>
-        /// <returns>A task that completes with the Firebase session cookie.</returns>
-        public async Task<string> CreateSessionCookieAsync(
-            string idToken, SessionCookieOptions options)
-        {
-            return await this.CreateSessionCookieAsync(idToken, options, default(CancellationToken))
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Creates a new Firebase session cookie from the given ID token and options. The returned JWT can
-        /// be set as a server-side session cookie with a custom cookie policy.
-        /// </summary>
-        /// <exception cref="FirebaseAuthException">If an error occurs while creating the cookie.</exception>
-        /// <param name="idToken">The Firebase ID token to exchange for a session cookie.</param>
-        /// <param name="options">Additional options required to create the cookie.</param>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
-        /// operation.</param>
-        /// <returns>A task that completes with the Firebase session cookie.</returns>
-        public virtual async Task<string> CreateSessionCookieAsync(
-            string idToken, SessionCookieOptions options, CancellationToken cancellationToken)
-        {
-            return await this.UserManager
-                .CreateSessionCookieAsync(idToken, options, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Parses and verifies a Firebase session cookie.
-        ///
-        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
-        /// Session Cookies</a> for code samples and detailed documentation.</para>
-        /// </summary>
-        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
-        /// the verified and decoded session cookie.</returns>
-        /// <exception cref="ArgumentException">If the session cookie is null or
-        /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
-        /// <param name="sessionCookie">A Firebase session cookie string to verify and
-        /// parse.</param>
-        public async Task<FirebaseToken> VerifySessionCookieAsync(string sessionCookie)
-        {
-            return await this.VerifySessionCookieAsync(sessionCookie, default(CancellationToken))
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Parses and verifies a Firebase session cookie.
-        ///
-        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
-        /// Session Cookies</a> for code samples and detailed documentation.</para>
-        /// </summary>
-        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
-        /// the verified and decoded session cookie.</returns>
-        /// <exception cref="ArgumentException">If the session cookie is null or
-        /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
-        /// <param name="sessionCookie">A Firebase session cookie string to verify and
-        /// parse.</param>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
-        /// operation.</param>
-        public async Task<FirebaseToken> VerifySessionCookieAsync(
-            string sessionCookie, CancellationToken cancellationToken)
-        {
-            return await this.VerifySessionCookieAsync(sessionCookie, false, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Parses and verifies a Firebase session cookie.
-        ///
-        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
-        /// Session Cookies</a> for code samples and detailed documentation.</para>
-        /// </summary>
-        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
-        /// the verified and decoded session cookie.</returns>
-        /// <exception cref="ArgumentException">If the session cookie is null or
-        /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
-        /// <param name="sessionCookie">A Firebase session cookie string to verify and
-        /// parse.</param>
-        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were
-        /// revoked.</param>
-        public async Task<FirebaseToken> VerifySessionCookieAsync(
-            string sessionCookie, bool checkRevoked)
-        {
-            return await this
-                .VerifySessionCookieAsync(sessionCookie, checkRevoked, default(CancellationToken))
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Parses and verifies a Firebase session cookie.
-        ///
-        /// <para>See <a href="https://firebase.google.com/docs/auth/admin/manage-cookies">Manage
-        /// Session Cookies</a> for code samples and detailed documentation.</para>
-        /// </summary>
-        /// <returns>A task that completes with a <see cref="FirebaseToken"/> representing
-        /// the verified and decoded session cookie.</returns>
-        /// <exception cref="ArgumentException">If the session cookie is null or
-        /// empty.</exception>
-        /// <exception cref="FirebaseAuthException">If the session cookie is invalid.</exception>
-        /// <param name="sessionCookie">A Firebase session cookie string to verify and
-        /// parse.</param>
-        /// <param name="checkRevoked">A boolean indicating whether to check if the tokens were
-        /// revoked.</param>
-        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
-        /// operation.</param>
-        public async Task<FirebaseToken> VerifySessionCookieAsync(
-            string sessionCookie, bool checkRevoked, CancellationToken cancellationToken)
-        {
-            var decodedToken = await this.SessionCookieVerifier
-                .VerifyTokenAsync(sessionCookie, cancellationToken)
-                .ConfigureAwait(false);
-            if (checkRevoked)
-            {
-                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken);
-                if (revoked)
-                {
-                    throw new FirebaseAuthException(
-                        ErrorCode.InvalidArgument,
-                        "Firebase session cookie has been revoked.",
-                        AuthErrorCode.RevokedSessionCookie);
-                }
-            }
-
-            return decodedToken;
-        }
-
-        /// <summary>
         /// Looks up an OIDC auth provider configuration by the provided ID.
         /// </summary>
         /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
@@ -1365,7 +1224,7 @@ namespace FirebaseAdmin.Auth
             }
         }
 
-        private async Task<bool> IsRevokedAsync(
+        private protected async Task<bool> IsRevokedAsync(
             FirebaseToken token, CancellationToken cancellationToken)
         {
             var user = await this.GetUserAsync(token.Uid, cancellationToken);
@@ -1379,8 +1238,6 @@ namespace FirebaseAdmin.Auth
             internal Lazy<FirebaseTokenFactory> TokenFactory { get; set; }
 
             internal Lazy<FirebaseTokenVerifier> IdTokenVerifier { get; set; }
-
-            internal Lazy<FirebaseTokenVerifier> SessionCookieVerifier { get; set; }
 
             internal Lazy<FirebaseUserManager> UserManager { get; set; }
 

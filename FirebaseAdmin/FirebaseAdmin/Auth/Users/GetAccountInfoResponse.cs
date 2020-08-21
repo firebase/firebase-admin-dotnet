@@ -129,6 +129,12 @@ namespace FirebaseAdmin.Auth.Users
             /// </summary>
             [JsonProperty(PropertyName = "customAttributes")]
             public string CustomClaims { get; set; }
+
+            /// <summary>
+            /// Gets or sets the user's tenant ID.
+            /// </summary>
+            [JsonProperty(PropertyName = "tenantId")]
+            public string TenantId { get; set; }
         }
 
         /// <summary>

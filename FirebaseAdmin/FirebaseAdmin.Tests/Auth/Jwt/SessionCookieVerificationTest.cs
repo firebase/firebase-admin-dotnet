@@ -28,7 +28,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
             new object[] { TestConfig.ForFirebaseAuth() },
-            new object[] { TestConfig.ForTenantAwareFirebaseAuth("test-tenant") },
+            // TODO(hkj): Add tenant-aware tests when the support is available.
         };
 
         private const long ClockSkewSeconds = 5 * 60;
@@ -234,7 +234,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TestConfigs))]
         public async Task IdToken(TestConfig config)
         {
-            var tokenBuilder = JwtTestUtils.IdTokenBuilder(config.TenantId);
+            var tokenBuilder = JwtTestUtils.IdTokenBuilder();
             var idToken = await tokenBuilder.CreateTokenAsync();
             var auth = config.CreateAuth();
 
@@ -330,7 +330,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             var expectedMessage = "Firebase session cookie has been revoked.";
             this.CheckException(exception, expectedMessage, AuthErrorCode.RevokedSessionCookie);
             Assert.Equal(1, handler.Calls);
-            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
+            JwtTestUtils.AssertRevocationCheckRequest(null, handler.Requests[0].Url);
         }
 
         [Theory]
@@ -354,7 +354,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(1, handler.Calls);
-            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
+            JwtTestUtils.AssertRevocationCheckRequest(null, handler.Requests[0].Url);
         }
 
         [Theory]
@@ -380,7 +380,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Null(exception.InnerException);
             Assert.NotNull(exception.HttpResponse);
             Assert.Equal(1, handler.Calls);
-            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
+            JwtTestUtils.AssertRevocationCheckRequest(null, handler.Requests[0].Url);
         }
 
         [Theory]
@@ -423,32 +423,25 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             private readonly AuthBuilder authBuilder;
             private readonly MockTokenBuilder tokenBuilder;
 
-            private TestConfig(string tenantId = null)
+            private TestConfig()
             {
-                this.authBuilder = JwtTestUtils.AuthBuilderForTokenVerification(tenantId);
-                this.tokenBuilder = JwtTestUtils.SessionCookieBuilder(tenantId);
+                this.authBuilder = JwtTestUtils.AuthBuilderForTokenVerification();
+                this.tokenBuilder = JwtTestUtils.SessionCookieBuilder();
             }
-
-            public string TenantId => this.authBuilder.TenantId;
 
             public static TestConfig ForFirebaseAuth()
             {
                 return new TestConfig();
             }
 
-            public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
-            {
-                return new TestConfig(tenantId);
-            }
-
-            public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
+            public FirebaseAuth CreateAuth(HttpMessageHandler handler = null)
             {
                 var options = new TestOptions
                 {
                     UserManagerRequestHandler = handler,
                     SessionCookieVerifier = true,
                 };
-                return this.authBuilder.Build(options);
+                return (FirebaseAuth)this.authBuilder.Build(options);
             }
 
             public async Task<string> CreateSessionCookieAsync(
