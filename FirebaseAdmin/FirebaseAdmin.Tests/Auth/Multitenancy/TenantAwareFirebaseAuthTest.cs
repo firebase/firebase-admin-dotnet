@@ -23,6 +23,22 @@ namespace FirebaseAdmin.Auth.Multitenancy
         private const string MockTenantId = "tenant1";
 
         [Fact]
+        public void NullTenantId()
+        {
+            var args = TenantAwareFirebaseAuth.Args.CreateDefault(null);
+
+            Assert.Throws<ArgumentException>(() => new TenantAwareFirebaseAuth(args));
+        }
+
+        [Fact]
+        public void EmptyTenantId()
+        {
+            var args = TenantAwareFirebaseAuth.Args.CreateDefault(string.Empty);
+
+            Assert.Throws<ArgumentException>(() => new TenantAwareFirebaseAuth(args));
+        }
+
+        [Fact]
         public void UseAfterDelete()
         {
             var app = CreateFirebaseApp();

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Jwt;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -123,6 +124,20 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(
                 "Must initialize FirebaseApp with a project ID to manage tenants.",
                 ex.Message);
+        }
+
+        [Fact]
+        public void ServiceAccountId()
+        {
+            FirebaseApp.Create(new AppOptions
+                {
+                    Credential = MockCredential,
+                    ServiceAccountId = "test-service-account",
+                });
+
+            var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
+
+            Assert.IsType<FixedAccountIAMSigner>(tokenFactory.Signer);
         }
 
         [Fact]

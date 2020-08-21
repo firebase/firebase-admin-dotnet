@@ -27,10 +27,26 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public void UidIdentifier()
+        {
+            var identifier = new UidIdentifier("firebase");
+
+            Assert.Equal("UidIdentifier(firebase)", identifier.ToString());
+        }
+
+        [Fact]
         public void InvalidEmailIdentifier()
         {
             Assert.Throws<ArgumentException>(
                     () => new EmailIdentifier("invalid email addr"));
+        }
+
+        [Fact]
+        public void EmailIdentifier()
+        {
+            var identifier = new EmailIdentifier("firebase@google.com");
+
+            Assert.Equal("EmailIdentifier(firebase@google.com)", identifier.ToString());
         }
 
         [Fact]
@@ -41,6 +57,14 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public void PhoneIdentifier()
+        {
+            var identifier = new PhoneIdentifier("+1234567890");
+
+            Assert.Equal("PhoneIdentifier(+1234567890)", identifier.ToString());
+        }
+
+        [Fact]
         public void InvalidProviderIdentifier()
         {
             Assert.Throws<ArgumentException>(
@@ -48,6 +72,14 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Throws<ArgumentException>(
                     () => new ProviderIdentifier("valid-id", string.Empty));
+        }
+
+        [Fact]
+        public void ProviderIdentifier()
+        {
+            var identifier = new ProviderIdentifier("google.com", "firebase");
+
+            Assert.Equal("ProviderIdentifier(google.com, firebase)", identifier.ToString());
         }
     }
 }

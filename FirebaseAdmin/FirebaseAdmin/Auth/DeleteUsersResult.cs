@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FirebaseAdmin.Auth.Users;
 
 namespace FirebaseAdmin.Auth
 {
@@ -25,26 +24,16 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class DeleteUsersResult
     {
-        internal DeleteUsersResult(int users, BatchDeleteResponse response)
+        internal DeleteUsersResult(int users, IReadOnlyList<ErrorInfo> errors)
         {
-            var errors = new List<ErrorInfo>();
-            if (response.Errors != null)
+            errors = errors ?? new List<ErrorInfo>();
+            if (users < errors.Count)
             {
-                if (users < response.Errors.Count)
-                {
-                    string errorMessages =
-                        string.Join(",", response.Errors.Select(errorInfo => errorInfo.Message));
-                    throw new InvalidOperationException(string.Format(
-                        "Internal error: More errors encountered ({0}) than users ({1}). Errors: {2}",
-                        response.Errors.Count,
-                        users,
-                        errorMessages));
-                }
-
-                foreach (BatchDeleteResponse.ErrorInfo error in response.Errors)
-                {
-                    errors.Add(new ErrorInfo(error.Index, error.Message));
-                }
+                string errorMessages = string.Join(
+                    ", ", errors.Select(errorInfo => errorInfo.Reason));
+                throw new ArgumentException(
+                    $"More errors encountered ({errors.Count}) than users "
+                    + $"({users}). Errors: {errorMessages}");
             }
 
             this.Errors = errors;
