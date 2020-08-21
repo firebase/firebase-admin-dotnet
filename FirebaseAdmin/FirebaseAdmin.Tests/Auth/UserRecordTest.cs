@@ -85,6 +85,7 @@ namespace FirebaseAdmin.Auth.Tests
                 CreatedAt = 100,
                 LastLoginAt = 150,
                 CustomClaims = @"{""admin"": true, ""level"": 10}",
+                TenantId = "tenant1",
                 Providers = new List<GetAccountInfoResponse.Provider>()
                 {
                     new GetAccountInfoResponse.Provider()
@@ -121,6 +122,7 @@ namespace FirebaseAdmin.Auth.Tests
                 { "level", 10L },
             };
             Assert.Equal(claims, user.CustomClaims);
+            Assert.Equal("tenant1", user.TenantId);
 
             Assert.Equal(2, user.ProviderData.Length);
             var provider = user.ProviderData[0];

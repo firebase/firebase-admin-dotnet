@@ -77,8 +77,16 @@ namespace FirebaseAdmin.Auth.Tests
 
             if (options.SessionCookieVerifier)
             {
-                args.SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
-                    this.CreateSessionCookieVerifier());
+                if (args is FirebaseAuth.Args)
+                {
+                    (args as FirebaseAuth.Args).SessionCookieVerifier =
+                        new Lazy<FirebaseTokenVerifier>(this.CreateSessionCookieVerifier());
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Session cookie verification not supported on {args.GetType()}");
+                }
             }
         }
 
@@ -116,7 +124,7 @@ namespace FirebaseAdmin.Auth.Tests
         private FirebaseTokenVerifier CreateSessionCookieVerifier()
         {
             return FirebaseTokenVerifier.CreateSessionCookieVerifier(
-                this.ProjectId, this.KeySource, this.Clock, this.TenantId);
+                this.ProjectId, this.KeySource, this.Clock);
         }
     }
 }

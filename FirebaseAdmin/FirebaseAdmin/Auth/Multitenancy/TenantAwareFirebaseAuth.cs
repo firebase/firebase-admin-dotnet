@@ -13,12 +13,9 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Providers;
 using FirebaseAdmin.Auth.Users;
-using Google.Apis.Util;
 
 namespace FirebaseAdmin.Auth.Multitenancy
 {
@@ -43,17 +40,6 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// </summary>
         public string TenantId { get; }
 
-        /// <inheritdoc/>
-        public override async Task<string> CreateSessionCookieAsync(
-            string idToken, SessionCookieOptions options, CancellationToken cancellationToken)
-        {
-            // As a minor optimization, validate options here before calling VerifyIdToken().
-            options.ThrowIfNull(nameof(options)).CopyAndValidate();
-            await this.VerifyIdTokenAsync(idToken, cancellationToken);
-            return await base.CreateSessionCookieAsync(idToken, options, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
         internal static TenantAwareFirebaseAuth Create(FirebaseApp app, string tenantId)
         {
             var args = new Args
@@ -63,8 +49,6 @@ namespace FirebaseAdmin.Auth.Multitenancy
                     () => FirebaseTokenFactory.Create(app, tenantId), true),
                 IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
                     () => FirebaseTokenVerifier.CreateIdTokenVerifier(app, tenantId), true),
-                SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(
-                    () => FirebaseTokenVerifier.CreateSessionCookieVerifier(app, tenantId), true),
                 UserManager = new Lazy<FirebaseUserManager>(
                     () => FirebaseUserManager.Create(app, tenantId), true),
                 ProviderConfigManager = new Lazy<ProviderConfigManager>(
@@ -83,7 +67,6 @@ namespace FirebaseAdmin.Auth.Multitenancy
                 {
                     TokenFactory = new Lazy<FirebaseTokenFactory>(),
                     IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(),
-                    SessionCookieVerifier = new Lazy<FirebaseTokenVerifier>(),
                     UserManager = new Lazy<FirebaseUserManager>(),
                     ProviderConfigManager = new Lazy<ProviderConfigManager>(),
                     TenantId = tenantId,
