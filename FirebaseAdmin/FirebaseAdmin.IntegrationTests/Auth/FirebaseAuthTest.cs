@@ -29,15 +29,6 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 {
     public class FirebaseAuthTest : IClassFixture<TemporaryUserBuilder>
     {
-        private const string EmailLinkSignInUrl =
-            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/emailLinkSignin";
-
-        private const string ResetPasswordUrl =
-            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/resetPassword";
-
-        private const string VerifyCustomTokenUrl =
-            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyCustomToken";
-
         private const string VerifyPasswordUrl =
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword";
 
@@ -61,7 +52,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         {
             var customToken = await FirebaseAuth.DefaultInstance
                 .CreateCustomTokenAsync("testuser");
-            var idToken = await SignInWithCustomTokenAsync(customToken);
+            var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(customToken);
             var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
             Assert.Equal("testuser", decoded.Uid);
         }
@@ -77,7 +68,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             };
             var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
                 "testuser", developerClaims);
-            var idToken = await SignInWithCustomTokenAsync(customToken);
+            var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(customToken);
             Assert.False(string.IsNullOrEmpty(idToken));
             var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
             Assert.Equal("testuser", decoded.Uid);
@@ -105,7 +96,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             {
                 var customToken = await FirebaseAuth.GetAuth(app).CreateCustomTokenAsync(
                     "testuser");
-                var idToken = await SignInWithCustomTokenAsync(customToken);
+                var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(customToken);
                 var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
                 Assert.Equal("testuser", decoded.Uid);
             }
@@ -120,7 +111,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         {
             var customToken = await FirebaseAuth.DefaultInstance
                 .CreateCustomTokenAsync("testuser");
-            var idToken = await SignInWithCustomTokenAsync(customToken);
+            var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(customToken);
             var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken, true);
             Assert.Equal("testuser", decoded.Uid);
 
@@ -135,7 +126,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.RevokedIdToken, exception.AuthErrorCode);
 
-            idToken = await SignInWithCustomTokenAsync(customToken);
+            idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(customToken);
             decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken, true);
             Assert.Equal("testuser", decoded.Uid);
         }
@@ -598,7 +589,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 NewPassword = "NewP@$$w0rd",
                 OobCode = query["oobCode"],
             };
-            var resetEmail = await ResetPasswordAsync(request);
+            var resetEmail = await AuthIntegrationUtils.ResetPasswordAsync(request);
             Assert.Equal(user.Email, resetEmail);
 
             // Password reset also verifies the user's email
@@ -618,7 +609,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             var query = HttpUtility.ParseQueryString(uri.Query);
             Assert.Equal(ContinueUrl, query["continueUrl"]);
 
-            var idToken = await SignInWithEmailLinkAsync(user.Email, query["oobCode"]);
+            var idToken = await AuthIntegrationUtils.SignInWithEmailLinkAsync(
+                user.Email, query["oobCode"]);
             Assert.NotEmpty(idToken);
 
             // Sign in with link also verifies the user's email
@@ -630,7 +622,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         public async Task SessionCookie()
         {
             var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("testuser");
-            var idToken = await SignInWithCustomTokenAsync(customToken);
+            var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(customToken);
 
             var options = new SessionCookieOptions()
             {
@@ -652,37 +644,11 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.RevokedSessionCookie, exception.AuthErrorCode);
 
-            idToken = await SignInWithCustomTokenAsync(customToken);
+            idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(customToken);
             sessionCookie = await FirebaseAuth.DefaultInstance.CreateSessionCookieAsync(
                 idToken, options);
             decoded = await FirebaseAuth.DefaultInstance.VerifySessionCookieAsync(sessionCookie, true);
             Assert.Equal("testuser", decoded.Uid);
-        }
-
-        private static async Task<string> SignInWithCustomTokenAsync(string customToken)
-        {
-            var rb = new Google.Apis.Requests.RequestBuilder()
-            {
-                Method = Google.Apis.Http.HttpConsts.Post,
-                BaseUri = new Uri(VerifyCustomTokenUrl),
-            };
-            rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
-            var request = rb.CreateRequest();
-            var jsonSerializer = Google.Apis.Json.NewtonsoftJsonSerializer.Instance;
-            var payload = jsonSerializer.Serialize(new SignInRequest
-            {
-                CustomToken = customToken,
-                ReturnSecureToken = true,
-            });
-            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-            using (var client = new HttpClient())
-            {
-                var response = await client.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                var parsed = jsonSerializer.Deserialize<SignInResponse>(json);
-                return parsed.IdToken;
-            }
         }
 
         private static async Task<string> SignInWithPasswordAsync(string email, string password)
@@ -712,59 +678,6 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             }
         }
 
-        private static async Task<string> SignInWithEmailLinkAsync(string email, string oobCode)
-        {
-            var rb = new Google.Apis.Requests.RequestBuilder()
-            {
-                Method = Google.Apis.Http.HttpConsts.Post,
-                BaseUri = new Uri(EmailLinkSignInUrl),
-            };
-            rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
-
-            var data = new Dictionary<string, object>()
-            {
-                { "email", email },
-                { "oobCode", oobCode },
-            };
-            var jsonSerializer = Google.Apis.Json.NewtonsoftJsonSerializer.Instance;
-            var payload = jsonSerializer.Serialize(data);
-
-            var request = rb.CreateRequest();
-            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-            using (var client = new HttpClient())
-            {
-                var response = await client.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                var parsed = jsonSerializer.Deserialize<Dictionary<string, object>>(json);
-                return (string)parsed["idToken"];
-            }
-        }
-
-        private static async Task<string> ResetPasswordAsync(ResetPasswordRequest data)
-        {
-            var rb = new Google.Apis.Requests.RequestBuilder()
-            {
-                Method = Google.Apis.Http.HttpConsts.Post,
-                BaseUri = new Uri(ResetPasswordUrl),
-            };
-            rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
-
-            var jsonSerializer = Google.Apis.Json.NewtonsoftJsonSerializer.Instance;
-            var payload = jsonSerializer.Serialize(data);
-
-            var request = rb.CreateRequest();
-            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-            using (var client = new HttpClient())
-            {
-                var response = await client.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                var parsed = jsonSerializer.Deserialize<Dictionary<string, object>>(json);
-                return (string)parsed["email"];
-            }
-        }
-
         /**
          * The <c>batchDelete</c> endpoint is currently rate limited to 1qps. Use this test helper
          * to ensure you don't run into quota exceeded errors.
@@ -789,36 +702,6 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 throw new Xunit.Sdk.XunitException("Assert.NotNull() Failure: " + msg);
             }
         }
-    }
-
-    internal class ResetPasswordRequest
-    {
-        [Newtonsoft.Json.JsonProperty("email")]
-        public string Email { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("oldPassword")]
-        public string OldPassword { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("newPassword")]
-        public string NewPassword { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("oobCode")]
-        public string OobCode { get; set; }
-    }
-
-    internal class SignInRequest
-    {
-        [Newtonsoft.Json.JsonProperty("token")]
-        public string CustomToken { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("returnSecureToken")]
-        public bool ReturnSecureToken { get; set; }
-    }
-
-    internal class SignInResponse
-    {
-        [Newtonsoft.Json.JsonProperty("idToken")]
-        public string IdToken { get; set; }
     }
 
     internal class VerifyPasswordRequest
