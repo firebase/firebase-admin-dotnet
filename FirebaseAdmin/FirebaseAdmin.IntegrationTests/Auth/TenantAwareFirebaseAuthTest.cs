@@ -35,21 +35,15 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             HandleCodeInApp = false,
         };
 
-        private readonly TenantFixture fixture;
         private readonly TenantAwareFirebaseAuth auth;
         private readonly TemporaryUserBuilder userBuilder;
+        private readonly string tenantId;
 
         public TenantAwareFirebaseAuthTest(TenantFixture fixture)
         {
-            this.fixture = fixture;
-            this.auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant(fixture.TenantId);
-            this.userBuilder = new TenantAwareTemporaryUserBuilder(this.auth);
-        }
-
-        [Fact]
-        public void TenantId()
-        {
-            Assert.Equal(this.fixture.TenantId, this.auth.TenantId);
+            this.auth = fixture.Auth;
+            this.userBuilder = fixture.UserBuilder;
+            this.tenantId = fixture.TenantId;
         }
 
         [Fact]
@@ -58,7 +52,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             var customToken = await this.auth.CreateCustomTokenAsync("testuser");
 
             var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(
-                customToken, this.fixture.TenantId);
+                customToken, this.tenantId);
 
             await this.AssertIdTokenIsValid(idToken);
         }
@@ -92,7 +86,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal(args.PhotoUrl, user.PhotoUrl);
             Assert.True(user.EmailVerified);
             Assert.False(user.Disabled);
-            Assert.Equal(this.fixture.TenantId, user.TenantId);
+            Assert.Equal(this.tenantId, user.TenantId);
 
             // Cannot recreate the same user.
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
@@ -118,7 +112,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Null(user.UserMetaData.LastSignInTimestamp);
             Assert.Empty(user.ProviderData);
             Assert.Empty(user.CustomClaims);
-            Assert.Equal(this.fixture.TenantId, user.TenantId);
+            Assert.Equal(this.tenantId, user.TenantId);
 
             // Get user by ID
             user = await this.auth.GetUserAsync(uid);
@@ -133,7 +127,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Null(user.UserMetaData.LastSignInTimestamp);
             Assert.Empty(user.ProviderData);
             Assert.Empty(user.CustomClaims);
-            Assert.Equal(this.fixture.TenantId, user.TenantId);
+            Assert.Equal(this.tenantId, user.TenantId);
 
             // Update user
             var randomUser = TemporaryUserBuilder.RandomUserRecordArgs();
@@ -159,12 +153,12 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Null(user.UserMetaData.LastSignInTimestamp);
             Assert.Equal(2, user.ProviderData.Length);
             Assert.Empty(user.CustomClaims);
-            Assert.Equal(this.fixture.TenantId, user.TenantId);
+            Assert.Equal(this.tenantId, user.TenantId);
 
             // Get user by email
             user = await this.auth.GetUserByEmailAsync(randomUser.Email);
             Assert.Equal(uid, user.Uid);
-            Assert.Equal(this.fixture.TenantId, user.TenantId);
+            Assert.Equal(this.tenantId, user.TenantId);
 
             // Disable user and remove properties
             var disableArgs = new UserRecordArgs
@@ -187,7 +181,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Null(user.UserMetaData.LastSignInTimestamp);
             Assert.Single(user.ProviderData);
             Assert.Empty(user.CustomClaims);
-            Assert.Equal(this.fixture.TenantId, user.TenantId);
+            Assert.Equal(this.tenantId, user.TenantId);
 
             // Delete user
             await this.auth.DeleteUserAsync(uid);
@@ -205,7 +199,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             var user3 = await this.userBuilder.CreateRandomUserAsync();
 
             await Task.Delay(millisecondsDelay: 1000);
-            var deleteUsersResult =  await this.auth.DeleteUsersAsync(
+            var deleteUsersResult = await this.auth.DeleteUsersAsync(
                 new List<string> { user1.Uid, user2.Uid, user3.Uid });
 
             Assert.Equal(3, deleteUsersResult.SuccessCount);
@@ -229,7 +223,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         {
             var customToken = await this.auth.CreateCustomTokenAsync("testuser");
             var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(
-                customToken, this.fixture.TenantId);
+                customToken, this.tenantId);
 
             await this.AssertIdTokenIsValid(idToken, true);
 
@@ -243,7 +237,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal(AuthErrorCode.RevokedIdToken, exception.AuthErrorCode);
 
             idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(
-                customToken,  this.fixture.TenantId);
+                customToken, this.tenantId);
             await this.AssertIdTokenIsValid(idToken, true);
         }
 
@@ -279,7 +273,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 + "See instructions in CONTRIBUTING.md";
             Assert.All(listedUsers.Values, (user) =>
                 {
-                    Assert.Equal(this.fixture.TenantId, user.TenantId);
+                    Assert.Equal(this.tenantId, user.TenantId);
                     AssertWithMessage.NotNull(
                         user.PasswordHash, string.Format(errMsgTemplate, "PasswordHash"));
                     AssertWithMessage.NotNull(
@@ -309,7 +303,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
             var user = await this.auth.GetUserAsync(randomUser.Uid);
             Assert.Equal(randomUser.Email, user.Email);
-            Assert.Equal(this.fixture.TenantId, user.TenantId);
+            Assert.Equal(this.tenantId, user.TenantId);
         }
 
         [Fact]
@@ -379,19 +373,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         {
             var decoded = await this.auth.VerifyIdTokenAsync(idToken, checkRevoked);
             Assert.Equal("testuser", decoded.Uid);
-            Assert.Equal(this.fixture.TenantId, decoded.TenantId);
-        }
-
-        private sealed class TenantAwareTemporaryUserBuilder : TemporaryUserBuilder
-        {
-            private readonly TenantAwareFirebaseAuth auth;
-
-            public TenantAwareTemporaryUserBuilder(TenantAwareFirebaseAuth auth)
-            {
-                this.auth = auth;
-            }
-
-            private protected override AbstractFirebaseAuth Auth => auth;
+            Assert.Equal(this.tenantId, decoded.TenantId);
         }
     }
 }

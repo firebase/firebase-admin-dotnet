@@ -35,11 +35,18 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             };
             var tenantManager = FirebaseAuth.DefaultInstance.TenantManager;
             this.Tenant = tenantManager.CreateTenantAsync(args).Result;
+            this.Auth = tenantManager.AuthForTenant(this.Tenant.TenantId);
+            this.UserBuilder = new TenantAwareTemporaryUserBuilder(this.Auth);
+            this.TenantId = this.Tenant.TenantId;
         }
 
         public Tenant Tenant { get; set; }
 
-        public string TenantId => this.Tenant.TenantId;
+        public TenantAwareFirebaseAuth Auth { get; }
+
+        public TemporaryUserBuilder UserBuilder { get; }
+
+        public string TenantId { get; }
 
         public void Dispose()
         {
@@ -49,6 +56,18 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                     .DeleteTenantAsync(this.Tenant.TenantId)
                     .Wait();
             }
+        }
+
+        private sealed class TenantAwareTemporaryUserBuilder : TemporaryUserBuilder
+        {
+            private readonly TenantAwareFirebaseAuth auth;
+
+            public TenantAwareTemporaryUserBuilder(TenantAwareFirebaseAuth auth)
+            {
+                this.auth = auth;
+            }
+
+            private protected override AbstractFirebaseAuth Auth => auth;
         }
     }
 }
