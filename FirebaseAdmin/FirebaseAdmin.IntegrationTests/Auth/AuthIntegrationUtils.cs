@@ -39,6 +39,9 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         private const string VerifyCustomTokenUrl =
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyCustomToken";
 
+        private const string VerifyPasswordUrl =
+            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword";
+
         internal static async Task<string> SignInWithCustomTokenAsync(
             string customToken, string tenantId = null)
         {
@@ -103,8 +106,31 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             var request = rb.CreateRequest();
             request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-            var response = await SendAndDeserialize<Dictionary<string, object>>(request);
-            return (string)response["idToken"];
+            var response = await SendAndDeserialize<VerifyPasswordResponse>(request);
+            return response.IdToken;
+        }
+
+        internal static async Task<string> SignInWithPasswordAsync(
+            string email, string password, string tenantId = null)
+        {
+            var rb = new RequestBuilder()
+            {
+                Method = HttpConsts.Post,
+                BaseUri = new Uri(VerifyPasswordUrl),
+            };
+            rb.AddParameter(RequestParameterType.Query, "key", IntegrationTestUtils.GetApiKey());
+            var request = rb.CreateRequest();
+            var payload = JsonParser.Serialize(new VerifyPasswordRequest
+            {
+                Email = email,
+                Password = password,
+                TenantId = tenantId,
+                ReturnSecureToken = true,
+            });
+            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+            var response = await SendAndDeserialize<VerifyPasswordResponse>(request);
+            return response.IdToken;
         }
 
         private static async Task<T> SendAndDeserialize<T>(HttpRequestMessage request)
@@ -131,6 +157,27 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         }
 
         internal class SignInResponse
+        {
+            [JsonProperty("idToken")]
+            public string IdToken { get; set; }
+        }
+
+        internal class VerifyPasswordRequest
+        {
+            [JsonProperty("email")]
+            public string Email { get; set; }
+
+            [JsonProperty("password")]
+            public string Password { get; set; }
+
+            [JsonProperty("tenantId")]
+            public string TenantId { get; set; }
+
+            [JsonProperty("returnSecureToken")]
+            public bool ReturnSecureToken { get; set; }
+        }
+
+        internal class VerifyPasswordResponse
         {
             [JsonProperty("idToken")]
             public string IdToken { get; set; }

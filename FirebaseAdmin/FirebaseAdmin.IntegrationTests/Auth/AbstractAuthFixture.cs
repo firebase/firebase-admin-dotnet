@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using FirebaseAdmin.Auth.Multitenancy;
-using Xunit;
+using FirebaseAdmin.Auth;
 
 namespace FirebaseAdmin.IntegrationTests.Auth
 {
-    public class TenantAwareFirebaseAuthTest
-    : AbstractFirebaseAuthTest<TenantAwareFirebaseAuth>, IClassFixture<TenantAwareFirebaseAuthFixture>
+    /// <summary>
+    /// A fixture API that facilitates running the same set of integration tests on different
+    /// implementations of <c>AbstractFirebaseAuth</c>.
+    /// </summary>
+    public abstract class AbstractAuthFixture<T>
+    where T : AbstractFirebaseAuth
     {
-        public TenantAwareFirebaseAuthTest(TenantAwareFirebaseAuthFixture fixture)
-        : base(fixture) { }
+        public abstract T Auth { get; }
 
-        [Fact]
-        public void TenantId()
-        {
-            Assert.NotEmpty(this.Auth.TenantId);
-        }
+        public abstract TemporaryUserBuilder UserBuilder { get; }
+
+        public abstract string TenantId { get; }
+
+        public abstract T AuthFromApp(FirebaseApp app);
     }
 }
