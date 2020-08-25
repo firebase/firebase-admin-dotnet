@@ -27,13 +27,13 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         public TenantFixture()
         {
             IntegrationTestUtils.EnsureDefaultApp();
+            var tenantManager = FirebaseAuth.DefaultInstance.TenantManager;
             var args = new TenantArgs
             {
                 DisplayName = "admin-dotnet-tenant",
                 PasswordSignUpAllowed = true,
                 EmailLinkSignInEnabled = true,
             };
-            var tenantManager = FirebaseAuth.DefaultInstance.TenantManager;
             this.Tenant = tenantManager.CreateTenantAsync(args).Result;
             this.Auth = tenantManager.AuthForTenant(this.Tenant.TenantId);
             this.TenantId = this.Tenant.TenantId;

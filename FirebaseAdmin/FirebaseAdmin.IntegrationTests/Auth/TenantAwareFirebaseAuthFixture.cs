@@ -20,27 +20,18 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 {
     public class TenantAwareFirebaseAuthFixture : AbstractAuthFixture<TenantAwareFirebaseAuth>, IDisposable
     {
-        private readonly TenantAwareFirebaseAuth auth;
-        private readonly TemporaryUserBuilder userBuilder;
+        private readonly TenantFixture tenant;
 
         public TenantAwareFirebaseAuthFixture()
         {
             IntegrationTestUtils.EnsureDefaultApp();
-            var args = new TenantArgs
-            {
-                DisplayName = "admin-dotnet-tenant",
-                PasswordSignUpAllowed = true,
-                EmailLinkSignInEnabled = true,
-            };
-            var tenantManager = FirebaseAuth.DefaultInstance.TenantManager;
-            var tenant = tenantManager.CreateTenantAsync(args).Result;
-            this.auth = tenantManager.AuthForTenant(tenant.TenantId);
-            this.userBuilder = new TenantAwareTemporaryUserBuilder(this.Auth);
+            this.tenant = new TenantFixture();
+            this.UserBuilder = new TenantAwareTemporaryUserBuilder(this.tenant.Auth);
         }
 
-        public override TenantAwareFirebaseAuth Auth => this.auth;
+        public override TenantAwareFirebaseAuth Auth => this.tenant.Auth;
 
-        public override TemporaryUserBuilder UserBuilder => this.userBuilder;
+        public override TemporaryUserBuilder UserBuilder { get; }
 
         public override string TenantId => this.Auth.TenantId;
 
@@ -52,9 +43,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
         public void Dispose()
         {
-            this.userBuilder.Dispose();
-            var tenantManager = FirebaseAuth.DefaultInstance.TenantManager;
-            tenantManager.DeleteTenantAsync(this.Auth.TenantId).Wait();
+            this.UserBuilder.Dispose();
+            this.tenant.Dispose();
         }
 
         private sealed class TenantAwareTemporaryUserBuilder : TemporaryUserBuilder
