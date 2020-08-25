@@ -1,3 +1,17 @@
+// Copyright 2020, Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Providers;
@@ -9,9 +23,6 @@ namespace FirebaseAdmin.IntegrationTests.Auth
     {
         public OidcProviderConfigFixture()
         {
-            IntegrationTestUtils.EnsureDefaultApp();
-            this.Auth = this.CreateAuth();
-
             var providerId = $"oidc.{AuthIntegrationUtils.GetRandomIdentifier()}";
             var args = new OidcProviderConfigArgs
             {
@@ -24,11 +35,11 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             this.ProviderConfig = this.Auth.CreateProviderConfigAsync(args).Result;
         }
 
+        public abstract T Auth { get; }
+
         public OidcProviderConfig ProviderConfig { get; set; }
 
         public string ProviderId => this.ProviderConfig.ProviderId;
-
-        public T Auth { get; }
 
         public virtual void Dispose()
         {
@@ -37,7 +48,5 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 this.Auth.DeleteProviderConfigAsync(this.ProviderConfig.ProviderId).Wait();
             }
         }
-
-        private protected abstract T CreateAuth();
     }
 }

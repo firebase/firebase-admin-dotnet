@@ -25,6 +25,11 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
         public class Fixture : SamlProviderConfigFixture<FirebaseAuth>
         {
+            static Fixture()
+            {
+                IntegrationTestUtils.EnsureDefaultApp();
+            }
+
             public override FirebaseAuth Auth => FirebaseAuth.DefaultInstance;
         }
     }

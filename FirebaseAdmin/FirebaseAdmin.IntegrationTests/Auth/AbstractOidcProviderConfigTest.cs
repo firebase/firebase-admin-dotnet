@@ -1,6 +1,18 @@
-using System;
+// Copyright 2020, Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Providers;
@@ -15,11 +27,13 @@ namespace FirebaseAdmin.IntegrationTests.Auth
     {
         private readonly OidcProviderConfigFixture<T> fixture;
         private readonly T auth;
+        private readonly string providerId;
 
         public AbstractOidcProviderConfigTest(OidcProviderConfigFixture<T> fixture)
         {
             this.fixture = fixture;
             this.auth = fixture.Auth;
+            this.providerId = fixture.ProviderId;
         }
 
         [Fact]
@@ -28,7 +42,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         {
             var config = this.fixture.ProviderConfig;
 
-            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
+            Assert.Equal(this.providerId, config.ProviderId);
             Assert.Equal("OIDC_DISPLAY_NAME", config.DisplayName);
             Assert.True(config.Enabled);
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
@@ -39,9 +53,9 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         [TestRank(10)]
         public async Task GetProviderConfig()
         {
-            var config = await this.auth.GetOidcProviderConfigAsync(this.fixture.ProviderId);
+            var config = await this.auth.GetOidcProviderConfigAsync(this.providerId);
 
-            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
+            Assert.Equal(this.providerId, config.ProviderId);
             Assert.Equal("OIDC_DISPLAY_NAME", config.DisplayName);
             Assert.True(config.Enabled);
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
@@ -58,7 +72,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             var enumerator = pagedEnumerable.GetEnumerator();
             while (await enumerator.MoveNext())
             {
-                if (enumerator.Current.ProviderId == this.fixture.ProviderId)
+                if (enumerator.Current.ProviderId == this.providerId)
                 {
                     config = enumerator.Current;
                     break;
@@ -66,7 +80,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             }
 
             Assert.NotNull(config);
-            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
+            Assert.Equal(this.providerId, config.ProviderId);
             Assert.Equal("OIDC_DISPLAY_NAME", config.DisplayName);
             Assert.True(config.Enabled);
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
@@ -79,7 +93,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         {
             var args = new OidcProviderConfigArgs
             {
-                ProviderId = this.fixture.ProviderId,
+                ProviderId = this.providerId,
                 DisplayName = "UPDATED_OIDC_DISPLAY_NAME",
                 Enabled = false,
                 ClientId = "UPDATED_OIDC_CLIENT_ID",
@@ -88,7 +102,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
             var config = await this.auth.UpdateProviderConfigAsync(args);
 
-            Assert.Equal(this.fixture.ProviderId, config.ProviderId);
+            Assert.Equal(this.providerId, config.ProviderId);
             Assert.Equal("UPDATED_OIDC_DISPLAY_NAME", config.DisplayName);
             Assert.False(config.Enabled);
             Assert.Equal("UPDATED_OIDC_CLIENT_ID", config.ClientId);
@@ -99,12 +113,11 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         [TestRank(30)]
         public async Task DeleteProviderConfig()
         {
-            await this.auth.DeleteProviderConfigAsync(this.fixture.ProviderId);
-
+            await this.auth.DeleteProviderConfigAsync(this.providerId);
             this.fixture.ProviderConfig = null;
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                () => this.auth.GetOidcProviderConfigAsync(this.fixture.ProviderId));
+                () => this.auth.GetOidcProviderConfigAsync(this.providerId));
             Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.ConfigurationNotFound, exception.AuthErrorCode);
         }

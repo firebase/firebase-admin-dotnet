@@ -25,7 +25,12 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
         public class Fixture : OidcProviderConfigFixture<FirebaseAuth>
         {
-            private protected override FirebaseAuth CreateAuth() => FirebaseAuth.DefaultInstance;
+            static Fixture()
+            {
+                IntegrationTestUtils.EnsureDefaultApp();
+            }
+
+            public override FirebaseAuth Auth => FirebaseAuth.DefaultInstance;
         }
     }
 }

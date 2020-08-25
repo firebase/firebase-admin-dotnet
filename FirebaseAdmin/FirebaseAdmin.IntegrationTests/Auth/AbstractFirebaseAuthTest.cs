@@ -634,4 +634,18 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             return await this.Auth.DeleteUsersAsync(uids);
         }
     }
+
+    /// <summary>
+    /// Additional Xunit style asserts that allow specifying an error message upon failure.
+    /// </summary>
+    internal static class AssertWithMessage
+    {
+        internal static void NotNull(object obj, string msg)
+        {
+            if (obj == null)
+            {
+                throw new Xunit.Sdk.XunitException("Assert.NotNull() Failure: " + msg);
+            }
+        }
+    }
 }

@@ -29,16 +29,15 @@ namespace FirebaseAdmin.IntegrationTests.Auth
     /// user accounts created by this class before this instance is disposed. This class is not
     /// thread safe. Any concurrent usage should be synchronized accordingly.
     /// <summary>
-    public class TemporaryUserBuilder : IDisposable
+    public sealed class TemporaryUserBuilder : IDisposable
     {
         private readonly ISet<string> userIds = new HashSet<string>();
+        private readonly AbstractFirebaseAuth auth;
 
-        public TemporaryUserBuilder()
+        public TemporaryUserBuilder(AbstractFirebaseAuth auth)
         {
-            IntegrationTestUtils.EnsureDefaultApp();
+            this.auth = auth;
         }
-
-        private protected virtual AbstractFirebaseAuth Auth => FirebaseAuth.DefaultInstance;
 
         public static UserRecordArgs RandomUserRecordArgs()
         {
@@ -72,7 +71,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 throw new InvalidOperationException("Maximum number of users reached.");
             }
 
-            var user = await this.Auth.CreateUserAsync(args);
+            var user = await this.auth.CreateUserAsync(args);
             this.AddUid(user.Uid);
             return user;
         }
@@ -85,7 +84,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         public void Dispose()
         {
             Thread.Sleep(1000); // DeleteUsers is rate limited at 1qps.
-            this.Auth.DeleteUsersAsync(this.userIds.ToList()).Wait();
+            this.auth.DeleteUsersAsync(this.userIds.ToList()).Wait();
             this.userIds.Clear();
         }
     }
