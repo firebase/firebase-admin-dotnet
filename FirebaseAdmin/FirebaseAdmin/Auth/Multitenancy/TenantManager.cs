@@ -280,9 +280,11 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// instance.</returns>
         public PagedAsyncEnumerable<TenantsPage, Tenant> ListTenantsAsync(ListTenantsOptions options)
         {
-            var request = new ListTenantsRequest(this.baseUrl, this.httpClient, options);
+            Func<ListTenantsRequest> validateAndCreate = () => new ListTenantsRequest(
+                this.baseUrl, options, this.httpClient);
+            validateAndCreate();
             return new RestPagedAsyncEnumerable
-                <ListTenantsRequest, TenantsPage, Tenant>(() => request, new PageManager());
+                <ListTenantsRequest, TenantsPage, Tenant>(validateAndCreate, new PageManager());
         }
 
         /// <summary>
@@ -410,13 +412,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
         }
 
         private sealed class ListTenantsRequest
-        : ListResourcesRequest<TenantsPage, FirebaseAuthException>
+        : AdaptedListResourcesRequest<TenantsPage, FirebaseAuthException>
         {
             internal ListTenantsRequest(
                 string baseUrl,
-                ErrorHandlingHttpClient<FirebaseAuthException> httpClient,
-                ListTenantsOptions options)
-            : base(baseUrl, httpClient, options?.PageToken, options?.PageSize) { }
+                ListTenantsOptions options,
+                ErrorHandlingHttpClient<FirebaseAuthException> httpClient)
+            : base(baseUrl, options?.PageToken, options?.PageSize, httpClient) { }
 
             public override string RestPath => "tenants";
 
@@ -430,14 +432,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
             public override async Task<TenantsPage> ExecuteAsync(
                 CancellationToken cancellationToken)
             {
-                var request = this.CreateRequest();
-                var response = await this.HttpClient
-                    .SendAndDeserializeAsync<ListResponse>(request, cancellationToken)
+                var response = await this
+                    .SendAndDeserializeAsync<ListResponse>(cancellationToken)
                     .ConfigureAwait(false);
-                var tenants = response.Result.Tenants?.Select(args => new Tenant(args));
+                var tenants = response.Tenants?.Select(args => new Tenant(args));
                 return new TenantsPage
                 {
-                    NextPageToken = response.Result.NextPageToken,
+                    NextPageToken = response.NextPageToken,
                     Tenants = tenants,
                 };
             }

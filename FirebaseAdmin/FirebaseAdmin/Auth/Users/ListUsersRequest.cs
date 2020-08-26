@@ -25,13 +25,13 @@ namespace FirebaseAdmin.Auth.Users
     /// project.
     /// </summary>
     internal sealed class ListUsersRequest
-    : ListResourcesRequest<ExportedUserRecords, FirebaseAuthException>
+    : AdaptedListResourcesRequest<ExportedUserRecords, FirebaseAuthException>
     {
         internal ListUsersRequest(
             string baseUrl,
-            ErrorHandlingHttpClient<FirebaseAuthException> httpClient,
-            ListUsersOptions options)
-        : base(baseUrl, httpClient, options?.PageToken, options?.PageSize) { }
+            ListUsersOptions options,
+            ErrorHandlingHttpClient<FirebaseAuthException> httpClient)
+        : base(baseUrl, options?.PageToken, options?.PageSize, httpClient) { }
 
         public override string RestPath => "accounts:batchGet";
 
@@ -52,15 +52,14 @@ namespace FirebaseAdmin.Auth.Users
         public override async Task<ExportedUserRecords> ExecuteAsync(
             CancellationToken cancellationToken)
         {
-            var request = this.CreateRequest();
-            var downloadAccountResponse = await this.HttpClient
-                .SendAndDeserializeAsync<DownloadAccountResponse>(request, cancellationToken)
+            var downloadAccountResponse = await this
+                .SendAndDeserializeAsync<DownloadAccountResponse>(cancellationToken)
                 .ConfigureAwait(false);
-            var userRecords = downloadAccountResponse.Result.Users?.Select(
+            var userRecords = downloadAccountResponse.Users?.Select(
                 u => new ExportedUserRecord(u));
             return new ExportedUserRecords
             {
-                NextPageToken = downloadAccountResponse.Result.NextPageToken,
+                NextPageToken = downloadAccountResponse.NextPageToken,
                 Users = userRecords,
             };
         }

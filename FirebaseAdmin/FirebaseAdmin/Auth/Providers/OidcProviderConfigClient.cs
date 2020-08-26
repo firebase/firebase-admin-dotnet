@@ -69,8 +69,6 @@ namespace FirebaseAdmin.Auth.Providers
             internal ListRequest(ApiClient client, ListProviderConfigsOptions options)
             : base(client, options) { }
 
-            public override string MethodName => "ListOidcProviderConfigs";
-
             public override string RestPath => "oauthIdpConfigs";
 
             public override async Task<AuthProviderConfigs<OidcProviderConfig>> ExecuteAsync(

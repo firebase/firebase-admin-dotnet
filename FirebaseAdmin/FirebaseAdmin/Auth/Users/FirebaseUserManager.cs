@@ -216,7 +216,7 @@ namespace FirebaseAdmin.Auth.Users
             ListUsersOptions options)
         {
             Func<ListUsersRequest> validateAndCreate = () => new ListUsersRequest(
-                this.baseUrl, this.httpClient, options);
+                this.baseUrl, options, this.httpClient);
             validateAndCreate();
             return new RestPagedAsyncEnumerable
                 <ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
