@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -131,6 +132,15 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
             var response = await SendAndDeserialize<VerifyPasswordResponse>(request);
             return response.IdToken;
+        }
+
+        internal static string GetRandomIdentifier(int length = 10)
+        {
+            var random = new Random();
+            const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            var suffix = new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+            return $"id-{suffix}";
         }
 
         private static async Task<T> SendAndDeserialize<T>(HttpRequestMessage request)

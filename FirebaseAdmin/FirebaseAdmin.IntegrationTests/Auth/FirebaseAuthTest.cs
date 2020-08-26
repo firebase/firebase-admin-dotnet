@@ -19,9 +19,9 @@ using Xunit;
 
 namespace FirebaseAdmin.IntegrationTests.Auth
 {
-    public class FirebaseAuthTest : AbstractFirebaseAuthTest<FirebaseAuth>, IClassFixture<FirebaseAuthFixture>
+    public class FirebaseAuthTest : AbstractFirebaseAuthTest<FirebaseAuth>, IClassFixture<FirebaseAuthTest.Fixture>
     {
-        public FirebaseAuthTest(FirebaseAuthFixture fixture)
+        public FirebaseAuthTest(Fixture fixture)
         : base(fixture) { }
 
         [Fact]
@@ -55,18 +55,29 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             decoded = await this.Auth.VerifySessionCookieAsync(sessionCookie, true);
             Assert.Equal("testuser", decoded.Uid);
         }
-    }
 
-    /**
-     * Additional Xunit style asserts that allow specifying an error message upon failure.
-     */
-    internal static class AssertWithMessage
-    {
-        internal static void NotNull(object obj, string msg)
+        public class Fixture : AbstractAuthFixture<FirebaseAuth>, IDisposable
         {
-            if (obj == null)
+            public Fixture()
             {
-                throw new Xunit.Sdk.XunitException("Assert.NotNull() Failure: " + msg);
+                IntegrationTestUtils.EnsureDefaultApp();
+                this.UserBuilder = new TemporaryUserBuilder(FirebaseAuth.DefaultInstance);
+            }
+
+            public override FirebaseAuth Auth => FirebaseAuth.DefaultInstance;
+
+            public override TemporaryUserBuilder UserBuilder { get; }
+
+            public override string TenantId => null;
+
+            public override FirebaseAuth AuthFromApp(FirebaseApp app)
+            {
+                return FirebaseAuth.GetAuth(app);
+            }
+
+            public void Dispose()
+            {
+                this.UserBuilder.Dispose();
             }
         }
     }

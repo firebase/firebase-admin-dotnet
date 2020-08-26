@@ -12,25 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth.Multitenancy;
 using Xunit;
 
 namespace FirebaseAdmin.IntegrationTests.Auth
 {
-    public class SamlProviderConfigTest
-    : AbstractSamlProviderConfigTest<FirebaseAuth>, IClassFixture<SamlProviderConfigTest.Fixture>
+    public class TenantAwareOidcProviderConfigTest
+    : AbstractOidcProviderConfigTest<TenantAwareFirebaseAuth>,
+    IClassFixture<TenantAwareOidcProviderConfigTest.Fixture>
     {
-        public SamlProviderConfigTest(Fixture fixture)
+        public TenantAwareOidcProviderConfigTest(Fixture fixture)
         : base(fixture) { }
 
-        public class Fixture : SamlProviderConfigFixture<FirebaseAuth>
+        public class Fixture : OidcProviderConfigFixture<TenantAwareFirebaseAuth>
         {
-            static Fixture()
-            {
-                IntegrationTestUtils.EnsureDefaultApp();
-            }
+            private readonly TenantFixture tenant = new TenantFixture();
 
-            public override FirebaseAuth Auth => FirebaseAuth.DefaultInstance;
+            public override TenantAwareFirebaseAuth Auth => this.tenant.Auth;
+
+            public override void Dispose()
+            {
+                base.Dispose();
+                this.tenant.Dispose();
+            }
         }
     }
 }
