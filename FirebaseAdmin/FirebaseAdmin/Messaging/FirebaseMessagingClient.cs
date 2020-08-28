@@ -201,12 +201,15 @@ namespace FirebaseAdmin.Messaging
             var batch = this.CreateBatchRequest(
                 messages,
                 dryRun,
-                async (content, error, index, message) =>
+                (content, error, index, message) =>
                 {
                     SendResponse sendResponse;
                     if (error != null)
                     {
-                        sendResponse = SendResponse.FromException(await this.CreateException(message).ConfigureAwait(false));
+                        var json = (error as ContentRetainingRequestError).Content;
+                        var exception = MessagingErrorHandler.Instance.HandleHttpErrorResponse(
+                            message, json);
+                        sendResponse = SendResponse.FromException(exception);
                     }
                     else if (content != null)
                     {
@@ -245,13 +248,6 @@ namespace FirebaseAdmin.Messaging
             }
 
             return batch;
-        }
-
-        private async Task<FirebaseMessagingException> CreateException(HttpResponseMessage response)
-        {
-            var json = await response.Content.ReadAsStringAsync()
-                .ConfigureAwait(false);
-            return MessagingErrorHandler.Instance.HandleHttpErrorResponse(response, json);
         }
 
         /// <summary>
@@ -300,6 +296,30 @@ namespace FirebaseAdmin.Messaging
             public override string BasePath => null;
 
             public override IList<string> Features => null;
+
+            public override async Task<RequestError> DeserializeError(HttpResponseMessage response)
+            {
+                var error = await base.DeserializeError(response).ConfigureAwait(false);
+
+                // Read the full response text here and add it to the RequestError so it can be
+                // used in the batch request callback.
+                // See https://github.com/googleapis/google-api-dotnet-client/issues/1632.
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return new ContentRetainingRequestError(error, content);
+            }
+        }
+
+        private sealed class ContentRetainingRequestError : RequestError
+        {
+            internal ContentRetainingRequestError(RequestError error, string content)
+            {
+                this.Code = error.Code;
+                this.Message = error.Message;
+                this.Errors = error.Errors;
+                this.Content = content;
+            }
+
+            internal string Content { get; }
         }
 
         private sealed class FCMClientServiceRequest : ClientServiceRequest<string>

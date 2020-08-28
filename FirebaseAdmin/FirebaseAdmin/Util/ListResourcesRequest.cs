@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -31,6 +32,7 @@ namespace FirebaseAdmin.Util
     /// marshaling logic, but leaves the actual transport behavior to be implemented by the child
     /// classes.
     /// </summary>
+    [SuppressMessage("Microsoft.VisualStudio.Threading.Analyzers", "VSTHRD002", Justification="Reviewed.")]
     internal abstract class ListResourcesRequest<TResult> : IClientServiceRequest<TResult>
     {
         private readonly string baseUrl;

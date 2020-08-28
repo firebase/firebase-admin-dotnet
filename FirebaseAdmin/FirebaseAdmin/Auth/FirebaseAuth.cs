@@ -208,7 +208,8 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
             if (checkRevoked)
             {
-                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken);
+                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken)
+                    .ConfigureAwait(false);
                 if (revoked)
                 {
                     throw new FirebaseAuthException(

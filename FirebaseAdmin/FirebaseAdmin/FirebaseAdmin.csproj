@@ -32,6 +32,9 @@
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="AsyncUsageAnalyzers" Version="1.0.0-alpha003">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <AdditionalFiles Include="../../stylecop.json" />
   </ItemGroup>
 
