@@ -25,20 +25,19 @@ using Google.Apis.Services;
 
 namespace FirebaseAdmin.Util
 {
-    internal abstract class ListResourcesRequest<TResult, TException>
-    : IClientServiceRequest<TResult>
-    where TException : FirebaseException
+    /// <summary>
+    /// A Google client service request implementation that supports paginating through a list of
+    /// resources. This parent class implements most of the argument validation and HTTP request
+    /// marshaling logic, but leaves the actual transport behavior to be implemented by the child
+    /// classes.
+    /// </summary>
+    internal abstract class ListResourcesRequest<TResult> : IClientServiceRequest<TResult>
     {
         private readonly string baseUrl;
 
-        public ListResourcesRequest(
-            string baseUrl,
-            ErrorHandlingHttpClient<TException> httpClient,
-            string pageToken,
-            int? pageSize)
+        public ListResourcesRequest(string baseUrl, string pageToken, int? pageSize)
         {
             this.baseUrl = baseUrl;
-            this.HttpClient = httpClient;
             this.RequestParameters = new Dictionary<string, IParameter>();
             this.SetPageToken(pageToken);
             this.SetPageSize(pageSize);
@@ -60,14 +59,10 @@ namespace FirebaseAdmin.Util
 
         protected virtual string PageTokenParam => "pageToken";
 
-        protected ErrorHandlingHttpClient<TException> HttpClient { get; }
-
         public async Task<TResult> ExecuteAsync()
         {
             return await this.ExecuteAsync(default).ConfigureAwait(false);
         }
-
-        public abstract Task<TResult> ExecuteAsync(CancellationToken cancellationToken);
 
         public TResult Execute()
         {
@@ -84,13 +79,9 @@ namespace FirebaseAdmin.Util
             return await this.ExecuteAsStreamAsync(default).ConfigureAwait(false);
         }
 
-        public async Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken)
-        {
-            var request = this.CreateRequest();
-            var response = await this.HttpClient.SendAsync(request, cancellationToken)
-                .ConfigureAwait(false);
-            return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        }
+        public abstract Task<TResult> ExecuteAsync(CancellationToken cancellationToken);
+
+        public abstract Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken);
 
         public virtual HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
         {

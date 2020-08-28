@@ -215,11 +215,12 @@ namespace FirebaseAdmin.Auth.Users
         internal Gax.PagedAsyncEnumerable<ExportedUserRecords, ExportedUserRecord> ListUsers(
             ListUsersOptions options)
         {
-            var factory = new ListUsersRequest.Factory(this.baseUrl, this.httpClient, options);
+            Func<ListUsersRequest> validateAndCreate = () => new ListUsersRequest(
+                this.baseUrl, options, this.httpClient);
+            validateAndCreate();
             return new RestPagedAsyncEnumerable
                 <ListUsersRequest, ExportedUserRecords, ExportedUserRecord>(
-                () => factory.Create(),
-                new ListUsersPageManager());
+                validateAndCreate, new ListUsersPageManager());
         }
 
         /// <summary>

@@ -35,8 +35,6 @@ namespace FirebaseAdmin.Auth.Providers
 
         private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
-        private readonly string baseUrl;
-
         private readonly ErrorHandlingHttpClient<FirebaseAuthException> httpClient;
 
         internal ApiClient(
@@ -54,15 +52,17 @@ namespace FirebaseAdmin.Auth.Providers
             var baseUrl = string.Format(IdToolkitUrl, projectId);
             if (tenantId != null)
             {
-                this.baseUrl = $"{baseUrl}/tenants/{tenantId}";
+                this.BaseUrl = $"{baseUrl}/tenants/{tenantId}";
             }
             else
             {
-                this.baseUrl = baseUrl;
+                this.BaseUrl = baseUrl;
             }
 
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(args);
         }
+
+        internal string BaseUrl { get; }
 
         public void Dispose()
         {
@@ -74,7 +74,7 @@ namespace FirebaseAdmin.Auth.Providers
         {
             if (!request.RequestUri.IsAbsoluteUri)
             {
-                request.RequestUri = new Uri($"{this.baseUrl}/{request.RequestUri}");
+                request.RequestUri = new Uri($"{this.BaseUrl}/{request.RequestUri}");
             }
 
             if (!request.Headers.Contains(ClientVersionHeader))

@@ -15,17 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Api.Gax.Rest;
-using Google.Apis.Discovery;
 using Google.Apis.Json;
-using Google.Apis.Requests;
-using Google.Apis.Services;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -113,9 +109,10 @@ namespace FirebaseAdmin.Auth.Providers
         internal PagedAsyncEnumerable<AuthProviderConfigs<T>, T>
             ListProviderConfigsAsync(ApiClient client, ListProviderConfigsOptions options)
         {
-            var request = this.CreateListRequest(client, options);
-            return new RestPagedAsyncEnumerable
-                <AbstractListRequest, AuthProviderConfigs<T>, T>(() => request, new PageManager());
+            Func<AbstractListRequest> validateAndCreate = () => this.CreateListRequest(client, options);
+            validateAndCreate();
+            return new RestPagedAsyncEnumerable<AbstractListRequest, AuthProviderConfigs<T>, T>(
+                validateAndCreate, new PageManager());
         }
 
         protected abstract string ValidateProviderId(string providerId);
@@ -138,114 +135,23 @@ namespace FirebaseAdmin.Auth.Providers
         /// pagination support.
         /// </summary>
         protected abstract class AbstractListRequest
-        : IClientServiceRequest<AuthProviderConfigs<T>>
+        : ListResourcesRequest<AuthProviderConfigs<T>>
         {
-            private const int MaxListResults = 100;
-
-            private readonly ApiClient client;
-
-            protected AbstractListRequest(
-                ApiClient client, ListProviderConfigsOptions options)
+            protected AbstractListRequest(ApiClient client, ListProviderConfigsOptions options)
+            : base(client.BaseUrl, options?.PageToken, options?.PageSize)
             {
-                this.client = client;
-                this.RequestParameters = new Dictionary<string, IParameter>();
-                this.SetPageSize(options?.PageSize);
-                this.SetPageToken(options?.PageToken);
+                this.ApiClient = client;
             }
 
-            public abstract string MethodName { get; }
+            protected ApiClient ApiClient { get; }
 
-            public abstract string RestPath { get; }
-
-            public string HttpMethod => "GET";
-
-            public IDictionary<string, IParameter> RequestParameters { get; }
-
-            public IClientService Service { get; }
-
-            protected ApiClient ApiClient => this.client;
-
-            public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
-            {
-                var query = this.RequestParameters.ToDictionary(
-                    entry => entry.Key, entry => entry.Value.DefaultValue as object);
-                return new HttpRequestMessage()
-                {
-                    Method = System.Net.Http.HttpMethod.Get,
-                    RequestUri = BuildUri(this.RestPath, query),
-                };
-            }
-
-            public async Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken)
+            public override async Task<Stream> ExecuteAsStreamAsync(
+                CancellationToken cancellationToken)
             {
                 var request = this.CreateRequest();
                 var response = await this.ApiClient.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
                 return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            }
-
-            public Stream ExecuteAsStream()
-            {
-                return this.ExecuteAsStreamAsync().Result;
-            }
-
-            public async Task<Stream> ExecuteAsStreamAsync()
-            {
-                return await this.ExecuteAsStreamAsync(default).ConfigureAwait(false);
-            }
-
-            public AuthProviderConfigs<T> Execute()
-            {
-                return this.ExecuteAsync().Result;
-            }
-
-            public async Task<AuthProviderConfigs<T>> ExecuteAsync()
-            {
-                return await this.ExecuteAsync(default).ConfigureAwait(false);
-            }
-
-            public abstract Task<AuthProviderConfigs<T>> ExecuteAsync(
-                CancellationToken cancellationToken);
-
-            internal void SetPageSize(int? pageSize)
-            {
-                if (pageSize > MaxListResults)
-                {
-                    throw new ArgumentException($"Page size must not exceed {MaxListResults}.");
-                }
-                else if (pageSize <= 0)
-                {
-                    throw new ArgumentException("Page size must be positive.");
-                }
-
-                this.AddOrUpdate("pageSize", (pageSize ?? MaxListResults).ToString());
-            }
-
-            internal void SetPageToken(string pageToken)
-            {
-                if (pageToken != null)
-                {
-                    if (pageToken == string.Empty)
-                    {
-                        throw new ArgumentException("Page token must not be empty.");
-                    }
-
-                    this.AddOrUpdate("pageToken", pageToken);
-                }
-                else
-                {
-                    this.RequestParameters.Remove("pageToken");
-                }
-            }
-
-            private void AddOrUpdate(string paramName, string value)
-            {
-                this.RequestParameters[paramName] = new Parameter()
-                {
-                    DefaultValue = value,
-                    IsRequired = true,
-                    Name = paramName,
-                };
             }
         }
 
