@@ -238,7 +238,7 @@ namespace FirebaseAdmin.Auth.Jwt
             {
                 error = $"Firebase {this.shortName} has a subject claim longer than 128 characters.";
             }
-            else if (this.TenantId != payload.Firebase?.Tenant)
+            else if (this.TenantId != null && this.TenantId != payload.Firebase?.Tenant)
             {
                 error = $"Firebase {this.shortName} has incorrect tenant ID. Expected "
                     + $"{this.TenantId} but got {payload.Firebase?.Tenant}";

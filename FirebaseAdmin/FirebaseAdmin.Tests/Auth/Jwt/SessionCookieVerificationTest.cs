@@ -383,29 +383,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             JwtTestUtils.AssertRevocationCheckRequest(null, handler.Requests[0].Url);
         }
 
-        [Theory]
-        [MemberData(nameof(TestConfigs))]
-        public async Task TenantIdMismatch(TestConfig config)
-        {
-            var payload = new Dictionary<string, object>()
-            {
-                {
-                    "firebase", new Dictionary<string, object>
-                    {
-                        { "tenant", "other-tenant" },
-                    }
-                },
-            };
-            var idToken = await config.CreateSessionCookieAsync(payloadOverrides: payload);
-            var auth = config.CreateAuth();
-
-            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await auth.VerifySessionCookieAsync(idToken));
-
-            var expectedMessage = "Firebase session cookie has incorrect tenant ID.";
-            this.CheckException(exception, expectedMessage, AuthErrorCode.TenantIdMismatch);
-        }
-
         private void CheckException(
             FirebaseAuthException exception,
             string prefix,

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Multitenancy;
 using Xunit;
@@ -30,6 +31,30 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         public void TenantId()
         {
             Assert.NotEmpty(this.Auth.TenantId);
+        }
+
+        [Fact]
+        public async Task VerifyIdTokenWithTenant()
+        {
+            var customToken = await this.Auth.CreateCustomTokenAsync("testuser");
+            var idToken = await AuthIntegrationUtils.SignInWithCustomTokenAsync(
+                customToken, this.Auth.TenantId);
+
+            // Verifies in FirebaseAuth
+            var decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+            Assert.Equal(this.Auth.TenantId, decoded.TenantId);
+
+            // Verifies in TenantAwareFirebaseAuth(matching-tenant)
+            decoded = await this.Auth.VerifyIdTokenAsync(idToken);
+            Assert.Equal(this.Auth.TenantId, decoded.TenantId);
+
+            // Does not verify in TenantAwareFirebaseAuth(other-tenant)
+            var otherTenantAuth = FirebaseAuth.DefaultInstance.TenantManager
+                .AuthForTenant("other-tenant");
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => otherTenantAuth.VerifyIdTokenAsync(idToken));
+
+            Assert.Equal(AuthErrorCode.TenantIdMismatch, exception.AuthErrorCode);
         }
 
         public class Fixture : AbstractAuthFixture<TenantAwareFirebaseAuth>, IDisposable

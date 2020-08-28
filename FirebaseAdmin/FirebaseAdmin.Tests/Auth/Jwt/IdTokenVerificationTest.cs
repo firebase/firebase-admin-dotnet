@@ -419,10 +419,23 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 () => auth.VerifyIdTokenAsync(idToken, canceller.Token));
         }
 
-        [Theory]
-        [MemberData(nameof(TestConfigs))]
-        public async Task TenantIdMismatch(TestConfig config)
+        [Fact]
+        public async Task TenantId()
         {
+            var tenantConfig = TestConfig.ForTenantAwareFirebaseAuth("test-tenant");
+            var idTokenWithTenant = await tenantConfig.CreateIdTokenAsync();
+            FirebaseAuth auth = (FirebaseAuth)TestConfig.ForFirebaseAuth().CreateAuth();
+
+            var decoded = await auth.VerifyIdTokenAsync(idTokenWithTenant);
+
+            tenantConfig.AssertFirebaseToken(decoded);
+            Assert.Equal("test-tenant", decoded.TenantId);
+        }
+
+        [Fact]
+        public async Task TenantIdMismatch()
+        {
+            var config = TestConfig.ForTenantAwareFirebaseAuth("test-tenant");
             var payload = new Dictionary<string, object>()
             {
                 {
