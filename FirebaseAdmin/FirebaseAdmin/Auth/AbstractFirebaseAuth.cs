@@ -313,7 +313,8 @@ namespace FirebaseAdmin.Auth
                 .ConfigureAwait(false);
             if (checkRevoked)
             {
-                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken);
+                var revoked = await this.IsRevokedAsync(decodedToken, cancellationToken)
+                    .ConfigureAwait(false);
                 if (revoked)
                 {
                     throw new FirebaseAuthException(
@@ -701,7 +702,8 @@ namespace FirebaseAdmin.Auth
         public async Task<UserImportResult> ImportUsersAsync(
           IEnumerable<ImportUserRecordArgs> users)
         {
-          return await this.ImportUsersAsync(users, default(CancellationToken)).ConfigureAwait(false);
+            return await this.ImportUsersAsync(users, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -726,7 +728,8 @@ namespace FirebaseAdmin.Auth
           IEnumerable<ImportUserRecordArgs> users,
           CancellationToken cancellationToken)
         {
-          return await this.ImportUsersAsync(users, null, cancellationToken).ConfigureAwait(false);
+            return await this.ImportUsersAsync(users, null, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -746,7 +749,8 @@ namespace FirebaseAdmin.Auth
             IEnumerable<ImportUserRecordArgs> users,
             UserImportOptions options)
         {
-          return await this.ImportUsersAsync(users, options, default(CancellationToken)).ConfigureAwait(false);
+            return await this.ImportUsersAsync(users, options, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -769,8 +773,9 @@ namespace FirebaseAdmin.Auth
             UserImportOptions options,
             CancellationToken cancellationToken)
         {
-          var request = new UserImportRequest(users, options);
-          return await this.UserManager.ImportUsersAsync(request, cancellationToken);
+            var request = new UserImportRequest(users, options);
+            return await this.UserManager.ImportUsersAsync(request, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1227,7 +1232,7 @@ namespace FirebaseAdmin.Auth
         private protected async Task<bool> IsRevokedAsync(
             FirebaseToken token, CancellationToken cancellationToken)
         {
-            var user = await this.GetUserAsync(token.Uid, cancellationToken);
+            var user = await this.GetUserAsync(token.Uid, cancellationToken).ConfigureAwait(false);
             var cutoff = user.TokensValidAfterTimestamp.Subtract(UserRecord.UnixEpoch)
                 .TotalSeconds;
             return token.IssuedAtTimeSeconds < cutoff;

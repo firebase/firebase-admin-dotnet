@@ -3,6 +3,9 @@
     "settings": {
         "documentationRules": {
             "documentInternalElements": false
+        },
+        "layoutRules": {
+            "newlineAtEndOfFile": "require"
         }
     }
 }

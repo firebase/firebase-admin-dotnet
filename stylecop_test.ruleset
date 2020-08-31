@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="Rules for FirebaseAdmin" Description="Code analysis rules for FirebaseAdmin." ToolsVersion="14.0">
-  <Rules AnalyzerId="AsyncUsageAnalyzers" RuleNamespace="AsyncUsageAnalyzers">
-    <Rule Id="UseConfigureAwait" Action="Warning" />
-  </Rules>
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
     <Rule Id="SA1200" Action="None" /> <!-- Using clauses inside namespaces -->
     <Rule Id="SA1402" Action="None" /> <!-- Multiple types in same file -->

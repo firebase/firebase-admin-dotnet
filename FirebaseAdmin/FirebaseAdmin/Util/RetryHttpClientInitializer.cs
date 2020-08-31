@@ -101,11 +101,11 @@ namespace FirebaseAdmin.Util
             {
                 if (this.waiter != null)
                 {
-                    await this.waiter.Wait(ts, cancellationToken);
+                    await this.waiter.Wait(ts, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
-                    await base.Wait(ts, cancellationToken);
+                    await base.Wait(ts, cancellationToken).ConfigureAwait(false);
                 }
             }
 
