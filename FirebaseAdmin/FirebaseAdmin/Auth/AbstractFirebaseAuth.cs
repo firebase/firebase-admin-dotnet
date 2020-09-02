@@ -773,8 +773,7 @@ namespace FirebaseAdmin.Auth
             UserImportOptions options,
             CancellationToken cancellationToken)
         {
-            var request = new UserImportRequest(users, options);
-            return await this.UserManager.ImportUsersAsync(request, cancellationToken)
+            return await this.UserManager.ImportUsersAsync(users, options, cancellationToken)
                 .ConfigureAwait(false);
         }
 

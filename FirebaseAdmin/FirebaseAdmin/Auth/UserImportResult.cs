@@ -17,46 +17,39 @@ using System.Collections.Generic;
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Represents the result of
-    /// <see cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/>.
+    /// Represents the result of the
+    /// <see cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> API.
     /// </summary>
     public sealed class UserImportResult
     {
         private readonly int users;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserImportResult"/> class from the
-        /// provided total user count and list of import errors.
+        /// Initializes a new instance of the <see cref="UserImportResult"/> class.
         /// </summary>
-        /// <param name="users">The number of users.</param>
-        /// <param name="errors">Any errors generated from the import operation.</param>
+        /// <param name="users">The number of users that was included in the input import
+        /// request.</param>
+        /// <param name="errors">Any errors encountered while importing users. Possibly
+        /// null.</param>
         internal UserImportResult(int users, IReadOnlyList<ErrorInfo> errors)
         {
-            this.Errors = errors;
             this.users = users;
+            this.Errors = errors ?? new List<ErrorInfo>();
         }
 
         /// <summary>
-        /// Gets errors associated with a user import.
+        /// Gets errors associated with a user import. Empty list if there were no errors.
         /// </summary>
-        public IReadOnlyList<ErrorInfo> Errors { get; private set; }
+        public IReadOnlyList<ErrorInfo> Errors { get; }
 
         /// <summary>
         /// Gets the number of users that were imported successfully.
         /// </summary>
-        /// <returns>Number of users successfully imported (possibly zero).</returns>
-        public int SuccessCount
-        {
-            get => this.users - this.FailureCount;
-        }
+        public int SuccessCount => this.users - this.FailureCount;
 
         /// <summary>
         /// Gets the number of users that failed to be imported.
         /// </summary>
-        /// <returns>Number of users that resulted in import failures (possibly zero).</returns>
-        public int FailureCount
-        {
-            get => this.Errors?.Count ?? 0;
-        }
+        public int FailureCount => this.Errors?.Count ?? 0;
     }
 }

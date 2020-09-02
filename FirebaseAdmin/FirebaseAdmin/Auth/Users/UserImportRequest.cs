@@ -33,38 +33,32 @@ namespace FirebaseAdmin.Auth.Users
         /// <c>MaxImportUsers</c>), and a valid <see cref="UserImportHash"/> is supplied when a
         /// password is provided to at least one of the users.
         /// </summary>
-        /// <param name="usersToImport"> List of users to be imported.</param>
-        /// <param name="options"> Options for user imports, see
-        /// <a cref="UserImportOptions">UserImportOptions</a>.</param>
-        /// <returns>Dictionary containing key/values for the password hashing algorithm.</returns>
-        public UserImportRequest(
-            IEnumerable<ImportUserRecordArgs> usersToImport,
-            UserImportOptions options)
+        /// <param name="usersToImport">List of users to be imported.</param>
+        /// <param name="options">Options for user imports. Possibly null.</param>
+        internal UserImportRequest(
+            IEnumerable<ImportUserRecordArgs> usersToImport, UserImportOptions options)
         {
-            if (usersToImport.Count() == 0)
+            if (usersToImport == null || usersToImport.Count() == 0)
             {
-                throw new ArgumentException("users must not be empty");
+                throw new ArgumentException("Users must not be null or empty.");
             }
 
             if (usersToImport.Count() > MaxImportUsers)
             {
-                throw new ArgumentException("users list must not contain more than"
-                    + $" {MaxImportUsers} items");
+                throw new ArgumentException(
+                    $"Users list must not contain more than {MaxImportUsers} items.");
             }
 
             this.Users = usersToImport.Select((user) => user.ToRequest());
-            var hasPassword = usersToImport.Any((user) => user.HasPassword());
-
-            if (hasPassword)
+            if (usersToImport.Any((user) => user.HasPassword()))
             {
                 if (options?.Hash == null)
                 {
-                    throw new ArgumentNullException("UserImportHash option is required when at"
-                        + " least one user has a password. Provide a UserImportHash via the"
-                        + " Hash setter.");
+                    throw new ArgumentException(
+                        "UserImportHash option is required when at least one user has a password.");
                 }
 
-                this.HashProperties = (Dictionary<string, object>)options.GetHashProperties();
+                this.HashProperties = options.GetHashProperties();
             }
         }
 
@@ -72,20 +66,16 @@ namespace FirebaseAdmin.Auth.Users
         internal IEnumerable<ImportUserRecordArgs.Request> Users { get; private set; }
 
         /// <summary>
+        /// Gets the number of users based on the constructor parameter.
+        /// </summary>
+        [JsonIgnore]
+        internal int UserCount => this.Users.Count();
+
+        /// <summary>
         /// Gets or sets JSON extension data for putting hashing properties at the root of the
         /// JSON serialized object.
         /// </summary>
-        /// <returns>Dictionary containing key/values for the password hashing algorithm.</returns>
         [JsonExtensionData]
-        private Dictionary<string, object> HashProperties { get; set; }
-
-        /// <summary>
-        /// Retrives the number of users based on the constructor parameter.
-        /// </summary>
-        /// <returns>Number of users.</returns>
-        public int GetUsersCount()
-        {
-            return this.Users.Count();
-        }
+        internal Dictionary<string, object> HashProperties { get; set; }
     }
 }

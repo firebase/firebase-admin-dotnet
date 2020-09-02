@@ -17,7 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Hash;
 using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Jwt.Tests;
 using FirebaseAdmin.Auth.Tests;
@@ -1843,6 +1846,187 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(3600, request["validDuration"]);
 
             config.AssertRequest(":createSessionCookie", Assert.Single(handler.Requests));
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ImportUsers(TestConfig config)
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var auth = config.CreateAuth(handler);
+            var users = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs() { Uid = "user2" },
+            };
+
+            var result = await auth.ImportUsersAsync(users);
+
+            Assert.Equal(2, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
+
+            config.AssertRequest("accounts:batchCreate", Assert.Single(handler.Requests));
+            var expected = new JObject()
+            {
+                {
+                    "users", new JArray()
+                    {
+                        new JObject() { { "localId", "user1" } },
+                        new JObject() { { "localId", "user2" } },
+                    }
+                },
+            };
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.True(JToken.DeepEquals(expected, request));
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ImportUsersError(TestConfig config)
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{
+                    ""error"": [
+                        {""index"": 1, ""message"": ""test error""}
+                    ]
+                }",
+            };
+            var auth = config.CreateAuth(handler);
+            var usersList = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs() { Uid = "user2" },
+            };
+
+            var result = await auth.ImportUsersAsync(usersList);
+
+            Assert.Equal(1, result.SuccessCount);
+            Assert.Equal(1, result.FailureCount);
+            var error = Assert.Single(result.Errors);
+            Assert.Equal(1, error.Index);
+            Assert.Equal("test error", error.Reason);
+
+            config.AssertRequest("accounts:batchCreate", Assert.Single(handler.Requests));
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ImportUsersWithPassword(TestConfig config)
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var auth = config.CreateAuth(handler);
+            var password = Encoding.UTF8.GetBytes("password");
+            var usersList = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs
+                {
+                    Uid = "user2",
+                    PasswordHash = password,
+                },
+            };
+
+            var result = await auth.ImportUsersAsync(usersList, new UserImportOptions()
+            {
+                Hash = new Bcrypt(),
+            });
+
+            Assert.Equal(2, result.SuccessCount);
+            Assert.Equal(0, result.FailureCount);
+            Assert.Empty(result.Errors);
+
+            config.AssertRequest("accounts:batchCreate", Assert.Single(handler.Requests));
+            var expected = new JObject()
+            {
+                {
+                    "users", new JArray()
+                    {
+                        new JObject() { { "localId", "user1" } },
+                        new JObject()
+                        {
+                            { "localId", "user2" },
+                            { "passwordHash", JwtUtils.UrlSafeBase64Encode(password) },
+                        },
+                    }
+                },
+                { "hashAlgorithm", "BCRYPT" },
+            };
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
+                handler.LastRequestBody);
+            Assert.True(JToken.DeepEquals(expected, request));
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ImportUsersMissingHash(TestConfig config)
+        {
+            var auth = config.CreateAuth(new MockMessageHandler());
+            var usersList = new List<ImportUserRecordArgs>()
+            {
+                new ImportUserRecordArgs() { Uid = "user1" },
+                new ImportUserRecordArgs
+                {
+                    Uid = "user2",
+                    PasswordHash = Encoding.UTF8.GetBytes("password"),
+                },
+            };
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(usersList));
+
+            Assert.Equal(
+                "UserImportHash option is required when at least one user has a password.",
+                exception.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ImportUsersEmpty(TestConfig config)
+        {
+            var auth = config.CreateAuth(new MockMessageHandler());
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(new List<ImportUserRecordArgs>()));
+
+            Assert.Equal("Users must not be null or empty.", exception.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ImportUsersNull(TestConfig config)
+        {
+            var auth = config.CreateAuth(new MockMessageHandler());
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(null));
+
+            Assert.Equal("Users must not be null or empty.", exception.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ImportUsersExceedLimit(TestConfig config)
+        {
+            var auth = config.CreateAuth(new MockMessageHandler());
+            var users = new List<ImportUserRecordArgs>();
+            for (int i = 0; i < 1001; i++)
+            {
+                users.Add(new ImportUserRecordArgs() { Uid = $"user{i}" });
+            }
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.ImportUsersAsync(users));
+
+            Assert.Equal("Users list must not contain more than 1000 items.", exception.Message);
         }
 
         [Theory]
