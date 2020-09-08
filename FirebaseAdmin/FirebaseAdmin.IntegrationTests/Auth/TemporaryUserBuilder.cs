@@ -32,10 +32,11 @@ namespace FirebaseAdmin.IntegrationTests.Auth
     public sealed class TemporaryUserBuilder : IDisposable
     {
         private readonly ISet<string> userIds = new HashSet<string>();
+        private readonly AbstractFirebaseAuth auth;
 
-        public TemporaryUserBuilder()
+        public TemporaryUserBuilder(AbstractFirebaseAuth auth)
         {
-            IntegrationTestUtils.EnsureDefaultApp();
+            this.auth = auth;
         }
 
         public static UserRecordArgs RandomUserRecordArgs()
@@ -70,7 +71,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 throw new InvalidOperationException("Maximum number of users reached.");
             }
 
-            var user = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
+            var user = await this.auth.CreateUserAsync(args);
             this.AddUid(user.Uid);
             return user;
         }
@@ -83,7 +84,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         public void Dispose()
         {
             Thread.Sleep(1000); // DeleteUsers is rate limited at 1qps.
-            FirebaseAuth.DefaultInstance.DeleteUsersAsync(this.userIds.ToList()).Wait();
+            this.auth.DeleteUsersAsync(this.userIds.ToList()).Wait();
             this.userIds.Clear();
         }
     }

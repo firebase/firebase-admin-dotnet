@@ -14,11 +14,13 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using FirebaseAdmin.Auth.Users;
 
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
-    /// Represents the result of the <see cref="FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/> API.
+    /// Represents the result of the
+    /// <see cref="AbstractFirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/> API.
     /// </summary>
     public sealed class GetUsersResult
     {

@@ -19,8 +19,8 @@ namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// Represents an error encountered while performing a batch operation such as
-    /// <see cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> or
-    /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/>.
+    /// <see cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> or
+    /// <see cref="AbstractFirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/>.
     /// </summary>
     public sealed class ErrorInfo
     {

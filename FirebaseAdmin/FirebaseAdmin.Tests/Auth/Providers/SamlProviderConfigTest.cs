@@ -28,12 +28,6 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 {
     public class SamlProviderConfigTest
     {
-        public static readonly IEnumerable<object[]> InvalidStrings = new List<object[]>()
-        {
-            new object[] { null },
-            new object[] { string.Empty },
-        };
-
         private const string SamlProviderConfigResponse = @"{
             ""name"": ""projects/mock-project-id/inboundSamlConfigs/saml.provider"",
             ""displayName"": ""samlProviderName"",
@@ -70,57 +64,57 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             }}",
         };
 
-        [Fact]
-        public async Task GetConfig()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task GetConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = SamlProviderConfigResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             var provider = await auth.GetSamlProviderConfigAsync("saml.provider");
 
             this.AssertSamlProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
-            var request = handler.Requests[0];
+            var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Equal(
-                "/v2/projects/project1/inboundSamlConfigs/saml.provider",
-                request.Url.PathAndQuery);
-            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+            config.AssertRequest("inboundSamlConfigs/saml.provider", request);
         }
 
         [Theory]
-        [MemberData(nameof(InvalidStrings))]
-        public async Task GetConfigNoProviderId(string providerId)
+        [MemberData(
+            nameof(ProviderTestConfig.InvalidProvierIds), MemberType=typeof(ProviderTestConfig))]
+        public async Task GetConfigNoProviderId(ProviderTestConfig config, string providerId)
         {
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.GetSamlProviderConfigAsync(providerId));
             Assert.Equal("Provider ID cannot be null or empty.", exception.Message);
         }
 
-        [Fact]
-        public async Task GetConfigInvalidProviderId()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task GetConfigInvalidProviderId(ProviderTestConfig config)
         {
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.GetSamlProviderConfigAsync("oidc.provider"));
             Assert.Equal("SAML provider ID must have the prefix 'saml.'.", exception.Message);
         }
 
-        [Fact]
-        public async Task GetConfigNotFoundError()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task GetConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
-                Response = ProviderConfigTestUtils.ConfigNotFoundResponse,
+                Response = ProviderTestConfig.ConfigNotFoundResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 () => auth.GetSamlProviderConfigAsync("saml.provider"));
@@ -134,14 +128,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task CreateConfig()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task CreateConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = SamlProviderConfigResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var args = new SamlProviderConfigArgs()
             {
                 ProviderId = "saml.provider",
@@ -157,13 +152,9 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.CreateProviderConfigAsync(args);
 
             this.AssertSamlProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
-            var request = handler.Requests[0];
+            var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Equal(
-                "/v2/projects/project1/inboundSamlConfigs?inboundSamlConfigId=saml.provider",
-                request.Url.PathAndQuery);
-            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+            config.AssertRequest("inboundSamlConfigs?inboundSamlConfigId=saml.provider", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -174,14 +165,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             this.AssertSpConfig((JObject)body["spConfig"]);
         }
 
-        [Fact]
-        public async Task CreateConfigMinimal()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task CreateConfigMinimal(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = SamlProviderConfigResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var args = new SamlProviderConfigArgs()
             {
                 ProviderId = "saml.minimal-provider",
@@ -195,13 +187,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.CreateProviderConfigAsync(args);
 
             this.AssertSamlProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
-            var request = handler.Requests[0];
+            var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Equal(
-                "/v2/projects/project1/inboundSamlConfigs?inboundSamlConfigId=saml.minimal-provider",
-                request.Url.PathAndQuery);
-            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+            config.AssertRequest(
+                "inboundSamlConfigs?inboundSamlConfigId=saml.minimal-provider", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -210,10 +199,11 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             this.AssertSpConfig((JObject)body["spConfig"]);
         }
 
-        [Fact]
-        public async Task CreateConfigNullArgs()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task CreateConfigNullArgs(ProviderTestConfig config)
         {
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             await Assert.ThrowsAsync<ArgumentNullException>(
                 () => auth.CreateProviderConfigAsync(null as SamlProviderConfigArgs));
@@ -221,24 +211,26 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [ClassData(typeof(InvalidCreateArgs))]
-        public async Task CreateConfigInvalidArgs(SamlProviderConfigArgs args, string expected)
+        public async Task CreateConfigInvalidArgs(
+            ProviderTestConfig config, SamlProviderConfigArgs args, string expected)
         {
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.CreateProviderConfigAsync(args));
             Assert.Equal(expected, exception.Message);
         }
 
-        [Fact]
-        public async Task CreateConfigUnknownError()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task CreateConfigUnknownError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
-                Response = ProviderConfigTestUtils.UnknownErrorResponse,
+                Response = ProviderTestConfig.UnknownErrorResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var args = new SamlProviderConfigArgs()
             {
                 ProviderId = "saml.minimal-provider",
@@ -260,14 +252,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task UpdateConfig()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task UpdateConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = SamlProviderConfigResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var args = new SamlProviderConfigArgs()
             {
                 ProviderId = "saml.provider",
@@ -283,15 +276,12 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.UpdateProviderConfigAsync(args);
 
             this.AssertSamlProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
-            var request = handler.Requests[0];
-            Assert.Equal(ProviderConfigTestUtils.PatchMethod, request.Method);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(ProviderTestConfig.PatchMethod, request.Method);
             var mask = "displayName,enabled,idpConfig.idpCertificates,idpConfig.idpEntityId,idpConfig.ssoUrl,"
                 + "spConfig.callbackUri,spConfig.spEntityId";
-            Assert.Equal(
-                $"/v2/projects/project1/inboundSamlConfigs/saml.provider?updateMask={mask}",
-                request.Url.PathAndQuery);
-            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+            config.AssertRequest(
+                $"inboundSamlConfigs/saml.provider?updateMask={mask}", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -302,14 +292,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             this.AssertSpConfig((JObject)body["spConfig"]);
         }
 
-        [Fact]
-        public async Task UpdateConfigMinimal()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task UpdateConfigMinimal(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = SamlProviderConfigResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var args = new SamlProviderConfigArgs()
             {
                 ProviderId = "saml.minimal-provider",
@@ -319,13 +310,11 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.UpdateProviderConfigAsync(args);
 
             this.AssertSamlProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
-            var request = handler.Requests[0];
-            Assert.Equal(ProviderConfigTestUtils.PatchMethod, request.Method);
-            Assert.Equal(
-                "/v2/projects/project1/inboundSamlConfigs/saml.minimal-provider?updateMask=idpConfig.idpEntityId",
-                request.Url.PathAndQuery);
-            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+            var request = Assert.Single(handler.Requests);
+            Assert.Equal(ProviderTestConfig.PatchMethod, request.Method);
+            config.AssertRequest(
+                "inboundSamlConfigs/saml.minimal-provider?updateMask=idpConfig.idpEntityId",
+                request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -334,10 +323,11 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal("IDP_ENTITY_ID", idpConfig["idpEntityId"]);
         }
 
-        [Fact]
-        public async Task UpdateConfigNullArgs()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task UpdateConfigNullArgs(ProviderTestConfig config)
         {
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             await Assert.ThrowsAsync<ArgumentNullException>(
                 () => auth.UpdateProviderConfigAsync(null as SamlProviderConfigArgs));
@@ -345,24 +335,26 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [ClassData(typeof(InvalidUpdateArgs))]
-        public async Task UpdateConfigInvalidArgs(SamlProviderConfigArgs args, string expected)
+        public async Task UpdateConfigInvalidArgs(
+            ProviderTestConfig config, SamlProviderConfigArgs args, string expected)
         {
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth();
+            var auth = config.CreateAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.UpdateProviderConfigAsync(args));
             Assert.Equal(expected, exception.Message);
         }
 
-        [Fact]
-        public async Task UpdateConfigNotFoundError()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task UpdateConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
-                Response = ProviderConfigTestUtils.ConfigNotFoundResponse,
+                Response = ProviderTestConfig.ConfigNotFoundResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var args = new SamlProviderConfigArgs()
             {
                 ProviderId = "saml.provider",
@@ -382,35 +374,33 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task DeleteConfig()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task DeleteConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = "{}",
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             await auth.DeleteProviderConfigAsync("saml.provider");
 
-            Assert.Equal(1, handler.Requests.Count);
-            var request = handler.Requests[0];
+            var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Delete, request.Method);
-            Assert.Equal(
-                "/v2/projects/project1/inboundSamlConfigs/saml.provider",
-                request.Url.PathAndQuery);
-            ProviderConfigTestUtils.AssertClientVersionHeader(request);
+            config.AssertRequest("inboundSamlConfigs/saml.provider", request);
         }
 
-        [Fact]
-        public async Task DeleteConfigNotFoundError()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task DeleteConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
-                Response = ProviderConfigTestUtils.ConfigNotFoundResponse,
+                Response = ProviderTestConfig.ConfigNotFoundResponse,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 () => auth.DeleteProviderConfigAsync("saml.provider"));
@@ -424,14 +414,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task ListConfigs()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task ListConfigs(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListConfigsResponses,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var configs = new List<SamlProviderConfig>();
 
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
@@ -445,26 +436,21 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertSamlProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("100", query["pageSize"]);
-
-            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("100", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
-
-            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=100", handler.Requests[0]);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=100&pageToken=token", handler.Requests[1]);
         }
 
-        [Fact]
-        public void ListSamlForEach()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public void ListSamlForEach(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListConfigsResponses,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var configs = new List<SamlProviderConfig>();
 
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
@@ -477,26 +463,21 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertSamlProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("100", query["pageSize"]);
-
-            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("100", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
-
-            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=100", handler.Requests[0]);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=100&pageToken=token", handler.Requests[1]);
         }
 
-        [Fact]
-        public async Task ListSamlByPages()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task ListSamlByPages(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListConfigsResponses,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var configs = new List<SamlProviderConfig>();
 
             // Read page 1.
@@ -506,10 +487,8 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal(3, configPage.Count());
             Assert.Equal("token", configPage.NextPageToken);
 
-            Assert.Single(handler.Requests);
-            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("3", query["pageSize"]);
+            var request = Assert.Single(handler.Requests);
+            config.AssertRequest("inboundSamlConfigs?pageSize=3", request);
             configs.AddRange(configPage);
 
             // Read page 2.
@@ -523,24 +502,23 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Null(configPage.NextPageToken);
 
             Assert.Equal(2, handler.Requests.Count);
-            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("3", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=3&pageToken=token", handler.Requests[1]);
             configs.AddRange(configPage);
 
             Assert.Equal(5, configs.Count);
             Assert.All(configs, this.AssertSamlProviderConfig);
         }
 
-        [Fact]
-        public async Task ListSamlAsRawResponses()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task ListSamlAsRawResponses(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListConfigsResponses,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var configs = new List<SamlProviderConfig>();
             var tokens = new List<string>();
 
@@ -558,24 +536,21 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertSamlProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("100", query["pageSize"]);
-
-            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("100", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=100", handler.Requests[0]);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=100&pageToken=token", handler.Requests[1]);
         }
 
-        [Fact]
-        public void ListSamlOptions()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public void ListSamlOptions(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListConfigsResponses,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var configs = new List<SamlProviderConfig>();
             var customOptions = new ListProviderConfigsOptions()
             {
@@ -593,28 +568,22 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.All(configs, this.AssertSamlProviderConfig);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[0]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("3", query["pageSize"]);
-            Assert.Equal("custom-token", query["pageToken"]);
-
-            query = ProviderConfigTestUtils.ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("3", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
-
-            Assert.All(handler.Requests, ProviderConfigTestUtils.AssertClientVersionHeader);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=3&pageToken=custom-token", handler.Requests[0]);
+            config.AssertRequest(
+                "inboundSamlConfigs?pageSize=3&pageToken=token", handler.Requests[1]);
         }
 
         [Theory]
-        [ClassData(typeof(ProviderConfigTestUtils.InvalidListOptions))]
-        public void ListSamlInvalidOptions(ListProviderConfigsOptions options, string expected)
+        [ClassData(typeof(ProviderTestConfig.InvalidListOptions))]
+        public void ListSamlInvalidOptions(
+            ProviderTestConfig config, ListProviderConfigsOptions options, string expected)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListConfigsResponses,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
 
             var exception = Assert.Throws<ArgumentException>(
                 () => auth.ListSamlProviderConfigsAsync(options));
@@ -623,14 +592,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Empty(handler.Requests);
         }
 
-        [Fact]
-        public async Task ListSamlReadPageSizeTooLarge()
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task ListSamlReadPageSizeTooLarge(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListConfigsResponses,
             };
-            var auth = ProviderConfigTestUtils.CreateFirebaseAuth(handler);
+            var auth = config.CreateAuth(handler);
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
 
             await Assert.ThrowsAsync<ArgumentException>(
@@ -675,7 +645,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         public class InvalidCreateArgs : IEnumerable<object[]>
         {
-            public IEnumerator<object[]> GetEnumerator()
+            public IEnumerator<object[]> GetEnumerator() =>
+                ProviderTestConfig.WithTestConfigs(this.MakeEnumerator());
+
+            public IEnumerator<object[]> MakeEnumerator()
             {
                 // {
                 //    1st element: InvalidInput,
@@ -815,7 +788,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         public class InvalidUpdateArgs : IEnumerable<object[]>
         {
-            public IEnumerator<object[]> GetEnumerator()
+            public IEnumerator<object[]> GetEnumerator() =>
+                ProviderTestConfig.WithTestConfigs(this.MakeEnumerator());
+
+            public IEnumerator<object[]> MakeEnumerator()
             {
                 // {
                 //    1st element: InvalidInput,

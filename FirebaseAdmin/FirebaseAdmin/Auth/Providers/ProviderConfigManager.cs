@@ -36,6 +36,12 @@ namespace FirebaseAdmin.Auth.Providers
         internal ProviderConfigManager(Args args)
         {
             args.ThrowIfNull(nameof(args));
+            this.TenantId = args.TenantId;
+            if (this.TenantId == string.Empty)
+            {
+                throw new ArgumentException("Tenant ID must not be empty.");
+            }
+
             var clientArgs = new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
             {
                 HttpClientFactory = args.ClientFactory,
@@ -45,15 +51,17 @@ namespace FirebaseAdmin.Auth.Providers
                 DeserializeExceptionHandler = AuthErrorHandler.Instance,
                 RetryOptions = args.RetryOptions,
             };
-            this.apiClient = new ApiClient(args.ProjectId, clientArgs);
+            this.apiClient = new ApiClient(args.ProjectId, this.TenantId, clientArgs);
         }
+
+        internal string TenantId { get; }
 
         public void Dispose()
         {
             this.apiClient.Dispose();
         }
 
-        internal static ProviderConfigManager Create(FirebaseApp app)
+        internal static ProviderConfigManager Create(FirebaseApp app, string tenantId = null)
         {
             var args = new Args
             {
@@ -61,6 +69,7 @@ namespace FirebaseAdmin.Auth.Providers
                 Credential = app.Options.Credential,
                 ProjectId = app.GetProjectId(),
                 RetryOptions = RetryOptions.Default,
+                TenantId = tenantId,
             };
 
             return new ProviderConfigManager(args);
@@ -144,6 +153,8 @@ namespace FirebaseAdmin.Auth.Providers
             internal GoogleCredential Credential { get; set; }
 
             internal string ProjectId { get; set; }
+
+            internal string TenantId { get; set; }
 
             internal RetryOptions RetryOptions { get; set; }
         }

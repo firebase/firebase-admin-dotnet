@@ -88,5 +88,15 @@ namespace FirebaseAdmin.Auth
         /// No identity provider configuration found for the given identifier.
         /// </summary>
         ConfigurationNotFound,
+
+        /// <summary>
+        /// No tenant found for the given identifier.
+        /// </summary>
+        TenantNotFound,
+
+        /// <summary>
+        /// Tenant ID in a token does not match.
+        /// </summary>
+        TenantIdMismatch,
     }
 }

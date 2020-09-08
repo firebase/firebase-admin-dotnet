@@ -20,30 +20,20 @@ namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// Represents the result of the
-    /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> API.
+    /// <see cref="AbstractFirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> API.
     /// </summary>
     public sealed class DeleteUsersResult
     {
-        internal DeleteUsersResult(int users, BatchDeleteResponse response)
+        internal DeleteUsersResult(int users, IReadOnlyList<ErrorInfo> errors)
         {
-            var errors = new List<ErrorInfo>();
-            if (response.Errors != null)
+            errors = errors ?? new List<ErrorInfo>();
+            if (users < errors.Count)
             {
-                if (users < response.Errors.Count)
-                {
-                    string errorMessages =
-                        string.Join(",", response.Errors.Select(errorInfo => errorInfo.Message));
-                    throw new InvalidOperationException(string.Format(
-                        "Internal error: More errors encountered ({0}) than users ({1}). Errors: {2}",
-                        response.Errors.Count,
-                        users,
-                        errorMessages));
-                }
-
-                foreach (BatchDeleteResponse.ErrorInfo error in response.Errors)
-                {
-                    errors.Add(new ErrorInfo(error.Index, error.Message));
-                }
+                string errorMessages = string.Join(
+                    ", ", errors.Select(errorInfo => errorInfo.Reason));
+                throw new ArgumentException(
+                    $"More errors encountered ({errors.Count}) than users "
+                    + $"({users}). Errors: {errorMessages}");
             }
 
             this.Errors = errors;
@@ -53,7 +43,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the number of users that were deleted successfully (possibly zero). Users that
         /// did not exist prior to calling
-        /// <see cref="FirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> are considered to
+        /// <see cref="AbstractFirebaseAuth.DeleteUsersAsync(IReadOnlyList{string})"/> are considered to
         /// be successfully deleted.
         /// </summary>
         public int SuccessCount { get; }

@@ -14,13 +14,14 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using FirebaseAdmin.Auth.Users;
 
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// Used for looking up an account by provider.
     ///
-    /// See <see cref="FirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
+    /// See <see cref="AbstractFirebaseAuth.GetUsersAsync(IReadOnlyCollection{UserIdentifier})"/>.
     /// </summary>
     public sealed class ProviderIdentifier : UserIdentifier
     {
@@ -42,7 +43,7 @@ namespace FirebaseAdmin.Auth
         /// <inheritdoc/>
         public override string ToString()
         {
-            return "ProviderIdentifier(" + this.providerId + ", " + this.providerUid + ")";
+            return $"ProviderIdentifier({this.providerId}, {this.providerUid})";
         }
 
         internal override void Populate(GetAccountInfoRequest payload)

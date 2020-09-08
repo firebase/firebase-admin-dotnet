@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using FirebaseAdmin.Auth.Users;
 using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth
@@ -84,6 +85,7 @@ namespace FirebaseAdmin.Auth
 
             this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt, lastRefreshAt);
             this.CustomClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
+            this.TenantId = user.TenantId;
         }
 
         /// <summary>
@@ -153,6 +155,11 @@ namespace FirebaseAdmin.Auth
         /// Gets the custom claims set on this user, as a non-null dictionary. Possibly empty.
         /// </summary>
         public IReadOnlyDictionary<string, object> CustomClaims { get; }
+
+        /// <summary>
+        /// Gets the user's tenant ID, if available. Otherwise null.
+        /// </summary>
+        public string TenantId { get; }
 
         private static IReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
         {

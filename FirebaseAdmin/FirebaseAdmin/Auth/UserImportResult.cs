@@ -18,7 +18,7 @@ namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// Represents the result of the
-    /// <see cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> API.
+    /// <see cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> API.
     /// </summary>
     public sealed class UserImportResult
     {

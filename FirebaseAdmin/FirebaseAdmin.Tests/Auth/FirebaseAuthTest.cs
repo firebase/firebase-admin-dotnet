@@ -14,12 +14,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Jwt;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -58,145 +55,94 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public async Task UseAfterDelete()
+        public void UseAfterDelete()
         {
             var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+            var auth = FirebaseAuth.DefaultInstance;
+
             app.Delete();
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await auth.CreateCustomTokenAsync("user"));
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await auth.VerifyIdTokenAsync("user"));
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await auth.SetCustomUserClaimsAsync("user", null));
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await auth.GetOidcProviderConfigAsync("oidc.provider"));
+
+            Assert.Throws<InvalidOperationException>(() => auth.TokenFactory);
+            Assert.Throws<InvalidOperationException>(() => auth.IdTokenVerifier);
+            Assert.Throws<InvalidOperationException>(() => auth.SessionCookieVerifier);
+            Assert.Throws<InvalidOperationException>(() => auth.UserManager);
+            Assert.Throws<InvalidOperationException>(() => auth.ProviderConfigManager);
+            Assert.Throws<InvalidOperationException>(() => auth.TenantManager);
         }
 
         [Fact]
-        public async Task CreateCustomToken()
+        public void NoTenantId()
         {
-            var cred = GoogleCredential.FromFile("./resources/service_account.json");
-            FirebaseApp.Create(new AppOptions() { Credential = cred });
-            var token = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1");
-            VerifyCustomToken(token, "user1", null);
+            var app = FirebaseApp.Create(new AppOptions
+                {
+                    Credential = MockCredential,
+                    ProjectId = "project1",
+                });
+
+            FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+
+            Assert.Null(auth.TokenFactory.TenantId);
+            Assert.Null(auth.IdTokenVerifier.TenantId);
+            Assert.Null(auth.SessionCookieVerifier.TenantId);
+            Assert.Null(auth.UserManager.TenantId);
         }
 
         [Fact]
-        public async Task CreateCustomTokenWithClaims()
-        {
-            var cred = GoogleCredential.FromFile("./resources/service_account.json");
-            FirebaseApp.Create(new AppOptions() { Credential = cred });
-            var developerClaims = new Dictionary<string, object>()
-            {
-                { "admin", true },
-                { "package", "gold" },
-                { "magicNumber", 42L },
-            };
-            var token = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
-                "user2", developerClaims);
-            VerifyCustomToken(token, "user2", developerClaims);
-        }
-
-        [Fact]
-        public async Task CreateCustomTokenCancel()
-        {
-            var cred = GoogleCredential.FromFile("./resources/service_account.json");
-            FirebaseApp.Create(new AppOptions() { Credential = cred });
-            var canceller = new CancellationTokenSource();
-            canceller.Cancel();
-            await Assert.ThrowsAsync<OperationCanceledException>(
-                async () => await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(
-                    "user1", canceller.Token));
-        }
-
-        [Fact]
-        public async Task CreateCustomTokenInvalidCredential()
+        public void UserManagerNoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1"));
 
-            var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
-                + "with service account credentials or specify a service account "
-                + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
-                + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
-                + "more details on creating custom tokens.";
-            Assert.Equal(errorMessage, ex.Message);
+            var ex = Assert.Throws<ArgumentException>(
+                () => FirebaseAuth.DefaultInstance.UserManager);
+
+            Assert.Equal(
+                "Must initialize FirebaseApp with a project ID to manage users.",
+                ex.Message);
         }
 
         [Fact]
-        public async Task VerifyIdTokenNoProjectId()
+        public void ProviderConfigManagerNoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
-            await Assert.ThrowsAsync<ArgumentException>(
-                async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken));
+
+            var ex = Assert.Throws<ArgumentException>(
+                () => FirebaseAuth.DefaultInstance.ProviderConfigManager);
+
+            Assert.Equal(
+                "Must initialize FirebaseApp with a project ID to manage provider configurations.",
+                ex.Message);
         }
 
         [Fact]
-        public async Task VerifyIdTokenCancel()
-        {
-            FirebaseApp.Create(new AppOptions()
-            {
-                Credential = MockCredential,
-                ProjectId = "test-project",
-            });
-            var canceller = new CancellationTokenSource();
-            canceller.Cancel();
-            var idToken = await IdTokenVerificationTest.CreateTestTokenAsync();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                async () => await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
-                    idToken, canceller.Token));
-        }
-
-        [Fact]
-        public async Task SetCustomUserClaimsNoProjectId()
+        public void TenantManagerNoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            var customClaims = new Dictionary<string, object>()
-            {
-                { "admin", true },
-            };
-            await Assert.ThrowsAsync<ArgumentException>(
-                async () => await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync("user1", customClaims));
+
+            var ex = Assert.Throws<ArgumentException>(
+                () => FirebaseAuth.DefaultInstance.TenantManager);
+
+            Assert.Equal(
+                "Must initialize FirebaseApp with a project ID to manage tenants.",
+                ex.Message);
+        }
+
+        [Fact]
+        public void ServiceAccountId()
+        {
+            FirebaseApp.Create(new AppOptions
+                {
+                    Credential = MockCredential,
+                    ServiceAccountId = "test-service-account",
+                });
+
+            var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
+
+            Assert.IsType<FixedAccountIAMSigner>(tokenFactory.Signer);
         }
 
         public void Dispose()
         {
             FirebaseApp.DeleteAll();
-        }
-
-        private static void VerifyCustomToken(string token, string uid, Dictionary<string, object> claims)
-        {
-            string[] segments = token.Split(".");
-            Assert.Equal(3, segments.Length);
-
-            var payload = JwtUtils.Decode<FirebaseTokenFactory.CustomTokenPayload>(segments[1]);
-            Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Issuer);
-            Assert.Equal("client@test-project.iam.gserviceaccount.com", payload.Subject);
-            Assert.Equal(uid, payload.Uid);
-            if (claims == null)
-            {
-                Assert.Null(payload.Claims);
-            }
-            else
-            {
-                Assert.Equal(claims.Count, payload.Claims.Count);
-                foreach (var entry in claims)
-                {
-                    object value;
-                    Assert.True(payload.Claims.TryGetValue(entry.Key, out value));
-                    Assert.Equal(entry.Value, value);
-                }
-            }
-
-            var x509cert = new X509Certificate2(File.ReadAllBytes("./resources/public_cert.pem"));
-            var rsa = (RSA)x509cert.PublicKey.Key;
-            var tokenData = Encoding.UTF8.GetBytes(segments[0] + "." + segments[1]);
-            var signature = JwtUtils.Base64DecodeToBytes(segments[2]);
-            var verified = rsa.VerifyData(tokenData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            Assert.True(verified);
         }
     }
 }

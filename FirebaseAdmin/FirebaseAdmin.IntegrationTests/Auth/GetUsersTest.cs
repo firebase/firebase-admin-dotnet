@@ -110,10 +110,12 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
     public class GetUsersFixture : IDisposable
     {
-        private readonly TemporaryUserBuilder userBuilder = new TemporaryUserBuilder();
+        private readonly TemporaryUserBuilder userBuilder;
 
         public GetUsersFixture()
         {
+            IntegrationTestUtils.EnsureDefaultApp();
+            this.userBuilder = new TemporaryUserBuilder(FirebaseAuth.DefaultInstance);
             this.TestUser1 = this.userBuilder.CreateRandomUserAsync().Result;
             this.TestUser2 = this.userBuilder.CreateRandomUserAsync().Result;
             this.TestUser3 = this.userBuilder.CreateRandomUserAsync().Result;

@@ -15,14 +15,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FirebaseAdmin.Auth.Jwt;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// Represents a user account to be imported to Firebase Auth via the
-    /// <see cref="FirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> API. Must
-    /// contain at least a user ID string.
+    /// <see cref="AbstractFirebaseAuth.ImportUsersAsync(IEnumerable{ImportUserRecordArgs})"/> API.
+    /// Must contain at least a user ID string.
     /// </summary>
     public sealed class ImportUserRecordArgs
     {

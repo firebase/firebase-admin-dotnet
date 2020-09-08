@@ -69,8 +69,6 @@ namespace FirebaseAdmin.Auth.Providers
             internal ListRequest(ApiClient client, ListProviderConfigsOptions options)
             : base(client, options) { }
 
-            public override string MethodName => "ListSamlProviderConfigs";
-
             public override string RestPath => "inboundSamlConfigs";
 
             public override async Task<AuthProviderConfigs<SamlProviderConfig>> ExecuteAsync(

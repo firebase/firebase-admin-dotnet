@@ -2,6 +2,8 @@
 <RuleSet Name="Rules for FirebaseAdmin" Description="Code analysis rules for FirebaseAdmin." ToolsVersion="14.0">
   <Rules AnalyzerId="AsyncUsageAnalyzers" RuleNamespace="AsyncUsageAnalyzers">
     <Rule Id="UseConfigureAwait" Action="Warning" />
+    <Rule Id="AvoidAsyncSuffix" Action="None" />
+    <Rule Id="UseAsyncSuffix" Action="None" />
   </Rules>
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
     <Rule Id="SA1200" Action="None" /> <!-- Using clauses inside namespaces -->

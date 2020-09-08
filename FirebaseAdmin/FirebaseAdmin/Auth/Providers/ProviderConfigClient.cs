@@ -15,17 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Api.Gax.Rest;
-using Google.Apis.Discovery;
 using Google.Apis.Json;
-using Google.Apis.Requests;
-using Google.Apis.Services;
-using Newtonsoft.Json.Linq;
 
 namespace FirebaseAdmin.Auth.Providers
 {
@@ -39,8 +35,6 @@ namespace FirebaseAdmin.Auth.Providers
     internal abstract class ProviderConfigClient<T>
     where T : AuthProviderConfig
     {
-        private static readonly HttpMethod Patch = new HttpMethod("PATCH");
-
         protected abstract string ResourcePath { get; }
 
         protected abstract string ProviderIdParam { get; }
@@ -80,7 +74,7 @@ namespace FirebaseAdmin.Auth.Providers
         {
             var providerId = this.ValidateProviderId(args.ProviderId);
             var content = args.ToUpdateRequest();
-            var updateMask = CreateUpdateMask(content);
+            var updateMask = HttpUtils.CreateUpdateMask(content);
             if (updateMask.Count == 0)
             {
                 throw new ArgumentException("At least one field must be specified for update.");
@@ -92,7 +86,7 @@ namespace FirebaseAdmin.Auth.Providers
             };
             var request = new HttpRequestMessage()
             {
-                Method = Patch,
+                Method = HttpUtils.Patch,
                 RequestUri = BuildUri($"{this.ResourcePath}/{providerId}", query),
                 Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(content),
             };
@@ -115,9 +109,10 @@ namespace FirebaseAdmin.Auth.Providers
         internal PagedAsyncEnumerable<AuthProviderConfigs<T>, T>
             ListProviderConfigsAsync(ApiClient client, ListProviderConfigsOptions options)
         {
-            var request = this.CreateListRequest(client, options);
-            return new RestPagedAsyncEnumerable
-                <AbstractListRequest, AuthProviderConfigs<T>, T>(() => request, new PageManager());
+            Func<AbstractListRequest> validateAndCreate = () => this.CreateListRequest(client, options);
+            validateAndCreate();
+            return new RestPagedAsyncEnumerable<AbstractListRequest, AuthProviderConfigs<T>, T>(
+                validateAndCreate, new PageManager());
         }
 
         protected abstract string ValidateProviderId(string providerId);
@@ -128,50 +123,10 @@ namespace FirebaseAdmin.Auth.Providers
         protected abstract AbstractListRequest CreateListRequest(
             ApiClient client, ListProviderConfigsOptions options);
 
-        private static IList<string> CreateUpdateMask(AuthProviderConfig.Request request)
-        {
-            var json = NewtonsoftJsonSerializer.Instance.Serialize(request);
-            var dictionary = JObject.Parse(json);
-            var mask = CreateUpdateMask(dictionary);
-            mask.Sort();
-            return mask;
-        }
-
         private static Uri BuildUri(string path, IDictionary<string, object> queryParams = null)
         {
-            var uriString = $"{path}{EncodeQueryParams(queryParams)}";
+            var uriString = $"{path}{HttpUtils.EncodeQueryParams(queryParams)}";
             return new Uri(uriString, UriKind.Relative);
-        }
-
-        private static string EncodeQueryParams(IDictionary<string, object> queryParams)
-        {
-            var queryString = string.Empty;
-            if (queryParams != null && queryParams.Count > 0)
-            {
-                var list = queryParams.Select(kvp => $"{kvp.Key}={kvp.Value}");
-                queryString = "?" + string.Join("&", list);
-            }
-
-            return queryString;
-        }
-
-        private static List<string> CreateUpdateMask(JObject dictionary)
-        {
-            var mask = new List<string>();
-            foreach (var entry in dictionary)
-            {
-                if (entry.Value.Type == JTokenType.Object)
-                {
-                    var childMask = CreateUpdateMask((JObject)entry.Value);
-                    mask.AddRange(childMask.Select((item) => $"{entry.Key}.{item}"));
-                }
-                else
-                {
-                    mask.Add(entry.Key);
-                }
-            }
-
-            return mask;
         }
 
         /// <summary>
@@ -180,114 +135,23 @@ namespace FirebaseAdmin.Auth.Providers
         /// pagination support.
         /// </summary>
         protected abstract class AbstractListRequest
-        : IClientServiceRequest<AuthProviderConfigs<T>>
+        : ListResourcesRequest<AuthProviderConfigs<T>>
         {
-            private const int MaxListResults = 100;
-
-            private readonly ApiClient client;
-
-            protected AbstractListRequest(
-                ApiClient client, ListProviderConfigsOptions options)
+            protected AbstractListRequest(ApiClient client, ListProviderConfigsOptions options)
+            : base(client.BaseUrl, options?.PageToken, options?.PageSize)
             {
-                this.client = client;
-                this.RequestParameters = new Dictionary<string, IParameter>();
-                this.SetPageSize(options?.PageSize);
-                this.SetPageToken(options?.PageToken);
+                this.ApiClient = client;
             }
 
-            public abstract string MethodName { get; }
+            protected ApiClient ApiClient { get; }
 
-            public abstract string RestPath { get; }
-
-            public string HttpMethod => "GET";
-
-            public IDictionary<string, IParameter> RequestParameters { get; }
-
-            public IClientService Service { get; }
-
-            protected ApiClient ApiClient => this.client;
-
-            public HttpRequestMessage CreateRequest(bool? overrideGZipEnabled = null)
-            {
-                var query = this.RequestParameters.ToDictionary(
-                    entry => entry.Key, entry => entry.Value.DefaultValue as object);
-                return new HttpRequestMessage()
-                {
-                    Method = System.Net.Http.HttpMethod.Get,
-                    RequestUri = BuildUri(this.RestPath, query),
-                };
-            }
-
-            public async Task<Stream> ExecuteAsStreamAsync(CancellationToken cancellationToken)
+            public override async Task<Stream> ExecuteAsStreamAsync(
+                CancellationToken cancellationToken)
             {
                 var request = this.CreateRequest();
                 var response = await this.ApiClient.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
                 return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            }
-
-            public Stream ExecuteAsStream()
-            {
-                return this.ExecuteAsStreamAsync().Result;
-            }
-
-            public async Task<Stream> ExecuteAsStreamAsync()
-            {
-                return await this.ExecuteAsStreamAsync(default).ConfigureAwait(false);
-            }
-
-            public AuthProviderConfigs<T> Execute()
-            {
-                return this.ExecuteAsync().Result;
-            }
-
-            public async Task<AuthProviderConfigs<T>> ExecuteAsync()
-            {
-                return await this.ExecuteAsync(default).ConfigureAwait(false);
-            }
-
-            public abstract Task<AuthProviderConfigs<T>> ExecuteAsync(
-                CancellationToken cancellationToken);
-
-            internal void SetPageSize(int? pageSize)
-            {
-                if (pageSize > MaxListResults)
-                {
-                    throw new ArgumentException($"Page size must not exceed {MaxListResults}.");
-                }
-                else if (pageSize <= 0)
-                {
-                    throw new ArgumentException("Page size must be positive.");
-                }
-
-                this.AddOrUpdate("pageSize", (pageSize ?? MaxListResults).ToString());
-            }
-
-            internal void SetPageToken(string pageToken)
-            {
-                if (pageToken != null)
-                {
-                    if (pageToken == string.Empty)
-                    {
-                        throw new ArgumentException("Page token must not be empty.");
-                    }
-
-                    this.AddOrUpdate("pageToken", pageToken);
-                }
-                else
-                {
-                    this.RequestParameters.Remove("pageToken");
-                }
-            }
-
-            private void AddOrUpdate(string paramName, string value)
-            {
-                this.RequestParameters[paramName] = new Parameter()
-                {
-                    DefaultValue = value,
-                    IsRequired = true,
-                    Name = paramName,
-                };
             }
         }
 
