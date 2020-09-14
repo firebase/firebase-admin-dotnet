@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using FirebaseAdmin.Messaging;
 using Newtonsoft.Json;
 using Xunit;

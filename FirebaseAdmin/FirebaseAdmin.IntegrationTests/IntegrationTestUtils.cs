@@ -13,11 +13,7 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Json;
 
 namespace FirebaseAdmin.IntegrationTests
 {
