@@ -426,8 +426,8 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var configs = new List<SamlProviderConfig>();
 
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 configs.Add(enumerator.Current);
             }
@@ -523,8 +523,8 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var tokens = new List<string>();
 
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
-            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
-            while (await responses.MoveNext())
+            var responses = pagedEnumerable.AsRawResponses().GetAsyncEnumerator();
+            while (await responses.MoveNextAsync())
             {
                 configs.AddRange(responses.Current.ProviderConfigs);
                 tokens.Add(responses.Current.NextPageToken);

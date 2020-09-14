@@ -443,8 +443,8 @@ namespace FirebaseAdmin.Auth.Users.Tests
             var users = new List<ExportedUserRecord>();
 
             var pagedEnumerable = auth.ListUsersAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 users.Add(enumerator.Current);
                 if (users.Count % 3 == 0)
@@ -649,8 +649,8 @@ namespace FirebaseAdmin.Auth.Users.Tests
             var tokens = new List<string>();
 
             var pagedEnumerable = auth.ListUsersAsync(null);
-            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
-            while (await responses.MoveNext())
+            var responses = pagedEnumerable.AsRawResponses().GetAsyncEnumerator();
+            while (await responses.MoveNextAsync())
             {
                 users.AddRange(responses.Current.Users);
                 tokens.Add(responses.Current.NextPageToken);
@@ -750,7 +750,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             var pagedEnumerable = auth.ListUsersAsync(null);
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await pagedEnumerable.First());
+                async () => await pagedEnumerable.FirstAsync());
 
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Null(exception.AuthErrorCode);
@@ -775,16 +775,16 @@ namespace FirebaseAdmin.Auth.Users.Tests
             var auth = config.CreateAuth(handler);
 
             var pagedEnumerable = auth.ListUsersAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
             for (int i = 0; i < 3; i++)
             {
-                Assert.True(await enumerator.MoveNext());
+                Assert.True(await enumerator.MoveNextAsync());
             }
 
             handler.StatusCode = HttpStatusCode.InternalServerError;
             handler.Response = "{}";
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await enumerator.MoveNext());
+                async () => await enumerator.MoveNextAsync());
 
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Null(exception.AuthErrorCode);
@@ -812,7 +812,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             var pagedEnumerable = auth.ListUsersAsync(null);
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
-                async () => await pagedEnumerable.First());
+                async () => await pagedEnumerable.FirstAsync());
 
             Assert.Equal(ErrorCode.Unknown, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.UnexpectedResponse, exception.AuthErrorCode);

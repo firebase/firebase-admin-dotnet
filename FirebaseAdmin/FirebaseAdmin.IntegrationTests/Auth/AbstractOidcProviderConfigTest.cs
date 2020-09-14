@@ -69,8 +69,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             OidcProviderConfig config = null;
 
             var pagedEnumerable = this.auth.ListOidcProviderConfigsAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 if (enumerator.Current.ProviderId == this.providerId)
                 {

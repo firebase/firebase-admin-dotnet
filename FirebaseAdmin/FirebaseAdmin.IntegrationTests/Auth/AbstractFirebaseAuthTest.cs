@@ -481,10 +481,10 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             }
 
             var pagedEnumerable = this.Auth.ListUsersAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
 
             var listedUsers = new List<string>();
-            while (await enumerator.MoveNext())
+            while (await enumerator.MoveNextAsync())
             {
                 var uid = enumerator.Current.Uid;
                 if (users.Contains(uid) && !listedUsers.Contains(uid))

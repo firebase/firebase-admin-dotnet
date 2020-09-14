@@ -75,8 +75,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             SamlProviderConfig config = null;
 
             var pagedEnumerable = this.auth.ListSamlProviderConfigsAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 if (enumerator.Current.ProviderId == this.providerId)
                 {

@@ -63,8 +63,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
             var pagedEnumerable = FirebaseAuth.DefaultInstance.TenantManager
                 .ListTenantsAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 if (enumerator.Current.TenantId == this.fixture.TenantId)
                 {

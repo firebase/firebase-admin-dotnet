@@ -399,8 +399,8 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var tenants = new List<Tenant>();
 
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 tenants.Add(enumerator.Current);
             }
@@ -509,8 +509,8 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var tokens = new List<string>();
 
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(null);
-            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
-            while (await responses.MoveNext())
+            var responses = pagedEnumerable.AsRawResponses().GetAsyncEnumerator();
+            while (await responses.MoveNextAsync())
             {
                 tenants.AddRange(responses.Current.Tenants);
                 tokens.Add(responses.Current.NextPageToken);
