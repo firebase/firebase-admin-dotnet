@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if NETSTANDARD1_5 || NETSTANDARD2_0
+#if NETSTANDARD2_0
 using RSAKey = System.Security.Cryptography.RSA;
-#elif NET45
+#elif NET461
 using RSAKey = System.Security.Cryptography.RSACryptoServiceProvider;
 #else
 #error Unsupported target
