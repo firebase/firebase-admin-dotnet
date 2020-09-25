@@ -24,7 +24,7 @@ using FirebaseAdmin.Util;
 using Google.Apis.Http;
 using Google.Apis.Util;
 
-#if NETSTANDARD1_5 || NETSTANDARD2_0
+#if NETSTANDARD1_5 || NETSTANDARD2_0 || NET461
 using RSAKey = System.Security.Cryptography.RSA;
 #elif NET45
 using RSAKey = System.Security.Cryptography.RSACryptoServiceProvider;
@@ -132,7 +132,7 @@ namespace FirebaseAdmin.Auth.Jwt
             {
                 var x509cert = new X509Certificate2(Encoding.UTF8.GetBytes(entry.Value));
                 RSAKey rsa;
-#if NETSTANDARD1_5 || NETSTANDARD2_0
+#if NETSTANDARD1_5 || NETSTANDARD2_0 || NET461
                 rsa = x509cert.GetRSAPublicKey();
 #elif NET45
                 rsa = (RSAKey)x509cert.PublicKey.Key;
