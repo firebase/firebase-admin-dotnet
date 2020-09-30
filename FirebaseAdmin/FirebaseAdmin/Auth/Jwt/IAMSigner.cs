@@ -25,8 +25,8 @@ namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
     /// An <see cref="ISigner"/> implementation that uses the
-    /// <a href="https://cloud.google.com/iam/reference/rest/v1/projects.serviceAccounts/signBlob">IAM
-    /// service</a> to sign data. The IAM
+    /// <a href="https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signBlob">
+    /// IAMCredentials service</a> to sign data. The IAMCredentials
     /// service must be called with a service account ID, and this class attempts to auto
     /// discover a service account ID by contacting the local metadata service present in
     /// Google-managed runtimes.
@@ -34,7 +34,7 @@ namespace FirebaseAdmin.Auth.Jwt
     internal class IAMSigner : ISigner
     {
         private const string SignBlobUrl =
-            "https://iam.googleapis.com/v1/projects/-/serviceAccounts/{0}:signBlob";
+            "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{0}:signBlob";
 
         private const string MetadataServerUrl =
             "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email";
@@ -128,7 +128,7 @@ namespace FirebaseAdmin.Auth.Jwt
         /// </summary>
         internal class SignBlobRequest
         {
-            [Newtonsoft.Json.JsonProperty("bytesToSign")]
+            [Newtonsoft.Json.JsonProperty("payload")]
             public string BytesToSign { get; set; }
         }
 
@@ -137,7 +137,7 @@ namespace FirebaseAdmin.Auth.Jwt
         /// </summary>
         internal class SignBlobResponse
         {
-            [Newtonsoft.Json.JsonProperty("signature")]
+            [Newtonsoft.Json.JsonProperty("signedBlob")]
             public string Signature { get; set; }
         }
 
