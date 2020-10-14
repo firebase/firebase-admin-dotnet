@@ -23,12 +23,7 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Util;
 using Google.Apis.Http;
 using Google.Apis.Util;
-
-#if NETSTANDARD2_0 || NET461
 using RSAKey = System.Security.Cryptography.RSA;
-#else
-#error Unsupported target
-#endif
 
 namespace FirebaseAdmin.Auth.Jwt
 {
@@ -130,11 +125,7 @@ namespace FirebaseAdmin.Auth.Jwt
             {
                 var x509cert = new X509Certificate2(Encoding.UTF8.GetBytes(entry.Value));
                 RSAKey rsa;
-#if NETSTANDARD2_0 || NET461
                 rsa = x509cert.GetRSAPublicKey();
-#else
-#error Unsupported target
-#endif
                 builder.Add(new PublicKey(entry.Key, rsa));
             }
 

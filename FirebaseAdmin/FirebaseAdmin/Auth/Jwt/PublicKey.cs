@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if NETSTANDARD2_0 || NET461
 using RSAKey = System.Security.Cryptography.RSA;
-#else
-#error Unsupported target
-#endif
 
 namespace FirebaseAdmin.Auth.Jwt
 {
