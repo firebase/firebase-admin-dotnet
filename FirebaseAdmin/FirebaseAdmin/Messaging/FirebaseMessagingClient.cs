@@ -150,9 +150,9 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException("At least one message is required.");
             }
 
-            if (copyOfMessages.Count > 100)
+            if (copyOfMessages.Count > 500)
             {
-                throw new ArgumentException("At most 100 messages are allowed.");
+                throw new ArgumentException("At most 500 messages are allowed.");
             }
 
             try
