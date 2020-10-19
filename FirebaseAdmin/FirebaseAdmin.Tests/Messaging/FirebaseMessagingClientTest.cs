@@ -380,7 +380,7 @@ Content-Type: application/json; charset=UTF-8
         {
             var factory = new MockHttpClientFactory(new MockMessageHandler());
             var client = this.CreateMessagingClient(factory);
-            var messages = Enumerable.Range(0, 101).Select(_ => new Message { Topic = "test-topic" });
+            var messages = Enumerable.Range(0, 501).Select(_ => new Message { Topic = "test-topic" });
             await Assert.ThrowsAsync<ArgumentException>(() => client.SendAllAsync(messages));
         }
 

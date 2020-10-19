@@ -121,7 +121,7 @@ namespace FirebaseAdmin.Snippets
         {
             var registrationToken = "YOUR_REGISTRATION_TOKEN";
             // [START send_all]
-            // Create a list containing up to 100 messages.
+            // Create a list containing up to 500 messages.
             var messages = new List<Message>()
             {
                 new Message()
@@ -154,7 +154,7 @@ namespace FirebaseAdmin.Snippets
         internal static async Task SendMulticastAsync()
         {
             // [START send_multicast]
-            // Create a list containing up to 100 registration tokens.
+            // Create a list containing up to 500 registration tokens.
             // These registration tokens come from the client FCM SDKs.
             var registrationTokens = new List<string>()
             {
