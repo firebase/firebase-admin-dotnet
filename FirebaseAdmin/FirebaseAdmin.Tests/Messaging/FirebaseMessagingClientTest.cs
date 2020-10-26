@@ -194,6 +194,8 @@ Vary: Referer
             Assert.Equal("projects/fir-adminintegrationtests/messages/5903525881088369386", response.Responses[1].MessageId);
             Assert.Equal(1, handler.Calls);
 
+            var userAgent = handler.LastRequestHeaders.UserAgent.First();
+            Assert.Equal("fire-admin-dotnet", userAgent.Product.Name);
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, VersionHeader));
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, ApiFormatHeader));
         }

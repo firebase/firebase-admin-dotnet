@@ -68,6 +68,7 @@ namespace FirebaseAdmin.Messaging
             {
                 HttpClientFactory = args.ClientFactory,
                 HttpClientInitializer = args.Credential,
+                ApplicationName = ClientVersion,
             });
             this.sendUrl = string.Format(FcmSendUrl, args.ProjectId);
             this.restPath = this.sendUrl.Substring(FcmBaseUrl.Length);
