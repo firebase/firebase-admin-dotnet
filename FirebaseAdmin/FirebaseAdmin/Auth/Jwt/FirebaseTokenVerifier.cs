@@ -290,15 +290,8 @@ namespace FirebaseAdmin.Auth.Jwt
             var keys = await this.keySource.GetPublicKeysAsync(cancellationToken)
                 .ConfigureAwait(false);
             var verified = keys.Any(key =>
-#if NETSTANDARD1_5 || NETSTANDARD2_0 || NET461
                 key.Id == keyId && key.RSA.VerifyHash(
                     hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1)
-#elif NET45
-                key.Id == keyId &&
-                    ((RSACryptoServiceProvider)key.RSA).VerifyHash(hash, Sha256Oid, signature)
-#else
-#error Unsupported target
-#endif
             );
             if (!verified)
             {

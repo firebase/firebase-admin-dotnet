@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Multitenancy;
@@ -63,8 +62,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
 
             var pagedEnumerable = FirebaseAuth.DefaultInstance.TenantManager
                 .ListTenantsAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 if (enumerator.Current.TenantId == this.fixture.TenantId)
                 {

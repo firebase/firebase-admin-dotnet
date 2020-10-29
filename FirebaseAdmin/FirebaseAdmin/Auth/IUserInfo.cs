@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace FirebaseAdmin.Auth
+﻿namespace FirebaseAdmin.Auth
 {
     /// <summary>
     /// A collection of standard profile information for a user. Used to expose profile information

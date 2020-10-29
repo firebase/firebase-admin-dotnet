@@ -498,8 +498,8 @@ namespace FirebaseAdmin.Snippets
             // [START list_all_users]
             // Start listing users from the beginning, 1000 at a time.
             var pagedEnumerable = FirebaseAuth.DefaultInstance.ListUsersAsync(null);
-            var responses = pagedEnumerable.AsRawResponses().GetEnumerator();
-            while (await responses.MoveNext())
+            var responses = pagedEnumerable.AsRawResponses().GetAsyncEnumerator();
+            while (await responses.MoveNextAsync())
             {
                 ExportedUserRecords response = responses.Current;
                 foreach (ExportedUserRecord user in response.Users)
@@ -510,8 +510,8 @@ namespace FirebaseAdmin.Snippets
 
             // Iterate through all users. This will still retrieve users in batches,
             // buffering no more than 1000 users in memory at a time.
-            var enumerator = FirebaseAuth.DefaultInstance.ListUsersAsync(null).GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = FirebaseAuth.DefaultInstance.ListUsersAsync(null).GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 ExportedUserRecord user = enumerator.Current;
                 Console.WriteLine($"User: {user.Uid}");
@@ -756,9 +756,9 @@ namespace FirebaseAdmin.Snippets
             };
             IAsyncEnumerator<SamlProviderConfig> enumerator = FirebaseAuth.DefaultInstance
                 .ListSamlProviderConfigsAsync(listOptions)
-                .GetEnumerator();
+                .GetAsyncEnumerator();
 
-            while (await enumerator.MoveNext())
+            while (await enumerator.MoveNextAsync())
             {
                 SamlProviderConfig saml = enumerator.Current;
                 Console.WriteLine(saml.ProviderId);
@@ -826,9 +826,9 @@ namespace FirebaseAdmin.Snippets
             };
             IAsyncEnumerator<OidcProviderConfig> enumerator = FirebaseAuth.DefaultInstance
                 .ListOidcProviderConfigsAsync(listOptions)
-                .GetEnumerator();
+                .GetAsyncEnumerator();
 
-            while (await enumerator.MoveNext())
+            while (await enumerator.MoveNextAsync())
             {
                 OidcProviderConfig oidc = enumerator.Current;
                 Console.WriteLine(oidc.ProviderId);

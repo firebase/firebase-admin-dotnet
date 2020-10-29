@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Google.Apis.Json;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Providers;
@@ -69,8 +68,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             OidcProviderConfig config = null;
 
             var pagedEnumerable = this.auth.ListOidcProviderConfigsAsync(null);
-            var enumerator = pagedEnumerable.GetEnumerator();
-            while (await enumerator.MoveNext())
+            var enumerator = pagedEnumerable.GetAsyncEnumerator();
+            while (await enumerator.MoveNextAsync())
             {
                 if (enumerator.Current.ProviderId == this.providerId)
                 {
