@@ -56,6 +56,7 @@ namespace FirebaseAdmin.Auth
         /// on or after which the token MUST NOT be accepted for processing.
         /// </summary>
         public long ExpirationTimeSeconds { get; }
+
         /// <summary>
         /// Gets the expiration time claim that identifies the expiration time
         /// on or after which the token MUST NOT be accepted for processing.
@@ -67,6 +68,7 @@ namespace FirebaseAdmin.Auth
         /// issued.
         /// </summary>
         public long IssuedAtTimeSeconds { get; }
+
         /// <summary>
         /// Gets the issued at claim that identifies the time at which the JWT was
         /// issued.
