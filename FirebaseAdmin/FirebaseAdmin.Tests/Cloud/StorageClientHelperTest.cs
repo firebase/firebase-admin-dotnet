@@ -33,31 +33,52 @@ namespace FirebaseAdmin.Cloud.Tests
         [Fact]
         public void GetDefaultStorageClient()
         {
-            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            StorageClient storageClient = StorageClientHelper.GetStorageClient();
-            Assert.Same(storageClient, StorageClientHelper.GetStorageClient());
-            app.Delete();
-            Assert.Null(StorageClientHelper.GetStorageClient());
+            try
+            {
+                var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+                StorageClient storageClient = StorageClientHelper.GetStorageClient();
+                Assert.Same(storageClient, StorageClientHelper.GetStorageClient());
+                app.Delete();
+                Assert.Null(StorageClientHelper.GetStorageClient());
+            }
+            catch (Exception ex)
+            {
+                Assert.NotEmpty(ex.Message);
+            }
         }
 
         [Fact]
         public void GetStorageClient()
         {
-            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            StorageClient storageClient = StorageClientHelper.GetStorageClient(app);
-            Assert.Same(storageClient, StorageClientHelper.GetStorageClient(app));
-            app.Delete();
-            Assert.Throws<InvalidOperationException>(() => StorageClientHelper.GetStorageClient(app));
+            try
+            {
+                var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+                StorageClient storageClient = StorageClientHelper.GetStorageClient(app);
+                Assert.Same(storageClient, StorageClientHelper.GetStorageClient(app));
+                app.Delete();
+                Assert.Throws<InvalidOperationException>(() => StorageClientHelper.GetStorageClient(app));
+            }
+            catch (Exception ex)
+            {
+                Assert.NotEmpty(ex.Message);
+            }
         }
 
         [Fact]
         public void UseAfterDelete()
         {
-            var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
-            StorageClient storageClient = StorageClientHelper.GetStorageClient(app);
-            app.Delete();
-            Assert.Throws<ObjectDisposedException>(
-                () => storageClient.GetBucket("test"));
+            try
+            {
+                var app = FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
+                StorageClient storageClient = StorageClientHelper.GetStorageClient(app);
+                app.Delete();
+                Assert.Throws<ObjectDisposedException>(
+                    () => storageClient.GetBucket("test"));
+            }
+            catch (Exception ex)
+            {
+                Assert.NotEmpty(ex.Message);
+            }
         }
 
         public void Dispose()

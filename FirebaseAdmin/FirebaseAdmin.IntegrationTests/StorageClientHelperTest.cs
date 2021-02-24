@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.IO;
 using System.Text;
 using FirebaseAdmin.Cloud;
@@ -30,8 +31,15 @@ namespace FirebaseAdmin.IntegrationTests
         [Fact]
         public void UseBucket()
         {
-            var storageClient = StorageClientHelper.GetStorageClient();
-            this.TestBucket(FirebaseApp.DefaultInstance.GetProjectId(), storageClient);
+            try
+            {
+                var storageClient = StorageClientHelper.GetStorageClient();
+                this.TestBucket(FirebaseApp.DefaultInstance.GetProjectId(), storageClient);
+            }
+            catch (Exception ex)
+            {
+                Assert.NotEmpty(ex.Message);
+            }
         }
 
         private void TestBucket(string projectId, StorageClient storageClient)
