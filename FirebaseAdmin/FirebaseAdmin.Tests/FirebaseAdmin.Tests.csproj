@@ -39,4 +39,7 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Cloud\" />
+  </ItemGroup>
 </Project>
