@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Logging;

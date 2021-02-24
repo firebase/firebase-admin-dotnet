@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/firebase/firebase-admin-dotnet/workflows/Continuous%20Integration/badge.svg)](https://github.com/firebase/firebase-admin-dotnet/actions)
+
 # Firebase Admin .NET SDK
 
 ## Table of Contents
@@ -57,8 +59,8 @@ We also welcome bug reports, feature requests, and code review feedback.
 
 Admin .NET SDK supports the following frameworks:
 
-* .NET Framework 4.5+
-* netstandard 1.5 and 2.0, providing .NET Core support
+* .NET Framework 4.6.1+
+* .NET Standard 2.0, providing .NET Core support
 
 This is consistent with the frameworks supported by other .NET libraries
 associated with Google Cloud Platform.

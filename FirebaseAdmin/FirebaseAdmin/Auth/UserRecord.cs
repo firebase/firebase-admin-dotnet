@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using FirebaseAdmin.Auth.Users;
 using Google.Apis.Json;
 
 namespace FirebaseAdmin.Auth
@@ -32,11 +33,11 @@ namespace FirebaseAdmin.Auth
         private readonly long validSinceTimestampInSeconds;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing instance of the
-        /// <see cref="GetAccountInfoResponse.User"/> class.
+        /// Initializes a new instance of the <see cref="UserRecord"/> class from an existing
+        /// instance of the <see cref="GetAccountInfoResponse.User"/> class.
         /// </summary>
-        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy the user's data
-        /// from.</param>
+        /// <param name="user">The <see cref="GetAccountInfoResponse.User"/> instance to copy
+        /// the user's data from.</param>
         internal UserRecord(GetAccountInfoResponse.User user)
         {
             if (user == null)
@@ -71,8 +72,20 @@ namespace FirebaseAdmin.Auth
             }
 
             this.validSinceTimestampInSeconds = user.ValidSince;
-            this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt);
+
+            // newtonsoft's json deserializer will convert an iso8601 format
+            // string to a (non-null) DateTime, returning 0001-01-01 if it's not
+            // present in the proto. We'll compare against the epoch and only
+            // use the deserialized value if it's bigger.
+            DateTime? lastRefreshAt = null;
+            if (user.LastRefreshAt > UnixEpoch)
+            {
+                lastRefreshAt = user.LastRefreshAt;
+            }
+
+            this.UserMetaData = new UserMetadata(user.CreatedAt, user.LastLoginAt, lastRefreshAt);
             this.CustomClaims = UserRecord.ParseCustomClaims(user.CustomClaims);
+            this.TenantId = user.TenantId;
         }
 
         /// <summary>
@@ -142,6 +155,11 @@ namespace FirebaseAdmin.Auth
         /// Gets the custom claims set on this user, as a non-null dictionary. Possibly empty.
         /// </summary>
         public IReadOnlyDictionary<string, object> CustomClaims { get; }
+
+        /// <summary>
+        /// Gets the user's tenant ID, if available. Otherwise null.
+        /// </summary>
+        public string TenantId { get; }
 
         private static IReadOnlyDictionary<string, object> ParseCustomClaims(string customClaims)
         {

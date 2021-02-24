@@ -100,7 +100,7 @@ Run the following commands from the command line to get your local environmentse
 ```bash
 $ git clone https://github.com/firebase/firebase-admin-dotnet.git
 $ cd firebase-admin-dotnet/FirebaseAdmin # Change into the FirebaseAdmin solution directory
-$ dotnet restore                         # Install dependencies 
+$ dotnet restore                         # Install dependencies
 ```
 
 ### Running Tests
@@ -119,6 +119,24 @@ To run the unit test suite:
 $ dotnet test FirebaseAdmin.Tests
 ```
 
+To invoke code coverage tools, run the unit tests as follows:
+
+```bash
+$ dotnet test FirebaseAdmin.Tests /p:CollectCoverage=true
+```
+
+The above command calculates and displays a code coverage summary. To produce a more detailed
+code coverage report, you can use a tool like
+[Report Generator](https://github.com/danielpalme/ReportGenerator):
+
+```bash
+$ dotnet test FirebaseAdmin.Tests /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+$ dotnet path/to/ReportGenerator.dll -reports:./FirebaseAdmin.Tests/coverage.opencover.xml -targetdir:./reports
+```
+
+This generates a collection of HTML code coverage reports in a local subdirectory named
+`reports/`.
+
 The integration test suite requires a service account JSON key file, and an API key for a Firebase
 project. Create a new project in the [Firebase console](https://console.firebase.google.com) if
 you do not already have one. Use a separate, dedicated project for integration tests since the
@@ -126,8 +144,23 @@ test suite makes a large number of writes to the Firebase realtime database. Dow
 account key file from the "Settings > Service Accounts" page of the project, and copy it to
 `FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_cert.json`. Also obtain the
 API key for the same project from "Settings > General", and save it to
-`FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_apikey.txt`. Finally, to run
-the integration test suite:
+`FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_apikey.txt`.
+
+You'll also need to grant your service account the 'Firebase Authentication Admin' role. This is
+required to ensure that exported user records contain the password hashes of the user accounts:
+1. Go to [Google Cloud Platform Console / IAM & admin](https://console.cloud.google.com/iam-admin).
+2. Find your service account in the list, and click the 'pencil' icon to edit it's permissions.
+3. Click 'ADD ANOTHER ROLE' and choose 'Firebase Authentication Admin'.
+4. Click 'SAVE'.
+
+For some of the Firebase Auth integration tests, it is required to enable the Email/Password
+sign-in method:
+1. Go to the [Firebase console](https://console.firebase.google.com).
+2. Click on 'Authentication', and select the 'Sign-in method' tab. 
+3. Enable 'Email/Password'.
+4. Enable 'Email link (passwordless sign-in)'.
+
+Finally, to run the integration test suite:
 
 ```bash
 $ dotnet test FirebaseAdmin.IntegrationTests
@@ -143,4 +176,3 @@ Here are some highlights of the directory structure and notable source files
   * `FirebaseAdmin.Tests/` - Unit tests directory.
   * `FirebaseAdmin.IntegrationTests/` - Integration tests directory.
   * `FirebaseAdmin.Snippets/` - Example code snippets for the SDK.
-  

@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FirebaseAdmin.Messaging;
 
@@ -122,7 +121,7 @@ namespace FirebaseAdmin.Snippets
         {
             var registrationToken = "YOUR_REGISTRATION_TOKEN";
             // [START send_all]
-            // Create a list containing up to 100 messages.
+            // Create a list containing up to 500 messages.
             var messages = new List<Message>()
             {
                 new Message()
@@ -155,7 +154,7 @@ namespace FirebaseAdmin.Snippets
         internal static async Task SendMulticastAsync()
         {
             // [START send_multicast]
-            // Create a list containing up to 100 registration tokens.
+            // Create a list containing up to 500 registration tokens.
             // These registration tokens come from the client FCM SDKs.
             var registrationTokens = new List<string>()
             {
@@ -320,6 +319,48 @@ namespace FirebaseAdmin.Snippets
             };
             // [END multi_platforms_message]
             return message;
+        }
+
+        internal static async Task SubscribeToTopicAsync(string topic)
+        {
+            // [START subscribe_to_topic]
+            // These registration tokens come from the client FCM SDKs.
+            var registrationTokens = new List<string>()
+            {
+                "YOUR_REGISTRATION_TOKEN_1",
+                // ...
+                "YOUR_REGISTRATION_TOKEN_n",
+            };
+
+            // Subscribe the devices corresponding to the registration tokens to the
+            // topic
+            var response = await FirebaseMessaging.DefaultInstance.SubscribeToTopicAsync(
+                registrationTokens, topic);
+            // See the TopicManagementResponse reference documentation
+            // for the contents of response.
+            Console.WriteLine($"{response.SuccessCount} tokens were subscribed successfully");
+            // [END subscribe_to_topic]
+        }
+
+        internal static async Task UnsubscribeFromTopicAsync(string topic)
+        {
+            // [START unsubscribe_from_topic]
+            // These registration tokens come from the client FCM SDKs.
+            var registrationTokens = new List<string>()
+            {
+                "YOUR_REGISTRATION_TOKEN_1",
+                // ...
+                "YOUR_REGISTRATION_TOKEN_n",
+            };
+
+            // Unsubscribe the devices corresponding to the registration tokens from the
+            // topic
+            var response = await FirebaseMessaging.DefaultInstance.UnsubscribeFromTopicAsync(
+                registrationTokens, topic);
+            // See the TopicManagementResponse reference documentation
+            // for the contents of response.
+            Console.WriteLine($"{response.SuccessCount} tokens were unsubscribed successfully");
+            // [END unsubscribe_from_topic]
         }
     }
 }

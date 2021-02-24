@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Google.Apis.Json;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
@@ -34,6 +33,12 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         [JsonProperty("headers")]
         public IReadOnlyDictionary<string, string> Headers { get; set; }
+
+        /// <summary>
+        /// Gets or sets the FCM options to be included in the message.
+        /// </summary>
+        [JsonProperty("fcm_options")]
+        public ApnsFcmOptions FcmOptions { get; set; }
 
         /// <summary>
         /// Gets or sets the <c>aps</c> dictionary to be included in the APNs payload.
@@ -102,6 +107,7 @@ namespace FirebaseAdmin.Messaging
             {
                 Headers = this.Headers?.Copy(),
                 Payload = this.Payload.CopyAndValidate(),
+                FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             return copy;
         }

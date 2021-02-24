@@ -79,6 +79,12 @@ namespace FirebaseAdmin.Tests
         public object Response { get; set; }
 
         /// <summary>
+        /// Gets or sets an exception to simulate low-level network errors. When specified, all invocations
+        /// of this message handler will fail by throwing this exception.
+        /// </summary>
+        public Exception Exception { get; set; }
+
+        /// <summary>
         /// Gets or sets the function for modifying the response headers.
         /// </summary>
         public SetHeaders ApplyHeaders { get; set; }
@@ -88,6 +94,13 @@ namespace FirebaseAdmin.Tests
         {
             var incomingRequest = await IncomingRequest.CreateAsync(request);
             this.requests.Add(incomingRequest);
+
+            var tcs = new TaskCompletionSource<HttpResponseMessage>();
+            if (this.Exception != null)
+            {
+                tcs.SetException(this.Exception);
+                return await tcs.Task;
+            }
 
             string json;
             if (this.Response is byte[])
@@ -116,7 +129,6 @@ namespace FirebaseAdmin.Tests
                 this.ApplyHeaders(resp.Headers, content.Headers);
             }
 
-            var tcs = new TaskCompletionSource<HttpResponseMessage>();
             tcs.SetResult(resp);
             return await tcs.Task;
         }

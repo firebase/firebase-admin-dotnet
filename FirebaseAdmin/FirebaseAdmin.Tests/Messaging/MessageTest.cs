@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Google.Apis.Json;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -74,6 +73,11 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Title = "title",
                     Body = "body",
+                    ImageUrl = "https://example.com/image.png",
+                },
+                FcmOptions = new FcmOptions()
+                {
+                    AnalyticsLabel = "label",
                 },
             };
             var expected = new JObject()
@@ -84,6 +88,13 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         { "title", "title" },
                         { "body", "body" },
+                        { "image", "https://example.com/image.png" },
+                    }
+                },
+                {
+                    "fcm_options", new JObject()
+                    {
+                        { "analytics_label", "label" },
                     }
                 },
             };
@@ -117,6 +128,10 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     Data = new Dictionary<string, string>() { { "key", "value" } },
                 },
+                FcmOptions = new FcmOptions()
+                {
+                    AnalyticsLabel = "label",
+                },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
@@ -128,6 +143,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
             Assert.Equal(original.Apns.Aps.AlertString, copy.Apns.Aps.AlertString);
             Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
+            Assert.Equal(original.FcmOptions.AnalyticsLabel, copy.FcmOptions.AnalyticsLabel);
         }
 
         [Fact]
@@ -205,6 +221,28 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void NotificationInvalidImageUrls()
+        {
+            var imageUrls = new List<string>()
+            {
+                string.Empty, "image.png", "invalid-image", "foo bar",
+            };
+            foreach (var imageUrl in imageUrls)
+            {
+                var message = new Message()
+                {
+                    Topic = "test-topic",
+                    Notification = new Notification()
+                    {
+                        ImageUrl = imageUrl,
+                    },
+                };
+
+                Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+            }
+        }
+
+        [Fact]
         public void AndroidConfig()
         {
             var message = new Message()
@@ -229,12 +267,17 @@ namespace FirebaseAdmin.Messaging.Tests
                         Color = "#112233",
                         Sound = "sound",
                         Tag = "tag",
+                        ImageUrl = "https://example.com/image.png",
                         ClickAction = "click-action",
                         TitleLocKey = "title-loc-key",
                         TitleLocArgs = new List<string>() { "arg1", "arg2" },
                         BodyLocKey = "body-loc-key",
                         BodyLocArgs = new List<string>() { "arg3", "arg4" },
                         ChannelId = "channel-id",
+                    },
+                    FcmOptions = new AndroidFcmOptions()
+                    {
+                        AnalyticsLabel = "label",
                     },
                 },
             };
@@ -258,12 +301,19 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "color", "#112233" },
                                 { "sound", "sound" },
                                 { "tag", "tag" },
+                                { "image", "https://example.com/image.png" },
                                 { "click_action", "click-action" },
                                 { "title_loc_key", "title-loc-key" },
                                 { "title_loc_args", new JArray() { "arg1", "arg2" } },
                                 { "body_loc_key", "body-loc-key" },
                                 { "body_loc_args", new JArray() { "arg3", "arg4" } },
                                 { "channel_id", "channel-id" },
+                            }
+                        },
+                        {
+                            "fcm_options", new JObject()
+                            {
+                                { "analytics_label", "label" },
                             }
                         },
                     }
@@ -365,6 +415,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Color = "#112233",
                 Sound = "sound",
                 Tag = "tag",
+                ImageUrl = "https://example.com/image.png",
                 ClickAction = "click-action",
                 TitleLocKey = "title-loc-key",
                 TitleLocArgs = new List<string>() { "arg1", "arg2" },
@@ -380,6 +431,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Color, copy.Color);
             Assert.Equal(original.Sound, copy.Sound);
             Assert.Equal(original.Tag, copy.Tag);
+            Assert.Equal(original.ImageUrl, copy.ImageUrl);
             Assert.Equal(original.ClickAction, copy.ClickAction);
             Assert.Equal(original.TitleLocKey, copy.TitleLocKey);
             Assert.Equal(original.TitleLocArgs, copy.TitleLocArgs);
@@ -433,6 +485,30 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidNotificationInvalidImageUrls()
+        {
+            var imageUrls = new List<string>()
+            {
+                string.Empty, "image.png", "invalid-image", "foo bar",
+            };
+            foreach (var imageUrl in imageUrls)
+            {
+                var message = new Message()
+                {
+                    Topic = "test-topic",
+                    Android = new AndroidConfig()
+                    {
+                        Notification = new AndroidNotification()
+                        {
+                            ImageUrl = imageUrl,
+                        },
+                    },
+                };
+                Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+            }
         }
 
         [Fact]
@@ -843,6 +919,11 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "custom-key3", "custom-data" },
                         { "custom-key4", true },
                     },
+                    FcmOptions = new ApnsFcmOptions()
+                    {
+                        AnalyticsLabel = "label",
+                        ImageUrl = "https://example.com/image.png",
+                    },
                 },
             };
             var expected = new JObject()
@@ -877,6 +958,13 @@ namespace FirebaseAdmin.Messaging.Tests
                                 },
                                 { "custom-key3", "custom-data" },
                                 { "custom-key4", true },
+                            }
+                        },
+                        {
+                            "fcm_options", new JObject()
+                            {
+                                { "analytics_label", "label" },
+                                { "image", "https://example.com/image.png" },
                             }
                         },
                     }
@@ -1559,6 +1647,30 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void ApnsFcmOptionsInvalidImageUrls()
+        {
+            var imageUrls = new List<string>()
+            {
+                string.Empty, "image.png", "invalid-image", "foo bar",
+            };
+            foreach (var imageUrl in imageUrls)
+            {
+                var message = new Message()
+                {
+                    Topic = "test-topic",
+                    Apns = new ApnsConfig()
+                    {
+                        FcmOptions = new ApnsFcmOptions()
+                        {
+                            ImageUrl = imageUrl,
+                        },
+                    },
+                };
+                Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+            }
+        }
+
+        [Fact]
         public void WebpushNotificationWithLinkUrl()
         {
             var message = new Message()
@@ -1645,6 +1757,25 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         Link = "https whatever",
                     },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AnalyticsLabelInvalid()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Notification = new Notification()
+                {
+                    Title = "title",
+                    Body = "body",
+                },
+                FcmOptions = new FcmOptions()
+                {
+                    AnalyticsLabel = "label!",
                 },
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());

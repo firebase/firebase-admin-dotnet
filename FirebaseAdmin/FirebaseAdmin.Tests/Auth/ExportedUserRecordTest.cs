@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
+using FirebaseAdmin.Auth.Users;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
@@ -150,6 +152,18 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.NotNull(metadata);
             Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(100), metadata.CreationTimestamp);
             Assert.Equal(UserRecord.UnixEpoch.AddMilliseconds(150), metadata.LastSignInTimestamp);
+        }
+
+        [Fact]
+        public void RedactedPasswordCleared()
+        {
+            var user = new ExportedUserRecord(new GetAccountInfoResponse.User()
+            {
+                UserId = "user1",
+                PasswordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes("REDACTED")),
+            });
+
+            Assert.Null(user.PasswordHash);
         }
     }
 }

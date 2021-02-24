@@ -14,14 +14,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// Represents a message that can be sent to multiple devices via Firebase Cloud Messaging (FCM).
     /// Contains payload information as well as the list of device registration tokens to which the
-    /// message should be sent. A single <c>MulticastMessage</c> may contain up to 100 registration
+    /// message should be sent. A single <c>MulticastMessage</c> may contain up to 500 registration
     /// tokens.
     /// </summary>
     public sealed class MulticastMessage
@@ -61,9 +60,9 @@ namespace FirebaseAdmin.Messaging
         {
             var tokens = this.Tokens;
 
-            if (tokens == null || tokens.Count > 100)
+            if (tokens == null || tokens.Count > 500)
             {
-                throw new ArgumentException("Tokens must be non-null and contain at most 100 tokens.");
+                throw new ArgumentException("Tokens must be non-null and contain at most 500 tokens.");
             }
 
             var tokensCopy = new List<string>(tokens);

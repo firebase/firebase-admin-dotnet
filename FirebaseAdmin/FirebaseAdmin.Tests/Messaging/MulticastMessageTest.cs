@@ -49,7 +49,7 @@ namespace FirebaseAdmin.Tests.Messaging
         {
             var message = new MulticastMessage
             {
-                Tokens = Enumerable.Range(0, 101).Select(x => x.ToString()).ToList(),
+                Tokens = Enumerable.Range(0, 501).Select(x => x.ToString()).ToList(),
             };
 
             Assert.Throws<ArgumentException>(() => message.GetMessageList());

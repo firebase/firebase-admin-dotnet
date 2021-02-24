@@ -18,13 +18,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Json;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 using Google.Apis.Util;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -38,28 +38,40 @@ namespace FirebaseAdmin.Messaging
         private const string FcmSendUrl = FcmBaseUrl + "/v1/projects/{0}/messages:send";
         private const string FcmBatchUrl = FcmBaseUrl + "/batch";
 
-        private readonly ConfigurableHttpClient httpClient;
+        private readonly ErrorHandlingHttpClient<FirebaseMessagingException> httpClient;
         private readonly string sendUrl;
         private readonly string restPath;
         private readonly FCMClientService fcmClientService;
 
-        public FirebaseMessagingClient(
-            HttpClientFactory clientFactory, GoogleCredential credential, string projectId)
+        internal FirebaseMessagingClient(Args args)
         {
-            if (string.IsNullOrEmpty(projectId))
+            if (string.IsNullOrEmpty(args.ProjectId))
             {
-                throw new FirebaseException(
+                throw new ArgumentException(
                     "Project ID is required to access messaging service. Use a service account "
                     + "credential or set the project ID explicitly via AppOptions. Alternatively "
                     + "you can set the project ID via the GOOGLE_CLOUD_PROJECT environment "
                     + "variable.");
             }
 
-            this.httpClient = clientFactory.ThrowIfNull(nameof(clientFactory))
-                .CreateAuthorizedHttpClient(credential);
-            this.sendUrl = string.Format(FcmSendUrl, projectId);
+            this.httpClient = new ErrorHandlingHttpClient<FirebaseMessagingException>(
+                new ErrorHandlingHttpClientArgs<FirebaseMessagingException>()
+                {
+                    HttpClientFactory = args.ClientFactory.ThrowIfNull(nameof(args.ClientFactory)),
+                    Credential = args.Credential.ThrowIfNull(nameof(args.Credential)),
+                    RequestExceptionHandler = MessagingErrorHandler.Instance,
+                    ErrorResponseHandler = MessagingErrorHandler.Instance,
+                    DeserializeExceptionHandler = MessagingErrorHandler.Instance,
+                    RetryOptions = args.RetryOptions,
+                });
+            this.fcmClientService = new FCMClientService(new BaseClientService.Initializer()
+            {
+                HttpClientFactory = args.ClientFactory,
+                HttpClientInitializer = args.Credential,
+                ApplicationName = ClientVersion,
+            });
+            this.sendUrl = string.Format(FcmSendUrl, args.ProjectId);
             this.restPath = this.sendUrl.Substring(FcmBaseUrl.Length);
-            this.fcmClientService = new FCMClientService(this.httpClient);
         }
 
         internal static string ClientVersion
@@ -81,7 +93,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -94,30 +106,24 @@ namespace FirebaseAdmin.Messaging
             bool dryRun = false,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var request = new SendRequest()
+            var body = new SendRequest()
             {
                 Message = message.ThrowIfNull(nameof(message)).CopyAndValidate(),
                 ValidateOnly = dryRun,
             };
-            try
-            {
-                var response = await this.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = "Response status code does not indicate success: "
-                            + $"{(int)response.StatusCode} ({response.StatusCode})"
-                            + $"{Environment.NewLine}{json}";
-                    throw new FirebaseException(error);
-                }
 
-                var parsed = JsonConvert.DeserializeObject<SingleMessageResponse>(json);
-                return parsed.Name;
-            }
-            catch (HttpRequestException e)
+            var request = new HttpRequestMessage()
             {
-                throw new FirebaseException("Error while calling the FCM service.", e);
-            }
+                Method = HttpMethod.Post,
+                RequestUri = new Uri(this.sendUrl),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
+            };
+            AddCommonHeaders(request);
+            var response = await this.httpClient
+                .SendAndDeserializeAsync<SingleMessageResponse>(request, cancellationToken)
+                .ConfigureAwait(false);
+
+            return response.Result.Name;
         }
 
         /// <summary>
@@ -145,46 +151,45 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException("At least one message is required.");
             }
 
-            if (copyOfMessages.Count > 100)
+            if (copyOfMessages.Count > 500)
             {
-                throw new ArgumentException("At most 100 messages are allowed.");
+                throw new ArgumentException("At most 500 messages are allowed.");
             }
 
             try
             {
-                return await this.SendBatchRequestAsync(copyOfMessages, dryRun, cancellationToken);
+                return await this.SendBatchRequestAsync(copyOfMessages, dryRun, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (HttpRequestException e)
             {
-                throw new FirebaseException("Error while calling the FCM service.", e);
+                throw MessagingErrorHandler.Instance.HandleHttpRequestException(e);
             }
         }
 
         public void Dispose()
         {
             this.httpClient.Dispose();
+            this.fcmClientService.Dispose();
+        }
+
+        internal static FirebaseMessagingClient Create(FirebaseApp app)
+        {
+            var args = new Args
+            {
+                ClientFactory = app.Options.HttpClientFactory,
+                Credential = app.Options.Credential,
+                ProjectId = app.GetProjectId(),
+                RetryOptions = RetryOptions.Default,
+            };
+
+            return new FirebaseMessagingClient(args);
         }
 
         private static void AddCommonHeaders(HttpRequestMessage request)
         {
             request.Headers.Add("X-Firebase-Client", ClientVersion);
-        }
-
-        private static FirebaseException CreateExceptionFor(RequestError requestError)
-        {
-            return new FirebaseException(requestError.ToString());
-        }
-
-        private async Task<HttpResponseMessage> SendRequestAsync(object body, CancellationToken cancellationToken)
-        {
-            var request = new HttpRequestMessage()
-            {
-                Method = HttpMethod.Post,
-                RequestUri = new Uri(this.sendUrl),
-                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
-            };
-            AddCommonHeaders(request);
-            return await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            request.Headers.Add("X-GOOG-API-FORMAT-VERSION", "2");
         }
 
         private async Task<BatchResponse> SendBatchRequestAsync(
@@ -199,19 +204,27 @@ namespace FirebaseAdmin.Messaging
                 dryRun,
                 (content, error, index, message) =>
                 {
+                    SendResponse sendResponse;
                     if (error != null)
                     {
-                        responses.Add(SendResponse.FromException(CreateExceptionFor(error)));
+                        var json = (error as ContentRetainingRequestError).Content;
+                        var exception = MessagingErrorHandler.Instance.HandleHttpErrorResponse(
+                            message, json);
+                        sendResponse = SendResponse.FromException(exception);
                     }
                     else if (content != null)
                     {
-                        responses.Add(SendResponse.FromMessageId(content.Name));
+                        sendResponse = SendResponse.FromMessageId(content.Name);
                     }
                     else
                     {
-                        responses.Add(SendResponse.FromException(new FirebaseException(
-                            $"Unexpected batch response. Response status code was {message.StatusCode}.")));
+                        var exception = new FirebaseMessagingException(
+                            ErrorCode.Unknown,
+                            $"Unexpected batch response. Response status code: {message.StatusCode}.");
+                        sendResponse = SendResponse.FromException(exception);
                     }
+
+                    responses.Add(sendResponse);
                 });
 
             await batch.ExecuteAsync(cancellationToken).ConfigureAwait(false);
@@ -261,12 +274,21 @@ namespace FirebaseAdmin.Messaging
             public string Name { get; set; }
         }
 
+        internal sealed class Args
+        {
+            internal HttpClientFactory ClientFactory { get; set; }
+
+            internal GoogleCredential Credential { get; set; }
+
+            internal string ProjectId { get; set; }
+
+            internal RetryOptions RetryOptions { get; set; }
+        }
+
         private sealed class FCMClientService : BaseClientService
         {
-            public FCMClientService(ConfigurableHttpClient httpClient)
-                : base(new Initializer { HttpClientFactory = new CannedHttpClientFactory(httpClient) })
-            {
-            }
+            public FCMClientService(Initializer initializer)
+            : base(initializer) { }
 
             public override string Name => "FCM";
 
@@ -275,21 +297,30 @@ namespace FirebaseAdmin.Messaging
             public override string BasePath => null;
 
             public override IList<string> Features => null;
+
+            public override async Task<RequestError> DeserializeError(HttpResponseMessage response)
+            {
+                var error = await base.DeserializeError(response).ConfigureAwait(false);
+
+                // Read the full response text here and add it to the RequestError so it can be
+                // used in the batch request callback.
+                // See https://github.com/googleapis/google-api-dotnet-client/issues/1632.
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return new ContentRetainingRequestError(error, content);
+            }
         }
 
-        private sealed class CannedHttpClientFactory : IHttpClientFactory
+        private sealed class ContentRetainingRequestError : RequestError
         {
-            private readonly ConfigurableHttpClient httpClient;
-
-            public CannedHttpClientFactory(ConfigurableHttpClient httpClient)
+            internal ContentRetainingRequestError(RequestError error, string content)
             {
-                this.httpClient = httpClient;
+                this.Code = error.Code;
+                this.Message = error.Message;
+                this.Errors = error.Errors;
+                this.Content = content;
             }
 
-            public ConfigurableHttpClient CreateHttpClient(CreateHttpClientArgs args)
-            {
-                return this.httpClient;
-            }
+            internal string Content { get; }
         }
 
         private sealed class FCMClientServiceRequest : ClientServiceRequest<string>
@@ -298,7 +329,7 @@ namespace FirebaseAdmin.Messaging
             private readonly SendRequest body;
 
             public FCMClientServiceRequest(FCMClientService clientService, string restPath, SendRequest body)
-                : base(clientService)
+            : base(clientService)
             {
                 this.restPath = restPath;
                 this.body = body;

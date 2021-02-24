@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Http;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -27,11 +26,12 @@ namespace FirebaseAdmin.Messaging
     public sealed class FirebaseMessaging : IFirebaseService
     {
         private readonly FirebaseMessagingClient messagingClient;
+        private readonly InstanceIdClient instanceIdClient;
 
         private FirebaseMessaging(FirebaseApp app)
         {
-            this.messagingClient = new FirebaseMessagingClient(
-                    app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
+            this.messagingClient = FirebaseMessagingClient.Create(app);
+            this.instanceIdClient = InstanceIdClient.Create(app);
         }
 
         /// <summary>
@@ -83,12 +83,13 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         public async Task<string> SendAsync(Message message)
         {
-            return await this.SendAsync(message, false);
+            return await this.SendAsync(message, false)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -102,14 +103,15 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         public async Task<string> SendAsync(Message message, CancellationToken cancellationToken)
         {
-            return await this.SendAsync(message, false, cancellationToken);
+            return await this.SendAsync(message, false, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -127,7 +129,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -135,7 +137,8 @@ namespace FirebaseAdmin.Messaging
         /// but it will not be delivered to any actual recipients.</param>
         public async Task<string> SendAsync(Message message, bool dryRun)
         {
-            return await this.SendAsync(message, dryRun, default(CancellationToken));
+            return await this.SendAsync(message, dryRun, default(CancellationToken))
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -153,7 +156,7 @@ namespace FirebaseAdmin.Messaging
         /// <exception cref="ArgumentNullException">If the message argument is null.</exception>
         /// <exception cref="ArgumentException">If the message contains any invalid
         /// fields.</exception>
-        /// <exception cref="FirebaseException">If an error occurs while sending the
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// message.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
@@ -173,12 +176,15 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages)
         {
-            return await this.SendAllAsync(messages, false);
+            return await this.SendAllAsync(messages, false)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -186,6 +192,8 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -193,7 +201,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
         {
-            return await this.SendAllAsync(messages, false, cancellationToken);
+            return await this.SendAllAsync(messages, false, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -201,6 +210,8 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
@@ -209,7 +220,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun)
         {
-            return await this.SendAllAsync(messages, dryRun, default);
+            return await this.SendAllAsync(messages, dryRun, default)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -217,6 +229,8 @@ namespace FirebaseAdmin.Messaging
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
@@ -227,23 +241,29 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
         {
-            return await this.messagingClient.SendAllAsync(messages, dryRun, cancellationToken);
+            return await this.messagingClient.SendAllAsync(messages, dryRun, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message)
         {
-            return await this.SendMulticastAsync(message, false);
+            return await this.SendMulticastAsync(message, false)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
@@ -251,7 +271,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, CancellationToken cancellationToken)
         {
-            return await this.SendMulticastAsync(message, false, cancellationToken);
+            return await this.SendMulticastAsync(message, false, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -261,6 +282,8 @@ namespace FirebaseAdmin.Messaging
         /// validations, and emulates the send operation. This is a good way to check if a
         /// certain message will be accepted by FCM for delivery.</para>
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
@@ -269,7 +292,8 @@ namespace FirebaseAdmin.Messaging
         /// outcome.</returns>
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, bool dryRun)
         {
-            return await this.SendMulticastAsync(message, dryRun, default);
+            return await this.SendMulticastAsync(message, dryRun, default)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -279,6 +303,8 @@ namespace FirebaseAdmin.Messaging
         /// validations, and emulates the send operation. This is a good way to check if a
         /// certain message will be accepted by FCM for delivery.</para>
         /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
@@ -291,7 +317,34 @@ namespace FirebaseAdmin.Messaging
             MulticastMessage message, bool dryRun, CancellationToken cancellationToken)
         {
             return await this.SendAllAsync(
-                message.GetMessageList(), dryRun, cancellationToken).ConfigureAwait(false);
+                message.GetMessageList(), dryRun, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Subscribes a list of registration tokens to a topic.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
+        /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic subscription operations.</returns>
+        public async Task<TopicManagementResponse> SubscribeToTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic)
+        {
+            return await this.instanceIdClient.SubscribeToTopicAsync(registrationTokens, topic)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Unsubscribes a list of registration tokens from a topic.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
+        /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic unsubscription operations.</returns>
+        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic)
+        {
+            return await this.instanceIdClient.UnsubscribeFromTopicAsync(registrationTokens, topic)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -300,6 +353,7 @@ namespace FirebaseAdmin.Messaging
         void IFirebaseService.Delete()
         {
             this.messagingClient.Dispose();
+            this.instanceIdClient.Dispose();
         }
     }
 }
