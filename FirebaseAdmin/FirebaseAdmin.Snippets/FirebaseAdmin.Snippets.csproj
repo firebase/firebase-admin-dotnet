@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.49.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
   </ItemGroup>
