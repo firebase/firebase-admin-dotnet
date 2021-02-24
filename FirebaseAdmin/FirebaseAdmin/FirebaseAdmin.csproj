@@ -28,6 +28,7 @@
     <PackageReference Include="Google.Api.Gax" Version="3.2.0" />
     <PackageReference Include="Google.Api.Gax.Rest" Version="3.2.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.49.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.1" />
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61">
       <PrivateAssets>all</PrivateAssets>
@@ -38,4 +39,7 @@
     <AdditionalFiles Include="../../stylecop.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Cloud\" />
+  </ItemGroup>
 </Project>
