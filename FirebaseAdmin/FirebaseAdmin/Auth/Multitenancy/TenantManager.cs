@@ -45,8 +45,6 @@ namespace FirebaseAdmin.Auth.Multitenancy
     /// </summary>
     public sealed class TenantManager : IDisposable
     {
-        private const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/v2/projects/{0}";
-
         private const string ClientVersionHeader = "X-Client-Version";
 
         private static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
@@ -73,7 +71,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
             }
 
             this.app = args.App;
-            this.baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
+
+            this.baseUrl = new IdToolkitHostResolver(args.ProjectId).Resolve();
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 args.ToHttpClientArgs());
         }

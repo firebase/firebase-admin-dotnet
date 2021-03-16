@@ -80,7 +80,7 @@ namespace FirebaseAdmin.Auth.Users
                     RetryOptions = args.RetryOptions,
                 });
             this.clock = args.Clock ?? SystemClock.Default;
-            var baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
+            var baseUrl = new IdToolkitHostResolver(args.ProjectId).Resolve();
             if (this.TenantId != null)
             {
                 this.baseUrl = $"{baseUrl}/tenants/{this.TenantId}";
