@@ -9,12 +9,25 @@ namespace FirebaseAdmin.Auth.Tests
         private string customHost = "localhost:9099";
 
         [Fact]
+        public void ResolvesToCorrectVersion()
+        {
+            var expectedV1Host = $"https://identitytoolkit.googleapis.com/v1/projects/{this.mockProjectId}";
+            var expectedV2Host = $"https://identitytoolkit.googleapis.com/v2/projects/{this.mockProjectId}";
+
+            var v1Resolver = new IdToolkitHostResolver(this.mockProjectId, IdToolkitVersion.V1);
+            var v2Resolver = new IdToolkitHostResolver(this.mockProjectId, IdToolkitVersion.V2);
+
+            Assert.Equal(expectedV1Host, v1Resolver.Resolve());
+            Assert.Equal(expectedV2Host, v2Resolver.Resolve());
+        }
+
+        [Fact]
         public void ResolvesToEmulatorHost()
         {
             Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", this.customHost);
 
             var expectedHost = $"http://{this.customHost}/identitytoolkit.googleapis.com/v2/projects/{this.mockProjectId}";
-            var resolver = new IdToolkitHostResolver(this.mockProjectId);
+            var resolver = new IdToolkitHostResolver(this.mockProjectId, IdToolkitVersion.V2);
 
             var resolvedHost = resolver.Resolve();
 
@@ -22,26 +35,16 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void FailsOnEmptyEmulatorHost()
-        {
-            Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", string.Empty);
-
-            var resolver = new IdToolkitHostResolver(this.mockProjectId);
-
-            Assert.Throws<ArgumentException>(() => resolver.Resolve());
-        }
-
-        [Fact]
         public void FailsOnNoProjectId()
         {
-            Assert.Throws<ArgumentException>(() => new IdToolkitHostResolver(string.Empty));
+            Assert.Throws<ArgumentException>(() => new IdToolkitHostResolver(string.Empty, IdToolkitVersion.V2));
         }
 
         [Fact]
         public void ResolvesToFirebaseHost()
         {
-            var expectedHost = $"http://identitytoolkit.googleapis.com/v2/projects/{this.mockProjectId}";
-            var resolver = new IdToolkitHostResolver(this.mockProjectId);
+            var expectedHost = $"https://identitytoolkit.googleapis.com/v2/projects/{this.mockProjectId}";
+            var resolver = new IdToolkitHostResolver(this.mockProjectId, IdToolkitVersion.V2);
             var resolvedHost = resolver.Resolve();
             Assert.Equal(expectedHost, resolvedHost);
         }

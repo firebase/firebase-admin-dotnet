@@ -72,7 +72,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
             this.app = args.App;
 
-            this.baseUrl = new IdToolkitHostResolver(args.ProjectId).Resolve();
+            this.baseUrl = new IdToolkitHostResolver(args.ProjectId, IdToolkitVersion.V2).Resolve();
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 args.ToHttpClientArgs());
         }
