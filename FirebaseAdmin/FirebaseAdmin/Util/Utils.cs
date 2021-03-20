@@ -24,6 +24,17 @@ namespace FirebaseAdmin.Util
 
     internal class Utils
     {
+        /// <summary>
+        /// Resolves to the correct identity toolkit api host.
+        /// It does this by checking if <see cref="EnvironmentVariable.FirebaseAuthEmulatorHost" /> exists 
+        /// and then prepends the url with that host if it does. Otherwise it returns the regular identity host.
+        /// Example:
+        /// If <see cref="EnvironmentVariable.FirebaseAuthEmulatorHost" /> is set to localhost:9099 the host is resolved to http://localhost:9099/identitytoolkit.googleapis.com...
+        /// If <see cref="EnvironmentVariable.FirebaseAuthEmulatorHost" /> is not set the host resolves to https://identitytoolkit.googleapis.com...
+        /// </summary>
+        /// <param name="projectId">The project ID to connect to</param>
+        /// <param name="version">The version of the API to connect to</param>
+        /// <returns></returns>
         internal static string ResolveIdToolkitHost(string projectId, IdToolkitVersion version = IdToolkitVersion.V2)
         {
             const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/{0}/projects/{1}";
