@@ -37,6 +37,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
             new object[] { TestConfig.ForFirebaseAuth() },
+            new object[] { TestConfig.ForEmulatorAwareFirebaseAuth() },
             new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
         };
 
@@ -2105,9 +2106,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
             return await tokenBuilder.CreateTokenAsync();
         }
 
-        public class TestConfig
+        public class TestConfig : IDisposable
         {
             internal const string MockProjectId = "project1";
+            internal const string MockEmulatorHost = "localhost:9099";
 
             internal static readonly IClock Clock = new MockClock();
 
@@ -2135,6 +2137,12 @@ namespace FirebaseAdmin.Auth.Users.Tests
             public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
             {
                 return new TestConfig(tenantId);
+            }
+
+            public static TestConfig ForEmulatorAwareFirebaseAuth(string emulatorHost = MockEmulatorHost)
+            {
+                EnvironmentVariable.FirebaseAuthEmulatorHost = emulatorHost;
+                return new TestConfig();
             }
 
             public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
@@ -2191,12 +2199,18 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 };
             }
 
+            public void Dispose()
+            {
+                EnvironmentVariable.FirebaseAuthEmulatorHost = string.Empty;
+            }
+
             internal void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
                 var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
-                var expectedPath = $"/v1/projects/{MockProjectId}{tenantInfo}/{expectedSuffix}";
-                Assert.Equal(expectedPath, request.Url.PathAndQuery);
+                var expectedPath = $"{Utils.ResolveIdToolkitHost(MockProjectId, IdToolkitVersion.V1)}{tenantInfo}/{expectedSuffix}";
+                var emulatorHost = EnvironmentVariable.FirebaseAuthEmulatorHost;
+                Assert.Equal(expectedPath, request.Url.ToString());
             }
 
             private IDictionary<string, object> GetUserResponseDictionary(string response = null)
