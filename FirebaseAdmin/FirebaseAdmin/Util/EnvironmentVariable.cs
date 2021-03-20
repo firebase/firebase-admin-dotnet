@@ -23,7 +23,7 @@ namespace FirebaseAdmin.Util
     internal static class EnvironmentVariable
     {
         /// <summary>
-        /// Environment variable for connecting to the Firebase Authentication Emulator.
+        /// Gets or sets environment variable for connecting to the Firebase Authentication Emulator.
         /// </summary>
         /// <value>string in the form &lt;host&gt;:&lt;port&gt;, e.g. localhost:9099. Beware: No validation is done.</value>
         internal static string FirebaseAuthEmulatorHost
