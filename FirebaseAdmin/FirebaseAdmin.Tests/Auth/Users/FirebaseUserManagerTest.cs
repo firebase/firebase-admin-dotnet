@@ -37,7 +37,6 @@ namespace FirebaseAdmin.Auth.Users.Tests
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
             new object[] { TestConfig.ForFirebaseAuth() },
-            new object[] { TestConfig.ForEmulatorAwareFirebaseAuth() },
             new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
         };
 
@@ -2106,11 +2105,9 @@ namespace FirebaseAdmin.Auth.Users.Tests
             return await tokenBuilder.CreateTokenAsync();
         }
 
-        public class TestConfig : IDisposable
+        public class TestConfig
         {
             internal const string MockProjectId = "project1";
-            internal const string MockEmulatorHost = "localhost:9099";
-
             internal static readonly IClock Clock = new MockClock();
 
             private readonly AuthBuilder authBuilder;
@@ -2137,12 +2134,6 @@ namespace FirebaseAdmin.Auth.Users.Tests
             public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
             {
                 return new TestConfig(tenantId);
-            }
-
-            public static TestConfig ForEmulatorAwareFirebaseAuth(string emulatorHost = MockEmulatorHost)
-            {
-                EnvironmentVariable.FirebaseAuthEmulatorHost = emulatorHost;
-                return new TestConfig();
             }
 
             public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
@@ -2199,11 +2190,6 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 };
             }
 
-            public void Dispose()
-            {
-                EnvironmentVariable.FirebaseAuthEmulatorHost = string.Empty;
-            }
-
             internal void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
@@ -2236,6 +2222,19 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
                 return user;
             }
+        }
+    }
+
+    public class EmulatorFirebaseUserManagerTest : FirebaseUserManagerTest, IDisposable
+    {
+        public EmulatorFirebaseUserManagerTest()
+        {
+            EnvironmentVariable.FirebaseAuthEmulatorHost = "localhost:9099";
+        }
+
+        public void Dispose()
+        {
+            EnvironmentVariable.FirebaseAuthEmulatorHost = string.Empty;
         }
     }
 }
