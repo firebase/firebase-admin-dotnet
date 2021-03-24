@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, string.Empty);
+            Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", string.Empty);
         }
     }
 }
