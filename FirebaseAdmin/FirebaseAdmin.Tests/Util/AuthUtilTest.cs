@@ -11,11 +11,11 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void ResolvesToCorrectVersion()
         {
-            var expectedV1Host = $"https://identitytoolkit.googleapis.com/v1/projects/{MockProjectId}";
-            var expectedV2Host = $"https://identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
+            var expectedV1Url = $"https://identitytoolkit.googleapis.com/v1/projects/{MockProjectId}";
+            var expectedV2Url = $"https://identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
 
-            Assert.Equal(expectedV1Host, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V1));
-            Assert.Equal(expectedV2Host, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
+            Assert.Equal(expectedV1Url, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V1));
+            Assert.Equal(expectedV2Url, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
         }
 
         [Fact]
@@ -23,9 +23,9 @@ namespace FirebaseAdmin.Auth.Tests
         {
             Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", CustomHost);
 
-            var expectedHost = $"http://{CustomHost}/identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
+            var expectedUrl = $"http://{CustomHost}/identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
 
-            Assert.Equal(expectedHost, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
+            Assert.Equal(expectedUrl, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
         }
 
         [Fact]
@@ -37,8 +37,8 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void ResolvesToFirebaseHost()
         {
-            var expectedHost = $"https://identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
-            Assert.Equal(expectedHost, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
+            var expectedUrl = $"https://identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
+            Assert.Equal(expectedUrl, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
         }
 
         public void Dispose()
