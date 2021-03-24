@@ -72,10 +72,10 @@ namespace FirebaseAdmin.Auth.Tests
         public void NoTenantId()
         {
             var app = FirebaseApp.Create(new AppOptions
-                {
-                    Credential = MockCredential,
-                    ProjectId = "project1",
-                });
+            {
+                Credential = MockCredential,
+                ProjectId = "project1",
+            });
 
             FirebaseAuth auth = FirebaseAuth.DefaultInstance;
 
@@ -128,10 +128,10 @@ namespace FirebaseAdmin.Auth.Tests
         public void ServiceAccountId()
         {
             FirebaseApp.Create(new AppOptions
-                {
-                    Credential = MockCredential,
-                    ServiceAccountId = "test-service-account",
-                });
+            {
+                Credential = MockCredential,
+                ServiceAccountId = "test-service-account",
+            });
 
             var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
 
@@ -146,16 +146,16 @@ namespace FirebaseAdmin.Auth.Tests
 
     public class EmulatorFirebaseAuthTest : FirebaseAuthTest, IDisposable
     {
-        private void SetFirebaseHostEnvironmentVariable(string value)
-            => Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, value);
-
         public EmulatorFirebaseAuthTest()
-            => SetFirebaseHostEnvironmentVariable("localhost:9099");
+            => this.SetFirebaseHostEnvironmentVariable("localhost:9099");
 
         public override void Dispose()
         {
             base.Dispose();
-            SetFirebaseHostEnvironmentVariable(string.Empty);
+            this.SetFirebaseHostEnvironmentVariable(string.Empty);
         }
+
+        private void SetFirebaseHostEnvironmentVariable(string value)
+            => Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, value);
     }
 }

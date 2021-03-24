@@ -24,6 +24,7 @@ using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Jwt.Tests;
 using FirebaseAdmin.Auth.Tests;
 using FirebaseAdmin.Tests;
+using FirebaseAdmin.Util;
 using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
@@ -2226,13 +2227,13 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
     public class EmulatorFirebaseUserManagerTest : FirebaseUserManagerTest, IDisposable
     {
-        private void SetFirebaseHostEnvironmentVariable(string value)
-            => Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, value);
-
         public EmulatorFirebaseUserManagerTest()
-            => SetFirebaseHostEnvironmentVariable("localhost:9099");
+            => this.SetFirebaseHostEnvironmentVariable("localhost:9099");
 
         public void Dispose()
-            => SetFirebaseHostEnvironmentVariable(string.Empty);
+            => this.SetFirebaseHostEnvironmentVariable(string.Empty);
+
+        private void SetFirebaseHostEnvironmentVariable(string value)
+            => Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, value);
     }
 }
