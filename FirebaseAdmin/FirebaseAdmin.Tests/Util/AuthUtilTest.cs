@@ -1,10 +1,9 @@
 using System;
-using FirebaseAdmin.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Tests
 {
-    public class UtilTest : IDisposable
+    public class AuthUtilTest : IDisposable
     {
         private const string MockProjectId = "test_project1234";
         private const string CustomHost = "localhost:9099";
