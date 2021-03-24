@@ -1,5 +1,6 @@
 using System;
 using Xunit;
+using static FirebaseAdmin.Auth.Utils;
 
 namespace FirebaseAdmin.Auth.Tests
 {
@@ -43,7 +44,7 @@ namespace FirebaseAdmin.Auth.Tests
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", string.Empty);
+            Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, string.Empty);
         }
     }
 }
