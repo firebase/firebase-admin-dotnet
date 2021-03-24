@@ -1,4 +1,4 @@
-// Copyright 2019, Google Inc. All rights reserved.
+// Copyright 2021, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 using System;
 
-namespace FirebaseAdmin.Util
+namespace FirebaseAdmin.Auth
 {
     internal enum IdToolkitVersion
     {
@@ -24,8 +24,21 @@ namespace FirebaseAdmin.Util
 
     internal class Utils
     {
+        internal static class EnvironmentVariable
+        {
+            internal const string FirebaseAuthEmulatorHostName = "FIREBASE_AUTH_EMULATOR_HOST";
+            /// <summary>
+            /// Gets environment variable for connecting to the Firebase Authentication Emulator.
+            /// The variable is expected to be in the form &lt;host&gt;:&lt;port&gt;, e.g. localhost:9099.
+            /// </summary>
+            internal static string FirebaseAuthEmulatorHost
+            {
+                get => Environment.GetEnvironmentVariable(FirebaseAuthEmulatorHostName) ?? string.Empty;
+            }
+        }
+
         /// <summary>
-        /// Resolves to the correct identity toolkit api host.
+        /// Gets the correct identity toolkit api host.
         /// It does this by checking if <see cref="EnvironmentVariable.FirebaseAuthEmulatorHost" /> exists
         /// and then prepends the url with that host if it does. Otherwise it returns the regular identity host.
         /// Example:
@@ -35,7 +48,7 @@ namespace FirebaseAdmin.Util
         /// <param name="projectId">The project ID to connect to.</param>
         /// <param name="version">The version of the API to connect to.</param>
         /// <returns>Resolved identity toolkit host.</returns>
-        internal static string ResolveIdToolkitHost(string projectId, IdToolkitVersion version = IdToolkitVersion.V2)
+        internal static string GetIdToolkitHost(string projectId, IdToolkitVersion version = IdToolkitVersion.V2)
         {
             const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/{0}/projects/{1}";
             const string IdToolkitEmulatorUrl = "http://{0}/identitytoolkit.googleapis.com/{1}/projects/{2}";
@@ -46,11 +59,13 @@ namespace FirebaseAdmin.Util
             }
 
             var emulatorHostEnvVar = EnvironmentVariable.FirebaseAuthEmulatorHost;
-            var useEmulatorHost = !string.IsNullOrWhiteSpace(emulatorHostEnvVar);
             var versionAsString = version.ToString().ToLower();
-            return useEmulatorHost
-                ? string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId)
-                : string.Format(IdToolkitUrl, versionAsString, projectId);
+
+            if (!string.IsNullOrWhiteSpace(emulatorHostEnvVar))
+            {
+                return string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId);
+            }
+            return string.Format(IdToolkitUrl, versionAsString, projectId);
         }
     }
 }

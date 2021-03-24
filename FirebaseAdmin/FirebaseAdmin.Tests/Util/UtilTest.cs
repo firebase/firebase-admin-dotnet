@@ -15,8 +15,8 @@ namespace FirebaseAdmin.Auth.Tests
             var expectedV1Host = $"https://identitytoolkit.googleapis.com/v1/projects/{MockProjectId}";
             var expectedV2Host = $"https://identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
 
-            Assert.Equal(expectedV1Host, Utils.ResolveIdToolkitHost(MockProjectId, IdToolkitVersion.V1));
-            Assert.Equal(expectedV2Host, Utils.ResolveIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
+            Assert.Equal(expectedV1Host, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V1));
+            Assert.Equal(expectedV2Host, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
         }
 
         [Fact]
@@ -26,20 +26,20 @@ namespace FirebaseAdmin.Auth.Tests
 
             var expectedHost = $"http://{CustomHost}/identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
 
-            Assert.Equal(expectedHost, Utils.ResolveIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
+            Assert.Equal(expectedHost, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
         }
 
         [Fact]
         public void FailsOnNoProjectId()
         {
-            Assert.Throws<ArgumentException>(() => Utils.ResolveIdToolkitHost(string.Empty, IdToolkitVersion.V2));
+            Assert.Throws<ArgumentException>(() => Utils.GetIdToolkitHost(string.Empty, IdToolkitVersion.V2));
         }
 
         [Fact]
         public void ResolvesToFirebaseHost()
         {
             var expectedHost = $"https://identitytoolkit.googleapis.com/v2/projects/{MockProjectId}";
-            Assert.Equal(expectedHost, Utils.ResolveIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
+            Assert.Equal(expectedHost, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2));
         }
 
         public void Dispose()

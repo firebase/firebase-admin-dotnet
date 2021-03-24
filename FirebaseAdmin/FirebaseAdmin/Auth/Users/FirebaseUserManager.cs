@@ -78,7 +78,7 @@ namespace FirebaseAdmin.Auth.Users
                     RetryOptions = args.RetryOptions,
                 });
             this.clock = args.Clock ?? SystemClock.Default;
-            var baseUrl = Utils.ResolveIdToolkitHost(args.ProjectId, IdToolkitVersion.V1);
+            var baseUrl = Utils.GetIdToolkitHost(args.ProjectId, IdToolkitVersion.V1);
             if (this.TenantId != null)
             {
                 this.baseUrl = $"{baseUrl}/tenants/{this.TenantId}";

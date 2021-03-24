@@ -16,6 +16,7 @@ using System;
 using FirebaseAdmin.Auth.Jwt;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
+using static FirebaseAdmin.Auth.Utils;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace FirebaseAdmin.Auth.Tests
@@ -137,9 +138,24 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.IsType<FixedAccountIAMSigner>(tokenFactory.Signer);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             FirebaseApp.DeleteAll();
+        }
+    }
+
+    public class EmulatorFirebaseAuthTest : FirebaseAuthTest, IDisposable
+    {
+        private void SetFirebaseHostEnvironmentVariable(string value)
+            => Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, value);
+
+        public EmulatorFirebaseAuthTest()
+            => SetFirebaseHostEnvironmentVariable("localhost:9099");
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            SetFirebaseHostEnvironmentVariable(string.Empty);
         }
     }
 }
