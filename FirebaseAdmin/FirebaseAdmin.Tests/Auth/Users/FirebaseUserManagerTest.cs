@@ -2234,6 +2234,6 @@ namespace FirebaseAdmin.Auth.Users.Tests
             => this.SetFirebaseHostEnvironmentVariable(string.Empty);
 
         private void SetFirebaseHostEnvironmentVariable(string value)
-            => Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, value);
+            => Environment.SetEnvironmentVariable(Utils.EmulatorHostEnvironmentVar, value);
     }
 }

@@ -24,13 +24,15 @@ namespace FirebaseAdmin.Auth
 
     internal class Utils
     {
+        internal const string EmulatorHostEnvironmentVar = "FIREBASE_AUTH_EMULATOR_HOST";
+
         /// <summary>
         /// Gets the correct identity toolkit api host.
-        /// It does this by checking if <see cref="EnvironmentVariable.FirebaseAuthEmulatorHost" /> exists
+        /// It does this by checking if <see cref="EmulatorHostEnvironmentVar" /> exists
         /// and then prepends the url with that host if it does. Otherwise it returns the regular identity host.
         /// Example:
-        /// If <see cref="EnvironmentVariable.FirebaseAuthEmulatorHost" /> is set to localhost:9099 the host is resolved to http://localhost:9099/identitytoolkit.googleapis.com...
-        /// If <see cref="EnvironmentVariable.FirebaseAuthEmulatorHost" /> is not set the host resolves to https://identitytoolkit.googleapis.com...
+        /// If <see cref="EmulatorHostEnvironmentVar" /> is set to localhost:9099 the host is resolved to http://localhost:9099/identitytoolkit.googleapis.com...
+        /// If <see cref="EmulatorHostEnvironmentVar" /> is not set the host resolves to https://identitytoolkit.googleapis.com...
         /// </summary>
         /// <param name="projectId">The project ID to connect to.</param>
         /// <param name="version">The version of the API to connect to.</param>
@@ -47,25 +49,13 @@ namespace FirebaseAdmin.Auth
 
             var versionAsString = version.ToString().ToLower();
 
-            var emulatorHostEnvVar = EnvironmentVariable.FirebaseAuthEmulatorHost;
+            var emulatorHostEnvVar = Environment.GetEnvironmentVariable(EmulatorHostEnvironmentVar);
             if (!string.IsNullOrWhiteSpace(emulatorHostEnvVar))
             {
                 return string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId);
             }
 
             return string.Format(IdToolkitUrl, versionAsString, projectId);
-        }
-
-        internal static class EnvironmentVariable
-        {
-            internal const string FirebaseAuthEmulatorHostName = "FIREBASE_AUTH_EMULATOR_HOST";
-
-            /// <summary>
-            /// Gets environment variable for connecting to the Firebase Authentication Emulator.
-            /// The variable is expected to be in the form &lt;host&gt;:&lt;port&gt;, e.g. localhost:9099.
-            /// </summary>
-            internal static string FirebaseAuthEmulatorHost
-                => Environment.GetEnvironmentVariable(FirebaseAuthEmulatorHostName) ?? string.Empty;
         }
     }
 }
