@@ -26,11 +26,11 @@ namespace FirebaseAdmin.Auth
     {
         /// <summary>
         /// Gets the correct identity toolkit api host.
-        /// It does this by checking if <see cref="EmulatorHostEnvironmentVar" /> exists
+        /// It does this by checking if FIREBASE_AUTH_EMULATOR_HOST exists
         /// and then prepends the url with that host if it does. Otherwise it returns the regular identity host.
         /// Example:
-        /// If <see cref="EmulatorHostEnvironmentVar" /> is set to localhost:9099 the host is resolved to http://localhost:9099/identitytoolkit.googleapis.com...
-        /// If <see cref="EmulatorHostEnvironmentVar" /> is not set the host resolves to https://identitytoolkit.googleapis.com...
+        /// If FIREBASE_AUTH_EMULATOR_HOST environment variable is set to localhost:9099 the host is resolved to http://localhost:9099/identitytoolkit.googleapis.com...
+        /// If FIREBASE_AUTH_EMULATOR_HOST environment variable is not set the host resolves to https://identitytoolkit.googleapis.com...
         /// </summary>
         /// <param name="projectId">The project ID to connect to.</param>
         /// <param name="version">The version of the API to connect to.</param>
