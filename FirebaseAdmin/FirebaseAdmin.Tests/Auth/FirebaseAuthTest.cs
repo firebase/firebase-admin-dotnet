@@ -143,19 +143,4 @@ namespace FirebaseAdmin.Auth.Tests
             FirebaseApp.DeleteAll();
         }
     }
-
-    public class EmulatorFirebaseAuthTest : FirebaseAuthTest, IDisposable
-    {
-        public EmulatorFirebaseAuthTest()
-            => this.SetFirebaseHostEnvironmentVariable("localhost:9099");
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            this.SetFirebaseHostEnvironmentVariable(string.Empty);
-        }
-
-        private void SetFirebaseHostEnvironmentVariable(string value)
-            => Environment.SetEnvironmentVariable(EnvironmentVariable.FirebaseAuthEmulatorHostName, value);
-    }
 }
