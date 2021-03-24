@@ -18,7 +18,7 @@ using static FirebaseAdmin.Auth.Utils;
 
 namespace FirebaseAdmin.Auth.Tests
 {
-    public class AuthUtilTest : IDisposable
+    public class UtilTest : IDisposable
     {
         private const string MockProjectId = "test_project1234";
         private const string CustomHost = "localhost:9099";
