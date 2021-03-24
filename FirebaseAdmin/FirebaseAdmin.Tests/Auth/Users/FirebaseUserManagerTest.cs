@@ -2194,9 +2194,8 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
                 var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
-                var expectedPath = $"{Utils.ResolveIdToolkitHost(MockProjectId, IdToolkitVersion.V1)}{tenantInfo}/{expectedSuffix}";
-                var emulatorHost = EnvironmentVariable.FirebaseAuthEmulatorHost;
-                Assert.Equal(expectedPath, request.Url.ToString());
+                var expectedUrl = $"{Utils.ResolveIdToolkitHost(MockProjectId, IdToolkitVersion.V1)}{tenantInfo}/{expectedSuffix}";
+                Assert.Equal(expectedUrl, request.Url.ToString());
             }
 
             private IDictionary<string, object> GetUserResponseDictionary(string response = null)
