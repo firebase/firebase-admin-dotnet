@@ -24,8 +24,6 @@ namespace FirebaseAdmin.Auth
 
     internal class Utils
     {
-        internal const string EmulatorHostEnvironmentVar = "FIREBASE_AUTH_EMULATOR_HOST";
-
         /// <summary>
         /// Gets the correct identity toolkit api host.
         /// It does this by checking if <see cref="EmulatorHostEnvironmentVar" /> exists
@@ -49,7 +47,7 @@ namespace FirebaseAdmin.Auth
 
             var versionAsString = version.ToString().ToLower();
 
-            var emulatorHostEnvVar = Environment.GetEnvironmentVariable(EmulatorHostEnvironmentVar);
+            var emulatorHostEnvVar = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
             if (!string.IsNullOrWhiteSpace(emulatorHostEnvVar))
             {
                 return string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId);
