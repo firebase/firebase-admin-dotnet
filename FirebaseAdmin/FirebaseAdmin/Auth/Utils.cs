@@ -58,9 +58,9 @@ namespace FirebaseAdmin.Auth
                 throw new ArgumentException("Must provide a project ID to resolve");
             }
 
-            var emulatorHostEnvVar = EnvironmentVariable.FirebaseAuthEmulatorHost;
             var versionAsString = version.ToString().ToLower();
 
+            var emulatorHostEnvVar = EnvironmentVariable.FirebaseAuthEmulatorHost;
             if (!string.IsNullOrWhiteSpace(emulatorHostEnvVar))
             {
                 return string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId);
