@@ -11,8 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#nullable enable
-
 using System;
 using Google.Apis.Auth.OAuth2;
 
@@ -38,7 +36,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="version">The version of the API to connect to.</param>
         /// <param name="tenantId">The tenant id.</param>
         /// <returns>Resolved identity toolkit host.</returns>
-        internal static string GetIdToolkitHost(string projectId, IdToolkitVersion version = IdToolkitVersion.V2, string? tenantId = null)
+        internal static string GetIdToolkitHost(string projectId, IdToolkitVersion version = IdToolkitVersion.V2, string tenantId = "")
         {
             if (string.IsNullOrWhiteSpace(projectId))
             {
@@ -77,4 +75,3 @@ namespace FirebaseAdmin.Auth
     }
 }
 
-#nullable disable
