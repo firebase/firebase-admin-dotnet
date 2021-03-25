@@ -47,9 +47,12 @@ namespace FirebaseAdmin.Auth
 
             const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/{0}/projects/{1}{2}";
             const string IdToolkitEmulatorUrl = "http://{0}/identitytoolkit.googleapis.com/{1}/projects/{2}{3}";
-            var tenantIdPath = !string.IsNullOrWhiteSpace(tenantId)
-                ? $"/tenants/{tenantId}"
-                : string.Empty;
+
+            var tenantIdPath = string.Empty;
+            if (!string.IsNullOrWhiteSpace(tenantId))
+            {
+                tenantIdPath = $"/tenants/{tenantId}";
+            }
 
             var versionAsString = version.ToString().ToLower();
 
