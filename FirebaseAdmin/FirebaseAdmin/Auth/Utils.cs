@@ -54,10 +54,14 @@ namespace FirebaseAdmin.Auth
 
             var versionAsString = version.ToString().ToLower();
 
-            var emulatorHostEnvVar = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
-            if (!string.IsNullOrWhiteSpace(emulatorHostEnvVar))
+            if (IsEmulatorHostSet())
             {
-                return string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId, tenantIdPath);
+                return string.Format(
+                    IdToolkitEmulatorUrl,
+                    GetEmulatorHostEnvironmentVariable(),
+                    versionAsString,
+                    projectId,
+                    tenantIdPath);
             }
 
             return string.Format(IdToolkitUrl, versionAsString, projectId, tenantIdPath);
@@ -65,12 +69,18 @@ namespace FirebaseAdmin.Auth
 
         internal static GoogleCredential ResolveCredentials(GoogleCredential original)
         {
-            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST")))
+            if (IsEmulatorHostSet())
             {
                 return GoogleCredential.FromAccessToken("owner");
             }
 
             return original;
         }
+
+        private static bool IsEmulatorHostSet()
+            => !string.IsNullOrWhiteSpace(GetEmulatorHostEnvironmentVariable());
+
+        private static string GetEmulatorHostEnvironmentVariable()
+            => Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
     }
 }
