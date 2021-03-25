@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#nullable enable
 
 using System;
 
@@ -34,26 +35,32 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         /// <param name="projectId">The project ID to connect to.</param>
         /// <param name="version">The version of the API to connect to.</param>
+        /// <param name="tenantId">The tenant id.</param>
         /// <returns>Resolved identity toolkit host.</returns>
-        internal static string GetIdToolkitHost(string projectId, IdToolkitVersion version = IdToolkitVersion.V2)
+        internal static string GetIdToolkitHost(string projectId, IdToolkitVersion version = IdToolkitVersion.V2, string? tenantId = null)
         {
-            const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/{0}/projects/{1}";
-            const string IdToolkitEmulatorUrl = "http://{0}/identitytoolkit.googleapis.com/{1}/projects/{2}";
-
             if (string.IsNullOrWhiteSpace(projectId))
             {
                 throw new ArgumentException("Must provide a project ID to resolve");
             }
+
+            const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/{0}/projects/{1}{2}";
+            const string IdToolkitEmulatorUrl = "http://{0}/identitytoolkit.googleapis.com/{1}/projects/{2}{3}";
+            var tenantIdPath = !string.IsNullOrWhiteSpace(tenantId)
+                ? $"/tenants/{tenantId}"
+                : string.Empty;
 
             var versionAsString = version.ToString().ToLower();
 
             var emulatorHostEnvVar = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
             if (!string.IsNullOrWhiteSpace(emulatorHostEnvVar))
             {
-                return string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId);
+                return string.Format(IdToolkitEmulatorUrl, emulatorHostEnvVar, versionAsString, projectId, tenantIdPath);
             }
 
-            return string.Format(IdToolkitUrl, versionAsString, projectId);
+            return string.Format(IdToolkitUrl, versionAsString, projectId, tenantIdPath);
         }
     }
 }
+
+#nullable disable
