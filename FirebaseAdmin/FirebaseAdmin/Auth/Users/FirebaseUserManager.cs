@@ -43,8 +43,6 @@ namespace FirebaseAdmin.Auth.Users
 
         internal static readonly string ClientVersion = $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
 
-        private const string IdToolkitUrl = "https://identitytoolkit.googleapis.com/v1/projects/{0}";
-
         /** Maximum allowed number of users to batch get at one time. */
         private const int MaxGetAccountsBatchSize = 100;
 
@@ -73,22 +71,14 @@ namespace FirebaseAdmin.Auth.Users
                 new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
                 {
                     HttpClientFactory = args.ClientFactory,
-                    Credential = args.Credential,
+                    Credential = Utils.ResolveCredentials(args.Credential),
                     ErrorResponseHandler = AuthErrorHandler.Instance,
                     RequestExceptionHandler = AuthErrorHandler.Instance,
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
                     RetryOptions = args.RetryOptions,
                 });
             this.clock = args.Clock ?? SystemClock.Default;
-            var baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
-            if (this.TenantId != null)
-            {
-                this.baseUrl = $"{baseUrl}/tenants/{this.TenantId}";
-            }
-            else
-            {
-                this.baseUrl = baseUrl;
-            }
+            this.baseUrl = Utils.GetIdToolkitHost(args.ProjectId, IdToolkitVersion.V1, this.TenantId);
         }
 
         internal string TenantId { get; }

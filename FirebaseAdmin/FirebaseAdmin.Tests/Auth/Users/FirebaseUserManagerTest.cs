@@ -29,6 +29,7 @@ using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using static FirebaseAdmin.Auth.Utils;
 
 namespace FirebaseAdmin.Auth.Users.Tests
 {
@@ -2108,7 +2109,6 @@ namespace FirebaseAdmin.Auth.Users.Tests
         public class TestConfig
         {
             internal const string MockProjectId = "project1";
-
             internal static readonly IClock Clock = new MockClock();
 
             private readonly AuthBuilder authBuilder;
@@ -2195,8 +2195,8 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
                 var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
-                var expectedPath = $"/v1/projects/{MockProjectId}{tenantInfo}/{expectedSuffix}";
-                Assert.Equal(expectedPath, request.Url.PathAndQuery);
+                var expectedUrl = $"{Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V1)}{tenantInfo}/{expectedSuffix}";
+                Assert.Equal(expectedUrl, request.Url.ToString());
             }
 
             private IDictionary<string, object> GetUserResponseDictionary(string response = null)
@@ -2223,5 +2223,17 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 return user;
             }
         }
+    }
+
+    public class EmulatorFirebaseUserManagerTest : FirebaseUserManagerTest, IDisposable
+    {
+        public EmulatorFirebaseUserManagerTest()
+            => this.SetFirebaseHostEnvironmentVariable("localhost:9099");
+
+        public void Dispose()
+            => this.SetFirebaseHostEnvironmentVariable(string.Empty);
+
+        private void SetFirebaseHostEnvironmentVariable(string value)
+            => Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", value);
     }
 }
