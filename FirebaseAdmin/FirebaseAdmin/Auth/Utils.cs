@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Auth
             {
                 return string.Format(
                     IdToolkitEmulatorUrl,
-                    GetEmulatorHostEnvironmentVariable(),
+                    GetEmulatorHost(),
                     versionAsString,
                     projectId,
                     tenantIdPath);
@@ -78,9 +78,9 @@ namespace FirebaseAdmin.Auth
         }
 
         private static bool IsEmulatorHostSet()
-            => !string.IsNullOrWhiteSpace(GetEmulatorHostEnvironmentVariable());
+            => !string.IsNullOrWhiteSpace(GetEmulatorHost());
 
-        private static string GetEmulatorHostEnvironmentVariable()
+        private static string GetEmulatorHost()
             => Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
     }
 }
