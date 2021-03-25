@@ -44,6 +44,17 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public void ResolvesToEmulatorHostWithTenantId()
+        {
+            Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", CustomHost);
+
+            var tenantId = "test-tenant1";
+            var expectedUrl = $"http://{CustomHost}/identitytoolkit.googleapis.com/v2/projects/{MockProjectId}/tenants/{tenantId}";
+
+            Assert.Equal(expectedUrl, Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V2, tenantId));
+        }
+
+        [Fact]
         public void FailsOnNoProjectId()
         {
             Assert.Throws<ArgumentException>(() => Utils.GetIdToolkitHost(string.Empty, IdToolkitVersion.V2));
