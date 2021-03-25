@@ -71,7 +71,7 @@ namespace FirebaseAdmin.Auth.Users
                 new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
                 {
                     HttpClientFactory = args.ClientFactory,
-                    Credential = args.Credential,
+                    Credential = Utils.ResolveCredentials(args.Credential),
                     ErrorResponseHandler = AuthErrorHandler.Instance,
                     RequestExceptionHandler = AuthErrorHandler.Instance,
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,

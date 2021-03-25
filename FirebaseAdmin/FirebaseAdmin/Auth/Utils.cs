@@ -14,6 +14,7 @@
 #nullable enable
 
 using System;
+using Google.Apis.Auth.OAuth2;
 
 namespace FirebaseAdmin.Auth
 {
@@ -59,6 +60,16 @@ namespace FirebaseAdmin.Auth
             }
 
             return string.Format(IdToolkitUrl, versionAsString, projectId, tenantIdPath);
+        }
+
+        internal static GoogleCredential ResolveCredentials(GoogleCredential original)
+        {
+            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST")))
+            {
+                return GoogleCredential.FromAccessToken("owner");
+            }
+
+            return original;
         }
     }
 }
