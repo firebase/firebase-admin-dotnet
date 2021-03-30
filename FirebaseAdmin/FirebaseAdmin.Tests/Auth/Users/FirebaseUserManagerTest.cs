@@ -29,7 +29,6 @@ using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using static FirebaseAdmin.Auth.Utils;
 
 namespace FirebaseAdmin.Auth.Users.Tests
 {
@@ -39,6 +38,8 @@ namespace FirebaseAdmin.Auth.Users.Tests
         {
             new object[] { TestConfig.ForFirebaseAuth() },
             new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
+            new object[] { EmulatorTestConfig.ForFirebaseAuth() },
+            new object[] { EmulatorTestConfig.ForTenantAwareFirebaseAuth("tenant1") },
         };
 
         private const string CreateUserResponse = @"{""localId"": ""user1""}";
@@ -2110,12 +2111,11 @@ namespace FirebaseAdmin.Auth.Users.Tests
         {
             internal const string MockProjectId = "project1";
             internal static readonly IClock Clock = new MockClock();
+            private static readonly string IdToolkitUrl = $"https://identitytoolkit.googleapis.com/v1/projects/{MockProjectId}";
 
-            private readonly AuthBuilder authBuilder;
-
-            private TestConfig(string tenantId = null)
+            protected TestConfig(string tenantId = null)
             {
-                this.authBuilder = new AuthBuilder
+                this.AuthBuilder = new AuthBuilder
                 {
                     ProjectId = MockProjectId,
                     Clock = Clock,
@@ -2125,7 +2125,9 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 };
             }
 
-            public string TenantId => this.authBuilder.TenantId;
+            public string TenantId => this.AuthBuilder.TenantId;
+
+            protected AuthBuilder AuthBuilder { get; }
 
             public static TestConfig ForFirebaseAuth()
             {
@@ -2143,7 +2145,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 {
                     UserManagerRequestHandler = handler,
                 };
-                return this.authBuilder.Build(options);
+                return this.AuthBuilder.Build(options);
             }
 
             public string GetUserResponse(string response = null)
@@ -2191,11 +2193,11 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 };
             }
 
-            internal void AssertRequest(
+            internal virtual void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
-                var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
-                var expectedUrl = $"{Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V1)}{tenantInfo}/{expectedSuffix}";
+                var tenant = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
+                var expectedUrl = $"{IdToolkitUrl}{tenant}/{expectedSuffix}";
                 Assert.Equal(expectedUrl, request.Url.ToString());
             }
 
@@ -2223,17 +2225,35 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 return user;
             }
         }
-    }
 
-    public class EmulatorFirebaseUserManagerTest : FirebaseUserManagerTest, IDisposable
-    {
-        public EmulatorFirebaseUserManagerTest()
-            => this.SetFirebaseHostEnvironmentVariable("localhost:9099");
+        public class EmulatorTestConfig : TestConfig
+        {
+            private static readonly string EmulatorUrl = $"http://localhost:9090/identitytoolkit.googleapis.com/v1/projects/{MockProjectId}";
 
-        public void Dispose()
-            => this.SetFirebaseHostEnvironmentVariable(string.Empty);
+            private EmulatorTestConfig(string tenantId = null)
+            : base(tenantId)
+            {
+                this.AuthBuilder.EmulatorHost = "localhost:9090";
+            }
 
-        private void SetFirebaseHostEnvironmentVariable(string value)
-            => Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", value);
+            public static new TestConfig ForFirebaseAuth()
+            {
+                return new EmulatorTestConfig();
+            }
+
+            public static new TestConfig ForTenantAwareFirebaseAuth(string tenantId)
+            {
+                return new EmulatorTestConfig(tenantId);
+            }
+
+            internal override void AssertRequest(
+                string expectedSuffix, MockMessageHandler.IncomingRequest request)
+            {
+                var tenant = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
+                var expectedUrl = $"{EmulatorUrl}{tenant}/{expectedSuffix}";
+                Assert.Equal(expectedUrl, request.Url.ToString());
+                Assert.Equal("Bearer owner", request.Headers.Authorization.ToString());
+            }
+        }
     }
 }

@@ -55,7 +55,8 @@ namespace FirebaseAdmin.Auth.Users
 
         internal FirebaseUserManager(Args args)
         {
-            if (string.IsNullOrEmpty(args.ProjectId))
+            this.ProjectId = args.ProjectId;
+            if (string.IsNullOrEmpty(this.ProjectId))
             {
                 throw new ArgumentException(
                     "Must initialize FirebaseApp with a project ID to manage users.");
@@ -67,21 +68,32 @@ namespace FirebaseAdmin.Auth.Users
                 throw new ArgumentException("Tenant ID must not be empty.");
             }
 
+            this.EmulatorHost = args.EmulatorHost;
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
                 {
                     HttpClientFactory = args.ClientFactory,
-                    Credential = Utils.ResolveCredentials(args.Credential),
+                    Credential = Utils.ResolveCredentials(this.EmulatorHost, args.Credential),
                     ErrorResponseHandler = AuthErrorHandler.Instance,
                     RequestExceptionHandler = AuthErrorHandler.Instance,
                     DeserializeExceptionHandler = AuthErrorHandler.Instance,
                     RetryOptions = args.RetryOptions,
                 });
             this.clock = args.Clock ?? SystemClock.Default;
-            this.baseUrl = Utils.GetIdToolkitHost(args.ProjectId, IdToolkitVersion.V1, this.TenantId);
+
+            var options = new Utils.UrlOptions
+            {
+                TenantId = this.TenantId,
+                EmulatorHost = this.EmulatorHost,
+            };
+            this.baseUrl = Utils.BuildAuthUrl(this.ProjectId, options);
         }
 
+        internal string ProjectId { get; }
+
         internal string TenantId { get; }
+
+        internal string EmulatorHost { get; }
 
         public void Dispose()
         {
@@ -97,6 +109,7 @@ namespace FirebaseAdmin.Auth.Users
                 ProjectId = app.GetProjectId(),
                 TenantId = tenantId,
                 RetryOptions = RetryOptions.Default,
+                EmulatorHost = Utils.EmulatorHostFromEnvironment,
             };
 
             return new FirebaseUserManager(args);
@@ -436,6 +449,8 @@ namespace FirebaseAdmin.Auth.Users
             internal RetryOptions RetryOptions { get; set; }
 
             internal IClock Clock { get; set; }
+
+            internal string EmulatorHost { get; set; }
         }
 
         /// <summary>

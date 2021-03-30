@@ -16,7 +16,6 @@ using System;
 using FirebaseAdmin.Auth.Jwt;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
-using static FirebaseAdmin.Auth.Utils;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace FirebaseAdmin.Auth.Tests
@@ -138,7 +137,23 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.IsType<FixedAccountIAMSigner>(tokenFactory.Signer);
         }
 
-        public virtual void Dispose()
+        [Fact]
+        public void UserManager()
+        {
+            var app = FirebaseApp.Create(new AppOptions
+            {
+                Credential = MockCredential,
+                ProjectId = "project1",
+            });
+
+            var userManager = FirebaseAuth.DefaultInstance.UserManager;
+
+            Assert.Equal("project1", userManager.ProjectId);
+            Assert.Null(userManager.TenantId);
+            Assert.Null(userManager.EmulatorHost);
+        }
+
+        public void Dispose()
         {
             FirebaseApp.DeleteAll();
         }
