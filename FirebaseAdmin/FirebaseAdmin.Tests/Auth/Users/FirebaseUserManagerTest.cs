@@ -2207,11 +2207,11 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 };
             }
 
-            internal virtual void AssertRequest(
+            internal void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
                 var tenant = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
-                if (!string.IsNullOrWhiteSpace(this.EmulatorHost))
+                if (this.EmulatorHost != null)
                 {
                     var expectedUrl = $"http://{this.EmulatorHost}/{IdToolkitUrl}{tenant}/{expectedSuffix}";
                     Assert.Equal(expectedUrl, request.Url.ToString());
