@@ -95,6 +95,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             FirebaseAuth auth = FirebaseAuth.DefaultInstance;
 
+            Assert.False(auth.TokenFactory.IsEmulatorMode);
             Assert.False(auth.IdTokenVerifier.IsEmulatorMode);
             Assert.Null(auth.UserManager.EmulatorHost);
         }
@@ -136,20 +137,6 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(
                 "Must initialize FirebaseApp with a project ID to manage tenants.",
                 ex.Message);
-        }
-
-        [Fact]
-        public void ServiceAccountId()
-        {
-            FirebaseApp.Create(new AppOptions
-            {
-                Credential = MockCredential,
-                ServiceAccountId = "test-service-account",
-            });
-
-            var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
-
-            Assert.IsType<FixedAccountIAMSigner>(tokenFactory.Signer);
         }
 
         public void Dispose()

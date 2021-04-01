@@ -60,23 +60,28 @@ namespace FirebaseAdmin.Auth.Jwt
             "nonce",
             "sub");
 
-        private readonly IClock clock;
-
-        internal FirebaseTokenFactory(ISigner signer, IClock clock, string tenantId = null)
+        internal FirebaseTokenFactory(Args args)
         {
-            if (tenantId == string.Empty)
+            args.ThrowIfNull(nameof(args));
+            this.TenantId = args.TenantId;
+            if (this.TenantId == string.Empty)
             {
                 throw new ArgumentException("Tenant ID must not be empty.");
             }
 
-            this.clock = clock.ThrowIfNull(nameof(clock));
-            this.Signer = signer.ThrowIfNull(nameof(signer));
-            this.TenantId = tenantId;
+            this.Clock = args.Clock ?? SystemClock.Default;
+            this.IsEmulatorMode = args.IsEmulatorMode;
+            this.Signer = this.IsEmulatorMode ?
+                EmulatorSigner.Instance : args.Signer.ThrowIfNull(nameof(args.Signer));
         }
 
         internal ISigner Signer { get; }
 
+        internal IClock Clock { get; }
+
         internal string TenantId { get; }
+
+        internal bool IsEmulatorMode { get; }
 
         public void Dispose()
         {
@@ -105,7 +110,13 @@ namespace FirebaseAdmin.Auth.Jwt
                 signer = FixedAccountIAMSigner.Create(app);
             }
 
-            return new FirebaseTokenFactory(signer, SystemClock.Default, tenantId);
+            var args = new Args
+            {
+                Signer = signer,
+                TenantId = tenantId,
+                IsEmulatorMode = Utils.IsEmulatorModeFromEnvironment,
+            };
+            return new FirebaseTokenFactory(args);
         }
 
         internal async Task<string> CreateCustomTokenAsync(
@@ -136,11 +147,11 @@ namespace FirebaseAdmin.Auth.Jwt
 
             var header = new JsonWebSignature.Header()
             {
-                Algorithm = "RS256",
+                Algorithm = this.Signer.Algorithm,
                 Type = "JWT",
             };
 
-            var issued = (int)(this.clock.UtcNow - UnixEpoch).TotalSeconds;
+            var issued = (int)(this.Clock.UtcNow - UnixEpoch).TotalSeconds;
             var keyId = await this.Signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
             var payload = new CustomTokenPayload()
             {
@@ -172,6 +183,17 @@ namespace FirebaseAdmin.Auth.Jwt
 
             [JsonPropertyAttribute("claims")]
             public IDictionary<string, object> Claims { get; set; }
+        }
+
+        internal sealed class Args
+        {
+            internal ISigner Signer { get; set; }
+
+            internal IClock Clock { get; set; }
+
+            internal string TenantId { get; set; }
+
+            internal bool IsEmulatorMode { get; set; }
         }
     }
 }

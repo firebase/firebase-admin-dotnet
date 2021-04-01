@@ -30,5 +30,7 @@ namespace FirebaseAdmin.Auth.Tests
         public bool IdTokenVerifier { get; set; }
 
         public bool SessionCookieVerifier { get; set; }
+
+        public bool TokenFactory { get; set; }
     }
 }

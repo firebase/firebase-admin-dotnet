@@ -67,12 +67,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
         }
 
         [Fact]
-        public void Emulator()
+        public void NoEmulator()
         {
             var app = CreateFirebaseApp();
 
             var auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant(MockTenantId);
 
+            Assert.False(auth.TokenFactory.IsEmulatorMode);
             Assert.False(auth.IdTokenVerifier.IsEmulatorMode);
             Assert.Null(auth.UserManager.EmulatorHost);
         }

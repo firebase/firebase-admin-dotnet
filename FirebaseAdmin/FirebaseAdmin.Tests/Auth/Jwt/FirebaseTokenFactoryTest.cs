@@ -18,11 +18,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
-    public class FirebaseTokenFactoryTest
+    public class FirebaseTokenFactoryTest : IDisposable
     {
         public static readonly IEnumerable<object[]> TenantIds = new List<object[]>
         {
@@ -38,7 +40,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task CreateCustomToken(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
 
             var token = await factory.CreateCustomTokenAsync("user1");
 
@@ -49,7 +51,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task CreateCustomTokenWithEmptyClaims(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
 
             var token = await factory.CreateCustomTokenAsync(
                 "user1", new Dictionary<string, object>());
@@ -61,7 +63,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task CreateCustomTokenWithClaims(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
             var developerClaims = new Dictionary<string, object>()
             {
                 { "admin", true },
@@ -78,7 +80,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task InvalidUid(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await factory.CreateCustomTokenAsync(null));
@@ -92,7 +94,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task ReservedClaims(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
             foreach (var key in FirebaseTokenFactory.ReservedClaims)
             {
                 var developerClaims = new Dictionary<string, object>()
@@ -106,43 +108,177 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         }
 
         [Fact]
-        public void NullSigner()
+        public void NullArgs()
         {
-            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(null, Clock));
+            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(null));
         }
 
         [Fact]
-        public void NullClock()
+        public void NullSigner()
         {
-            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(Signer, null));
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = null,
+            };
+
+            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(args));
         }
 
         [Fact]
         public void EmptyTenantId()
         {
-            Assert.Throws<ArgumentException>(
-                () => new FirebaseTokenFactory(Signer, Clock, string.Empty));
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = Signer,
+                TenantId = string.Empty,
+            };
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenFactory(args));
+        }
+
+        [Fact]
+        public void SignerOnly()
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = Signer,
+            };
+
+            var factory = new FirebaseTokenFactory(args);
+
+            Assert.Same(SystemClock.Default, factory.Clock);
+            Assert.Null(factory.TenantId);
+            Assert.False(factory.IsEmulatorMode);
         }
 
         [Theory]
         [MemberData(nameof(TenantIds))]
-        public void TenantId(string tenantId)
+        public void ProductionMode(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
-            if (tenantId == null)
+            var factory = CreateTokenFactory(tenantId);
+
+            Assert.False(factory.IsEmulatorMode);
+            Assert.Same(Signer, factory.Signer);
+            Assert.Same(Clock, factory.Clock);
+            AssertTenantId(tenantId, factory);
+        }
+
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public void EmulatorMode(string tenantId)
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                IsEmulatorMode = true,
+                TenantId = tenantId,
+            };
+            var factory = new FirebaseTokenFactory(args);
+
+            Assert.True(factory.IsEmulatorMode);
+            Assert.Same(EmulatorSigner.Instance, factory.Signer);
+            Assert.Same(SystemClock.Default, factory.Clock);
+            AssertTenantId(tenantId, factory);
+        }
+
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public void ServiceAccountCredential(string tenantId)
+        {
+            var options = new AppOptions
+            {
+                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
+            };
+            var app = FirebaseApp.Create(options);
+
+            var factory = FirebaseTokenFactory.Create(app, tenantId);
+
+            Assert.IsType<ServiceAccountSigner>(factory.Signer);
+            Assert.Same(SystemClock.Default, factory.Clock);
+            Assert.False(factory.IsEmulatorMode);
+            AssertTenantId(tenantId, factory);
+        }
+
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public void ServiceAccountId(string tenantId)
+        {
+            var options = new AppOptions
+            {
+                Credential = GoogleCredential.FromAccessToken("token"),
+                ServiceAccountId = "test-service-account",
+            };
+            var app = FirebaseApp.Create(options);
+
+            var factory = FirebaseTokenFactory.Create(app, tenantId);
+
+            Assert.IsType<FixedAccountIAMSigner>(factory.Signer);
+            Assert.Same(SystemClock.Default, factory.Clock);
+            Assert.False(factory.IsEmulatorMode);
+            AssertTenantId(tenantId, factory);
+        }
+
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public async void InvalidCredential(string tenantId)
+        {
+            var options = new AppOptions
+            {
+                Credential = GoogleCredential.FromAccessToken("token"),
+            };
+            var app = FirebaseApp.Create(options);
+
+            var factory = FirebaseTokenFactory.Create(app, tenantId);
+
+            Assert.IsType<IAMSigner>(factory.Signer);
+            Assert.Same(SystemClock.Default, factory.Clock);
+            Assert.False(factory.IsEmulatorMode);
+            AssertTenantId(tenantId, factory);
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => factory.CreateCustomTokenAsync("user1"));
+
+            var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
+                + "with service account credentials or specify a service account "
+                + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
+                + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
+                + "more details on creating custom tokens.";
+            Assert.Equal(errorMessage, ex.Message);
+        }
+
+        public void Dispose()
+        {
+            FirebaseApp.DeleteAll();
+        }
+
+        private static void AssertTenantId(string expectedTenantId, FirebaseTokenFactory factory)
+        {
+            if (expectedTenantId == null)
             {
                 Assert.Null(factory.TenantId);
             }
             else
             {
-                Assert.Equal(tenantId, factory.TenantId);
+                Assert.Equal(expectedTenantId, factory.TenantId);
             }
+        }
+
+        private static FirebaseTokenFactory CreateTokenFactory(string tenantId)
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = Signer,
+                Clock = Clock,
+                TenantId = tenantId,
+            };
+            return new FirebaseTokenFactory(args);
         }
 
         private sealed class MockSigner : ISigner
         {
             public const string KeyIdString = "mock-key-id";
             public const string Signature = "signature";
+
+            public string Algorithm => JwtUtils.AlgorithmRS256;
 
             public Task<string> GetKeyIdAsync(CancellationToken cancellationToken)
             {

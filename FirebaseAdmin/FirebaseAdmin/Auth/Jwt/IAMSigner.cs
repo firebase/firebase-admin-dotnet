@@ -60,6 +60,8 @@ namespace FirebaseAdmin.Auth.Jwt
                     .ConfigureAwait(false), true);
         }
 
+        public string Algorithm => JwtUtils.AlgorithmRS256;
+
         public async Task<byte[]> SignDataAsync(
             byte[] data, CancellationToken cancellationToken = default(CancellationToken))
         {
