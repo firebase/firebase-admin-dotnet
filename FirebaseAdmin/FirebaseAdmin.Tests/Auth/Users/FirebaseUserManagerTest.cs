@@ -29,7 +29,6 @@ using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using static FirebaseAdmin.Auth.Utils;
 
 namespace FirebaseAdmin.Auth.Users.Tests
 {
@@ -39,6 +38,14 @@ namespace FirebaseAdmin.Auth.Users.Tests
         {
             new object[] { TestConfig.ForFirebaseAuth() },
             new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
+            new object[] { TestConfig.ForFirebaseAuth().WithEmulator() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1").WithEmulator() },
+        };
+
+        public static readonly IEnumerable<object[]> MainTenantTestConfigs = new List<object[]>()
+        {
+            new object[] { TestConfig.ForFirebaseAuth() },
+            new object[] { TestConfig.ForFirebaseAuth().WithEmulator() },
         };
 
         private const string CreateUserResponse = @"{""localId"": ""user1""}";
@@ -1747,10 +1754,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 async () => await auth.RevokeRefreshTokensAsync(uid));
         }
 
-        [Fact]
-        public void CreateSessionCookieNoIdToken()
+        [Theory]
+        [MemberData(nameof(MainTenantTestConfigs))]
+        public void CreateSessionCookieNoIdToken(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
             var options = new SessionCookieOptions()
@@ -1764,10 +1771,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 async () => await auth.CreateSessionCookieAsync(string.Empty, options));
         }
 
-        [Fact]
-        public void CreateSessionCookieNoOptions()
+        [Theory]
+        [MemberData(nameof(MainTenantTestConfigs))]
+        public void CreateSessionCookieNoOptions(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
 
@@ -1775,10 +1782,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 async () => await auth.CreateSessionCookieAsync("idToken", null));
         }
 
-        [Fact]
-        public void CreateSessionCookieNoExpiresIn()
+        [Theory]
+        [MemberData(nameof(MainTenantTestConfigs))]
+        public void CreateSessionCookieNoExpiresIn(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
 
@@ -1787,10 +1794,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     "idToken", new SessionCookieOptions()));
         }
 
-        [Fact]
-        public async Task CreateSessionCookieExpiresInTooLow()
+        [Theory]
+        [MemberData(nameof(MainTenantTestConfigs))]
+        public async Task CreateSessionCookieExpiresInTooLow(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
             var fiveMinutesInSeconds = TimeSpan.FromMinutes(5).TotalSeconds;
@@ -1803,10 +1810,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 async () => await auth.CreateSessionCookieAsync("idToken", options));
         }
 
-        [Fact]
-        public async Task CreateSessionCookieExpiresInTooHigh()
+        [Theory]
+        [MemberData(nameof(MainTenantTestConfigs))]
+        public async Task CreateSessionCookieExpiresInTooHigh(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
             var fourteenDaysInSeconds = TimeSpan.FromDays(14).TotalSeconds;
@@ -1819,10 +1826,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 async () => await auth.CreateSessionCookieAsync("idToken", options));
         }
 
-        [Fact]
-        public async Task CreateSessionCookie()
+        [Theory]
+        [MemberData(nameof(MainTenantTestConfigs))]
+        public async Task CreateSessionCookie(TestConfig config)
         {
-            var config = TestConfig.ForFirebaseAuth();
             var handler = new MockMessageHandler()
             {
                 Response = @"{
@@ -2110,6 +2117,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
         {
             internal const string MockProjectId = "project1";
             internal static readonly IClock Clock = new MockClock();
+            private static readonly string IdToolkitUrl = $"identitytoolkit.googleapis.com/v1/projects/{MockProjectId}";
 
             private readonly AuthBuilder authBuilder;
 
@@ -2120,12 +2128,13 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     ProjectId = MockProjectId,
                     Clock = Clock,
                     RetryOptions = RetryOptions.NoBackOff,
-                    KeySource = JwtTestUtils.DefaultKeySource,
                     TenantId = tenantId,
                 };
             }
 
             public string TenantId => this.authBuilder.TenantId;
+
+            public string EmulatorHost => this.authBuilder.EmulatorHost;
 
             public static TestConfig ForFirebaseAuth()
             {
@@ -2135,6 +2144,13 @@ namespace FirebaseAdmin.Auth.Users.Tests
             public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
             {
                 return new TestConfig(tenantId);
+            }
+
+            public TestConfig WithEmulator()
+            {
+                var config = new TestConfig(this.TenantId);
+                config.authBuilder.EmulatorHost = "localhost:9090";
+                return config;
             }
 
             public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
@@ -2194,9 +2210,18 @@ namespace FirebaseAdmin.Auth.Users.Tests
             internal void AssertRequest(
                 string expectedSuffix, MockMessageHandler.IncomingRequest request)
             {
-                var tenantInfo = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
-                var expectedUrl = $"{Utils.GetIdToolkitHost(MockProjectId, IdToolkitVersion.V1)}{tenantInfo}/{expectedSuffix}";
-                Assert.Equal(expectedUrl, request.Url.ToString());
+                var tenant = this.TenantId != null ? $"/tenants/{this.TenantId}" : string.Empty;
+                if (this.EmulatorHost != null)
+                {
+                    var expectedUrl = $"http://{this.EmulatorHost}/{IdToolkitUrl}{tenant}/{expectedSuffix}";
+                    Assert.Equal(expectedUrl, request.Url.ToString());
+                    Assert.Equal("Bearer owner", request.Headers.Authorization.ToString());
+                }
+                else
+                {
+                    var expectedUrl = $"https://{IdToolkitUrl}{tenant}/{expectedSuffix}";
+                    Assert.Equal(expectedUrl, request.Url.ToString());
+                }
             }
 
             private IDictionary<string, object> GetUserResponseDictionary(string response = null)
@@ -2223,17 +2248,5 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 return user;
             }
         }
-    }
-
-    public class EmulatorFirebaseUserManagerTest : FirebaseUserManagerTest, IDisposable
-    {
-        public EmulatorFirebaseUserManagerTest()
-            => this.SetFirebaseHostEnvironmentVariable("localhost:9099");
-
-        public void Dispose()
-            => this.SetFirebaseHostEnvironmentVariable(string.Empty);
-
-        private void SetFirebaseHostEnvironmentVariable(string value)
-            => Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", value);
     }
 }

@@ -41,6 +41,8 @@ namespace FirebaseAdmin.Auth.Tests
 
         internal string TenantId { get; set; }
 
+        internal string EmulatorHost { get; set; }
+
         public AbstractFirebaseAuth Build(TestOptions options)
         {
             if (this.TenantId != null)
@@ -99,6 +101,7 @@ namespace FirebaseAdmin.Auth.Tests
                 ProjectId = this.ProjectId,
                 ClientFactory = new MockHttpClientFactory(options.UserManagerRequestHandler),
                 TenantId = this.TenantId,
+                EmulatorHost = this.EmulatorHost,
             };
             return new FirebaseUserManager(args);
         }
@@ -107,7 +110,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var args = new ProviderConfigManager.Args
             {
-                RetryOptions = RetryOptions.NoBackOff,
+                RetryOptions = this.RetryOptions,
                 ProjectId = this.ProjectId,
                 ClientFactory = new MockHttpClientFactory(options.ProviderConfigRequestHandler),
                 TenantId = this.TenantId,
