@@ -69,6 +69,7 @@ namespace FirebaseAdmin.Auth.Jwt
             this.keySource = args.PublicKeySource.ThrowIfNull(nameof(args.PublicKeySource));
             this.invalidTokenCode = args.InvalidTokenCode;
             this.expiredIdTokenCode = args.ExpiredTokenCode;
+            this.IsEmulatorMode = args.IsEmulatorMode;
             if ("aeiou".Contains(this.shortName.ToLower().Substring(0, 1)))
             {
                 this.articledShortName = $"an {this.shortName}";
@@ -89,6 +90,8 @@ namespace FirebaseAdmin.Auth.Jwt
 
         internal string TenantId { get; }
 
+        internal bool IsEmulatorMode { get; }
+
         internal static FirebaseTokenVerifier CreateIdTokenVerifier(
             FirebaseApp app, string tenantId = null)
         {
@@ -101,29 +104,25 @@ namespace FirebaseAdmin.Auth.Jwt
 
             var keySource = new HttpPublicKeySource(
                 IdTokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
-            return CreateIdTokenVerifier(projectId, keySource, tenantId: tenantId);
+            var args = CreateIdTokenVerifierArgs();
+            args.ProjectId = projectId;
+            args.TenantId = tenantId;
+            args.PublicKeySource = keySource;
+            args.IsEmulatorMode = Utils.IsEmulatorModeFromEnvironment;
+            return new FirebaseTokenVerifier(args);
         }
 
-        internal static FirebaseTokenVerifier CreateIdTokenVerifier(
-            string projectId,
-            IPublicKeySource keySource,
-            IClock clock = null,
-            string tenantId = null)
+        internal static FirebaseTokenVerifierArgs CreateIdTokenVerifierArgs()
         {
-            var args = new FirebaseTokenVerifierArgs
+            return new FirebaseTokenVerifierArgs
             {
-                ProjectId = projectId,
-                TenantId = tenantId,
                 ShortName = "ID token",
                 Operation = "VerifyIdTokenAsync()",
                 Url = "https://firebase.google.com/docs/auth/admin/verify-id-tokens",
                 Issuer = "https://securetoken.google.com/",
-                Clock = clock,
-                PublicKeySource = keySource,
                 InvalidTokenCode = AuthErrorCode.InvalidIdToken,
                 ExpiredTokenCode = AuthErrorCode.ExpiredIdToken,
             };
-            return new FirebaseTokenVerifier(args);
         }
 
         internal static FirebaseTokenVerifier CreateSessionCookieVerifier(FirebaseApp app)
@@ -185,7 +184,7 @@ namespace FirebaseAdmin.Auth.Jwt
             var errorCode = this.invalidTokenCode;
             var currentTimeInSeconds = this.clock.UnixTimestamp();
 
-            if (string.IsNullOrEmpty(header.KeyId))
+            if (!this.IsEmulatorMode && string.IsNullOrEmpty(header.KeyId))
             {
                 if (payload.Audience == FirebaseAudience)
                 {
@@ -202,7 +201,7 @@ namespace FirebaseAdmin.Auth.Jwt
                     error = $"Firebase {this.shortName} has no 'kid' claim.";
                 }
             }
-            else if (header.Algorithm != "RS256")
+            else if (!this.IsEmulatorMode && header.Algorithm != "RS256")
             {
                 error = $"Firebase {this.shortName} has incorrect algorithm. Expected RS256 but got "
                     + $"{header.Algorithm}. {verifyTokenMessage}";
@@ -279,6 +278,12 @@ namespace FirebaseAdmin.Auth.Jwt
         private async Task VerifySignatureAsync(
             string[] segments, string keyId, CancellationToken cancellationToken)
         {
+            if (this.IsEmulatorMode)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return;
+            }
+
             byte[] hash;
             using (var hashAlg = SHA256.Create())
             {

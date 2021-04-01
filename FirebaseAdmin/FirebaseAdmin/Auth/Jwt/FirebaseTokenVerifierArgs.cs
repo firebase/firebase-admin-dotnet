@@ -36,6 +36,8 @@ namespace FirebaseAdmin.Auth.Jwt
 
         public AuthErrorCode InvalidTokenCode { get; set; }
 
+        public bool IsEmulatorMode { get; set; }
+
         public AuthErrorCode ExpiredTokenCode { get; set; }
     }
 }
