@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Tests;
-using Google.Apis.Auth.OAuth2;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
@@ -28,8 +27,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         {
             new object[] { TestConfig.ForFirebaseAuth() },
             new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
-            new object[] { TestConfig.ForFirebaseAuth().ForEmulator() },
-            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1").ForEmulator() },
+            new object[] { TestConfig.ForFirebaseAuth().WithEmulator() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1").WithEmulator() },
         };
 
         [Theory]
@@ -69,11 +68,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 () => auth.CreateCustomTokenAsync("user1", canceller.Token));
         }
 
-        public class TestConfig
+        public sealed class TestConfig
         {
-            private static readonly ServiceAccountCredential DefaultServiceAccount =
-                GoogleCredential.FromFile("./resources/service_account.json").ToServiceAccountCredential();
-
             private readonly AuthBuilder authBuilder;
             private readonly CustomTokenVerifier tokenVerifier;
 
@@ -89,9 +85,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             {
                 var authBuilder = new AuthBuilder
                 {
-                    Signer = new ServiceAccountSigner(DefaultServiceAccount),
+                    Signer = JwtTestUtils.DefaultSigner,
                 };
-                var tokenVerifier = CustomTokenVerifier.FromDefaultServiceAccount();
+                var tokenVerifier = CustomTokenVerifier.ForServiceAccount(
+                    JwtTestUtils.DefaultClientEmail, JwtTestUtils.DefaultPublicKey);
                 return new TestConfig(authBuilder, tokenVerifier);
             }
 
@@ -100,13 +97,14 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 var authBuilder = new AuthBuilder
                 {
                     TenantId = tenantId,
-                    Signer = new ServiceAccountSigner(DefaultServiceAccount),
+                    Signer = JwtTestUtils.DefaultSigner,
                 };
-                var tokenVerifier = CustomTokenVerifier.FromDefaultServiceAccount(tenantId);
+                var tokenVerifier = CustomTokenVerifier.ForServiceAccount(
+                    JwtTestUtils.DefaultClientEmail, JwtTestUtils.DefaultPublicKey, tenantId);
                 return new TestConfig(authBuilder, tokenVerifier);
             }
 
-            internal TestConfig ForEmulator()
+            internal TestConfig WithEmulator()
             {
                 var authBuilder = new AuthBuilder
                 {

@@ -37,9 +37,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             IDictionary<string, object> headerOverrides = null,
             IDictionary<string, object> payloadOverrides = null)
         {
+            var signer = this.Signer.ThrowIfNull(nameof(this.Signer));
             var header = new Dictionary<string, object>()
             {
-                { "alg", "RS256" },
+                { "alg", signer.Algorithm },
                 { "typ", "jwt" },
                 { "kid", "test-key-id" },
             };
@@ -79,7 +80,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 }
             }
 
-            var signer = this.Signer.ThrowIfNull(nameof(this.Signer));
             return await JwtUtils.CreateSignedJwtAsync(header, payload, signer);
         }
 

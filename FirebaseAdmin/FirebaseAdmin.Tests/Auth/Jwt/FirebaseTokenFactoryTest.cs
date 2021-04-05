@@ -18,13 +18,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
-    public class FirebaseTokenFactoryTest : IDisposable
+    public class FirebaseTokenFactoryTest
     {
         public static readonly IEnumerable<object[]> TenantIds = new List<object[]>
         {
@@ -178,76 +177,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Same(EmulatorSigner.Instance, factory.Signer);
             Assert.Same(SystemClock.Default, factory.Clock);
             AssertTenantId(tenantId, factory);
-        }
-
-        [Theory]
-        [MemberData(nameof(TenantIds))]
-        public void ServiceAccountCredential(string tenantId)
-        {
-            var options = new AppOptions
-            {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
-            };
-            var app = FirebaseApp.Create(options);
-
-            var factory = FirebaseTokenFactory.Create(app, tenantId);
-
-            Assert.IsType<ServiceAccountSigner>(factory.Signer);
-            Assert.Same(SystemClock.Default, factory.Clock);
-            Assert.False(factory.IsEmulatorMode);
-            AssertTenantId(tenantId, factory);
-        }
-
-        [Theory]
-        [MemberData(nameof(TenantIds))]
-        public void ServiceAccountId(string tenantId)
-        {
-            var options = new AppOptions
-            {
-                Credential = GoogleCredential.FromAccessToken("token"),
-                ServiceAccountId = "test-service-account",
-            };
-            var app = FirebaseApp.Create(options);
-
-            var factory = FirebaseTokenFactory.Create(app, tenantId);
-
-            Assert.IsType<FixedAccountIAMSigner>(factory.Signer);
-            Assert.Same(SystemClock.Default, factory.Clock);
-            Assert.False(factory.IsEmulatorMode);
-            AssertTenantId(tenantId, factory);
-        }
-
-        [Theory]
-        [MemberData(nameof(TenantIds))]
-        public async void InvalidCredential(string tenantId)
-        {
-            var options = new AppOptions
-            {
-                Credential = GoogleCredential.FromAccessToken("token"),
-            };
-            var app = FirebaseApp.Create(options);
-
-            var factory = FirebaseTokenFactory.Create(app, tenantId);
-
-            Assert.IsType<IAMSigner>(factory.Signer);
-            Assert.Same(SystemClock.Default, factory.Clock);
-            Assert.False(factory.IsEmulatorMode);
-            AssertTenantId(tenantId, factory);
-
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => factory.CreateCustomTokenAsync("user1"));
-
-            var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
-                + "with service account credentials or specify a service account "
-                + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
-                + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
-                + "more details on creating custom tokens.";
-            Assert.Equal(errorMessage, ex.Message);
-        }
-
-        public void Dispose()
-        {
-            FirebaseApp.DeleteAll();
         }
 
         private static void AssertTenantId(string expectedTenantId, FirebaseTokenFactory factory)

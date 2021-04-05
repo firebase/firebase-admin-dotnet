@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -24,11 +23,6 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     internal abstract class CustomTokenVerifier
     {
-        private const string ClientEmail = "client@test-project.iam.gserviceaccount.com";
-
-        private static readonly byte[] PublicKey =
-            File.ReadAllBytes("./resources/public_cert.pem");
-
         private readonly string issuer;
         private readonly string tenantId;
 
@@ -38,9 +32,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.tenantId = tenantId;
         }
 
-        internal static CustomTokenVerifier FromDefaultServiceAccount(string tenantId = null)
+        internal static CustomTokenVerifier ForServiceAccount(
+            string clientEmail, byte[] publicKey, string tenantId = null)
         {
-            return new RSACustomTokenVerifier(ClientEmail, PublicKey, tenantId);
+            return new RSACustomTokenVerifier(clientEmail, publicKey, tenantId);
         }
 
         internal static CustomTokenVerifier ForEmulator(string tenantId = null)

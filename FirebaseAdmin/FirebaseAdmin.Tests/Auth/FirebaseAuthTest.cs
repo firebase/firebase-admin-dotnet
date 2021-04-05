@@ -93,7 +93,7 @@ namespace FirebaseAdmin.Auth.Tests
                 ProjectId = "project1",
             });
 
-            FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+            var auth = FirebaseAuth.DefaultInstance;
 
             Assert.False(auth.TokenFactory.IsEmulatorMode);
             Assert.False(auth.IdTokenVerifier.IsEmulatorMode);
@@ -137,6 +137,57 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal(
                 "Must initialize FirebaseApp with a project ID to manage tenants.",
                 ex.Message);
+        }
+
+        [Fact]
+        public void ServiceAccountCredential()
+        {
+            var options = new AppOptions
+            {
+                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
+            };
+            var app = FirebaseApp.Create(options);
+
+            var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
+
+            Assert.IsType<ServiceAccountSigner>(tokenFactory.Signer);
+        }
+
+        [Fact]
+        public void ServiceAccountId()
+        {
+            var options = new AppOptions
+            {
+                Credential = MockCredential,
+                ServiceAccountId = "test-service-account",
+            };
+            var app = FirebaseApp.Create(options);
+
+            var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
+
+            Assert.IsType<FixedAccountIAMSigner>(tokenFactory.Signer);
+        }
+
+        [Fact]
+        public async void InvalidCredential()
+        {
+            var options = new AppOptions
+            {
+                Credential = MockCredential,
+            };
+            var app = FirebaseApp.Create(options);
+
+            var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
+
+            Assert.IsType<IAMSigner>(tokenFactory.Signer);
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => FirebaseAuth.DefaultInstance.CreateCustomTokenAsync("user1"));
+            var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
+                + "with service account credentials or specify a service account "
+                + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
+                + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
+                + "more details on creating custom tokens.";
+            Assert.Equal(errorMessage, ex.Message);
         }
 
         public void Dispose()
