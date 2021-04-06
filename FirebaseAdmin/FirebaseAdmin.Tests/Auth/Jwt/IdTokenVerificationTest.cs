@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -26,11 +27,20 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     public class IdTokenVerificationTest
     {
-        public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
+        public static readonly IEnumerable<object[]> ProdTestConfigs = new List<object[]>()
         {
             new object[] { TestConfig.ForFirebaseAuth() },
             new object[] { TestConfig.ForTenantAwareFirebaseAuth("test-tenant") },
         };
+
+        public static readonly IEnumerable<object[]> EmulatorTestConfigs = new List<object[]>()
+        {
+            new object[] { TestConfig.ForFirebaseAuth().WithEmulator() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("test-tenant").WithEmulator() },
+        };
+
+        public static readonly IEnumerable<object[]> TestConfigs =
+            Enumerable.Concat(ProdTestConfigs, EmulatorTestConfigs);
 
         private const long ClockSkewSeconds = 5 * 60;
 
@@ -87,7 +97,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestConfigs))]
+        [MemberData(nameof(ProdTestConfigs))]
         public async Task NoKid(TestConfig config)
         {
             var header = new Dictionary<string, object>()
@@ -104,7 +114,23 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestConfigs))]
+        [MemberData(nameof(EmulatorTestConfigs))]
+        public async Task EmulatorNoKid(TestConfig config)
+        {
+            var header = new Dictionary<string, object>()
+            {
+                { "kid", string.Empty },
+            };
+            var idToken = await config.CreateIdTokenAsync(headerOverrides: header);
+            var auth = config.CreateAuth();
+
+            var decoded = await auth.VerifyIdTokenAsync(idToken);
+
+            config.AssertFirebaseToken(decoded);
+        }
+
+        [Theory]
+        [MemberData(nameof(ProdTestConfigs))]
         public async Task IncorrectKid(TestConfig config)
         {
             var header = new Dictionary<string, object>()
@@ -121,7 +147,23 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestConfigs))]
+        [MemberData(nameof(EmulatorTestConfigs))]
+        public async Task EmulatorIncorrectKid(TestConfig config)
+        {
+            var header = new Dictionary<string, object>()
+            {
+                { "kid", "incorrect-key-id" },
+            };
+            var idToken = await config.CreateIdTokenAsync(headerOverrides: header);
+            var auth = config.CreateAuth();
+
+            var decoded = await auth.VerifyIdTokenAsync(idToken);
+
+            config.AssertFirebaseToken(decoded);
+        }
+
+        [Theory]
+        [MemberData(nameof(ProdTestConfigs))]
         public async Task IncorrectAlgorithm(TestConfig config)
         {
             var header = new Dictionary<string, object>()
@@ -137,6 +179,22 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             var expectedMessage = "Firebase ID token has incorrect algorithm."
                 + " Expected RS256 but got HS256.";
             this.CheckException(exception, expectedMessage);
+        }
+
+        [Theory]
+        [MemberData(nameof(EmulatorTestConfigs))]
+        public async Task EmulatorIncorrectAlgorithm(TestConfig config)
+        {
+            var header = new Dictionary<string, object>()
+            {
+                { "alg", "HS256" },
+            };
+            var idToken = await config.CreateIdTokenAsync(headerOverrides: header);
+            var auth = config.CreateAuth();
+
+            var decoded = await auth.VerifyIdTokenAsync(idToken);
+
+            config.AssertFirebaseToken(decoded);
         }
 
         [Theory]
@@ -231,7 +289,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestConfigs))]
+        [MemberData(nameof(ProdTestConfigs))]
         public async Task CustomToken(TestConfig config)
         {
             var header = new Dictionary<string, object>()
@@ -250,6 +308,28 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             var expectedMessage = "VerifyIdTokenAsync() expects an ID token, but was given "
                 + "a custom token.";
+            this.CheckException(exception, expectedMessage);
+        }
+
+        [Theory]
+        [MemberData(nameof(EmulatorTestConfigs))]
+        public async Task EmulatorCustomToken(TestConfig config)
+        {
+            var header = new Dictionary<string, object>()
+            {
+                { "kid", string.Empty },
+            };
+            var payload = new Dictionary<string, object>()
+            {
+                { "aud", FirebaseTokenFactory.FirebaseAudience },
+            };
+            var idToken = await config.CreateIdTokenAsync(header, payload);
+            var auth = config.CreateAuth();
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.VerifyIdTokenAsync(idToken));
+
+            var expectedMessage = "Firebase ID token has incorrect audience (aud) claim.";
             this.CheckException(exception, expectedMessage);
         }
 
@@ -353,7 +433,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             var expectedMessage = "Firebase ID token has been revoked.";
             this.CheckException(exception, expectedMessage, AuthErrorCode.RevokedIdToken);
             Assert.Equal(1, handler.Calls);
-            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
+            config.AssertRevocationCheckRequest(handler.Requests[0].Url);
         }
 
         [Theory]
@@ -377,7 +457,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(1, handler.Calls);
-            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
+            config.AssertRevocationCheckRequest(handler.Requests[0].Url);
         }
 
         [Theory]
@@ -403,7 +483,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Null(exception.InnerException);
             Assert.NotNull(exception.HttpResponse);
             Assert.Equal(1, handler.Calls);
-            JwtTestUtils.AssertRevocationCheckRequest(config.TenantId, handler.Requests[0].Url);
+            config.AssertRevocationCheckRequest(handler.Requests[0].Url);
         }
 
         [Theory]
@@ -480,6 +560,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             public string TenantId => this.authBuilder.TenantId;
 
+            public string EmulatorHost => this.authBuilder.EmulatorHost;
+
             public static TestConfig ForFirebaseAuth()
             {
                 return new TestConfig();
@@ -488,6 +570,13 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
             {
                 return new TestConfig(tenantId);
+            }
+
+            public TestConfig WithEmulator()
+            {
+                var config = new TestConfig(this.TenantId);
+                config.authBuilder.EmulatorHost = "localhost:9090";
+                return config;
             }
 
             public AbstractFirebaseAuth CreateAuth(HttpMessageHandler handler = null)
@@ -511,6 +600,11 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 FirebaseToken token, IDictionary<string, object> expectedClaims = null)
             {
                 this.tokenBuilder.AssertFirebaseToken(token, expectedClaims);
+            }
+
+            public void AssertRevocationCheckRequest(Uri uri)
+            {
+                JwtTestUtils.AssertRevocationCheckRequest(this.TenantId, this.EmulatorHost, uri);
             }
         }
     }

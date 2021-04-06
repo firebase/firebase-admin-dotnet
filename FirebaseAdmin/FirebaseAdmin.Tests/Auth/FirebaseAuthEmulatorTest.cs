@@ -31,7 +31,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public void UserManager()
+        public void DefaultFirebaseAuth()
         {
             var app = FirebaseApp.Create(new AppOptions
             {
@@ -39,11 +39,25 @@ namespace FirebaseAdmin.Auth.Tests
                 ProjectId = "project1",
             });
 
-            var userManager = FirebaseAuth.DefaultInstance.UserManager;
+            var auth = FirebaseAuth.DefaultInstance;
 
-            Assert.Equal("project1", userManager.ProjectId);
-            Assert.Null(userManager.TenantId);
-            Assert.Equal("localhost:9090", userManager.EmulatorHost);
+            Assert.Equal("localhost:9090", auth.UserManager.EmulatorHost);
+            Assert.True(auth.IdTokenVerifier.IsEmulatorMode);
+        }
+
+        [Fact]
+        public void TenantAwareFirebseAuth()
+        {
+            var app = FirebaseApp.Create(new AppOptions
+            {
+                Credential = MockCredential,
+                ProjectId = "project1",
+            });
+
+            var auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant("tenant1");
+
+            Assert.Equal("localhost:9090", auth.UserManager.EmulatorHost);
+            Assert.True(auth.IdTokenVerifier.IsEmulatorMode);
         }
 
         public virtual void Dispose()

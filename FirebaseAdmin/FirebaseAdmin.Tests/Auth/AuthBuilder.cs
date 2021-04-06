@@ -120,8 +120,13 @@ namespace FirebaseAdmin.Auth.Tests
 
         private FirebaseTokenVerifier CreateIdTokenVerifier()
         {
-            return FirebaseTokenVerifier.CreateIdTokenVerifier(
-                this.ProjectId, this.KeySource, this.Clock, this.TenantId);
+            var args = FirebaseTokenVerifier.CreateIdTokenVerifierArgs();
+            args.ProjectId = this.ProjectId;
+            args.PublicKeySource = this.KeySource;
+            args.Clock = this.Clock;
+            args.TenantId = this.TenantId;
+            args.IsEmulatorMode = !string.IsNullOrWhiteSpace(this.EmulatorHost);
+            return new FirebaseTokenVerifier(args);
         }
 
         private FirebaseTokenVerifier CreateSessionCookieVerifier()

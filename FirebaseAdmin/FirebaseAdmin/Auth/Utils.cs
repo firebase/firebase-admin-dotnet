@@ -24,6 +24,9 @@ namespace FirebaseAdmin.Auth
         internal static string EmulatorHostFromEnvironment =>
             Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
 
+        internal static bool IsEmulatorModeFromEnvironment =>
+            !string.IsNullOrWhiteSpace(EmulatorHostFromEnvironment);
+
         internal static string BuildAuthUrl(string projectId, UrlOptions options = null)
         {
             var version = !string.IsNullOrEmpty(options?.ApiVersion) ? options.ApiVersion : "v1";

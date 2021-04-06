@@ -81,9 +81,18 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         public static void AssertRevocationCheckRequest(string tenantId, Uri uri)
         {
-            var tenantInfo = tenantId != null ? $"/tenants/{tenantId}" : string.Empty;
-            var expectedPath = $"/v1/projects/{ProjectId}{tenantInfo}/accounts:lookup";
-            Assert.Equal(expectedPath, uri.PathAndQuery);
+            AssertRevocationCheckRequest(tenantId, null, uri);
+        }
+
+        public static void AssertRevocationCheckRequest(string tenantId, string emulatorHost, Uri uri)
+        {
+            var options = new Utils.UrlOptions
+            {
+                TenantId = tenantId,
+                EmulatorHost = emulatorHost,
+            };
+            var expectedUrl = $"{Utils.BuildAuthUrl(ProjectId, options)}/accounts:lookup";
+            Assert.Equal(expectedUrl, uri.ToString());
         }
 
         private static ISigner CreateTestSigner(string filePath)

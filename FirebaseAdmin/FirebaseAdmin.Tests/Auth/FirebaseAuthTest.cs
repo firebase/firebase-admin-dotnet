@@ -85,6 +85,21 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
+        public void NoEmulator()
+        {
+            var app = FirebaseApp.Create(new AppOptions
+            {
+                Credential = MockCredential,
+                ProjectId = "project1",
+            });
+
+            FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+
+            Assert.False(auth.IdTokenVerifier.IsEmulatorMode);
+            Assert.Null(auth.UserManager.EmulatorHost);
+        }
+
+        [Fact]
         public void UserManagerNoProjectId()
         {
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
@@ -135,22 +150,6 @@ namespace FirebaseAdmin.Auth.Tests
             var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
 
             Assert.IsType<FixedAccountIAMSigner>(tokenFactory.Signer);
-        }
-
-        [Fact]
-        public void UserManager()
-        {
-            var app = FirebaseApp.Create(new AppOptions
-            {
-                Credential = MockCredential,
-                ProjectId = "project1",
-            });
-
-            var userManager = FirebaseAuth.DefaultInstance.UserManager;
-
-            Assert.Equal("project1", userManager.ProjectId);
-            Assert.Null(userManager.TenantId);
-            Assert.Null(userManager.EmulatorHost);
         }
 
         public void Dispose()
