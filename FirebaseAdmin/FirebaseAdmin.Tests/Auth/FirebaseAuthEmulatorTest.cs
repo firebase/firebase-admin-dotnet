@@ -43,6 +43,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal("localhost:9090", auth.UserManager.EmulatorHost);
             Assert.True(auth.IdTokenVerifier.IsEmulatorMode);
+            Assert.True(auth.TokenFactory.IsEmulatorMode);
         }
 
         [Fact]
@@ -58,6 +59,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             Assert.Equal("localhost:9090", auth.UserManager.EmulatorHost);
             Assert.True(auth.IdTokenVerifier.IsEmulatorMode);
+            Assert.True(auth.TokenFactory.IsEmulatorMode);
         }
 
         public virtual void Dispose()

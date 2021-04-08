@@ -33,10 +33,15 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
     {
         internal const string ProjectId = "test-project";
 
+        internal const string DefaultClientEmail = "client@test-project.iam.gserviceaccount.com";
+
         internal static readonly IClock Clock = new MockClock();
 
-        internal static readonly IPublicKeySource DefaultKeySource = new FileSystemPublicKeySource(
+        internal static readonly byte[] DefaultPublicKey = File.ReadAllBytes(
             "./resources/public_cert.pem");
+
+        internal static readonly IPublicKeySource DefaultKeySource = new ByteArrayPublicKeySource(
+            DefaultPublicKey);
 
         internal static readonly ISigner DefaultSigner = CreateTestSigner(
             "./resources/service_account.json");
@@ -98,17 +103,16 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         private static ISigner CreateTestSigner(string filePath)
         {
             var credential = GoogleCredential.FromFile(filePath);
-            var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
-            return new ServiceAccountSigner(serviceAccount);
+            return new ServiceAccountSigner(credential.ToServiceAccountCredential());
         }
 
-        private sealed class FileSystemPublicKeySource : IPublicKeySource
+        private sealed class ByteArrayPublicKeySource : IPublicKeySource
         {
             private IReadOnlyList<PublicKey> rsa;
 
-            public FileSystemPublicKeySource(string file)
+            public ByteArrayPublicKeySource(byte[] publicKey)
             {
-                var x509cert = new X509Certificate2(File.ReadAllBytes(file));
+                var x509cert = new X509Certificate2(publicKey);
                 var rsa = (RSA)x509cert.PublicKey.Key;
                 this.rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
             }

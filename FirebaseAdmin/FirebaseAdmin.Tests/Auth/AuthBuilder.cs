@@ -43,6 +43,8 @@ namespace FirebaseAdmin.Auth.Tests
 
         internal string EmulatorHost { get; set; }
 
+        internal ISigner Signer { get; set; }
+
         public AbstractFirebaseAuth Build(TestOptions options)
         {
             if (this.TenantId != null)
@@ -90,6 +92,11 @@ namespace FirebaseAdmin.Auth.Tests
                         $"Session cookie verification not supported on {args.GetType()}");
                 }
             }
+
+            if (options.TokenFactory)
+            {
+                args.TokenFactory = new Lazy<FirebaseTokenFactory>(this.CreateTokenFactory());
+            }
         }
 
         private FirebaseUserManager CreateUserManager(TestOptions options)
@@ -133,6 +140,18 @@ namespace FirebaseAdmin.Auth.Tests
         {
             return FirebaseTokenVerifier.CreateSessionCookieVerifier(
                 this.ProjectId, this.KeySource, this.Clock);
+        }
+
+        private FirebaseTokenFactory CreateTokenFactory()
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = this.Signer,
+                Clock = this.Clock,
+                TenantId = this.TenantId,
+                IsEmulatorMode = !string.IsNullOrWhiteSpace(this.EmulatorHost),
+            };
+            return new FirebaseTokenFactory(args);
         }
     }
 }

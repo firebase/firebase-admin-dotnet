@@ -25,6 +25,8 @@ namespace FirebaseAdmin.Auth.Jwt
     /// </summary>
     internal static class JwtUtils
     {
+        internal const string AlgorithmRS256 = "RS256";
+
         /// <summary>
         /// Decodes a single JWT segment, and deserializes it into a value of type
         /// <typeparamref name="T"/>.

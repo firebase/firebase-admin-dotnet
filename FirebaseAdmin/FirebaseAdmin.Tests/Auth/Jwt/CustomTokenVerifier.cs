@@ -13,21 +13,16 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using Google.Apis.Auth;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
     internal abstract class CustomTokenVerifier
     {
-        private const string ClientEmail = "client@test-project.iam.gserviceaccount.com";
-
-        private static readonly byte[] PublicKey =
-            File.ReadAllBytes("./resources/public_cert.pem");
-
         private readonly string issuer;
         private readonly string tenantId;
 
@@ -37,9 +32,15 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.tenantId = tenantId;
         }
 
-        internal static CustomTokenVerifier FromDefaultServiceAccount(string tenantId = null)
+        internal static CustomTokenVerifier ForServiceAccount(
+            string clientEmail, byte[] publicKey, string tenantId = null)
         {
-            return new RSACustomTokenVerifier(ClientEmail, PublicKey, tenantId);
+            return new RSACustomTokenVerifier(clientEmail, publicKey, tenantId);
+        }
+
+        internal static CustomTokenVerifier ForEmulator(string tenantId = null)
+        {
+            return new EmulatorCustomTokenVerifier(tenantId);
         }
 
         internal void Verify(string token, string uid, IDictionary<string, object> claims = null)
@@ -47,9 +48,13 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             string[] segments = token.Split(".");
             Assert.Equal(3, segments.Length);
 
+            var header = JwtUtils.Decode<JsonWebSignature.Header>(segments[0]);
+            this.AssertHeader(header);
+
             var payload = JwtUtils.Decode<FirebaseTokenFactory.CustomTokenPayload>(segments[1]);
             Assert.Equal(this.issuer, payload.Issuer);
             Assert.Equal(this.issuer, payload.Subject);
+            Assert.Equal(FirebaseTokenFactory.FirebaseAudience, payload.Audience);
             Assert.Equal(uid, payload.Uid);
             if (claims == null)
             {
@@ -78,6 +83,12 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.AssertSignature($"{segments[0]}.{segments[1]}", segments[2]);
         }
 
+        protected virtual void AssertHeader(JsonWebSignature.Header header)
+        {
+            Assert.Equal("RS256", header.Algorithm);
+            Assert.Equal("JWT", header.Type);
+        }
+
         protected abstract void AssertSignature(string tokenData, string signature);
 
         private sealed class RSACustomTokenVerifier : CustomTokenVerifier
@@ -101,6 +112,23 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                     HashAlgorithmName.SHA256,
                     RSASignaturePadding.Pkcs1);
                 Assert.True(verified);
+            }
+        }
+
+        private sealed class EmulatorCustomTokenVerifier : CustomTokenVerifier
+        {
+            internal EmulatorCustomTokenVerifier(string tenantId)
+            : base("firebase-auth-emulator@example.com", tenantId) { }
+
+            protected override void AssertHeader(JsonWebSignature.Header header)
+            {
+                Assert.Equal("none", header.Algorithm);
+                Assert.Equal("JWT", header.Type);
+            }
+
+            protected override void AssertSignature(string tokenData, string signature)
+            {
+                Assert.Empty(signature);
             }
         }
     }

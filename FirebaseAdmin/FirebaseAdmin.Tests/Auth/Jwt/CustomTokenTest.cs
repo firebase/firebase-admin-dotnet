@@ -16,17 +16,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Auth.OAuth2;
+using FirebaseAdmin.Auth.Tests;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
-    public class CustomTokenTest : IDisposable
+    public class CustomTokenTest
     {
         public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
-            new object[] { FirebaseAuthTestConfig.DefaultInstance },
-            new object[] { TenantAwareFirebaseAuthTestConfig.DefaultInstance },
+            new object[] { TestConfig.ForFirebaseAuth() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
+            new object[] { TestConfig.ForFirebaseAuth().WithEmulator() },
+            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1").WithEmulator() },
         };
 
         [Theory]
@@ -66,78 +68,66 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 () => auth.CreateCustomTokenAsync("user1", canceller.Token));
         }
 
-        [Theory]
-        [MemberData(nameof(TestConfigs))]
-        public async Task CreateCustomTokenInvalidCredential(TestConfig config)
+        public sealed class TestConfig
         {
-            var options = new AppOptions
+            private readonly AuthBuilder authBuilder;
+            private readonly CustomTokenVerifier tokenVerifier;
+
+            private TestConfig(AuthBuilder authBuilder, CustomTokenVerifier tokenVerifier)
             {
-                Credential = GoogleCredential.FromAccessToken("test-token"),
-                ProjectId = "project1",
-            };
-            var auth = config.CreateAuth(options);
+                this.authBuilder = authBuilder;
+                this.tokenVerifier = tokenVerifier;
+            }
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => auth.CreateCustomTokenAsync("user1"));
+            public string TenantId => this.authBuilder.TenantId;
 
-            var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
-                + "with service account credentials or specify a service account "
-                + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
-                + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
-                + "more details on creating custom tokens.";
-            Assert.Equal(errorMessage, ex.Message);
-        }
-
-        public void Dispose()
-        {
-            FirebaseApp.DeleteAll();
-        }
-
-        public abstract class TestConfig
-        {
-            protected static readonly AppOptions DefaultOptions = new AppOptions
+            public static TestConfig ForFirebaseAuth()
             {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
-            };
+                var authBuilder = new AuthBuilder
+                {
+                    Signer = JwtTestUtils.DefaultSigner,
+                };
+                var tokenVerifier = CustomTokenVerifier.ForServiceAccount(
+                    JwtTestUtils.DefaultClientEmail, JwtTestUtils.DefaultPublicKey);
+                return new TestConfig(authBuilder, tokenVerifier);
+            }
 
-            internal abstract CustomTokenVerifier TokenVerifier { get; }
+            public static TestConfig ForTenantAwareFirebaseAuth(string tenantId)
+            {
+                var authBuilder = new AuthBuilder
+                {
+                    TenantId = tenantId,
+                    Signer = JwtTestUtils.DefaultSigner,
+                };
+                var tokenVerifier = CustomTokenVerifier.ForServiceAccount(
+                    JwtTestUtils.DefaultClientEmail, JwtTestUtils.DefaultPublicKey, tenantId);
+                return new TestConfig(authBuilder, tokenVerifier);
+            }
 
-            internal abstract AbstractFirebaseAuth CreateAuth(AppOptions options = null);
+            internal TestConfig WithEmulator()
+            {
+                var authBuilder = new AuthBuilder
+                {
+                    TenantId = this.TenantId,
+                    EmulatorHost = "localhost:9090",
+                };
+                var tokenVerifier = CustomTokenVerifier.ForEmulator(this.TenantId);
+                return new TestConfig(authBuilder, tokenVerifier);
+            }
+
+            internal AbstractFirebaseAuth CreateAuth()
+            {
+                var options = new TestOptions
+                {
+                    TokenFactory = true,
+                };
+                return this.authBuilder.Build(options);
+            }
 
             internal void AssertCustomToken(
                 string token, string uid, Dictionary<string, object> claims = null)
             {
-                this.TokenVerifier.Verify(token, uid, claims);
-            }
-        }
-
-        private sealed class FirebaseAuthTestConfig : TestConfig
-        {
-            internal static readonly FirebaseAuthTestConfig DefaultInstance =
-                new FirebaseAuthTestConfig();
-
-            internal override CustomTokenVerifier TokenVerifier =>
-                CustomTokenVerifier.FromDefaultServiceAccount();
-
-            internal override AbstractFirebaseAuth CreateAuth(AppOptions options = null)
-            {
-                FirebaseApp.Create(options ?? DefaultOptions);
-                return FirebaseAuth.DefaultInstance;
-            }
-        }
-
-        private sealed class TenantAwareFirebaseAuthTestConfig : TestConfig
-        {
-            internal static readonly TenantAwareFirebaseAuthTestConfig DefaultInstance =
-                new TenantAwareFirebaseAuthTestConfig();
-
-            internal override CustomTokenVerifier TokenVerifier =>
-                CustomTokenVerifier.FromDefaultServiceAccount("tenant1");
-
-            internal override AbstractFirebaseAuth CreateAuth(AppOptions options = null)
-            {
-                FirebaseApp.Create(options ?? DefaultOptions);
-                return FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant("tenant1");
+                this.tokenVerifier.Verify(token, uid, claims);
             }
         }
     }

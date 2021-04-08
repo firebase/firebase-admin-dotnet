@@ -576,6 +576,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             {
                 var config = new TestConfig(this.TenantId);
                 config.authBuilder.EmulatorHost = "localhost:9090";
+                config.tokenBuilder.Signer = EmulatorSigner.Instance;
                 return config;
             }
 
