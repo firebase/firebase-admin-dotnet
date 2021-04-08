@@ -55,12 +55,6 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             }
         }";
 
-        private static readonly string ClientVersion =
-            $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
-
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
-
         private static readonly IList<string> ListTenantsResponses = new List<string>()
         {
             $@"{{
@@ -647,6 +641,12 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
         {
             private static readonly string IdToolkitUrl = $"identitytoolkit.googleapis.com/v2/projects/project1";
 
+            private static readonly string ClientVersion =
+                $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
+
+            private static readonly GoogleCredential MockCredential =
+                GoogleCredential.FromAccessToken("test-token");
+
             private TestConfig(string emulatorHost = null)
             {
                 this.EmulatorHost = emulatorHost;
@@ -686,6 +686,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
                 {
                     var expectedUrl = $"https://{IdToolkitUrl}/{expectedSuffix}";
                     Assert.Equal(expectedUrl, request.Url.ToString());
+                    Assert.Equal("Bearer test-token", request.Headers.Authorization.ToString());
                 }
 
                 Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
