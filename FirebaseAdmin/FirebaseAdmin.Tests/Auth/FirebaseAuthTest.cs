@@ -98,6 +98,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.False(auth.TokenFactory.IsEmulatorMode);
             Assert.False(auth.IdTokenVerifier.IsEmulatorMode);
             Assert.Null(auth.UserManager.EmulatorHost);
+            Assert.Null(auth.TenantManager.EmulatorHost);
         }
 
         [Fact]
