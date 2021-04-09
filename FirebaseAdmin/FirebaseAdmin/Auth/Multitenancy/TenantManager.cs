@@ -72,11 +72,20 @@ namespace FirebaseAdmin.Auth.Multitenancy
                     "Must initialize FirebaseApp with a project ID to manage tenants.");
             }
 
+            this.EmulatorHost = args.EmulatorHost;
             this.app = args.App;
-            this.baseUrl = string.Format(IdToolkitUrl, args.ProjectId);
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 args.ToHttpClientArgs());
+
+            var options = new Utils.UrlOptions
+            {
+                ApiVersion = "v2",
+                EmulatorHost = this.EmulatorHost,
+            };
+            this.baseUrl = Utils.BuildAuthUrl(args.ProjectId, options);
         }
+
+        internal string EmulatorHost { get; }
 
         /// <summary>
         /// Gets the <see cref="Tenant"/> corresponding to the given <paramref name="tenantId"/>.
@@ -339,12 +348,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
         internal static TenantManager Create(FirebaseApp app)
         {
-            var args = new Args()
+            var args = new Args
             {
                 App = app,
                 ClientFactory = app.Options.HttpClientFactory,
                 Credential = app.Options.Credential,
                 ProjectId = app.GetProjectId(),
+                EmulatorHost = Utils.EmulatorHostFromEnvironment,
                 RetryOptions = RetryOptions.Default,
             };
 
@@ -371,6 +381,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
 
             internal string ProjectId { get; set; }
 
+            internal string EmulatorHost { get; set; }
+
             internal RetryOptions RetryOptions { get; set; }
 
             internal ErrorHandlingHttpClientArgs<FirebaseAuthException> ToHttpClientArgs()
@@ -378,7 +390,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
                 return new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
                 {
                     HttpClientFactory = this.ClientFactory,
-                    Credential = this.Credential,
+                    Credential = Utils.ResolveCredentials(this.EmulatorHost, this.Credential),
                     RetryOptions = this.RetryOptions,
                     ErrorResponseHandler = AuthErrorHandler.Instance,
                     RequestExceptionHandler = AuthErrorHandler.Instance,

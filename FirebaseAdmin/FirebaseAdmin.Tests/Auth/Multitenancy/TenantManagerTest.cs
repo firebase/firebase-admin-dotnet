@@ -30,10 +30,10 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 {
     public class TenantManagerTest
     {
-        public static readonly IEnumerable<object[]> InvalidStrings = new List<object[]>()
+        public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
         {
-            new object[] { null },
-            new object[] { string.Empty },
+            new object[] { TestConfig.Default },
+            new object[] { TestConfig.WithEmulator },
         };
 
         private const string TenantResponse = @"{
@@ -55,12 +55,6 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             }
         }";
 
-        private static readonly string ClientVersion =
-            $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
-
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
-
         private static readonly IList<string> ListTenantsResponses = new List<string>()
         {
             $@"{{
@@ -79,14 +73,22 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             }}",
         };
 
-        [Fact]
-        public async Task GetTenant()
+        public static IEnumerable<object[]> InvalidStrings()
+        {
+            var strings = new List<string>() { null, string.Empty };
+            return TestConfigs.SelectMany(
+                config => strings, (config, str) => config.Append(str).ToArray());
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task GetTenant(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = TenantResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
 
             var provider = await auth.TenantManager.GetTenantAsync("tenant1");
 
@@ -94,33 +96,34 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Equal("/v2/projects/project1/tenants/tenant1", request.Url.PathAndQuery);
-            AssertClientVersionHeader(request);
+            config.AssertRequest("tenants/tenant1", request);
         }
 
         [Theory]
         [MemberData(nameof(InvalidStrings))]
-        public async Task GetTenantNoId(string tenantId)
+        public async Task GetTenantNoId(TestConfig config, string tenantId)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.TenantManager.GetTenantAsync(tenantId));
             Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
         }
 
-        [Fact]
-        public async Task GetTenantNotFoundError()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task GetTenantNotFoundError(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
                 Response = TenantNotFoundResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 () => auth.TenantManager.GetTenantAsync("tenant1"));
+
             Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
             Assert.Equal(AuthErrorCode.TenantNotFound, exception.AuthErrorCode);
             Assert.Equal(
@@ -130,14 +133,15 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task CreateTenant()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CreateTenant(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = TenantResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var args = new TenantArgs()
             {
                 DisplayName = "Test Tenant",
@@ -151,8 +155,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Equal("/v2/projects/project1/tenants", request.Url.PathAndQuery);
-            AssertClientVersionHeader(request);
+            config.AssertRequest("tenants", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -162,14 +165,15 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.True((bool)body["enableEmailLinkSignin"]);
         }
 
-        [Fact]
-        public async Task CreateTenantMinimal()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CreateTenantMinimal(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = TenantResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
 
             var provider = await auth.TenantManager.CreateTenantAsync(new TenantArgs());
 
@@ -177,32 +181,33 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Equal("/v2/projects/project1/tenants", request.Url.PathAndQuery);
-            AssertClientVersionHeader(request);
+            config.AssertRequest("tenants", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
             Assert.Empty(body);
         }
 
-        [Fact]
-        public async Task CreateTenantNullArgs()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CreateTenantNullArgs(TestConfig config)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             await Assert.ThrowsAsync<ArgumentNullException>(
                 () => auth.TenantManager.CreateTenantAsync(null));
         }
 
-        [Fact]
-        public async Task CreateTenantError()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task CreateTenantError(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.InternalServerError,
                 Response = UnknownErrorResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 () => auth.TenantManager.CreateTenantAsync(new TenantArgs()));
@@ -215,14 +220,15 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task UpdateTenant()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateTenant(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = TenantResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var args = new TenantArgs()
             {
                 DisplayName = "Test Tenant",
@@ -237,10 +243,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var request = handler.Requests[0];
             Assert.Equal(HttpUtils.Patch, request.Method);
             var mask = "allowPasswordSignup,displayName,enableEmailLinkSignin";
-            Assert.Equal(
-                $"/v2/projects/project1/tenants/tenant1?updateMask={mask}",
-                request.Url.PathAndQuery);
-            AssertClientVersionHeader(request);
+            config.AssertRequest($"tenants/tenant1?updateMask={mask}", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -250,14 +253,15 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.True((bool)body["enableEmailLinkSignin"]);
         }
 
-        [Fact]
-        public async Task UpdateTenantMinimal()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateTenantMinimal(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = TenantResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var args = new TenantArgs()
             {
                 DisplayName = "Test Tenant",
@@ -269,10 +273,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
             Assert.Equal(HttpUtils.Patch, request.Method);
-            Assert.Equal(
-                "/v2/projects/project1/tenants/tenant1?updateMask=displayName",
-                request.Url.PathAndQuery);
-            AssertClientVersionHeader(request);
+            config.AssertRequest("tenants/tenant1?updateMask=displayName", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
@@ -282,9 +283,9 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 
         [Theory]
         [MemberData(nameof(InvalidStrings))]
-        public async Task UpdateTenantNoId(string tenantId)
+        public async Task UpdateTenantNoId(TestConfig config, string tenantId)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
             var args = new TenantArgs()
             {
                 DisplayName = "Test Tenant",
@@ -295,33 +296,36 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
         }
 
-        [Fact]
-        public async Task UpdateTenantNullArgs()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateTenantNullArgs(TestConfig config)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             await Assert.ThrowsAsync<ArgumentNullException>(
                 () => auth.TenantManager.UpdateTenantAsync("tenant1", null));
         }
 
-        [Fact]
-        public async Task UpdateTenantEmptyArgs()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateTenantEmptyArgs(TestConfig config)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.TenantManager.UpdateTenantAsync("tenant1", new TenantArgs()));
         }
 
-        [Fact]
-        public async Task UpdateTenantError()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateTenantError(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
                 Response = TenantNotFoundResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var args = new TenantArgs()
             {
                 DisplayName = "Test Tenant",
@@ -338,44 +342,45 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task DeleteTenant()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task DeleteTenant(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = TenantResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
 
             await auth.TenantManager.DeleteTenantAsync("tenant1");
 
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Delete, request.Method);
-            Assert.Equal("/v2/projects/project1/tenants/tenant1", request.Url.PathAndQuery);
-            AssertClientVersionHeader(request);
+            config.AssertRequest("tenants/tenant1", request);
         }
 
         [Theory]
         [MemberData(nameof(InvalidStrings))]
-        public async Task DeleteTenantNoId(string tenantId)
+        public async Task DeleteTenantNoId(TestConfig config, string tenantId)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.TenantManager.DeleteTenantAsync(tenantId));
             Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
         }
 
-        [Fact]
-        public async Task DeleteTenantNotFoundError()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task DeleteTenantNotFoundError(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 StatusCode = HttpStatusCode.NotFound,
                 Response = TenantNotFoundResponse,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
 
             var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
                 () => auth.TenantManager.DeleteTenantAsync("tenant1"));
@@ -388,14 +393,15 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Null(exception.InnerException);
         }
 
-        [Fact]
-        public async Task ListTenants()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ListTenants(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListTenantsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var tenants = new List<Tenant>();
 
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(null);
@@ -409,26 +415,19 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.All(tenants, AssertTenant);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("100", query["pageSize"]);
-
-            query = ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("100", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
-
-            Assert.All(handler.Requests, AssertClientVersionHeader);
+            config.AssertRequest("tenants?pageSize=100", handler.Requests[0]);
+            config.AssertRequest("tenants?pageSize=100&pageToken=token", handler.Requests[1]);
         }
 
-        [Fact]
-        public void ListTenantsForEach()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public void ListTenantsForEach(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListTenantsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var tenants = new List<Tenant>();
 
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(null);
@@ -441,26 +440,19 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.All(tenants, AssertTenant);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("100", query["pageSize"]);
-
-            query = ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("100", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
-
-            Assert.All(handler.Requests, AssertClientVersionHeader);
+            config.AssertRequest("tenants?pageSize=100", handler.Requests[0]);
+            config.AssertRequest("tenants?pageSize=100&pageToken=token", handler.Requests[1]);
         }
 
-        [Fact]
-        public async Task ListTenantsByPages()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ListTenantsByPages(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListTenantsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var tenants = new List<Tenant>();
 
             // Read page 1.
@@ -471,9 +463,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Equal("token", tenantsPage.NextPageToken);
 
             Assert.Single(handler.Requests);
-            var query = ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("3", query["pageSize"]);
+            config.AssertRequest("tenants?pageSize=3", handler.Requests[0]);
             tenants.AddRange(tenantsPage);
 
             // Read page 2.
@@ -487,24 +477,22 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Null(tenantsPage.NextPageToken);
 
             Assert.Equal(2, handler.Requests.Count);
-            query = ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("3", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
+            config.AssertRequest("tenants?pageSize=3&pageToken=token", handler.Requests[1]);
             tenants.AddRange(tenantsPage);
 
             Assert.Equal(5, tenants.Count);
             Assert.All(tenants, AssertTenant);
         }
 
-        [Fact]
-        public async Task ListTenantsAsRawResponses()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ListTenantsAsRawResponses(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListTenantsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var tenants = new List<Tenant>();
             var tokens = new List<string>();
 
@@ -522,24 +510,19 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.All(tenants, AssertTenant);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ExtractQueryParams(handler.Requests[0]);
-            Assert.Single(query);
-            Assert.Equal("100", query["pageSize"]);
-
-            query = ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("100", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
+            config.AssertRequest("tenants?pageSize=100", handler.Requests[0]);
+            config.AssertRequest("tenants?pageSize=100&pageToken=token", handler.Requests[1]);
         }
 
-        [Fact]
-        public void ListTenantsOptions()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public void ListTenantsOptions(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListTenantsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var tenants = new List<Tenant>();
             var customOptions = new ListTenantsOptions()
             {
@@ -557,28 +540,19 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.All(tenants, AssertTenant);
 
             Assert.Equal(2, handler.Requests.Count);
-            var query = ExtractQueryParams(handler.Requests[0]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("3", query["pageSize"]);
-            Assert.Equal("custom-token", query["pageToken"]);
-
-            query = ExtractQueryParams(handler.Requests[1]);
-            Assert.Equal(2, query.Count);
-            Assert.Equal("3", query["pageSize"]);
-            Assert.Equal("token", query["pageToken"]);
-
-            Assert.All(handler.Requests, AssertClientVersionHeader);
+            config.AssertRequest("tenants?pageSize=3&pageToken=custom-token", handler.Requests[0]);
+            config.AssertRequest("tenants?pageSize=3&pageToken=token", handler.Requests[1]);
         }
 
         [Theory]
         [ClassData(typeof(TenantManagerTest.InvalidListOptions))]
-        public void ListInvalidOptions(ListTenantsOptions options, string expected)
+        public void ListInvalidOptions(TestConfig config, ListTenantsOptions options, string expected)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListTenantsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
 
             var exception = Assert.Throws<ArgumentException>(
                 () => auth.TenantManager.ListTenantsAsync(options));
@@ -587,14 +561,15 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Empty(handler.Requests);
         }
 
-        [Fact]
-        public async Task ListReadPageSizeTooLarge()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task ListReadPageSizeTooLarge(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
                 Response = ListTenantsResponses,
             };
-            var auth = CreateFirebaseAuth(handler);
+            var auth = config.CreateFirebaseAuth(handler);
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(null);
 
             await Assert.ThrowsAsync<ArgumentException>(
@@ -603,20 +578,22 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Empty(handler.Requests);
         }
 
-        [Fact]
-        public void AuthForTenant()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public void AuthForTenant(TestConfig config)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             var tenantAwareAuth = auth.TenantManager.AuthForTenant("tenant1");
 
             Assert.Equal("tenant1", tenantAwareAuth.TenantId);
         }
 
-        [Fact]
-        public void AuthForTenantCaching()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public void AuthForTenantCaching(TestConfig config)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             var tenantAwareAuth1 = auth.TenantManager.AuthForTenant("tenant1");
             var tenantAwareAuth2 = auth.TenantManager.AuthForTenant("tenant1");
@@ -628,19 +605,20 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 
         [Theory]
         [MemberData(nameof(InvalidStrings))]
-        public void AuthForTenantNoTenantId(string tenantId)
+        public void AuthForTenantNoTenantId(TestConfig config, string tenantId)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
 
             var exception = Assert.Throws<ArgumentException>(
                 () => auth.TenantManager.AuthForTenant(tenantId));
             Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
         }
 
-        [Fact]
-        public async Task UseAfterDelete()
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UseAfterDelete(TestConfig config)
         {
-            var auth = CreateFirebaseAuth();
+            var auth = config.CreateFirebaseAuth();
             var tenantManager = auth.TenantManager;
 
             (auth as IFirebaseService).Delete();
@@ -651,20 +629,6 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
                 () => tenantManager.AuthForTenant("tenant1"));
         }
 
-        private static FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
-        {
-            var tenantManager = new TenantManager(new TenantManager.Args
-            {
-                Credential = MockCredential,
-                ProjectId = "project1",
-                ClientFactory = new MockHttpClientFactory(handler ?? new MockMessageHandler()),
-                RetryOptions = RetryOptions.NoBackOff,
-            });
-            var args = FirebaseAuth.Args.CreateDefault();
-            args.TenantManager = new Lazy<TenantManager>(tenantManager);
-            return new FirebaseAuth(args);
-        }
-
         private static void AssertTenant(Tenant tenant)
         {
             Assert.Equal("tenant1", tenant.TenantId);
@@ -673,58 +637,109 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.True(tenant.EmailLinkSignInEnabled);
         }
 
-        private static void AssertClientVersionHeader(MockMessageHandler.IncomingRequest request)
+        public class TestConfig
         {
-            Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
-        }
+            private static readonly string IdToolkitUrl = $"identitytoolkit.googleapis.com/v2/projects/project1";
 
-        private static IDictionary<string, string> ExtractQueryParams(
-            MockMessageHandler.IncomingRequest req)
-        {
-            return req.Url.Query.Substring(1).Split('&').ToDictionary(
-                entry => entry.Split('=')[0], entry => entry.Split('=')[1]);
+            private static readonly string ClientVersion =
+                $"DotNet/Admin/{FirebaseApp.GetSdkVersion()}";
+
+            private static readonly GoogleCredential MockCredential =
+                GoogleCredential.FromAccessToken("test-token");
+
+            private TestConfig(string emulatorHost = null)
+            {
+                this.EmulatorHost = emulatorHost;
+            }
+
+            public static TestConfig Default => new TestConfig();
+
+            public static TestConfig WithEmulator => new TestConfig("localhost:9090");
+
+            internal string EmulatorHost { get; }
+
+            internal FirebaseAuth CreateFirebaseAuth(HttpMessageHandler handler = null)
+            {
+                var tenantManager = new TenantManager(new TenantManager.Args
+                {
+                    Credential = MockCredential,
+                    ProjectId = "project1",
+                    ClientFactory = new MockHttpClientFactory(handler ?? new MockMessageHandler()),
+                    RetryOptions = RetryOptions.NoBackOff,
+                    EmulatorHost = this.EmulatorHost,
+                });
+                var args = FirebaseAuth.Args.CreateDefault();
+                args.TenantManager = new Lazy<TenantManager>(tenantManager);
+                return new FirebaseAuth(args);
+            }
+
+            internal void AssertRequest(
+                string expectedSuffix, MockMessageHandler.IncomingRequest request)
+            {
+                if (this.EmulatorHost != null)
+                {
+                    var expectedUrl = $"http://{this.EmulatorHost}/{IdToolkitUrl}/{expectedSuffix}";
+                    Assert.Equal(expectedUrl, request.Url.ToString());
+                    Assert.Equal("Bearer owner", request.Headers.Authorization.ToString());
+                }
+                else
+                {
+                    var expectedUrl = $"https://{IdToolkitUrl}/{expectedSuffix}";
+                    Assert.Equal(expectedUrl, request.Url.ToString());
+                    Assert.Equal("Bearer test-token", request.Headers.Authorization.ToString());
+                }
+
+                Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
+            }
         }
 
         public class InvalidListOptions : IEnumerable<object[]>
         {
-            public IEnumerator<object[]> GetEnumerator()
+            // {
+            //    1st element: InvalidInput,
+            //    2nd element: ExpectedError,
+            // }
+            private static readonly List<object[]> TestCases = new List<object[]>
             {
-                // {
-                //    1st element: InvalidInput,
-                //    2nd element: ExpectedError,
-                // }
-                yield return new object[]
+                new object[]
                 {
                     new ListTenantsOptions()
                     {
                         PageSize = 101,
                     },
                     "Page size must not exceed 100.",
-                };
-                yield return new object[]
+                },
+                new object[]
                 {
                     new ListTenantsOptions()
                     {
                         PageSize = 0,
                     },
                     "Page size must be positive.",
-                };
-                yield return new object[]
+                },
+                new object[]
                 {
                     new ListTenantsOptions()
                     {
                         PageSize = -1,
                     },
                     "Page size must be positive.",
-                };
-                yield return new object[]
+                },
+                new object[]
                 {
                     new ListTenantsOptions()
                     {
                         PageToken = string.Empty,
                     },
                     "Page token must not be empty.",
-                };
+                },
+            };
+
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                return TestConfigs
+                    .SelectMany(config => TestCases, (config, testCase) => config.Concat(testCase).ToArray())
+                    .GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();

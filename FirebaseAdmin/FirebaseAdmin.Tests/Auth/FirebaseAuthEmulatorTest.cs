@@ -44,6 +44,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("localhost:9090", auth.UserManager.EmulatorHost);
             Assert.True(auth.IdTokenVerifier.IsEmulatorMode);
             Assert.True(auth.TokenFactory.IsEmulatorMode);
+            Assert.Equal("localhost:9090", auth.TenantManager.EmulatorHost);
         }
 
         [Fact]
