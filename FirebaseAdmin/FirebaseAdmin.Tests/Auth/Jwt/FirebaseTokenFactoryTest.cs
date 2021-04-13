@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
+using Google.Apis.Util;
 using Xunit;
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
@@ -38,7 +39,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task CreateCustomToken(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
 
             var token = await factory.CreateCustomTokenAsync("user1");
 
@@ -49,7 +50,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task CreateCustomTokenWithEmptyClaims(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
 
             var token = await factory.CreateCustomTokenAsync(
                 "user1", new Dictionary<string, object>());
@@ -61,7 +62,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task CreateCustomTokenWithClaims(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
             var developerClaims = new Dictionary<string, object>()
             {
                 { "admin", true },
@@ -78,7 +79,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task InvalidUid(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
 
             await Assert.ThrowsAsync<ArgumentException>(
                 async () => await factory.CreateCustomTokenAsync(null));
@@ -92,7 +93,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [MemberData(nameof(TenantIds))]
         public async Task ReservedClaims(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
+            var factory = CreateTokenFactory(tenantId);
             foreach (var key in FirebaseTokenFactory.ReservedClaims)
             {
                 var developerClaims = new Dictionary<string, object>()
@@ -106,43 +107,107 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         }
 
         [Fact]
-        public void NullSigner()
+        public void NullArgs()
         {
-            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(null, Clock));
+            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(null));
         }
 
         [Fact]
-        public void NullClock()
+        public void NullSigner()
         {
-            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(Signer, null));
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = null,
+            };
+
+            Assert.Throws<ArgumentNullException>(() => new FirebaseTokenFactory(args));
         }
 
         [Fact]
         public void EmptyTenantId()
         {
-            Assert.Throws<ArgumentException>(
-                () => new FirebaseTokenFactory(Signer, Clock, string.Empty));
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = Signer,
+                TenantId = string.Empty,
+            };
+
+            Assert.Throws<ArgumentException>(() => new FirebaseTokenFactory(args));
+        }
+
+        [Fact]
+        public void SignerOnly()
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = Signer,
+            };
+
+            var factory = new FirebaseTokenFactory(args);
+
+            Assert.Same(SystemClock.Default, factory.Clock);
+            Assert.Null(factory.TenantId);
+            Assert.False(factory.IsEmulatorMode);
         }
 
         [Theory]
         [MemberData(nameof(TenantIds))]
-        public void TenantId(string tenantId)
+        public void ProductionMode(string tenantId)
         {
-            var factory = new FirebaseTokenFactory(Signer, Clock, tenantId);
-            if (tenantId == null)
+            var factory = CreateTokenFactory(tenantId);
+
+            Assert.False(factory.IsEmulatorMode);
+            Assert.Same(Signer, factory.Signer);
+            Assert.Same(Clock, factory.Clock);
+            AssertTenantId(tenantId, factory);
+        }
+
+        [Theory]
+        [MemberData(nameof(TenantIds))]
+        public void EmulatorMode(string tenantId)
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                IsEmulatorMode = true,
+                TenantId = tenantId,
+            };
+            var factory = new FirebaseTokenFactory(args);
+
+            Assert.True(factory.IsEmulatorMode);
+            Assert.Same(EmulatorSigner.Instance, factory.Signer);
+            Assert.Same(SystemClock.Default, factory.Clock);
+            AssertTenantId(tenantId, factory);
+        }
+
+        private static void AssertTenantId(string expectedTenantId, FirebaseTokenFactory factory)
+        {
+            if (expectedTenantId == null)
             {
                 Assert.Null(factory.TenantId);
             }
             else
             {
-                Assert.Equal(tenantId, factory.TenantId);
+                Assert.Equal(expectedTenantId, factory.TenantId);
             }
+        }
+
+        private static FirebaseTokenFactory CreateTokenFactory(string tenantId)
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = Signer,
+                Clock = Clock,
+                TenantId = tenantId,
+            };
+            return new FirebaseTokenFactory(args);
         }
 
         private sealed class MockSigner : ISigner
         {
             public const string KeyIdString = "mock-key-id";
             public const string Signature = "signature";
+
+            public string Algorithm => JwtUtils.AlgorithmRS256;
 
             public Task<string> GetKeyIdAsync(CancellationToken cancellationToken)
             {

@@ -33,10 +33,15 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
     {
         internal const string ProjectId = "test-project";
 
+        internal const string DefaultClientEmail = "client@test-project.iam.gserviceaccount.com";
+
         internal static readonly IClock Clock = new MockClock();
 
-        internal static readonly IPublicKeySource DefaultKeySource = new FileSystemPublicKeySource(
+        internal static readonly byte[] DefaultPublicKey = File.ReadAllBytes(
             "./resources/public_cert.pem");
+
+        internal static readonly IPublicKeySource DefaultKeySource = new ByteArrayPublicKeySource(
+            DefaultPublicKey);
 
         internal static readonly ISigner DefaultSigner = CreateTestSigner(
             "./resources/service_account.json");
@@ -81,25 +86,33 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         public static void AssertRevocationCheckRequest(string tenantId, Uri uri)
         {
-            var tenantInfo = tenantId != null ? $"/tenants/{tenantId}" : string.Empty;
-            var expectedPath = $"/v1/projects/{ProjectId}{tenantInfo}/accounts:lookup";
-            Assert.Equal(expectedPath, uri.PathAndQuery);
+            AssertRevocationCheckRequest(tenantId, null, uri);
+        }
+
+        public static void AssertRevocationCheckRequest(string tenantId, string emulatorHost, Uri uri)
+        {
+            var options = new Utils.UrlOptions
+            {
+                TenantId = tenantId,
+                EmulatorHost = emulatorHost,
+            };
+            var expectedUrl = $"{Utils.BuildAuthUrl(ProjectId, options)}/accounts:lookup";
+            Assert.Equal(expectedUrl, uri.ToString());
         }
 
         private static ISigner CreateTestSigner(string filePath)
         {
             var credential = GoogleCredential.FromFile(filePath);
-            var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
-            return new ServiceAccountSigner(serviceAccount);
+            return new ServiceAccountSigner(credential.ToServiceAccountCredential());
         }
 
-        private sealed class FileSystemPublicKeySource : IPublicKeySource
+        private sealed class ByteArrayPublicKeySource : IPublicKeySource
         {
             private IReadOnlyList<PublicKey> rsa;
 
-            public FileSystemPublicKeySource(string file)
+            public ByteArrayPublicKeySource(byte[] publicKey)
             {
-                var x509cert = new X509Certificate2(File.ReadAllBytes(file));
+                var x509cert = new X509Certificate2(publicKey);
                 var rsa = (RSA)x509cert.PublicKey.Key;
                 this.rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
             }

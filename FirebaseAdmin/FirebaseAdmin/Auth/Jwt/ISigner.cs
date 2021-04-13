@@ -25,6 +25,11 @@ namespace FirebaseAdmin.Auth.Jwt
     internal interface ISigner : IDisposable
     {
         /// <summary>
+        /// Gets the name of the algorithm used to sign data.
+        /// </summary>
+        string Algorithm { get; }
+
+        /// <summary>
         /// Returns the ID (client email) of the service account used to sign payloads.
         /// </summary>
         /// <returns>A task that completes with the key ID string.</returns>

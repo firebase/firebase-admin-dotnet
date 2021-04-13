@@ -66,6 +66,18 @@ namespace FirebaseAdmin.Auth.Multitenancy
             Assert.Equal(MockTenantId, auth.ProviderConfigManager.TenantId);
         }
 
+        [Fact]
+        public void NoEmulator()
+        {
+            var app = CreateFirebaseApp();
+
+            var auth = FirebaseAuth.DefaultInstance.TenantManager.AuthForTenant(MockTenantId);
+
+            Assert.False(auth.TokenFactory.IsEmulatorMode);
+            Assert.False(auth.IdTokenVerifier.IsEmulatorMode);
+            Assert.Null(auth.UserManager.EmulatorHost);
+        }
+
         public void Dispose()
         {
             FirebaseApp.DeleteAll();

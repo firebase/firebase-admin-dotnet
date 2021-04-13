@@ -33,6 +33,8 @@ namespace FirebaseAdmin.Auth.Jwt
             this.credential = credential.ThrowIfNull(nameof(credential));
         }
 
+        public string Algorithm => JwtUtils.AlgorithmRS256;
+
         public Task<string> GetKeyIdAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             return Task.FromResult(this.credential.Id);

@@ -41,6 +41,10 @@ namespace FirebaseAdmin.Auth.Tests
 
         internal string TenantId { get; set; }
 
+        internal string EmulatorHost { get; set; }
+
+        internal ISigner Signer { get; set; }
+
         public AbstractFirebaseAuth Build(TestOptions options)
         {
             if (this.TenantId != null)
@@ -88,6 +92,11 @@ namespace FirebaseAdmin.Auth.Tests
                         $"Session cookie verification not supported on {args.GetType()}");
                 }
             }
+
+            if (options.TokenFactory)
+            {
+                args.TokenFactory = new Lazy<FirebaseTokenFactory>(this.CreateTokenFactory());
+            }
         }
 
         private FirebaseUserManager CreateUserManager(TestOptions options)
@@ -99,6 +108,7 @@ namespace FirebaseAdmin.Auth.Tests
                 ProjectId = this.ProjectId,
                 ClientFactory = new MockHttpClientFactory(options.UserManagerRequestHandler),
                 TenantId = this.TenantId,
+                EmulatorHost = this.EmulatorHost,
             };
             return new FirebaseUserManager(args);
         }
@@ -107,7 +117,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var args = new ProviderConfigManager.Args
             {
-                RetryOptions = RetryOptions.NoBackOff,
+                RetryOptions = this.RetryOptions,
                 ProjectId = this.ProjectId,
                 ClientFactory = new MockHttpClientFactory(options.ProviderConfigRequestHandler),
                 TenantId = this.TenantId,
@@ -117,14 +127,31 @@ namespace FirebaseAdmin.Auth.Tests
 
         private FirebaseTokenVerifier CreateIdTokenVerifier()
         {
-            return FirebaseTokenVerifier.CreateIdTokenVerifier(
-                this.ProjectId, this.KeySource, this.Clock, this.TenantId);
+            var args = FirebaseTokenVerifier.CreateIdTokenVerifierArgs();
+            args.ProjectId = this.ProjectId;
+            args.PublicKeySource = this.KeySource;
+            args.Clock = this.Clock;
+            args.TenantId = this.TenantId;
+            args.IsEmulatorMode = !string.IsNullOrWhiteSpace(this.EmulatorHost);
+            return new FirebaseTokenVerifier(args);
         }
 
         private FirebaseTokenVerifier CreateSessionCookieVerifier()
         {
             return FirebaseTokenVerifier.CreateSessionCookieVerifier(
                 this.ProjectId, this.KeySource, this.Clock);
+        }
+
+        private FirebaseTokenFactory CreateTokenFactory()
+        {
+            var args = new FirebaseTokenFactory.Args
+            {
+                Signer = this.Signer,
+                Clock = this.Clock,
+                TenantId = this.TenantId,
+                IsEmulatorMode = !string.IsNullOrWhiteSpace(this.EmulatorHost),
+            };
+            return new FirebaseTokenFactory(args);
         }
     }
 }
