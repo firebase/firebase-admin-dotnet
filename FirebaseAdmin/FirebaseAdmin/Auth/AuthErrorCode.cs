@@ -30,6 +30,13 @@ namespace FirebaseAdmin.Auth
         EmailAlreadyExists,
 
         /// <summary>
+        /// No user record found for the given email, typically raised when
+        /// generating a password reset link using an email for a user that
+        /// is not already registered.
+        /// </summary>
+        EmailNotFound,
+
+        /// <summary>
         /// The specified ID token is expired.
         /// </summary>
         ExpiredIdToken,
