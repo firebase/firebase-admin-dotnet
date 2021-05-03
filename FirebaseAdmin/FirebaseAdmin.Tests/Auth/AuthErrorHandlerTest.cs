@@ -57,6 +57,12 @@ namespace FirebaseAdmin.Auth.Tests
                     ErrorCode.NotFound,
                     AuthErrorCode.UserNotFound,
                 },
+                new object[]
+                {
+                    "EMAIL_NOT_FOUND",
+                    ErrorCode.NotFound,
+                    AuthErrorCode.EmailNotFound,
+                },
             };
 
         [Theory]

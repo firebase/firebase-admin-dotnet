@@ -30,13 +30,6 @@ namespace FirebaseAdmin.Auth
         EmailAlreadyExists,
 
         /// <summary>
-        /// No user record found for the given email, typically raised when
-        /// generating a password reset link using an email for a user that
-        /// is not already registered.
-        /// </summary>
-        EmailNotFound,
-
-        /// <summary>
         /// The specified ID token is expired.
         /// </summary>
         ExpiredIdToken,
@@ -105,5 +98,12 @@ namespace FirebaseAdmin.Auth
         /// Tenant ID in a token does not match.
         /// </summary>
         TenantIdMismatch,
+
+        /// <summary>
+        /// No user record found for the given email, typically raised when
+        /// generating a password reset link using an email for a user that
+        /// is not already registered.
+        /// </summary>
+        EmailNotFound,
     }
 }
