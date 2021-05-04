@@ -64,6 +64,13 @@ namespace FirebaseAdmin.Auth
                         "The user with the provided email already exists")
                 },
                 {
+                    "EMAIL_NOT_FOUND",
+                    new ErrorInfo(
+                        ErrorCode.NotFound,
+                        AuthErrorCode.EmailNotFound,
+                        "No user record found for the given email")
+                },
+                {
                     "INVALID_DYNAMIC_LINK_DOMAIN",
                     new ErrorInfo(
                         ErrorCode.InvalidArgument,
