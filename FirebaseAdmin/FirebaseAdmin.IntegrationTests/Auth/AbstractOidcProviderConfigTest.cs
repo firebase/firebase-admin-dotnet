@@ -46,6 +46,9 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.True(config.Enabled);
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
+            Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
+            Assert.True(config.ResponseType.Code);
+            Assert.Null(config.ResponseType.IDToken);
         }
 
         [Fact]
@@ -59,6 +62,9 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.True(config.Enabled);
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
+            Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
+            Assert.True(config.ResponseType.Code);
+            Assert.Null(config.ResponseType.IDToken);
         }
 
         [Fact]
@@ -84,6 +90,9 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.True(config.Enabled);
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
+            Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
+            Assert.True(config.ResponseType.Code);
+            Assert.Null(config.ResponseType.IDToken);
         }
 
         [Fact]
@@ -97,6 +106,9 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 Enabled = false,
                 ClientId = "UPDATED_OIDC_CLIENT_ID",
                 Issuer = "https://oidc.com/updated-issuer",
+                ClientSecret = "UPDATED_OIDC_CLIENT_SECRET",
+                CodeResponseType = false,
+                IDTokenResponseType = true,
             };
 
             var config = await this.auth.UpdateProviderConfigAsync(args);
@@ -106,6 +118,9 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.False(config.Enabled);
             Assert.Equal("UPDATED_OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/updated-issuer", config.Issuer);
+            Assert.Equal("UPDATED_OIDC_CLIENT_SECRET", config.ClientSecret);
+            Assert.Null(config.ResponseType.Code);
+            Assert.True(config.ResponseType.IDToken);
         }
 
         [Fact]

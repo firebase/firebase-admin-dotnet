@@ -33,7 +33,12 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             ""clientId"": ""CLIENT_ID"",
             ""issuer"": ""https://oidc.com/issuer"",
             ""displayName"": ""oidcProviderName"",
-            ""enabled"": true
+            ""enabled"": true,
+            ""clientSecret"": ""CLIENT_SECRET"",
+            ""responseType"": {
+                ""code"": true,
+                ""idToken"": true
+            }
         }";
 
         private static readonly IList<string> ListConfigsResponses = new List<string>()
@@ -135,6 +140,9 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 Enabled = true,
                 ClientId = "CLIENT_ID",
                 Issuer = "https://oidc.com/issuer",
+                ClientSecret = "CLIENT_SECRET",
+                CodeResponseType = true,
+                IDTokenResponseType = true,
             };
 
             var provider = await auth.CreateProviderConfigAsync(args);
@@ -147,11 +155,14 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
-            Assert.Equal(4, body.Count);
+            Assert.Equal(6, body.Count);
             Assert.Equal("oidcProviderName", body["displayName"]);
             Assert.True((bool)body["enabled"]);
             Assert.Equal("CLIENT_ID", body["clientId"]);
             Assert.Equal("https://oidc.com/issuer", body["issuer"]);
+            Assert.Equal("CLIENT_SECRET", body["clientSecret"]);
+            Assert.True((bool)body["responseType"]["code"]);
+            Assert.True((bool)body["responseType"]["idToken"]);
         }
 
         [Theory]
@@ -252,6 +263,9 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 Enabled = true,
                 ClientId = "CLIENT_ID",
                 Issuer = "https://oidc.com/issuer",
+                ClientSecret = "CLIENT_SECRET",
+                CodeResponseType = true,
+                IDTokenResponseType = true,
             };
 
             var provider = await auth.UpdateProviderConfigAsync(args);
@@ -260,16 +274,19 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal(1, handler.Requests.Count);
             var request = handler.Requests[0];
             Assert.Equal(ProviderTestConfig.PatchMethod, request.Method);
-            var mask = "clientId,displayName,enabled,issuer";
+            var mask = "clientId,clientSecret,displayName,enabled,issuer,responseType.code,responseType.idToken";
             config.AssertRequest($"oauthIdpConfigs/oidc.provider?updateMask={mask}", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
                 handler.LastRequestBody);
-            Assert.Equal(4, body.Count);
+            Assert.Equal(6, body.Count);
             Assert.Equal("oidcProviderName", body["displayName"]);
             Assert.True((bool)body["enabled"]);
             Assert.Equal("CLIENT_ID", body["clientId"]);
             Assert.Equal("https://oidc.com/issuer", body["issuer"]);
+            Assert.Equal("CLIENT_SECRET", body["clientSecret"]);
+            Assert.True((bool)body["responseType"]["code"]);
+            Assert.True((bool)body["responseType"]["idToken"]);
         }
 
         [Theory]
@@ -621,6 +638,9 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.True(provider.Enabled);
             Assert.Equal("CLIENT_ID", provider.ClientId);
             Assert.Equal("https://oidc.com/issuer", provider.Issuer);
+            Assert.Equal("CLIENT_SECRET", provider.ClientSecret);
+            Assert.True(provider.ResponseType.Code);
+            Assert.True(provider.ResponseType.IDToken);
         }
 
         public class InvalidCreateArgs : IEnumerable<object[]>
@@ -681,6 +701,17 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         Issuer = "not a url",
                     },
                     "Malformed issuer string: not a url",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
+                        ClientId = "CLIENT_ID",
+                        Issuer = "https://oidc.com/issuer",
+                        CodeResponseType = true,
+                    },
+                    "Client Secret must not be null or empty for code response type",
                 };
             }
 
@@ -753,6 +784,16 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         Issuer = "not a url",
                     },
                     "Malformed issuer string: not a url",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
+                        Issuer = "https://oidc.com/issuer",
+                        CodeResponseType = true,
+                    },
+                    "Client Secret must not be null or empty for code response type",
                 };
             }
 

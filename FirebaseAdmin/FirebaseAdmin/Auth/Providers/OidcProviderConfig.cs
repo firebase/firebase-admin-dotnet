@@ -27,6 +27,8 @@ namespace FirebaseAdmin.Auth.Providers
         {
             this.ClientId = request.ClientId;
             this.Issuer = request.Issuer;
+            this.ClientSecret = request.ClientSecret;
+            this.ResponseType = new ResponseTypeArgs(request.ResponseType);
         }
 
         /// <summary>
@@ -63,6 +65,47 @@ namespace FirebaseAdmin.Auth.Providers
         /// </summary>
         public string Issuer { get; }
 
+        /// <summary>
+        /// Gets the Client Secret used to verify code based response types.
+        /// </summary>
+        public string ClientSecret { get; }
+
+        /// <summary>
+        /// Gets what response types are being used for this OIDC config.
+        /// </summary>
+        public ResponseTypeArgs ResponseType { get; }
+
+        /// <summary>
+        /// Represents the response types beinf used for this OIDC config.
+        /// </summary>
+        public class ResponseTypeArgs
+        {
+            internal ResponseTypeArgs(ResponseTypeJson request)
+            {
+                this.Code = request.Code;
+                this.IDToken = request.IDToken;
+            }
+
+            /// <summary>
+            /// Gets a value indicating whether this OIDC provider uses a code based response type.
+            /// </summary>
+            public bool? Code { get; }
+
+            /// <summary>
+            /// Gets a value indicating whether this OIDC provider uses an ID-token based response type.
+            /// </summary>
+            public bool? IDToken { get; }
+        }
+
+        internal sealed class ResponseTypeJson
+        {
+            [JsonProperty("code")]
+            internal bool? Code { get; set; }
+
+            [JsonProperty("idToken")]
+            internal bool? IDToken { get; set; }
+        }
+
         internal sealed new class Request : AuthProviderConfig.Request
         {
             [JsonProperty("clientId")]
@@ -70,6 +113,12 @@ namespace FirebaseAdmin.Auth.Providers
 
             [JsonProperty("issuer")]
             internal string Issuer { get; set; }
+
+            [JsonProperty("clientSecret")]
+            internal string ClientSecret { get; set; }
+
+            [JsonProperty("responseType")]
+            internal ResponseTypeJson ResponseType { get; set; }
         }
     }
 }
