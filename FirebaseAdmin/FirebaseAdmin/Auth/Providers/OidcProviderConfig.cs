@@ -28,7 +28,8 @@ namespace FirebaseAdmin.Auth.Providers
             this.ClientId = request.ClientId;
             this.Issuer = request.Issuer;
             this.ClientSecret = request.ClientSecret;
-            this.ResponseType = new ResponseTypeArgs(request.ResponseType);
+            this.IDTokenResponseType = request.ResponseType.IDToken == true;
+            this.CodeResponseType = request.ResponseType.Code == true;
         }
 
         /// <summary>
@@ -71,33 +72,16 @@ namespace FirebaseAdmin.Auth.Providers
         public string ClientSecret { get; }
 
         /// <summary>
-        /// Gets what response types are being used for this OIDC config.
+        /// Gets a value indicating whether an ID Token response type will be provided.
         /// </summary>
-        public ResponseTypeArgs ResponseType { get; }
+        public bool IDTokenResponseType { get; }
 
         /// <summary>
-        /// Represents the response types beinf used for this OIDC config.
+        /// Gets a value indicating whether an Code type response type will be provided.
         /// </summary>
-        public class ResponseTypeArgs
-        {
-            internal ResponseTypeArgs(ResponseTypeJson request)
-            {
-                this.Code = request.Code;
-                this.IDToken = request.IDToken;
-            }
+        public bool CodeResponseType { get; }
 
-            /// <summary>
-            /// Gets a value indicating whether this OIDC provider uses a code based response type.
-            /// </summary>
-            public bool? Code { get; }
-
-            /// <summary>
-            /// Gets a value indicating whether this OIDC provider uses an ID-token based response type.
-            /// </summary>
-            public bool? IDToken { get; }
-        }
-
-        internal sealed class ResponseTypeJson
+        internal sealed class ResponseTypeInfo
         {
             [JsonProperty("code")]
             internal bool? Code { get; set; }
@@ -118,7 +102,7 @@ namespace FirebaseAdmin.Auth.Providers
             internal string ClientSecret { get; set; }
 
             [JsonProperty("responseType")]
-            internal ResponseTypeJson ResponseType { get; set; }
+            internal ResponseTypeInfo ResponseType { get; set; }
         }
     }
 }

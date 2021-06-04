@@ -83,7 +83,7 @@ namespace FirebaseAdmin.Auth.Providers
             };
             if (this.CodeResponseType != null || this.IDTokenResponseType != null)
             {
-                req.ResponseType = new OidcProviderConfig.ResponseTypeJson()
+                req.ResponseType = new OidcProviderConfig.ResponseTypeInfo()
                 {
                     Code = this.CodeResponseType,
                     IDToken = this.IDTokenResponseType,
@@ -124,7 +124,7 @@ namespace FirebaseAdmin.Auth.Providers
             };
             if (this.CodeResponseType != null || this.IDTokenResponseType != null)
             {
-                req.ResponseType = new OidcProviderConfig.ResponseTypeJson()
+                req.ResponseType = new OidcProviderConfig.ResponseTypeInfo()
                 {
                     Code = this.CodeResponseType,
                     IDToken = this.IDTokenResponseType,
@@ -148,6 +148,11 @@ namespace FirebaseAdmin.Auth.Providers
             if (req.ResponseType?.Code == true && string.IsNullOrEmpty(req.ClientSecret))
             {
                 throw new ArgumentException("Client Secret must not be null or empty for code response type");
+            }
+
+            if (req.ResponseType?.Code == false && req.ResponseType?.IDToken == false)
+            {
+                throw new ArgumentException("At least one response type must be returned.");
             }
 
             return req;

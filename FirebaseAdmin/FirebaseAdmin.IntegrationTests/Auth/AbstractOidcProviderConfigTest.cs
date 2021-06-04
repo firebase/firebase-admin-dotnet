@@ -47,8 +47,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
             Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
-            Assert.True(config.ResponseType.Code);
-            Assert.Null(config.ResponseType.IDToken);
+            Assert.True(config.CodeResponseType);
+            Assert.False(config.IDTokenResponseType);
         }
 
         [Fact]
@@ -63,8 +63,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
             Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
-            Assert.True(config.ResponseType.Code);
-            Assert.Null(config.ResponseType.IDToken);
+            Assert.True(config.CodeResponseType);
+            Assert.False(config.IDTokenResponseType);
         }
 
         [Fact]
@@ -91,8 +91,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
             Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
-            Assert.True(config.ResponseType.Code);
-            Assert.Null(config.ResponseType.IDToken);
+            Assert.True(config.CodeResponseType);
+            Assert.False(config.IDTokenResponseType);
         }
 
         [Fact]
@@ -119,8 +119,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("UPDATED_OIDC_CLIENT_ID", config.ClientId);
             Assert.Equal("https://oidc.com/updated-issuer", config.Issuer);
             Assert.Equal("UPDATED_OIDC_CLIENT_SECRET", config.ClientSecret);
-            Assert.Null(config.ResponseType.Code);
-            Assert.True(config.ResponseType.IDToken);
+            Assert.False(config.CodeResponseType);
+            Assert.True(config.IDTokenResponseType);
         }
 
         [Fact]
