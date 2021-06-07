@@ -48,7 +48,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
             Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
             Assert.True(config.CodeResponseType);
-            Assert.False(config.IDTokenResponseType);
+            Assert.False(config.IdTokenResponseType);
         }
 
         [Fact]
@@ -64,7 +64,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
             Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
             Assert.True(config.CodeResponseType);
-            Assert.False(config.IDTokenResponseType);
+            Assert.False(config.IdTokenResponseType);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("https://oidc.com/issuer", config.Issuer);
             Assert.Equal("OIDC_CLIENT_SECRET", config.ClientSecret);
             Assert.True(config.CodeResponseType);
-            Assert.False(config.IDTokenResponseType);
+            Assert.False(config.IdTokenResponseType);
         }
 
         [Fact]
@@ -108,7 +108,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 Issuer = "https://oidc.com/updated-issuer",
                 ClientSecret = "UPDATED_OIDC_CLIENT_SECRET",
                 CodeResponseType = false,
-                IDTokenResponseType = true,
+                IdTokenResponseType = true,
             };
 
             var config = await this.auth.UpdateProviderConfigAsync(args);
@@ -120,7 +120,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Equal("https://oidc.com/updated-issuer", config.Issuer);
             Assert.Equal("UPDATED_OIDC_CLIENT_SECRET", config.ClientSecret);
             Assert.False(config.CodeResponseType);
-            Assert.True(config.IDTokenResponseType);
+            Assert.True(config.IdTokenResponseType);
         }
 
         [Fact]

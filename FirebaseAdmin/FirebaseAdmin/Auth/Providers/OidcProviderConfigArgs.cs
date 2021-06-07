@@ -64,7 +64,7 @@ namespace FirebaseAdmin.Auth.Providers
         /// <summary>
         /// Gets or sets a value indicating whether this OIDC provider uses an ID-token based response type.
         /// </summary>
-        public bool? IDTokenResponseType { get; set; }
+        public bool? IdTokenResponseType { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this OIDC provider uses a code based response type.
@@ -81,12 +81,12 @@ namespace FirebaseAdmin.Auth.Providers
                 Issuer = this.Issuer,
                 ClientSecret = this.ClientSecret,
             };
-            if (this.CodeResponseType != null || this.IDTokenResponseType != null)
+            if (this.CodeResponseType != null || this.IdTokenResponseType != null)
             {
                 req.ResponseType = new OidcProviderConfig.ResponseTypeInfo()
                 {
                     Code = this.CodeResponseType,
-                    IDToken = this.IDTokenResponseType,
+                    IdToken = this.IdTokenResponseType,
                 };
             }
 
@@ -109,6 +109,11 @@ namespace FirebaseAdmin.Auth.Providers
                 throw new ArgumentException("Client Secret must not be null or empty for code response type");
             }
 
+            if (req.ResponseType?.Code == false && req.ResponseType?.IdToken == false)
+            {
+                throw new ArgumentException("At least one response type must be returned.");
+            }
+
             return req;
         }
 
@@ -122,12 +127,12 @@ namespace FirebaseAdmin.Auth.Providers
                 Issuer = this.Issuer,
                 ClientSecret = this.ClientSecret,
             };
-            if (this.CodeResponseType != null || this.IDTokenResponseType != null)
+            if (this.CodeResponseType != null || this.IdTokenResponseType != null)
             {
                 req.ResponseType = new OidcProviderConfig.ResponseTypeInfo()
                 {
                     Code = this.CodeResponseType,
-                    IDToken = this.IDTokenResponseType,
+                    IdToken = this.IdTokenResponseType,
                 };
             }
 
@@ -150,7 +155,7 @@ namespace FirebaseAdmin.Auth.Providers
                 throw new ArgumentException("Client Secret must not be null or empty for code response type");
             }
 
-            if (req.ResponseType?.Code == false && req.ResponseType?.IDToken == false)
+            if (req.ResponseType?.Code == false && req.ResponseType?.IdToken == false)
             {
                 throw new ArgumentException("At least one response type must be returned.");
             }

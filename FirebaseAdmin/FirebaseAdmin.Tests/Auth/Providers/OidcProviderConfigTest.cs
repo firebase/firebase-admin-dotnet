@@ -142,7 +142,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 Issuer = "https://oidc.com/issuer",
                 ClientSecret = "CLIENT_SECRET",
                 CodeResponseType = true,
-                IDTokenResponseType = true,
+                IdTokenResponseType = true,
             };
 
             var provider = await auth.CreateProviderConfigAsync(args);
@@ -265,7 +265,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 Issuer = "https://oidc.com/issuer",
                 ClientSecret = "CLIENT_SECRET",
                 CodeResponseType = true,
-                IDTokenResponseType = true,
+                IdTokenResponseType = true,
             };
 
             var provider = await auth.UpdateProviderConfigAsync(args);
@@ -640,7 +640,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Equal("https://oidc.com/issuer", provider.Issuer);
             Assert.Equal("CLIENT_SECRET", provider.ClientSecret);
             Assert.True(provider.CodeResponseType);
-            Assert.True(provider.IDTokenResponseType);
+            Assert.True(provider.IdTokenResponseType);
         }
 
         public class InvalidCreateArgs : IEnumerable<object[]>
@@ -712,6 +712,18 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         CodeResponseType = true,
                     },
                     "Client Secret must not be null or empty for code response type",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider",
+                        ClientId = "CLIENT_ID",
+                        Issuer = "https://oidc.com/issuer",
+                        CodeResponseType = false,
+                        IdTokenResponseType = false,
+                    },
+                    "At least one response type must be returned.",
                 };
             }
 
@@ -802,7 +814,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         ProviderId = "oidc.provider",
                         Issuer = "https://oidc.com/issuer",
                         CodeResponseType = false,
-                        IDTokenResponseType = false,
+                        IdTokenResponseType = false,
                     },
                     "At least one response type must be returned.",
                 };

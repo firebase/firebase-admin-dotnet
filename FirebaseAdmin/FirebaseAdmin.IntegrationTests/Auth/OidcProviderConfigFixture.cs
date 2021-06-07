@@ -33,7 +33,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 Issuer = "https://oidc.com/issuer",
                 ClientSecret = "OIDC_CLIENT_SECRET",
                 CodeResponseType = true,
-                IDTokenResponseType = false,
+                IdTokenResponseType = false,
             };
             this.ProviderConfig = this.Auth.CreateProviderConfigAsync(args).Result;
         }

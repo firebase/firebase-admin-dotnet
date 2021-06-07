@@ -28,7 +28,7 @@ namespace FirebaseAdmin.Auth.Providers
             this.ClientId = request.ClientId;
             this.Issuer = request.Issuer;
             this.ClientSecret = request.ClientSecret;
-            this.IDTokenResponseType = request.ResponseType.IDToken == true;
+            this.IdTokenResponseType = request.ResponseType.IdToken == true;
             this.CodeResponseType = request.ResponseType.Code == true;
         }
 
@@ -74,7 +74,7 @@ namespace FirebaseAdmin.Auth.Providers
         /// <summary>
         /// Gets a value indicating whether an ID Token response type will be provided.
         /// </summary>
-        public bool IDTokenResponseType { get; }
+        public bool IdTokenResponseType { get; }
 
         /// <summary>
         /// Gets a value indicating whether an Code type response type will be provided.
@@ -87,7 +87,7 @@ namespace FirebaseAdmin.Auth.Providers
             internal bool? Code { get; set; }
 
             [JsonProperty("idToken")]
-            internal bool? IDToken { get; set; }
+            internal bool? IdToken { get; set; }
         }
 
         internal sealed new class Request : AuthProviderConfig.Request
