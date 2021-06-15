@@ -57,7 +57,7 @@ namespace FirebaseAdmin.Auth.Providers
         public string Issuer { get; set; }
 
         /// <summary>
-        /// Gets or sets the Client Secret used to verify code based response types.
+        /// Gets or sets the client secret, which is used to verify Code response types.
         /// </summary>
         public string ClientSecret { get; set; }
 
