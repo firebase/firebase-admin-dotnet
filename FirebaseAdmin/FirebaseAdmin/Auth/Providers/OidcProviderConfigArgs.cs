@@ -67,7 +67,7 @@ namespace FirebaseAdmin.Auth.Providers
         public bool? IdTokenResponseType { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether this OIDC provider uses a code based response type.
+        /// Gets or sets a value indicating whether this OIDC provider uses a Code response type.
         /// </summary>
         public bool? CodeResponseType { get; set; }
 
