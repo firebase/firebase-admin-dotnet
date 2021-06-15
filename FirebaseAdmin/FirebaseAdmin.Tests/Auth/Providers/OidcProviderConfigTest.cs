@@ -795,7 +795,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         ProviderId = "oidc.provider",
                         Issuer = "not a url",
                     },
-                    "Malformed issuer string: not a url",
+                    "Malformed issuer string: not a URL.",
                 };
                 yield return new object[]
                 {
