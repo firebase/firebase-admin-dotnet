@@ -106,7 +106,7 @@ namespace FirebaseAdmin.Auth.Providers
 
             if (req.ResponseType?.Code == true && string.IsNullOrEmpty(req.ClientSecret))
             {
-                throw new ArgumentException("Client Secret must not be null or empty for code response type");
+                throw new ArgumentException("Client secret must not be null or empty for code response type.");
             }
 
             if (req.ResponseType?.Code == false && req.ResponseType?.IdToken == false)
