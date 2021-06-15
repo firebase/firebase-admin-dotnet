@@ -62,7 +62,7 @@ namespace FirebaseAdmin.Auth.Providers
         public string ClientSecret { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether this OIDC provider uses an ID-token based response type.
+        /// Gets or sets a value indicating whether this OIDC provider uses an ID Token response type.
         /// </summary>
         public bool? IdTokenResponseType { get; set; }
 
