@@ -805,7 +805,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         Issuer = "https://oidc.com/issuer",
                         CodeResponseType = true,
                     },
-                    "Client Secret must not be null or empty for code response type",
+                    "Client secret must not be null or empty for 'code' response type.",
                 };
                 yield return new object[]
                 {
