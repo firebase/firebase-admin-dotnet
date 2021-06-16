@@ -56,6 +56,21 @@ namespace FirebaseAdmin.Auth.Providers
         /// </summary>
         public string Issuer { get; set; }
 
+        /// <summary>
+        /// Gets or sets the client secret, which is used to verify Code response types.
+        /// </summary>
+        public string ClientSecret { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this OIDC provider uses an ID Token response type.
+        /// </summary>
+        public bool? IdTokenResponseType { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this OIDC provider uses a Code response type.
+        /// </summary>
+        public bool? CodeResponseType { get; set; }
+
         internal override AuthProviderConfig.Request ToCreateRequest()
         {
             var req = new OidcProviderConfig.Request()
@@ -64,7 +79,17 @@ namespace FirebaseAdmin.Auth.Providers
                 Enabled = this.Enabled,
                 ClientId = this.ClientId,
                 Issuer = this.Issuer,
+                ClientSecret = this.ClientSecret,
             };
+            if (this.CodeResponseType != null || this.IdTokenResponseType != null)
+            {
+                req.ResponseType = new OidcProviderConfig.ResponseTypeInfo()
+                {
+                    Code = this.CodeResponseType,
+                    IdToken = this.IdTokenResponseType,
+                };
+            }
+
             if (string.IsNullOrEmpty(req.ClientId))
             {
                 throw new ArgumentException("Client ID must not be null or empty.");
@@ -79,6 +104,16 @@ namespace FirebaseAdmin.Auth.Providers
                 throw new ArgumentException($"Malformed issuer string: {req.Issuer}");
             }
 
+            if (req.ResponseType?.Code == true && string.IsNullOrEmpty(req.ClientSecret))
+            {
+                throw new ArgumentException("Client secret must not be null or empty for code response type.");
+            }
+
+            if (req.ResponseType?.Code == false && req.ResponseType?.IdToken == false)
+            {
+                throw new ArgumentException("At least one response type must be returned.");
+            }
+
             return req;
         }
 
@@ -90,7 +125,16 @@ namespace FirebaseAdmin.Auth.Providers
                 Enabled = this.Enabled,
                 ClientId = this.ClientId,
                 Issuer = this.Issuer,
+                ClientSecret = this.ClientSecret,
             };
+            if (this.CodeResponseType != null || this.IdTokenResponseType != null)
+            {
+                req.ResponseType = new OidcProviderConfig.ResponseTypeInfo()
+                {
+                    Code = this.CodeResponseType,
+                    IdToken = this.IdTokenResponseType,
+                };
+            }
 
             if (req.ClientId == string.Empty)
             {
@@ -104,6 +148,16 @@ namespace FirebaseAdmin.Auth.Providers
             else if (req.Issuer != null && !IsWellFormedUriString(req.Issuer))
             {
                 throw new ArgumentException($"Malformed issuer string: {req.Issuer}");
+            }
+
+            if (req.ResponseType?.Code == true && string.IsNullOrEmpty(req.ClientSecret))
+            {
+                throw new ArgumentException("Client secret must not be null or empty for code response type.");
+            }
+
+            if (req.ResponseType?.Code == false && req.ResponseType?.IdToken == false)
+            {
+                throw new ArgumentException("At least one response type must be returned.");
             }
 
             return req;

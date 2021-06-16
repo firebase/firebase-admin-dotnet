@@ -27,6 +27,9 @@ namespace FirebaseAdmin.Auth.Providers
         {
             this.ClientId = request.ClientId;
             this.Issuer = request.Issuer;
+            this.ClientSecret = request.ClientSecret;
+            this.IdTokenResponseType = request.ResponseType.IdToken == true;
+            this.CodeResponseType = request.ResponseType.Code == true;
         }
 
         /// <summary>
@@ -63,6 +66,30 @@ namespace FirebaseAdmin.Auth.Providers
         /// </summary>
         public string Issuer { get; }
 
+        /// <summary>
+        /// Gets the client secret, which is used to verify Code response types.
+        /// </summary>
+        public string ClientSecret { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether an ID Token response type will be provided.
+        /// </summary>
+        public bool IdTokenResponseType { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether an Code type response type will be provided.
+        /// </summary>
+        public bool CodeResponseType { get; }
+
+        internal sealed class ResponseTypeInfo
+        {
+            [JsonProperty("code")]
+            internal bool? Code { get; set; }
+
+            [JsonProperty("idToken")]
+            internal bool? IdToken { get; set; }
+        }
+
         internal sealed new class Request : AuthProviderConfig.Request
         {
             [JsonProperty("clientId")]
@@ -70,6 +97,12 @@ namespace FirebaseAdmin.Auth.Providers
 
             [JsonProperty("issuer")]
             internal string Issuer { get; set; }
+
+            [JsonProperty("clientSecret")]
+            internal string ClientSecret { get; set; }
+
+            [JsonProperty("responseType")]
+            internal ResponseTypeInfo ResponseType { get; set; }
         }
     }
 }
