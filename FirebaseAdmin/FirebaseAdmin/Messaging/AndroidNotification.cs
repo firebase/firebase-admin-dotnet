@@ -119,6 +119,14 @@ namespace FirebaseAdmin.Messaging
         public string ChannelId { get; set; }
 
         /// <summary>
+        /// Gets or sets the time that the event in the notification occurred for notifications that
+        /// inform users about events with an absolute time reference. Notifications in the panel are
+        /// sorted by this time.
+        /// </summary>
+        [JsonProperty("event_time")]
+        public DateTime EventTime { get; set; }
+
+        /// <summary>
         /// Copies this notification, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service.
         /// </summary>
@@ -139,6 +147,7 @@ namespace FirebaseAdmin.Messaging
                 BodyLocKey = this.BodyLocKey,
                 BodyLocArgs = this.BodyLocArgs?.ToList(),
                 ChannelId = this.ChannelId,
+                EventTime = this.EventTime,
             };
             if (copy.Color != null && !Regex.Match(copy.Color, "^#[0-9a-fA-F]{6}$").Success)
             {
