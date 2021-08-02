@@ -274,6 +274,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         BodyLocKey = "body-loc-key",
                         BodyLocArgs = new List<string>() { "arg3", "arg4" },
                         ChannelId = "channel-id",
+                        EventTime = new DateTime(1998, 9, 4, 0, 0, 0, DateTimeKind.Utc),
                     },
                     FcmOptions = new AndroidFcmOptions()
                     {
@@ -308,6 +309,7 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "body_loc_key", "body-loc-key" },
                                 { "body_loc_args", new JArray() { "arg3", "arg4" } },
                                 { "channel_id", "channel-id" },
+                                { "event_time", new DateTime(1998, 9, 4, 0, 0, 0, DateTimeKind.Utc) },
                             }
                         },
                         {
