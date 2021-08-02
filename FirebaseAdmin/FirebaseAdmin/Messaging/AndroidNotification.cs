@@ -124,7 +124,7 @@ namespace FirebaseAdmin.Messaging
         /// sorted by this time.
         /// </summary>
         [JsonProperty("event_time")]
-        public DateTime EventTime { get; set; }
+        public DateTime? EventTime { get; set; }
 
         /// <summary>
         /// Copies this notification, and validates the content of it to ensure that it can be
