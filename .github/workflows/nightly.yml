@@ -25,7 +25,7 @@ on:
 jobs:
   nightly:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -40,7 +40,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 2.2.x
+        dotnet-version: 2.2.108
 
     - name: Build with dotnet
       run: dotnet build FirebaseAdmin/FirebaseAdmin
