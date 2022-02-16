@@ -25,7 +25,7 @@ on:
 jobs:
   nightly:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-2019
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -36,11 +36,6 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
-        
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.2.108
 
     - name: Build with dotnet
       run: dotnet build FirebaseAdmin/FirebaseAdmin
