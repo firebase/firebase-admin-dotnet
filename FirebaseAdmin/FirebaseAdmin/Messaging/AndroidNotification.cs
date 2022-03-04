@@ -18,7 +18,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using FirebaseAdmin.Messaging.Util;
-using Google.Apis.Util;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
@@ -461,7 +460,6 @@ namespace FirebaseAdmin.Messaging
                 VibrateTimingsMillis = this.VibrateTimingsMillis,
                 DefaultVibrateTimings = this.DefaultVibrateTimings,
                 DefaultSound = this.DefaultSound,
-                LightSettings = this.LightSettings,
                 DefaultLightSettings = this.DefaultLightSettings,
                 Visibility = this.Visibility,
                 NotificationCount = this.NotificationCount,
@@ -485,6 +483,8 @@ namespace FirebaseAdmin.Messaging
             {
                 throw new ArgumentException($"Malformed image URL string: {copy.ImageUrl}.");
             }
+
+            copy.LightSettings = this.LightSettings?.CopyAndValidate();
 
             return copy;
         }

@@ -25,11 +25,24 @@ namespace FirebaseAdmin.Messaging
     /// </summary>
     public sealed class LightSettings
     {
+        private LightSettingsColor lightColor = new LightSettingsColor();
+
         /// <summary>
-        /// Gets or sets the lightSettingsColor value in the light settings.
+        /// Gets or sets the color value of the light settings.
         /// </summary>
         [JsonIgnore]
-        public LightSettingsColor Color { get; set; }
+        public string Color
+        {
+            get
+            {
+                return this.lightColor.ColorString();
+            }
+
+            set
+            {
+                this.lightColor = LightSettingsColor.FromString(value);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the light on duration in milliseconds.
@@ -44,45 +57,19 @@ namespace FirebaseAdmin.Messaging
         public long LightOffDurationMillis { get; set; }
 
         /// <summary>
-        /// Gets or sets a string representation of <see cref="LightSettingsColor"/>.
+        /// Gets or sets the light settings color representation as accepted by the FCM backend service.
         /// </summary>
         [JsonProperty("color")]
-        private string LightSettingsColorString
+        private LightSettingsColor LightColor
         {
             get
             {
-                var colorStringBuilder = new StringBuilder();
-
-                colorStringBuilder
-                    .Append("#")
-                    .Append(Convert.ToInt32(this.Color.Red * 255).ToString("X"))
-                    .Append(Convert.ToInt32(this.Color.Green * 255).ToString("X"))
-                    .Append(Convert.ToInt32(this.Color.Blue * 255).ToString("X"));
-
-                return colorStringBuilder.ToString();
+                return this.lightColor;
             }
 
             set
             {
-                var pattern = new Regex("^#[0-9a-fA-F]{6}$");
-
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("Invalid LightSettingsColor. LightSettingsColor annot be null or empty");
-                }
-
-                if (!pattern.IsMatch(value))
-                {
-                    throw new ArgumentException($"Invalid LightSettingsColor {value}. LightSettingsColor must be in the form #RRGGBB");
-                }
-
-                this.Color = new LightSettingsColor
-                {
-                    Red = Convert.ToInt32(value.Substring(1, 2), 16) / 255.0f,
-                    Green = Convert.ToInt32(value.Substring(3, 2), 16) / 255.0f,
-                    Blue = Convert.ToInt32(value.Substring(5, 2), 16) / 255.0f,
-                    Alpha = 1.0f,
-                };
+                this.lightColor = value;
             }
         }
 
@@ -117,6 +104,90 @@ namespace FirebaseAdmin.Messaging
             set
             {
                 this.LightOffDurationMillis = TimeConverter.StringToLongMillis(value);
+            }
+        }
+
+        /// <summary>
+        /// Copies this Light Settings, and validates the content of it to ensure that it can be
+        /// serialized into the JSON format expected by the FCM service.
+        /// </summary>
+        internal LightSettings CopyAndValidate()
+        {
+            // Copy and validate the leaf-level properties
+            var copy = new LightSettings()
+            {
+                Color = this.Color,
+                LightOnDurationMillis = this.LightOnDurationMillis,
+                LightOffDurationMillis = this.LightOffDurationMillis,
+            };
+
+            return copy;
+        }
+
+        /// <summary>
+        /// The LightSettings Color object as expected by the FCM backend service.
+        /// </summary>
+        private class LightSettingsColor
+        {
+            /// <summary>
+            /// Gets or sets the red component.
+            /// </summary>
+            [JsonProperty("red")]
+            internal float Red { get; set; }
+
+            /// <summary>
+            /// Gets or sets the green component.
+            /// </summary>
+            [JsonProperty("green")]
+            internal float Green { get; set; }
+
+            /// <summary>
+            /// Gets or sets the blue component.
+            /// </summary>
+            [JsonProperty("blue")]
+            internal float Blue { get; set; }
+
+            /// <summary>
+            /// Gets or sets the alpha component.
+            /// </summary>
+            [JsonProperty("alpha")]
+            internal float Alpha { get; set; }
+
+            internal static LightSettingsColor FromString(string color)
+            {
+                if (string.IsNullOrEmpty(color))
+                {
+                    throw new ArgumentException("Light settings color must not be null or empty");
+                }
+
+                if (!Regex.Match(color, "^#[0-9a-fA-F]{6}$").Success && !Regex.Match(color, "^#[0-9a-fA-F]{8}$").Success)
+                {
+                    throw new ArgumentException($"Invalid Light Settings Color {color}. Must be in the form of #RRGGBB or #RRGGBBAA.");
+                }
+
+                var colorString = color.Length == 7 ? color + "FF" : color;
+
+                return new LightSettingsColor()
+                {
+                    Red = Convert.ToInt32(colorString.Substring(1, 2), 16) / 255.0f,
+                    Green = Convert.ToInt32(colorString.Substring(3, 2), 16) / 255.0f,
+                    Blue = Convert.ToInt32(colorString.Substring(5, 2), 16) / 255.0f,
+                    Alpha = Convert.ToInt32(colorString.Substring(7, 2), 16) / 255.0f,
+                };
+            }
+
+            internal string ColorString()
+            {
+                var colorStringBuilder = new StringBuilder();
+
+                colorStringBuilder
+                    .Append("#")
+                    .Append(Convert.ToInt32(this.Red * 255).ToString("X"))
+                    .Append(Convert.ToInt32(this.Green * 255).ToString("X"))
+                    .Append(Convert.ToInt32(this.Blue * 255).ToString("X"))
+                    .Append(Convert.ToInt32(this.Alpha * 255).ToString("X"));
+
+                return colorStringBuilder.ToString();
             }
         }
     }

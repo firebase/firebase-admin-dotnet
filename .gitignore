@@ -3,3 +3,4 @@ obj/
 .vscode/
 .vs/
 .idea/
+.DS_Store

@@ -282,9 +282,9 @@ namespace FirebaseAdmin.Messaging.Tests
                         VibrateTimingsMillis = new long[] { 1000L, 1001L },
                         DefaultVibrateTimings = false,
                         DefaultSound = true,
-                        LightSettings = new LightSettings
+                        LightSettings = new LightSettings()
                         {
-                            Color = new LightSettingsColor { Red = 0.2f, Green = 0.4f, Blue = 0.6f },
+                            Color = "#aabbccdd",
                             LightOnDurationMillis = 1002L,
                             LightOffDurationMillis = 1003L,
                         },
@@ -333,7 +333,17 @@ namespace FirebaseAdmin.Messaging.Tests
                                 {
                                     "light_settings", new JObject()
                                     {
-                                        { "color", "#336699" }, { "light_on_duration", "1.002000000s" }, { "light_off_duration", "1.003000000s" },
+                                        { "light_on_duration", "1.002000000s" },
+                                        { "light_off_duration", "1.003000000s" },
+                                        {
+                                            "color", new JObject()
+                                            {
+                                                { "red", 0.6666667 },
+                                                { "green", 0.733333349 },
+                                                { "blue", 0.8 },
+                                                { "alpha", 0.8666667 },
+                                            }
+                                        },
                                     }
                                 },
                                 { "default_light_settings", false },
@@ -465,9 +475,9 @@ namespace FirebaseAdmin.Messaging.Tests
                 VibrateTimingsMillis = new long[] { 1000L, 1001L },
                 DefaultVibrateTimings = false,
                 DefaultSound = true,
-                LightSettings = new LightSettings
+                LightSettings = new LightSettings()
                 {
-                    Color = new LightSettingsColor { Red = 0.2F, Green = 0.4F, Blue = 0.6F, Alpha = 1.0F },
+                    Color = "#AABBCCDD",
                     LightOnDurationMillis = 1002L,
                     LightOffDurationMillis = 1003L,
                 },
@@ -498,10 +508,9 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.VibrateTimingsMillis, copy.VibrateTimingsMillis);
             Assert.Equal(original.DefaultVibrateTimings, copy.DefaultVibrateTimings);
             Assert.Equal(original.DefaultSound, copy.DefaultSound);
-            Assert.Equal(original.LightSettings.Color.Red, copy.LightSettings.Color.Red);
-            Assert.Equal(original.LightSettings.Color.Blue, copy.LightSettings.Color.Blue);
-            Assert.Equal(original.LightSettings.Color.Green, copy.LightSettings.Color.Green);
-            Assert.Equal(original.LightSettings.Color.Alpha, copy.LightSettings.Color.Alpha);
+            Assert.Equal(original.LightSettings.Color, copy.LightSettings.Color);
+            Assert.Equal(original.LightSettings.LightOnDurationMillis, copy.LightSettings.LightOnDurationMillis);
+            Assert.Equal(original.LightSettings.LightOffDurationMillis, copy.LightSettings.LightOffDurationMillis);
             Assert.Equal(original.DefaultLightSettings, copy.DefaultLightSettings);
             Assert.Equal(original.Visibility, copy.Visibility);
             Assert.Equal(original.NotificationCount, copy.NotificationCount);
