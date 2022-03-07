@@ -30,6 +30,7 @@ jobs:
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
 
     steps:
     - name: Checkout source for staging
@@ -42,8 +43,11 @@ jobs:
       with:
         dotnet-version: 2.1.x
 
+    - name: Install dependencies
+      run: dotnet msbuild /t:restore FirebaseAdmin
+
     - name: Build with dotnet
-      run: dotnet build FirebaseAdmin/FirebaseAdmin
+      run: dotnet msbuild FirebaseAdmin/FirebaseAdmin
 
     - name: Run unit tests
       run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
