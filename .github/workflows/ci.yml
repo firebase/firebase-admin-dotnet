@@ -24,6 +24,9 @@ jobs:
       with:
         dotnet-version: 2.1.x
 
+    - name: Install dependencies
+      run: dotnet msbuild /t:restore FirebaseAdmin
+
     - name: Build with dotnet
       run: |
         dotnet msbuild FirebaseAdmin/FirebaseAdmin
