@@ -35,11 +35,12 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'release:publish'))
 
     # Build and package artifacts on Windows.
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
 
     # When manually triggering the build, the requester can specify a target branch or a tag
     # via the 'ref' client parameter.
@@ -49,14 +50,19 @@ jobs:
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
+    - name: Setup .NET Core 2.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.1.x
+
     - name: Build with dotnet
-      run: dotnet build FirebaseAdmin/FirebaseAdmin
+      run: dotnet msbuild FirebaseAdmin/FirebaseAdmin
 
     - name: Run unit tests
       run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
 
     - name: Run integration tests
-      run: ./.github/scripts/run_integration_tests
+      run: ./.github/scripts/run_integration_tests.sh
       env:
         FIREBASE_SERVICE_ACCT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCT_KEY }}
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
