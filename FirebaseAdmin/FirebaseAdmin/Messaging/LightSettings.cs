@@ -108,7 +108,7 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Copies this Light Settings, and validates the content of it to ensure that it can be
+        /// Copies this <see cref="LightSettings"/> object, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service.
         /// </summary>
         internal LightSettings CopyAndValidate()
@@ -125,7 +125,7 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// The LightSettings Color object as expected by the FCM backend service.
+        /// Represents the light settings color as expected by the FCM backend service.
         /// </summary>
         private class LightSettingsColor
         {

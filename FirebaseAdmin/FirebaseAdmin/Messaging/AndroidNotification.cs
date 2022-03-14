@@ -168,7 +168,7 @@ namespace FirebaseAdmin.Messaging
         /// indicates the duration to keep the vibrator on. Subsequent values alternate between
         /// duration to turn the vibrator off and to turn the vibrator on. If <see cref="VibrateTimingsMillis"/> is set and
         /// <see cref="DefaultVibrateTimings"/> is set to true, the default value is used instead of
-        /// the user-specified vibrate_timings. A duration in seconds with up to nine fractional digits,
+        /// the user-specified <see cref="VibrateTimingsMillis"/>. A duration in seconds with up to nine fractional digits,
         /// terminated by 's'.Example: "3.5s".
         /// </summary>
         [JsonIgnore]
