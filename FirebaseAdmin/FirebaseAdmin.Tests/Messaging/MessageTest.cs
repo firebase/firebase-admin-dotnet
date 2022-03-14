@@ -278,7 +278,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         Sticky = false,
                         EventTimestamp = DateTime.Parse("2020-06-27T16:29:06.032691000-04:00"),
                         LocalOnly = true,
-                        Priority = AndroidNotification.PriorityType.HIGH,
+                        Priority = NotificationPriority.HIGH,
                         VibrateTimingsMillis = new long[] { 1000L, 1001L },
                         DefaultVibrateTimings = false,
                         DefaultSound = true,
@@ -289,7 +289,7 @@ namespace FirebaseAdmin.Messaging.Tests
                             LightOffDurationMillis = 1003L,
                         },
                         DefaultLightSettings = false,
-                        Visibility = AndroidNotification.VisibilityType.PUBLIC,
+                        Visibility = NotificationVisibility.PUBLIC,
                         NotificationCount = 10,
                     },
                     FcmOptions = new AndroidFcmOptions()
@@ -471,7 +471,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Sticky = false,
                 EventTimestamp = DateTime.Parse("2020-06-27T16:29:06.032691000-04:00"),
                 LocalOnly = true,
-                Priority = AndroidNotification.PriorityType.HIGH,
+                Priority = NotificationPriority.HIGH,
                 VibrateTimingsMillis = new long[] { 1000L, 1001L },
                 DefaultVibrateTimings = false,
                 DefaultSound = true,
@@ -482,7 +482,7 @@ namespace FirebaseAdmin.Messaging.Tests
                     LightOffDurationMillis = 1003L,
                 },
                 DefaultLightSettings = false,
-                Visibility = AndroidNotification.VisibilityType.PUBLIC,
+                Visibility = NotificationVisibility.PUBLIC,
                 NotificationCount = 10,
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);

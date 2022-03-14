@@ -29,58 +29,6 @@ namespace FirebaseAdmin.Messaging
     public sealed class AndroidNotification
     {
         /// <summary>
-        /// Priority levels that can be set on an <see cref="AndroidNotification"/>.
-        /// </summary>
-        public enum PriorityType
-        {
-            /// <summary>
-            /// Minimum priority notification.
-            /// </summary>
-            MIN,
-
-            /// <summary>
-            /// Low priority notification.
-            /// </summary>
-            LOW,
-
-            /// <summary>
-            /// Default priority notification.
-            /// </summary>
-            DEFAULT,
-
-            /// <summary>
-            /// High priority notification.
-            /// </summary>
-            HIGH,
-
-            /// <summary>
-            /// Maximum priority notification.
-            /// </summary>
-            MAX,
-        }
-
-        /// <summary>
-        /// Visibility levels that can be set on an <see cref="AndroidNotification"/>.
-        /// </summary>
-        public enum VisibilityType
-        {
-            /// <summary>
-            /// Private visibility.
-            /// </summary>
-            PRIVATE,
-
-            /// <summary>
-            /// Public visibility.
-            /// </summary>
-            PUBLIC,
-
-            /// <summary>
-            /// Secret visibility.
-            /// </summary>
-            SECRET,
-        }
-
-        /// <summary>
         /// Gets or sets the title of the Android notification. When provided, overrides the title
         /// set via <see cref="Notification.Title"/>.
         /// </summary>
@@ -212,7 +160,7 @@ namespace FirebaseAdmin.Messaging
         /// for a higher-priority notification.
         /// </summary>
         [JsonIgnore]
-        public AndroidNotification.PriorityType? Priority { get; set; }
+        public NotificationPriority? Priority { get; set; }
 
         /// <summary>
         /// Gets or sets a list of vibration timings in milliseconds in the array to use. The first value in the
@@ -263,7 +211,7 @@ namespace FirebaseAdmin.Messaging
         /// Gets or sets the visibility of this notification.
         /// </summary>
         [JsonIgnore]
-        public AndroidNotification.VisibilityType? Visibility { get; set; }
+        public NotificationVisibility? Visibility { get; set; }
 
         /// <summary>
         /// Gets or sets the number of items this notification represents. May be displayed as a badge
@@ -277,7 +225,7 @@ namespace FirebaseAdmin.Messaging
         public int? NotificationCount { get; set; }
 
         /// <summary>
-        /// Gets or sets the string representation of the <see cref="PriorityType"/> property.
+        /// Gets or sets the string representation of the <see cref="NotificationPriority"/> property.
         /// </summary>
         [JsonProperty("notification_priority")]
         private string PriorityString
@@ -286,15 +234,15 @@ namespace FirebaseAdmin.Messaging
             {
                 switch (this.Priority)
                 {
-                    case PriorityType.MIN:
+                    case NotificationPriority.MIN:
                         return "PRIORITY_MIN";
-                    case PriorityType.LOW:
+                    case NotificationPriority.LOW:
                         return "PRIORITY_LOW";
-                    case PriorityType.DEFAULT:
+                    case NotificationPriority.DEFAULT:
                         return "PRIORITY_DEFAULT";
-                    case PriorityType.HIGH:
+                    case NotificationPriority.HIGH:
                         return "PRIORITY_HIGH";
-                    case PriorityType.MAX:
+                    case NotificationPriority.MAX:
                         return "PRIORITY_MAX";
                     default:
                         return null;
@@ -306,19 +254,19 @@ namespace FirebaseAdmin.Messaging
                 switch (value)
                 {
                     case "PRIORITY_MIN":
-                        this.Priority = PriorityType.MIN;
+                        this.Priority = NotificationPriority.MIN;
                         return;
                     case "PRIORITY_LOW":
-                        this.Priority = PriorityType.LOW;
+                        this.Priority = NotificationPriority.LOW;
                         return;
                     case "PRIORITY_DEFAULT":
-                        this.Priority = PriorityType.DEFAULT;
+                        this.Priority = NotificationPriority.DEFAULT;
                         return;
                     case "PRIORITY_HIGH":
-                        this.Priority = PriorityType.HIGH;
+                        this.Priority = NotificationPriority.HIGH;
                         return;
                     case "PRIORITY_MAX":
-                        this.Priority = PriorityType.MAX;
+                        this.Priority = NotificationPriority.MAX;
                         return;
                     default:
                         throw new ArgumentException(
@@ -329,7 +277,7 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Gets or sets the string representation of the <see cref="VisibilityType"/> property.
+        /// Gets or sets the string representation of the <see cref="NotificationVisibility"/> property.
         /// </summary>
         [JsonProperty("visibility")]
         private string VisibilityString
@@ -338,11 +286,11 @@ namespace FirebaseAdmin.Messaging
             {
                 switch (this.Visibility)
                 {
-                    case VisibilityType.PUBLIC:
+                    case NotificationVisibility.PUBLIC:
                         return "PUBLIC";
-                    case VisibilityType.PRIVATE:
+                    case NotificationVisibility.PRIVATE:
                         return "PRIVATE";
-                    case VisibilityType.SECRET:
+                    case NotificationVisibility.SECRET:
                         return "SECRET";
                     default:
                         return null;
@@ -354,13 +302,13 @@ namespace FirebaseAdmin.Messaging
                 switch (value)
                 {
                     case "PUBLIC":
-                        this.Visibility = VisibilityType.PUBLIC;
+                        this.Visibility = NotificationVisibility.PUBLIC;
                         return;
                     case "PRIVATE":
-                        this.Visibility = VisibilityType.PRIVATE;
+                        this.Visibility = NotificationVisibility.PRIVATE;
                         return;
                     case "SECRET":
-                        this.Visibility = VisibilityType.SECRET;
+                        this.Visibility = NotificationVisibility.SECRET;
                         return;
                     default:
                         throw new ArgumentException(
