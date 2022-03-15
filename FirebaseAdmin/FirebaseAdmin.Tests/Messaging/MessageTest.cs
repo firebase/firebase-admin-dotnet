@@ -274,6 +274,23 @@ namespace FirebaseAdmin.Messaging.Tests
                         BodyLocKey = "body-loc-key",
                         BodyLocArgs = new List<string>() { "arg3", "arg4" },
                         ChannelId = "channel-id",
+                        Ticker = "ticker",
+                        Sticky = false,
+                        EventTimestamp = DateTime.Parse("2020-06-27T16:29:06.032691000-04:00"),
+                        LocalOnly = true,
+                        Priority = NotificationPriority.HIGH,
+                        VibrateTimingsMillis = new long[] { 1000L, 1001L },
+                        DefaultVibrateTimings = false,
+                        DefaultSound = true,
+                        LightSettings = new LightSettings()
+                        {
+                            Color = "#aabbccdd",
+                            LightOnDurationMillis = 1002L,
+                            LightOffDurationMillis = 1003L,
+                        },
+                        DefaultLightSettings = false,
+                        Visibility = NotificationVisibility.PUBLIC,
+                        NotificationCount = 10,
                     },
                     FcmOptions = new AndroidFcmOptions()
                     {
@@ -308,6 +325,33 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "body_loc_key", "body-loc-key" },
                                 { "body_loc_args", new JArray() { "arg3", "arg4" } },
                                 { "channel_id", "channel-id" },
+                                { "ticker", "ticker" },
+                                { "sticky", false },
+                                { "local_only", true },
+                                { "default_vibrate_timings", false },
+                                { "default_sound", true },
+                                {
+                                    "light_settings", new JObject()
+                                    {
+                                        { "light_on_duration", "1.002000000s" },
+                                        { "light_off_duration", "1.003000000s" },
+                                        {
+                                            "color", new JObject()
+                                            {
+                                                { "red", 0.6666667 },
+                                                { "green", 0.733333349 },
+                                                { "blue", 0.8 },
+                                                { "alpha", 0.8666667 },
+                                            }
+                                        },
+                                    }
+                                },
+                                { "default_light_settings", false },
+                                { "notification_count", 10 },
+                                { "notification_priority", "PRIORITY_HIGH" },
+                                { "visibility", "PUBLIC" },
+                                { "vibrate_timings", new JArray() { "1s", "1.001000000s" } },
+                                { "event_time", "2020-06-27T20:29:06.032691000Z" },
                             }
                         },
                         {
@@ -378,6 +422,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 Notification = new AndroidNotification()
                 {
                     Title = "title",
+                    EventTimestamp = DateTime.Parse("2020-06-27T20:29:06.032691000Z"),
                 },
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
@@ -422,6 +467,23 @@ namespace FirebaseAdmin.Messaging.Tests
                 BodyLocKey = "body-loc-key",
                 BodyLocArgs = new List<string>() { "arg3", "arg4" },
                 ChannelId = "channel-id",
+                Ticker = "ticker",
+                Sticky = false,
+                EventTimestamp = DateTime.Parse("2020-06-27T16:29:06.032691000-04:00"),
+                LocalOnly = true,
+                Priority = NotificationPriority.HIGH,
+                VibrateTimingsMillis = new long[] { 1000L, 1001L },
+                DefaultVibrateTimings = false,
+                DefaultSound = true,
+                LightSettings = new LightSettings()
+                {
+                    Color = "#AABBCCDD",
+                    LightOnDurationMillis = 1002L,
+                    LightOffDurationMillis = 1003L,
+                },
+                DefaultLightSettings = false,
+                Visibility = NotificationVisibility.PUBLIC,
+                NotificationCount = 10,
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidNotification>(json);
@@ -438,6 +500,20 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.BodyLocKey, copy.BodyLocKey);
             Assert.Equal(original.BodyLocArgs, copy.BodyLocArgs);
             Assert.Equal(original.ChannelId, copy.ChannelId);
+            Assert.Equal(original.Ticker, copy.Ticker);
+            Assert.Equal(original.Sticky, copy.Sticky);
+            Assert.Equal(original.EventTimestamp, copy.EventTimestamp);
+            Assert.Equal(original.LocalOnly, copy.LocalOnly);
+            Assert.Equal(original.Priority, copy.Priority);
+            Assert.Equal(original.VibrateTimingsMillis, copy.VibrateTimingsMillis);
+            Assert.Equal(original.DefaultVibrateTimings, copy.DefaultVibrateTimings);
+            Assert.Equal(original.DefaultSound, copy.DefaultSound);
+            Assert.Equal(original.LightSettings.Color, copy.LightSettings.Color);
+            Assert.Equal(original.LightSettings.LightOnDurationMillis, copy.LightSettings.LightOnDurationMillis);
+            Assert.Equal(original.LightSettings.LightOffDurationMillis, copy.LightSettings.LightOffDurationMillis);
+            Assert.Equal(original.DefaultLightSettings, copy.DefaultLightSettings);
+            Assert.Equal(original.Visibility, copy.Visibility);
+            Assert.Equal(original.NotificationCount, copy.NotificationCount);
         }
 
         [Fact]
