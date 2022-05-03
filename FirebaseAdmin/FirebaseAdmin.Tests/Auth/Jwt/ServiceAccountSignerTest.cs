@@ -35,7 +35,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 "client@test-project.iam.gserviceaccount.com", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
             byte[] signature = signer.SignDataAsync(data).Result;
-            Assert.True(this.Verify(data, signature));
+            Assert.True(Verify(data, signature));
         }
 
         [Fact]
@@ -44,10 +44,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Throws<ArgumentNullException>(() => { new ServiceAccountSigner(null); });
         }
 
-        private bool Verify(byte[] data, byte[] signature)
+        private static bool Verify(byte[] data, byte[] signature)
         {
             var x509cert = new X509Certificate2(File.ReadAllBytes("./resources/public_cert.pem"));
-            var rsa = (RSA)x509cert.PublicKey.Key;
+            var rsa = x509cert.GetRSAPublicKey(); // Obsolete: (RSA)x509cert.PublicKey.Key;
             return rsa.VerifyData(
                 data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }

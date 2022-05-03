@@ -108,12 +108,12 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         private sealed class ByteArrayPublicKeySource : IPublicKeySource
         {
-            private IReadOnlyList<PublicKey> rsa;
+            private readonly IReadOnlyList<PublicKey> rsa;
 
             public ByteArrayPublicKeySource(byte[] publicKey)
             {
                 var x509cert = new X509Certificate2(publicKey);
-                var rsa = (RSA)x509cert.PublicKey.Key;
+                var rsa = x509cert.GetRSAPublicKey(); // Obsolete: (RSA)x509cert.PublicKey.Key;
                 this.rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
             }
 

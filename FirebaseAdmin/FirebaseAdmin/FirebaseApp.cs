@@ -27,6 +27,7 @@ using Google.Apis.Logging;
 "3003684e85e61cf15f13150008c81f0b75a252673028e530ea95d0c581378da8c6846526ab9597" +
 "4c6d0bc66d2462b51af69968a0e25114bde8811e0d6ee1dc22d4a59eee6a8bba4712cba839652f" +
 "badddb9c")]
+
 namespace FirebaseAdmin
 {
     internal delegate TResult ServiceFactory<out TResult>()
@@ -51,18 +52,18 @@ namespace FirebaseAdmin
 
         private const string DefaultAppName = "[DEFAULT]";
 
-        private static readonly Dictionary<string, FirebaseApp> Apps = new Dictionary<string, FirebaseApp>();
+        private static readonly Dictionary<string, FirebaseApp> Apps = new ();
 
         private static readonly ILogger Logger = ApplicationContext.Logger.ForType<FirebaseApp>();
 
         // Guards the mutable state local to an app instance.
-        private readonly object appLock = new object();
+        private readonly object appLock = new ();
         private readonly AppOptions options;
 
         // A collection of stateful services initialized using this app instance (e.g.
         // FirebaseAuth). Services are tracked here so they can be cleaned up when the app is
         // deleted.
-        private readonly Dictionary<string, IFirebaseService> services = new Dictionary<string, IFirebaseService>();
+        private readonly Dictionary<string, IFirebaseService> services = new ();
         private bool deleted = false;
 
         private FirebaseApp(AppOptions options, string name)
@@ -130,8 +131,7 @@ namespace FirebaseAdmin
 
             lock (Apps)
             {
-                FirebaseApp app;
-                if (Apps.TryGetValue(name, out app))
+                if (Apps.TryGetValue(name, out FirebaseApp app))
                 {
                     return app;
                 }
@@ -192,7 +192,7 @@ namespace FirebaseAdmin
                 throw new ArgumentException("App name must not be null or empty");
             }
 
-            options = options ?? GetOptionsFromEnvironment();
+            options ??= GetOptionsFromEnvironment();
             lock (Apps)
             {
                 if (Apps.ContainsKey(name))
@@ -286,8 +286,7 @@ namespace FirebaseAdmin
                     throw new InvalidOperationException("Cannot use an app after it has been deleted");
                 }
 
-                IFirebaseService service;
-                if (!this.services.TryGetValue(id, out service))
+                if (!this.services.TryGetValue(id, out IFirebaseService service))
                 {
                     service = initializer();
                     this.services.Add(id, service);

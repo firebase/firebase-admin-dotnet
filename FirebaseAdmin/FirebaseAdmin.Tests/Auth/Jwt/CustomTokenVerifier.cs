@@ -65,8 +65,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 Assert.Equal(claims.Count, payload.Claims.Count);
                 foreach (var entry in claims)
                 {
-                    object value;
-                    Assert.True(payload.Claims.TryGetValue(entry.Key, out value));
+                    Assert.True(payload.Claims.TryGetValue(entry.Key, out object value));
                     Assert.Equal(entry.Value, value);
                 }
             }
@@ -99,7 +98,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             : base(issuer, tenantId)
             {
                 var x509cert = new X509Certificate2(publicKey);
-                this.rsa = (RSA)x509cert.PublicKey.Key;
+                this.rsa = x509cert.GetRSAPublicKey(); // Obsolete: (RSA)x509cert.PublicKey.Key;
             }
 
             protected override void AssertSignature(string tokenData, string signature)

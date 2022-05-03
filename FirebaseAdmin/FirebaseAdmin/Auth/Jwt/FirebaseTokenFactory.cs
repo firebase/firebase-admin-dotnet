@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 "3003684e85e61cf15f13150008c81f0b75a252673028e530ea95d0c581378da8c6846526ab9597" +
 "4c6d0bc66d2462b51af69968a0e25114bde8811e0d6ee1dc22d4a59eee6a8bba4712cba839652f" +
 "badddb9c")]
+
 namespace FirebaseAdmin.Auth.Jwt
 {
     /// <summary>
@@ -39,7 +40,7 @@ namespace FirebaseAdmin.Auth.Jwt
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
         public const int TokenDurationSeconds = 3600;
-        public static readonly DateTime UnixEpoch = new DateTime(
+        public static readonly DateTime UnixEpoch = new (
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public static readonly ImmutableList<string> ReservedClaims = ImmutableList.Create(
@@ -90,8 +91,8 @@ namespace FirebaseAdmin.Auth.Jwt
 
         internal static FirebaseTokenFactory Create(FirebaseApp app, string tenantId = null)
         {
-            ISigner signer = null;
             var serviceAccount = app.Options.Credential.ToServiceAccountCredential();
+            ISigner signer;
             if (serviceAccount != null)
             {
                 // If the app was initialized with a service account, use it to sign
@@ -122,7 +123,7 @@ namespace FirebaseAdmin.Auth.Jwt
         internal async Task<string> CreateCustomTokenAsync(
             string uid,
             IDictionary<string, object> developerClaims = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(uid))
             {

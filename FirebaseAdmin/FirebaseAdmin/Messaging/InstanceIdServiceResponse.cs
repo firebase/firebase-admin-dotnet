@@ -20,12 +20,12 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Gets the number of errors returned by the operation.
         /// </summary>
-        public int ErrorCount => Results?.Count(results => results.HasError) ?? 0;
+        public int ErrorCount => this.Results?.Count(results => results.HasError) ?? 0;
 
         /// <summary>
         /// Gets the number of results returned by the operation.
         /// </summary>
-        public int ResultCount => Results?.Count() ?? 0;
+        public int ResultCount => this.Results?.Count ?? 0;
 
         /// <summary>
         /// An instance Id response error.
@@ -41,7 +41,7 @@ namespace FirebaseAdmin.Messaging
             /// <summary>
             /// Gets a value indicating whether this response element in the response array is an error, as an empty element indicates success.
             /// </summary>
-            public bool HasError => !string.IsNullOrEmpty(Error);
+            public bool HasError => !string.IsNullOrEmpty(this.Error);
         }
     }
 }

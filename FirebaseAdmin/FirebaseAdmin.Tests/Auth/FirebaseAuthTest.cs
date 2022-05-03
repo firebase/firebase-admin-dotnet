@@ -18,6 +18,7 @@ using Google.Apis.Auth.OAuth2;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace FirebaseAdmin.Auth.Tests
 {
     public class FirebaseAuthTest : IDisposable
@@ -70,7 +71,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void NoTenantId()
         {
-            var app = FirebaseApp.Create(new AppOptions
+            _ = FirebaseApp.Create(new AppOptions
             {
                 Credential = MockCredential,
                 ProjectId = "project1",
@@ -87,7 +88,7 @@ namespace FirebaseAdmin.Auth.Tests
         [Fact]
         public void NoEmulator()
         {
-            var app = FirebaseApp.Create(new AppOptions
+            _ = FirebaseApp.Create(new AppOptions
             {
                 Credential = MockCredential,
                 ProjectId = "project1",
@@ -147,7 +148,7 @@ namespace FirebaseAdmin.Auth.Tests
             {
                 Credential = GoogleCredential.FromFile("./resources/service_account.json"),
             };
-            var app = FirebaseApp.Create(options);
+            _ = FirebaseApp.Create(options);
 
             var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
 
@@ -162,7 +163,7 @@ namespace FirebaseAdmin.Auth.Tests
                 Credential = MockCredential,
                 ServiceAccountId = "test-service-account",
             };
-            var app = FirebaseApp.Create(options);
+            _ = FirebaseApp.Create(options);
 
             var tokenFactory = FirebaseAuth.DefaultInstance.TokenFactory;
 
