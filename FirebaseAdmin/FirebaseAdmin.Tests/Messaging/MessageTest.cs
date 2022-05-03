@@ -300,13 +300,10 @@ namespace FirebaseAdmin.Messaging.Tests
             };
             var expected = new JObject()
             {
-                { "topic", "test-topic" },
                 {
                     "android", new JObject()
                     {
                         { "collapse_key", "collapse-key" },
-                        { "priority", "high" },
-                        { "ttl", "0.010000000s" },
                         { "restricted_package_name", "test-pkg-name" },
                         { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
                         {
@@ -333,17 +330,17 @@ namespace FirebaseAdmin.Messaging.Tests
                                 {
                                     "light_settings", new JObject()
                                     {
-                                        { "light_on_duration", "1.002000000s" },
-                                        { "light_off_duration", "1.003000000s" },
                                         {
                                             "color", new JObject()
                                             {
                                                 { "red", 0.6666667 },
-                                                { "green", 0.733333349 },
+                                                { "green", 0.73333335 },
                                                 { "blue", 0.8 },
                                                 { "alpha", 0.8666667 },
                                             }
                                         },
+                                        { "light_on_duration", "1.002000000s" },
+                                        { "light_off_duration", "1.003000000s" },
                                     }
                                 },
                                 { "default_light_settings", false },
@@ -360,8 +357,11 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "analytics_label", "label" },
                             }
                         },
+                        { "priority", "high" },
+                        { "ttl", "0.010000000s" },
                     }
                 },
+                { "topic", "test-topic" },
             };
             this.AssertJsonEquals(expected, message);
         }
@@ -1863,7 +1863,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var parsed = JObject.Parse(json);
             Assert.True(
                 JToken.DeepEquals(expected, parsed),
-                $"Expected: {expected.ToString()}\nActual: {parsed.ToString()}");
+                $"Expected: {expected}\nActual: {parsed}");
         }
     }
 }
