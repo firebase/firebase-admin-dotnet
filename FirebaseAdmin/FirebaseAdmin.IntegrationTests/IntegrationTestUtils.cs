@@ -19,8 +19,8 @@ namespace FirebaseAdmin.IntegrationTests
 {
     internal static class IntegrationTestUtils
     {
-        private const string ServiceAccountFile = "./resources/integration_cert.json";
-        private const string ApiKeyFile = "./resources/integration_apikey.txt";
+        private const string ServiceAccountFile = "./resources/integration_cert.json"; // Get JSON from https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk "Generate new private key" if you don't have one.
+        private const string ApiKeyFile = "./resources/integration_apikey.txt"; // TODO Add information about KEY.
 
         private static readonly Lazy<FirebaseApp> DefaultFirebaseApp = new Lazy<FirebaseApp>(
             () =>
