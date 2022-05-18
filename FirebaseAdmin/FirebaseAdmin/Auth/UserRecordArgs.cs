@@ -32,7 +32,6 @@ namespace FirebaseAdmin.Auth
         private Optional<string> photoUrl;
         private Optional<string> phoneNumber;
         private Optional<IReadOnlyDictionary<string, object>> customClaims;
-        private Optional<IEnumerable<string>> providersToDelete;
         private bool? disabled = null;
         private bool? emailVerified = null;
 
@@ -92,6 +91,11 @@ namespace FirebaseAdmin.Auth
         }
 
         /// <summary>
+        ///  Gets or sets the list of providers the user account should have deleted.
+        /// </summary>
+        public IEnumerable<string> ProvidersToDelete { get; set; }
+
+        /// <summary>
         /// Gets or sets the password of the user.
         /// </summary>
         public string Password { get; set; }
@@ -102,12 +106,6 @@ namespace FirebaseAdmin.Auth
         {
             get => this.customClaims?.Value;
             set => this.customClaims = this.Wrap(value);
-        }
-
-        internal IEnumerable<string> ProvidersToDelete
-        {
-            get => this.providersToDelete?.Value;
-            set => this.providersToDelete = this.Wrap(value);
         }
 
         internal static string CheckUid(string uid, bool required = false)
@@ -370,9 +368,9 @@ namespace FirebaseAdmin.Auth
                     }
                 }
 
-                if (args.providersToDelete != null)
+                if (args.ProvidersToDelete != null)
                 {
-                    foreach (var providerToDelete in args.providersToDelete.Value)
+                    foreach (var providerToDelete in args.ProvidersToDelete)
                     {
                         this.AddDeleteProvider(providerToDelete);
                     }
