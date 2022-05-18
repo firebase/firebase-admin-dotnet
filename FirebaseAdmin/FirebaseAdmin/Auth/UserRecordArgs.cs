@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using FirebaseAdmin.Auth.Jwt;
@@ -31,6 +32,7 @@ namespace FirebaseAdmin.Auth
         private Optional<string> photoUrl;
         private Optional<string> phoneNumber;
         private Optional<IReadOnlyDictionary<string, object>> customClaims;
+        private Optional<IEnumerable<string>> providersToDelete;
         private bool? disabled = null;
         private bool? emailVerified = null;
 
@@ -100,6 +102,12 @@ namespace FirebaseAdmin.Auth
         {
             get => this.customClaims?.Value;
             set => this.customClaims = this.Wrap(value);
+        }
+
+        internal IEnumerable<string> ProvidersToDelete
+        {
+            get => this.providersToDelete?.Value;
+            set => this.providersToDelete = this.Wrap(value);
         }
 
         internal static string CheckUid(string uid, bool required = false)
@@ -361,6 +369,14 @@ namespace FirebaseAdmin.Auth
                         this.PhoneNumber = CheckPhoneNumber(phoneNumber);
                     }
                 }
+
+                if (args.providersToDelete != null)
+                {
+                    foreach (var providerToDelete in args.providersToDelete.Value)
+                    {
+                        this.AddDeleteProvider(providerToDelete);
+                    }
+                }
             }
 
             [JsonProperty("customAttributes")]
@@ -411,12 +427,12 @@ namespace FirebaseAdmin.Auth
 
             private void AddDeleteProvider(string provider)
             {
-                if (this.DeleteProvider == null)
-                {
-                    this.DeleteProvider = new List<string>();
-                }
+                this.DeleteProvider ??= new List<string>();
 
-                this.DeleteProvider.Add(provider);
+                if (!this.DeleteProvider.Contains(provider))
+                {
+                    this.DeleteProvider.Add(provider);
+                }
             }
         }
 
