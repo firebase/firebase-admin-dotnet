@@ -72,7 +72,7 @@ namespace FirebaseAdmin.Auth
         /// credentials, if provided at initialization.</description>
         /// </item>
         /// <item>
-        /// <description>the IAM service if a service accound ID was specified via
+        /// <description>the IAM service if a service account ID was specified via
         /// <see cref="AppOptions"/></description>
         /// </item>
         /// <item>
@@ -111,7 +111,7 @@ namespace FirebaseAdmin.Auth
         /// credentials, if provided at initialization.</description>
         /// </item>
         /// <item>
-        /// <description>the IAM service if a service accound ID was specified via
+        /// <description>the IAM service if a service account ID was specified via
         /// <see cref="AppOptions"/></description>
         /// </item>
         /// <item>
