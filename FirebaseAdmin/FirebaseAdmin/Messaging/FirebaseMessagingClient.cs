@@ -127,6 +127,49 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
+        /// Sends each message in a single batch.
+        /// </summary>
+        /// <param name="messages">The messages to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the messages will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A task that completes with a <see cref="BatchResponse"/>, giving details about
+        /// the batch operation.</returns>
+        public async Task<BatchResponse> SendEachAsync(
+            IEnumerable<Message> messages,
+            bool dryRun = false,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var copyOfMessages = messages.ThrowIfNull(nameof(messages))
+                .Select((message) => message.CopyAndValidate())
+                .ToList();
+
+            if (copyOfMessages.Count < 1)
+            {
+                throw new ArgumentException("At least one message is required.");
+            }
+
+            if (copyOfMessages.Count > 500)
+            {
+                throw new ArgumentException("At most 500 messages are allowed.");
+            }
+
+            var tasks = new List<Task<SendResponse>>();
+
+            for (int i = 0; i < copyOfMessages.Count; i++)
+            {
+                tasks.Add(this.SendAsyncForSendResponse(copyOfMessages[i], dryRun, cancellationToken));
+            }
+
+            // No task should throw an exception because any exception should be caught
+            // within `SendAsyncForSendResponse` and turned into a `SendResponse`
+            var responses = await Task.WhenAll(tasks).ConfigureAwait(false);
+            return new BatchResponse(responses);
+        }
+
+        /// <summary>
         /// Sends all messages in a single batch.
         /// </summary>
         /// <param name="messages">The messages to be sent. Must not be null.</param>
@@ -249,6 +292,31 @@ namespace FirebaseAdmin.Messaging
             }
 
             return batch;
+        }
+
+        private async Task<SendResponse> SendAsyncForSendResponse(
+            Message message,
+            bool dryRun = false,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            try
+            {
+                var messageId = await this.SendAsync(message, dryRun, cancellationToken).ConfigureAwait(false);
+                return SendResponse.FromMessageId(messageId);
+            }
+            catch (FirebaseMessagingException e)
+            {
+                return SendResponse.FromException(e);
+            }
+            catch (HttpRequestException e)
+            {
+                return SendResponse.FromException(MessagingErrorHandler.Instance.HandleHttpRequestException(e));
+            }
+            catch (Exception e)
+            {
+                var exception = new FirebaseMessagingException(ErrorCode.Unknown, $"{e}");
+                return SendResponse.FromException(exception);
+            }
         }
 
         /// <summary>

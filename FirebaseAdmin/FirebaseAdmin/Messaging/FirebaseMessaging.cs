@@ -172,15 +172,174 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
+        /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
+        /// <see cref="SendAllAsync(IEnumerable{Message})"/>, this method makes a single HTTP call
+        /// for each message in the given list.
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachAsync(IEnumerable<Message> messages)
+        {
+            return await this.SendEachAsync(messages, false)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
+        /// <see cref="SendAllAsync(IEnumerable{Message}, CancellationToken)"/>, this method makes a
+        /// single HTTP call for each message in the given list.
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
+        {
+            return await this.SendEachAsync(messages, false, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
+        /// <see cref="SendAllAsync(IEnumerable{Message}, bool)"/>, this method makes a
+        /// single HTTP call for each message in the given list.
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachAsync(IEnumerable<Message> messages, bool dryRun)
+        {
+            return await this.SendEachAsync(messages, dryRun, default)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
+        /// <see cref="SendAllAsync(IEnumerable{Message}, bool, CancellationToken)"/>, this method
+        /// makes a single HTTP call for each message in the given list.
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
+        {
+            return await this.messagingClient.SendEachAsync(messages, dryRun, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Unlike <see cref="SendMulticastAsync(MulticastMessage)"/>, this method makes a
+        /// single HTTP call for each token in the given multicast message.
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachForMulticastAsync(MulticastMessage message)
+        {
+            return await this.SendEachForMulticastAsync(message, false)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Unlike <see cref="SendMulticastAsync(MulticastMessage, CancellationToken)"/>, this
+        /// method makes a single HTTP call for each token in the given multicast message.
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachForMulticastAsync(MulticastMessage message, CancellationToken cancellationToken)
+        {
+            return await this.SendEachForMulticastAsync(message, false, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Unlike <see cref="SendMulticastAsync(MulticastMessage, bool)"/>, this method makes a
+        /// single HTTP call for each token in the given multicast message.
+        /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
+        /// actually sent to the recipients. Instead, the FCM service performs all the necessary
+        /// validations, and emulates the send operation. This is a good way to check if a
+        /// certain message will be accepted by FCM for delivery.</para>
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachForMulticastAsync(MulticastMessage message, bool dryRun)
+        {
+            return await this.SendEachForMulticastAsync(message, dryRun, default)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Unlike <see cref="SendMulticastAsync(MulticastMessage, bool, CancellationToken)"/>,
+        /// this method makes a single HTTP call for each token in the given multicast message.
+        /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
+        /// actually sent to the recipients. Instead, the FCM service performs all the necessary
+        /// validations, and emulates the send operation. This is a good way to check if a
+        /// certain message will be accepted by FCM for delivery.</para>
+        /// </summary>
+        /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
+        /// messages.</exception>
+        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
+        /// only) of the send. If set to true, the message will be sent to the FCM backend service,
+        /// but it will not be delivered to any actual recipients.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
+        /// operation.</param>
+        /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
+        /// outcome.</returns>
+        public async Task<BatchResponse> SendEachForMulticastAsync(
+            MulticastMessage message, bool dryRun, CancellationToken cancellationToken)
+        {
+            return await this.SendEachAsync(
+                message.GetMessageList(), dryRun, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Sends all the messages in the given list via Firebase Cloud Messaging. Employs batching to
         /// send the entire list as a single RPC call. Compared to the <see cref="SendAsync(Message)"/>
         /// method, this is a significantly more efficient way to send multiple messages.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message})"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages)
         {
             return await this.SendAllAsync(messages, false)
@@ -194,11 +353,12 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
         {
             return await this.SendAllAsync(messages, false, cancellationToken)
@@ -212,12 +372,13 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
         /// but it will not be delivered to any actual recipients.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, bool)"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun)
         {
             return await this.SendAllAsync(messages, dryRun, default)
@@ -231,7 +392,7 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 100 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
         /// but it will not be delivered to any actual recipients.</param>
@@ -239,6 +400,7 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, bool, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
         {
             return await this.messagingClient.SendAllAsync(messages, dryRun, cancellationToken)
@@ -253,6 +415,7 @@ namespace FirebaseAdmin.Messaging
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message)
         {
             return await this.SendMulticastAsync(message, false)
@@ -269,6 +432,7 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, CancellationToken cancellationToken)
         {
             return await this.SendMulticastAsync(message, false, cancellationToken)
@@ -290,6 +454,7 @@ namespace FirebaseAdmin.Messaging
         /// but it will not be delivered to any actual recipients.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, bool)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, bool dryRun)
         {
             return await this.SendMulticastAsync(message, dryRun, default)
@@ -313,6 +478,7 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
+        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, bool, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(
             MulticastMessage message, bool dryRun, CancellationToken cancellationToken)
         {
