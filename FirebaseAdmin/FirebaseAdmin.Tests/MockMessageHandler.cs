@@ -40,6 +40,10 @@ namespace FirebaseAdmin.Tests
 
         public delegate void SetHeaders(HttpResponseHeaders respHeaders, HttpContentHeaders contentHeaders);
 
+        public delegate object GetResponse(IncomingRequest request);
+
+        public delegate HttpStatusCode GetStatusCode(IncomingRequest request);
+
         /// <summary>
         /// Gets the list of request bodies processed by this handler.
         /// </summary>
@@ -89,6 +93,16 @@ namespace FirebaseAdmin.Tests
         /// </summary>
         public SetHeaders ApplyHeaders { get; set; }
 
+        /// <summary>
+        /// Gets or sets the function for generating the response based on the incoming request.
+        /// </summary>
+        public GetResponse GenerateResponse { get; set; }
+
+        /// <summary>
+        /// Gets or sets the function for generating the status code based on the incoming request.
+        /// </summary>
+        public GetStatusCode GenerateStatusCode { get; set; }
+
         protected override async Task<HttpResponseMessage> DoSendAsync(
             HttpRequestMessage request, int count, CancellationToken cancellationToken)
         {
@@ -100,6 +114,16 @@ namespace FirebaseAdmin.Tests
             {
                 tcs.SetException(this.Exception);
                 return await tcs.Task;
+            }
+
+            if (this.GenerateResponse != null)
+            {
+                this.Response = this.GenerateResponse(incomingRequest);
+            }
+
+            if (this.GenerateStatusCode != null)
+            {
+                this.StatusCode = this.GenerateStatusCode(incomingRequest);
             }
 
             string json;
