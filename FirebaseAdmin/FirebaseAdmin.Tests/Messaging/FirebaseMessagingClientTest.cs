@@ -134,6 +134,212 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public async Task SendEachAsync()
+        {
+            var handler = new MockMessageHandler()
+            {
+                GenerateResponse = (incomingRequest) =>
+                {
+                    string name;
+                    if (incomingRequest.Body.Contains("test-token1"))
+                    {
+                        name = "projects/fir-adminintegrationtests/messages/8580920590356323124";
+                    }
+                    else
+                    {
+                        name = "projects/fir-adminintegrationtests/messages/5903525881088369386";
+                    }
+
+                    return new FirebaseMessagingClient.SingleMessageResponse()
+                    {
+                        Name = name,
+                    };
+                },
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+            var message1 = new Message()
+            {
+                Token = "test-token1",
+            };
+            var message2 = new Message()
+            {
+                Token = "test-token2",
+            };
+
+            var response = await client.SendEachAsync(new[] { message1, message2 });
+
+            Assert.Equal(2, response.SuccessCount);
+            Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
+            Assert.Equal("projects/fir-adminintegrationtests/messages/5903525881088369386", response.Responses[1].MessageId);
+            Assert.Equal(2, handler.Calls);
+        }
+
+        [Fact]
+        public async Task SendEachAsyncWithError()
+        {
+            // Return a success for `message1` and an error for `message2`
+            var handler = new MockMessageHandler()
+            {
+                GenerateResponse = (incomingRequest) =>
+                {
+                    string name;
+                    if (incomingRequest.Body.Contains("test-token1"))
+                    {
+                        name = "projects/fir-adminintegrationtests/messages/8580920590356323124";
+                        return new FirebaseMessagingClient.SingleMessageResponse()
+                        {
+                            Name = name,
+                        };
+                    }
+                    else
+                    {
+                        return @"{
+                                    ""error"": {
+                                        ""status"": ""INVALID_ARGUMENT"",
+                                        ""message"": ""The registration token is not a valid FCM registration token"",
+                                        ""details"": [
+                                            {
+                                                ""@type"": ""type.googleapis.com/google.firebase.fcm.v1.FcmError"",
+                                                ""errorCode"": ""UNREGISTERED""
+                                            }
+                                        ]
+                                    }
+                                }";
+                    }
+                },
+                GenerateStatusCode = (incomingRequest) =>
+                {
+                    if (incomingRequest.Body.Contains("test-token1"))
+                    {
+                        return HttpStatusCode.OK;
+                    }
+                    else
+                    {
+                        return HttpStatusCode.InternalServerError;
+                    }
+                },
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+            var message1 = new Message()
+            {
+                Token = "test-token1",
+            };
+            var message2 = new Message()
+            {
+                Token = "test-token2",
+            };
+
+            var response = await client.SendEachAsync(new[] { message1, message2 });
+
+            Assert.Equal(1, response.SuccessCount);
+            Assert.Equal(1, response.FailureCount);
+            Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
+
+            var exception = response.Responses[1].Exception;
+            Assert.NotNull(exception);
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal("The registration token is not a valid FCM registration token", exception.Message);
+            Assert.Equal(MessagingErrorCode.Unregistered, exception.MessagingErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+
+            Assert.Equal(2, handler.Calls);
+        }
+
+        [Fact]
+        public async Task SendEachAsyncWithErrorNoDetail()
+        {
+            // Return a success for `message1` and an error for `message2`
+            var handler = new MockMessageHandler()
+            {
+                GenerateResponse = (incomingRequest) =>
+                {
+                    string name;
+                    if (incomingRequest.Body.Contains("test-token1"))
+                    {
+                        name = "projects/fir-adminintegrationtests/messages/8580920590356323124";
+                        return new FirebaseMessagingClient.SingleMessageResponse()
+                        {
+                            Name = name,
+                        };
+                    }
+                    else
+                    {
+                        return @"{
+                                    ""error"": {
+                                        ""status"": ""INVALID_ARGUMENT"",
+                                        ""message"": ""The registration token is not a valid FCM registration token"",
+                                    }
+                                }";
+                    }
+                },
+                GenerateStatusCode = (incomingRequest) =>
+                {
+                    if (incomingRequest.Body.Contains("test-token1"))
+                    {
+                        return HttpStatusCode.OK;
+                    }
+                    else
+                    {
+                        return HttpStatusCode.InternalServerError;
+                    }
+                },
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+            var message1 = new Message()
+            {
+                Token = "test-token1",
+            };
+            var message2 = new Message()
+            {
+                Token = "test-token2",
+            };
+
+            var response = await client.SendEachAsync(new[] { message1, message2 });
+
+            Assert.Equal(1, response.SuccessCount);
+            Assert.Equal(1, response.FailureCount);
+            Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
+
+            var exception = response.Responses[1].Exception;
+            Assert.NotNull(exception);
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal("The registration token is not a valid FCM registration token", exception.Message);
+            Assert.Null(exception.MessagingErrorCode);
+            Assert.NotNull(exception.HttpResponse);
+
+            Assert.Equal(2, handler.Calls);
+        }
+
+        [Fact]
+        public async Task SendEachAsyncNullList()
+        {
+            var factory = new MockHttpClientFactory(new MockMessageHandler());
+            var client = this.CreateMessagingClient(factory);
+
+            await Assert.ThrowsAsync<ArgumentNullException>(() => client.SendEachAsync(null));
+        }
+
+        [Fact]
+        public async Task SendEachAsyncWithNoMessages()
+        {
+            var factory = new MockHttpClientFactory(new MockMessageHandler());
+            var client = this.CreateMessagingClient(factory);
+            await Assert.ThrowsAsync<ArgumentException>(() => client.SendEachAsync(Enumerable.Empty<Message>()));
+        }
+
+        [Fact]
+        public async Task SendEachAsyncWithTooManyMessages()
+        {
+            var factory = new MockHttpClientFactory(new MockMessageHandler());
+            var client = this.CreateMessagingClient(factory);
+            var messages = Enumerable.Range(0, 501).Select(_ => new Message { Topic = "test-topic" });
+            await Assert.ThrowsAsync<ArgumentException>(() => client.SendEachAsync(messages));
+        }
+
+        [Fact]
         public async Task SendAllAsync()
         {
             var rawResponse = @"
