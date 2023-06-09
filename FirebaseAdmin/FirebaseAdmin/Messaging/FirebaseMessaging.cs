@@ -173,12 +173,13 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
-        /// <see cref="SendAllAsync(IEnumerable{Message})"/>, this method makes a single HTTP call
+        /// <see cref="SendAllAsync(IEnumerable{Message})"/>, this method makes an HTTP call
         /// for each message in the given list.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null or
+        /// empty.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
         public async Task<BatchResponse> SendEachAsync(IEnumerable<Message> messages)
@@ -189,12 +190,13 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
-        /// <see cref="SendAllAsync(IEnumerable{Message}, CancellationToken)"/>, this method makes a
-        /// single HTTP call for each message in the given list.
+        /// <see cref="SendAllAsync(IEnumerable{Message}, CancellationToken)"/>, this method makes
+        /// an HTTP call for each message in the given list.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null or
+        /// empty.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
@@ -207,12 +209,13 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
-        /// <see cref="SendAllAsync(IEnumerable{Message}, bool)"/>, this method makes a
-        /// single HTTP call for each message in the given list.
+        /// <see cref="SendAllAsync(IEnumerable{Message}, bool)"/>, this method makes an HTTP
+        /// call for each message in the given list.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null or
+        /// empty.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
         /// but it will not be delivered to any actual recipients.</param>
@@ -227,11 +230,12 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Sends each message in the given list via Firebase Cloud Messaging. Unlike
         /// <see cref="SendAllAsync(IEnumerable{Message}, bool, CancellationToken)"/>, this method
-        /// makes a single HTTP call for each message in the given list.
+        /// makes an HTTP call for each message in the given list.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
+        /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null or
+        /// empty.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
         /// but it will not be delivered to any actual recipients.</param>
@@ -247,12 +251,12 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
-        /// Unlike <see cref="SendMulticastAsync(MulticastMessage)"/>, this method makes a
-        /// single HTTP call for each token in the given multicast message.
+        /// Unlike <see cref="SendMulticastAsync(MulticastMessage)"/>, this method makes an
+        /// HTTP call for each token in the given multicast message.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="message">The message to be sent. Must not be null or empty.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
         public async Task<BatchResponse> SendEachForMulticastAsync(MulticastMessage message)
@@ -264,11 +268,11 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
         /// Unlike <see cref="SendMulticastAsync(MulticastMessage, CancellationToken)"/>, this
-        /// method makes a single HTTP call for each token in the given multicast message.
+        /// method makes an HTTP call for each token in the given multicast message.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="message">The message to be sent. Must not be null or empty.</param>
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
@@ -281,8 +285,8 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
-        /// Unlike <see cref="SendMulticastAsync(MulticastMessage, bool)"/>, this method makes a
-        /// single HTTP call for each token in the given multicast message.
+        /// Unlike <see cref="SendMulticastAsync(MulticastMessage, bool)"/>, this method makes an
+        /// HTTP call for each token in the given multicast message.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
         /// actually sent to the recipients. Instead, the FCM service performs all the necessary
         /// validations, and emulates the send operation. This is a good way to check if a
@@ -290,7 +294,7 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="message">The message to be sent. Must not be null or empty.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
         /// but it will not be delivered to any actual recipients.</param>
@@ -305,7 +309,7 @@ namespace FirebaseAdmin.Messaging
         /// <summary>
         /// Sends the given multicast message to all the FCM registration tokens specified in it.
         /// Unlike <see cref="SendMulticastAsync(MulticastMessage, bool, CancellationToken)"/>,
-        /// this method makes a single HTTP call for each token in the given multicast message.
+        /// this method makes an HTTP call for each token in the given multicast message.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
         /// actually sent to the recipients. Instead, the FCM service performs all the necessary
         /// validations, and emulates the send operation. This is a good way to check if a
@@ -313,7 +317,7 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
-        /// <param name="message">The message to be sent. Must not be null.</param>
+        /// <param name="message">The message to be sent. Must not be null or empty.</param>
         /// <param name="dryRun">A boolean indicating whether to perform a dry run (validation
         /// only) of the send. If set to true, the message will be sent to the FCM backend service,
         /// but it will not be delivered to any actual recipients.</param>
