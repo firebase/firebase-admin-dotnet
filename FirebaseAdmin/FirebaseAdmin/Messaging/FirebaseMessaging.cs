@@ -339,7 +339,7 @@ namespace FirebaseAdmin.Messaging
         /// <param name="messages">Up to 500 messages to send in the batch. Cannot be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message})"/> instead)]
+        [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message})"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages)
         {
             return await this.SendAllAsync(messages, false)
@@ -358,7 +358,7 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, CancellationToken)"/> instead)]
+        [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
         {
             return await this.SendAllAsync(messages, false, cancellationToken)
@@ -378,7 +378,7 @@ namespace FirebaseAdmin.Messaging
         /// but it will not be delivered to any actual recipients.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, bool)"/> instead)]
+        [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, bool)"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun)
         {
             return await this.SendAllAsync(messages, dryRun, default)
@@ -400,7 +400,7 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, bool, CancellationToken)"/> instead)]
+        [Obsolete(Use <see cref="SendEachAsync(IEnumerable{Message}, bool, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendAllAsync(IEnumerable<Message> messages, bool dryRun, CancellationToken cancellationToken)
         {
             return await this.messagingClient.SendAllAsync(messages, dryRun, cancellationToken)
@@ -415,7 +415,7 @@ namespace FirebaseAdmin.Messaging
         /// <param name="message">The message to be sent. Must not be null.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage)"/> instead)]
+        [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message)
         {
             return await this.SendMulticastAsync(message, false)
@@ -432,7 +432,7 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, CancellationToken)"/> instead)]
+        [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, CancellationToken cancellationToken)
         {
             return await this.SendMulticastAsync(message, false, cancellationToken)
@@ -454,7 +454,7 @@ namespace FirebaseAdmin.Messaging
         /// but it will not be delivered to any actual recipients.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, bool)"/> instead)]
+        [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, bool)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(MulticastMessage message, bool dryRun)
         {
             return await this.SendMulticastAsync(message, dryRun, default)
@@ -478,7 +478,7 @@ namespace FirebaseAdmin.Messaging
         /// operation.</param>
         /// <returns>A <see cref="BatchResponse"/> containing details of the batch operation's
         /// outcome.</returns>
-        /// [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, bool, CancellationToken)"/> instead)]
+        [Obsolete(Use <see cref="SendEachForMulticastAsync(MulticastMessage, bool, CancellationToken)"/> instead)]
         public async Task<BatchResponse> SendMulticastAsync(
             MulticastMessage message, bool dryRun, CancellationToken cancellationToken)
         {
