@@ -117,7 +117,7 @@ namespace FirebaseAdmin.Snippets
             // [END send_dry_run]
         }
 
-        internal static async Task SendAllAsync()
+        internal static async Task SendEachAsync()
         {
             var registrationToken = "YOUR_REGISTRATION_TOKEN";
             // [START send_all]
@@ -144,14 +144,14 @@ namespace FirebaseAdmin.Snippets
                 },
             };
 
-            var response = await FirebaseMessaging.DefaultInstance.SendAllAsync(messages);
+            var response = await FirebaseMessaging.DefaultInstance.SendEachAsync(messages);
             // See the BatchResponse reference documentation
             // for the contents of response.
             Console.WriteLine($"{response.SuccessCount} messages were sent successfully");
             // [END send_all]
         }
 
-        internal static async Task SendMulticastAsync()
+        internal static async Task SendEachForMulticastAsync()
         {
             // [START send_multicast]
             // Create a list containing up to 500 registration tokens.
@@ -172,14 +172,14 @@ namespace FirebaseAdmin.Snippets
                 },
             };
 
-            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+            var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
             // See the BatchResponse reference documentation
             // for the contents of response.
             Console.WriteLine($"{response.SuccessCount} messages were sent successfully");
             // [END send_multicast]
         }
 
-        internal static async Task SendMulticastAndHandleErrorsAsync()
+        internal static async Task SendEachForMulticastAndHandleErrorsAsync()
         {
             // [START send_multicast_error]
             // These registration tokens come from the client FCM SDKs.
@@ -199,7 +199,7 @@ namespace FirebaseAdmin.Snippets
                 },
             };
 
-            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+            var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
             if (response.FailureCount > 0)
             {
                 var failedTokens = new List<string>();
