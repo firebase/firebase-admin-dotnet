@@ -42,6 +42,17 @@ namespace FirebaseAdmin.Snippets
             // [END initialize_sdk_with_application_default]
         }
 
+        internal static void InitSdkWithApplicationDefaultAndProjectId()
+        {
+            // [START initialize_sdk_with_application_default_and_projectId]
+            FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.GetApplicationDefault(),
+                ProjectId = "my-project-id",
+            });
+            // [END initialize_sdk_with_application_default_and_projectId]
+        }
+
         internal static void InitSdkWithRefreshToken()
         {
             // [START initialize_sdk_with_refresh_token]
