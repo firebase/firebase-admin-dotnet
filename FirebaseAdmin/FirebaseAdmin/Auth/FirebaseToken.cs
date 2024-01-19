@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -79,6 +80,11 @@ namespace FirebaseAdmin.Auth
         /// access custom claims of the token.
         /// </summary>
         public IReadOnlyDictionary<string, object> Claims { get; }
+
+        public static implicit operator string(FirebaseToken v)
+        {
+            throw new NotImplementedException();
+        }
 
         internal sealed class Args
         {
