@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FirebaseAdmin
+namespace FirebaseAdmin.Check
 {
     /// <summary>
     /// Represents a cryptographic key.

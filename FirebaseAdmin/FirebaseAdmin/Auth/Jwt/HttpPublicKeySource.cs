@@ -15,14 +15,18 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Check;
 using FirebaseAdmin.Util;
 using Google.Apis.Http;
 using Google.Apis.Util;
+using Newtonsoft.Json;
+using static Google.Apis.Requests.BatchRequest;
 using RSAKey = System.Security.Cryptography.RSA;
 
 namespace FirebaseAdmin.Auth.Jwt
@@ -74,11 +78,19 @@ namespace FirebaseAdmin.Auth.Jwt
                                 Method = HttpMethod.Get,
                                 RequestUri = new Uri(this.certUrl),
                             };
+
                             var response = await httpClient
                                 .SendAndDeserializeAsync<Dictionary<string, string>>(request, cancellationToken)
                                 .ConfigureAwait(false);
+                            if (this.certUrl != "https://firebaseappcheck.googleapis.com/v1/jwks")
+                            {
+                                this.cachedKeys = this.ParseKeys(response);
+                            }
+                            else
+                            {
+                                this.cachedKeys = await this.ParseAppCheckKeys().ConfigureAwait(false);
+                            }
 
-                            this.cachedKeys = this.ParseKeys(response);
                             var cacheControl = response.HttpResponse.Headers.CacheControl;
                             if (cacheControl?.MaxAge != null)
                             {
@@ -130,6 +142,37 @@ namespace FirebaseAdmin.Auth.Jwt
             }
 
             return builder.ToImmutableList();
+        }
+
+        private async Task<IReadOnlyList<PublicKey>> ParseAppCheckKeys()
+        {
+            try
+            {
+                using var client = new HttpClient();
+                HttpResponseMessage response = await client.GetAsync(this.certUrl).ConfigureAwait(false);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    string responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    KeysRoot keysRoot = JsonConvert.DeserializeObject<KeysRoot>(responseString);
+                    var builder = ImmutableList.CreateBuilder<PublicKey>();
+                    foreach (Key key in keysRoot.Keys)
+                    {
+                        var x509cert = new X509Certificate2(Encoding.UTF8.GetBytes(key.N));
+                        RSAKey rsa = x509cert.GetRSAPublicKey();
+                        builder.Add(new PublicKey(key.Kid, rsa));
+                    }
+
+                    return builder.ToImmutableList();
+                }
+                else
+                {
+                    throw new ArgumentNullException("Error Http request JwksUrl");
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new ArgumentNullException("Error Http request", exception);
+            }
         }
 
         private class HttpKeySourceErrorHandler

@@ -39,6 +39,8 @@ namespace FirebaseAdmin.Auth.Jwt
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
         public const int TokenDurationSeconds = 3600;
+        public const int OneMinuteInSeconds = 60;
+        public const int OneDayInMillis = 24 * 60 * 60 * 1000;
         public static readonly DateTime UnixEpoch = new DateTime(
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -58,7 +60,8 @@ namespace FirebaseAdmin.Auth.Jwt
             "jti",
             "nbf",
             "nonce",
-            "sub");
+            "sub",
+            "app_id");
 
         internal FirebaseTokenFactory(Args args)
         {
@@ -173,13 +176,74 @@ namespace FirebaseAdmin.Auth.Jwt
                 header, payload, this.Signer, cancellationToken).ConfigureAwait(false);
         }
 
+        internal async Task<string> CreateCustomTokenAppIdAsync(
+            string appId,
+            AppCheckTokenOptions options = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrEmpty(appId))
+            {
+                throw new ArgumentException("uid must not be null or empty");
+            }
+            else if (appId.Length > 128)
+            {
+                throw new ArgumentException("uid must not be longer than 128 characters");
+            }
+
+            var header = new JsonWebSignature.Header()
+            {
+                Algorithm = this.Signer.Algorithm,
+                Type = "JWT",
+            };
+
+            var issued = (int)(this.Clock.UtcNow - UnixEpoch).TotalSeconds / 1000;
+            var keyId = await this.Signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
+            var payload = new CustomTokenPayload()
+            {
+                AppId = appId,
+                Issuer = keyId,
+                Subject = keyId,
+                Audience = FirebaseAudience,
+                IssuedAtTimeSeconds = issued,
+                ExpirationTimeSeconds = issued + (OneMinuteInSeconds * 5),
+            };
+
+            if (options != null)
+            {
+                this.ValidateTokenOptions(options);
+                payload.Ttl = options.TtlMillis.ToString();
+            }
+
+            return await JwtUtils.CreateSignedJwtAsync(
+                header, payload, this.Signer, cancellationToken).ConfigureAwait(false);
+        }
+
+        internal void ValidateTokenOptions(AppCheckTokenOptions options)
+        {
+            if (options.TtlMillis == 0)
+            {
+                throw new ArgumentException("TtlMillis must be a duration in milliseconds.");
+            }
+
+            if (options.TtlMillis < OneMinuteInSeconds * 30 || options.TtlMillis > OneDayInMillis * 7)
+            {
+                throw new ArgumentException("ttlMillis must be a duration in milliseconds between 30 minutes and 7 days (inclusive).");
+            }
+        }
+
         internal class CustomTokenPayload : JsonWebToken.Payload
         {
             [JsonPropertyAttribute("uid")]
             public string Uid { get; set; }
 
+            [JsonPropertyAttribute("app_id")]
+            public string AppId { get; set; }
+
             [JsonPropertyAttribute("tenant_id")]
             public string TenantId { get; set; }
+
+            [JsonPropertyAttribute("ttl")]
+            public string Ttl { get; set; }
 
             [JsonPropertyAttribute("claims")]
             public IDictionary<string, object> Claims { get; set; }
