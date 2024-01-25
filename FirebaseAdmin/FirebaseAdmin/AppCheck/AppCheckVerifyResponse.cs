@@ -8,7 +8,7 @@ namespace FirebaseAdmin.Check
     /// <summary>
     /// AppCheckVerifyResponse.
     /// </summary>
-    public class AppCheckVerifyResponse(string appId, FirebaseToken verifiedToken, bool alreadyConsumed = false)
+    public class AppCheckVerifyResponse(string appId, string verifiedToken, bool alreadyConsumed = false)
     {
         /// <summary>
         /// Gets or sets a value indicating whether gets the Firebase App Check token.

@@ -51,31 +51,14 @@ namespace FirebaseAdmin.Check
         {
             if (string.IsNullOrEmpty(customToken))
             {
-                throw new ArgumentException("First argument passed to customToken must be a valid Firebase app instance.");
+                throw new ArgumentNullException("First argument passed to customToken must be a valid Firebase app instance.");
             }
 
             if (string.IsNullOrEmpty(appId))
             {
-                throw new ArgumentException("Second argument passed to appId must be a valid Firebase app instance.");
+                throw new ArgumentNullException("Second argument passed to appId must be a valid Firebase app instance.");
             }
 
-            HttpResponseMessage response = await this.GetExchangeToken(customToken, appId).ConfigureAwait(false);
-
-            JObject responseData = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-            string tokenValue = responseData["data"]["token"].ToString();
-            int ttlValue = this.StringToMilliseconds(responseData["data"]["ttl"].ToString());
-            AppCheckToken appCheckToken = new (tokenValue, ttlValue);
-            return appCheckToken;
-        }
-
-        /// <summary>
-        /// Exchange a signed custom token to App Check token.
-        /// </summary>
-        /// <param name="customToken"> The custom token to be exchanged. </param>
-        /// <param name="appId"> The Id of Firebase App. </param>
-        /// <returns> HttpResponseMessage .</returns>
-        public async Task<HttpResponseMessage> GetExchangeToken(string customToken, string appId)
-        {
             var url = this.GetUrl(appId);
             var content = new StringContent(JsonConvert.SerializeObject(new { customToken }), Encoding.UTF8, "application/json");
             var request = new HttpRequestMessage()
@@ -85,7 +68,6 @@ namespace FirebaseAdmin.Check
                 Content = content,
             };
             request.Headers.Add("X-Firebase-Client", "fire-admin-node/" + $"{FirebaseApp.GetSdkVersion()}");
-            Console.WriteLine(request.Content);
             var httpClient = new HttpClient();
             var response = await httpClient.SendAsync(request).ConfigureAwait(false);
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
@@ -95,10 +77,14 @@ namespace FirebaseAdmin.Check
             }
             else if (!response.IsSuccessStatusCode)
             {
-                throw new ArgumentException("unknown-error", $"Unexpected response with status:{response.StatusCode}");
+                throw new HttpRequestException("network error");
             }
 
-            return response;
+            JObject responseData = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+            string tokenValue = responseData["data"]["token"].ToString();
+            int ttlValue = this.StringToMilliseconds(responseData["data"]["ttl"].ToString());
+            AppCheckToken appCheckToken = new (tokenValue, ttlValue);
+            return appCheckToken;
         }
 
         /// <summary>
@@ -128,7 +114,7 @@ namespace FirebaseAdmin.Check
             var responseData = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
             bool alreadyConsumed = (bool)responseData["data"]["alreadyConsumed"];
             return alreadyConsumed;
-          }
+        }
 
         /// <summary>
         /// Get Verify Token Url .

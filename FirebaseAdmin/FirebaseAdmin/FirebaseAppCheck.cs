@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using FirebaseAdmin.Auth;
@@ -21,8 +22,8 @@ namespace FirebaseAdmin
         private static Dictionary<string, FirebaseAppCheck> appChecks = new Dictionary<string, FirebaseAppCheck>();
 
         private readonly AppCheckApiClient apiClient;
-        private readonly FirebaseTokenVerifier appCheckTokenVerifier;
-        private readonly FirebaseTokenFactory tokenFactory;
+        private readonly AppCheckTokenVerify appCheckTokenVerifier;
+        private readonly AppCheckTokenGenerator tokenFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FirebaseAppCheck"/> class.
@@ -31,8 +32,8 @@ namespace FirebaseAdmin
         public FirebaseAppCheck(FirebaseApp value)
         {
             this.apiClient = new AppCheckApiClient(value);
-            this.tokenFactory = FirebaseTokenFactory.Create(value);
-            this.appCheckTokenVerifier = FirebaseTokenVerifier.CreateAppCheckVerifier(value);
+            this.tokenFactory = AppCheckTokenGenerator.Create(value);
+            this.appCheckTokenVerifier = AppCheckTokenVerify.Create(value);
         }
 
         /// <summary>
@@ -42,12 +43,12 @@ namespace FirebaseAdmin
         /// <returns>A <see cref="Task{FirebaseAppCheck}"/> Representing the result of the asynchronous operation.</returns>
         public static FirebaseAppCheck Create(FirebaseApp app)
         {
-            string appId = app.Name;
-
             if (app == null)
             {
                 throw new ArgumentNullException("FirebaseApp must not be null or empty");
             }
+
+            string appId = app.Name;
 
             lock (appChecks)
             {
@@ -77,7 +78,7 @@ namespace FirebaseAdmin
         /// <returns>A <see cref="Task{AppCheckToken}"/> Representing the result of the asynchronous operation.</returns>
         public async Task<AppCheckToken> CreateToken(string appId, AppCheckTokenOptions options = null)
         {
-            string customToken = await this.tokenFactory.CreateCustomTokenAppIdAsync(appId, options)
+            string customToken = await this.tokenFactory.CreateCustomTokenAsync(appId, options, default(CancellationToken))
                 .ConfigureAwait(false);
 
             return await this.apiClient.ExchangeTokenAsync(customToken, appId).ConfigureAwait(false);
