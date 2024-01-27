@@ -1,211 +1,324 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using FirebaseAdmin.Check;
+using FirebaseAdmin.Messaging;
+using FirebaseAdmin.Tests;
+using FirebaseAdmin.Tests.AppCheck;
+using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Moq;
+using Google.Apis.Http;
+using Newtonsoft.Json;
 using Xunit;
 
-namespace FirebaseAdmin.Tests.AppCheck
+namespace FirebaseAdmin.AppCheck.Tests
 {
     public class AppCheckApiClientTest
     {
+        private static readonly GoogleCredential MockCredential =
+            GoogleCredential.FromFile("./resources/service_account.json");
+
         private readonly string appId = "1:1234:android:1234";
-        private readonly string testTokenToExchange = "signed-custom-token";
-        private readonly string noProjectId = "Failed to determine project ID.Initialize the SDK with service "
-                        + "account credentials or set project ID as an app option. Alternatively, set the "
-                        + "GOOGLE_CLOUD_PROJECT environment variable.";
 
         [Fact]
-        public void CreateInvalidApp()
+        public void NoProjectId()
         {
-            Assert.Throws<ArgumentException>(() => new AppCheckApiClient(null));
+            var args = new AppCheckApiClient.Args()
+            {
+                ClientFactory = new HttpClientFactory(),
+                Credential = null,
+            };
+
+            args.ProjectId = null;
+            Assert.Throws<FirebaseAppCheckException>(() => new AppCheckApiClient(args));
+
+            args.ProjectId = string.Empty;
+            Assert.Throws<FirebaseAppCheckException>(() => new AppCheckApiClient(args));
         }
 
         [Fact]
-        public async Task ExchangeTokenNoProjectId()
+        public void NoCredential()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var args = new AppCheckApiClient.Args()
+            {
+                ClientFactory = new HttpClientFactory(),
+                Credential = null,
+                ProjectId = "test-project",
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new ArgumentException(this.noProjectId));
-            var result = await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(this.testTokenToExchange, this.appId));
-            Assert.Equal(this.noProjectId, result.Message);
+            Assert.Throws<ArgumentNullException>(() => new AppCheckApiClient(args));
         }
 
         [Fact]
-        public async Task ExchangeTokenInvalidAppId()
+        public void NoClientFactory()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var args = new AppCheckApiClient.Args()
+            {
+                ClientFactory = null,
+                Credential = MockCredential,
+                ProjectId = "test-project",
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new ArgumentException(this.noProjectId));
-
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(this.testTokenToExchange, string.Empty));
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(this.testTokenToExchange, null));
+            Assert.Throws<ArgumentNullException>(() => new AppCheckApiClient(args));
         }
 
         [Fact]
-        public async Task ExchangeTokenInvalidCustomTokenAsync()
+        public async Task ExchangeToken()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.ExchangeTokenResponse()
+                {
+                    Token = "test-token",
+                    Ttl = "36000s",
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new ArgumentException(this.noProjectId));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(string.Empty, this.appId));
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(null, this.appId));
+            string customToken = "test-token";
+
+            var response = await client.ExchangeTokenAsync(customToken, this.appId);
+
+            Assert.Equal("test-token", response.Token);
+            Assert.Equal(36000000, response.TtlMillis);
+
+            var req = JsonConvert.DeserializeObject<AppCheckApiClient.ExchangeTokenRequest>(handler.LastRequestBody);
+            Assert.Equal("test-token", req.CustomToken);
+            Assert.Equal(1, handler.Calls);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
         [Fact]
-        public async Task ExchangeTokenFullErrorResponseAsync()
+        public async Task ExchangeTokenWithEmptyAppId()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.ExchangeTokenResponse()
+                {
+                    Token = "test-token",
+                    Ttl = "36000s",
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new ArgumentException("not-found", "Requested entity not found"));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(this.testTokenToExchange, this.appId));
+            string customToken = "test-token";
+
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await client.ExchangeTokenAsync(customToken, string.Empty));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("appId must be a non-empty string.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidArgument, ex.AppCheckErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(0, handler.Calls);
         }
 
         [Fact]
-        public async Task ExchangeTokenErrorCodeAsync()
+        public async Task ExchangeTokenWithNullAppId()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.ExchangeTokenResponse()
+                {
+                    Token = "test-token",
+                    Ttl = "36000s",
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new ArgumentException("unknown-error", "Unknown server error: {}"));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(this.testTokenToExchange, this.appId));
+            string customToken = "test-token";
+
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await client.ExchangeTokenAsync(customToken, null));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("appId must be a non-empty string.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidArgument, ex.AppCheckErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(0, handler.Calls);
         }
 
         [Fact]
-        public async Task ExchangeTokenFullNonJsonAsync()
+        public async Task ExchangeTokenWithEmptyCustomToken()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.ExchangeTokenResponse()
+                {
+                    Token = "test-token",
+                    Ttl = "36000s",
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new ArgumentException("unknown-error", "Unexpected response with status: 404 and body: not json"));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(this.testTokenToExchange, this.appId));
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await client.ExchangeTokenAsync(string.Empty, this.appId));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("customToken must be a non-empty string.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidArgument, ex.AppCheckErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(0, handler.Calls);
         }
 
         [Fact]
-        public async Task ExchangeTokenAppErrorAsync()
+        public async Task ExchangeTokenWithNullCustomToken()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.ExchangeTokenResponse()
+                {
+                    Token = "test-token",
+                    Ttl = "36000s",
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new ArgumentException("network-error", "socket hang up"));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.ExchangeTokenAsync(string.Empty, this.appId));
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await client.ExchangeTokenAsync(null, this.appId));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("customToken must be a non-empty string.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidArgument, ex.AppCheckErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(0, handler.Calls);
         }
 
         [Fact]
-        public async Task ExchangeTokenOnSuccessAsync()
+        public async Task ExchangeTokenWithErrorNoTtlResponse()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.ExchangeTokenResponse()
+                {
+                    Token = "test-token",
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.ExchangeTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync(new AppCheckToken("token", 3000));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            var result = await appCheckApiClient.Object.ExchangeTokenAsync(this.testTokenToExchange, this.appId).ConfigureAwait(false);
-            Assert.NotNull(result);
-            Assert.Equal("token", result.Token);
-            Assert.Equal(3000, result.TtlMillis);
+            string customToken = "test-token";
+
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await client.ExchangeTokenAsync(customToken, this.appId));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("`ttl` must be a valid duration string with the suffix `s`.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidArgument, ex.AppCheckErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(1, handler.Calls);
         }
 
         [Fact]
-        public async Task VerifyReplayNoProjectIdAsync()
+        public async Task ExchangeTokenWithErrorNoTokenResponse()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.ExchangeTokenResponse()
+                {
+                    Ttl = "36000s",
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .Throws(new ArgumentException(this.noProjectId));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.VerifyReplayProtection(this.testTokenToExchange));
+            string customToken = "test-token";
+
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await client.ExchangeTokenAsync(customToken, this.appId));
+
+            Assert.Equal(ErrorCode.PermissionDenied, ex.ErrorCode);
+            Assert.Equal("Token is not valid", ex.Message);
+            Assert.Equal(AppCheckErrorCode.AppCheckTokenExpired, ex.AppCheckErrorCode);
+            Assert.Null(ex.HttpResponse);
+            Assert.Null(ex.InnerException);
+            Assert.Equal(1, handler.Calls);
         }
 
         [Fact]
-        public async Task VerifyReplayInvaildTokenAsync()
+        public async Task VerifyReplayProtectionWithTrue()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.VerifyTokenResponse()
+                {
+                    AlreadyConsumed = true,
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .Throws(new ArgumentException(this.noProjectId));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.VerifyReplayProtection(string.Empty));
+            string customToken = "test-token";
+
+            var response = await client.VerifyReplayProtectionAsync(customToken);
+
+            Assert.True(response);
+
+            var req = JsonConvert.DeserializeObject<AppCheckApiClient.ExchangeTokenRequest>(handler.LastRequestBody);
+            Assert.Equal(1, handler.Calls);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
         [Fact]
-        public async Task VerifyReplayFullErrorAsync()
+        public async Task VerifyReplayProtectionWithFalse()
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
+            var handler = new MockAppCheckHandler()
+            {
+                Response = new AppCheckApiClient.VerifyTokenResponse()
+                {
+                    AlreadyConsumed = false,
+                },
+            };
 
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .Throws(new ArgumentException("not-found", "Requested entity not found"));
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateAppCheckApiClient(factory);
 
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.VerifyReplayProtection(this.testTokenToExchange));
+            string customToken = "test-token";
+
+            var response = await client.VerifyReplayProtectionAsync(customToken);
+
+            Assert.False(response);
+
+            var req = JsonConvert.DeserializeObject<AppCheckApiClient.ExchangeTokenRequest>(handler.LastRequestBody);
+            Assert.Equal(1, handler.Calls);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
-        [Fact]
-        public async Task VerifyReplayErrorCodeAsync()
+        private AppCheckApiClient CreateAppCheckApiClient(HttpClientFactory factory)
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
-
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .Throws(new ArgumentException("unknown-error", "Unknown server error: {}"));
-
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.VerifyReplayProtection(this.testTokenToExchange));
+            return new AppCheckApiClient(new AppCheckApiClient.Args()
+            {
+                ClientFactory = factory,
+                Credential = MockCredential,
+                ProjectId = "test-project",
+                RetryOptions = RetryOptions.NoBackOff,
+            });
         }
 
-        [Fact]
-        public async Task VerifyReplayNonJsonAsync()
+        private void CheckHeaders(HttpRequestHeaders header)
         {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
-
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .Throws(new ArgumentException("unknown-error", "Unexpected response with status: 404 and body: not json"));
-
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.VerifyReplayProtection(this.testTokenToExchange));
-        }
-
-        [Fact]
-        public async Task VerifyReplayFirebaseAppErrorAsync()
-        {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
-
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .Throws(new ArgumentException("network-error", "socket hang up"));
-
-            await Assert.ThrowsAsync<ArgumentException>(() => appCheckApiClient.Object.VerifyReplayProtection(this.testTokenToExchange));
-        }
-
-        [Fact]
-        public async Task VerifyReplayAlreadyTrueAsync()
-        {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
-
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .ReturnsAsync(true);
-
-            bool res = await appCheckApiClient.Object.VerifyReplayProtection(this.testTokenToExchange).ConfigureAwait(false);
-            Assert.True(res);
-        }
-
-        [Fact]
-        public async Task VerifyReplayAlreadyFlaseAsync()
-        {
-            var appCheckApiClient = new Mock<IAppCheckApiClient>();
-
-            appCheckApiClient.Setup(service => service.VerifyReplayProtection(It.IsAny<string>()))
-                .ReturnsAsync(true);
-
-            bool res = await appCheckApiClient.Object.VerifyReplayProtection(this.testTokenToExchange).ConfigureAwait(false);
-            Assert.True(res);
+            var versionHeader = header.GetValues("X-Firebase-Client").First();
+            Assert.Equal(AppCheckApiClient.ClientVersion, versionHeader);
         }
     }
 }

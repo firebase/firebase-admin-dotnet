@@ -26,7 +26,6 @@ namespace FirebaseAdmin.Auth
     {
         internal FirebaseToken(Args args)
         {
-            this.AppId = args.AppId;
             this.Issuer = args.Issuer;
             this.Subject = args.Subject;
             this.Audience = args.Audience;
@@ -71,11 +70,6 @@ namespace FirebaseAdmin.Auth
         public string Uid { get; }
 
         /// <summary>
-        /// Gets the Id of the Firebase .
-        /// </summary>
-        public string AppId { get; }
-
-        /// <summary>
         /// Gets the ID of the tenant the user belongs to, if available. Returns null if the ID
         /// token is not scoped to a tenant.
         /// </summary>
@@ -93,14 +87,12 @@ namespace FirebaseAdmin.Auth
         /// <param name="v">FirebaseToken.</param>
         public static implicit operator string(FirebaseToken v)
         {
-            throw new NotImplementedException();
+            return v.Uid;
         }
 
         internal sealed class Args
         {
-            public string AppId { get; internal set; }
-
-            [JsonProperty("app_id")]
+            [JsonProperty("iss")]
             internal string Issuer { get; set; }
 
             [JsonProperty("sub")]

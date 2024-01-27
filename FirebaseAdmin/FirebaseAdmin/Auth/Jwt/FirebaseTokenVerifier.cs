@@ -37,8 +37,6 @@ namespace FirebaseAdmin.Auth.Jwt
         private const string SessionCookieCertUrl = "https://www.googleapis.com/identitytoolkit/v3/"
             + "relyingparty/publicKeys";
 
-        private const string AppCheckCertUrl = "https://firebaseappcheck.googleapis.com/v1/jwks";
-
         private const string FirebaseAudience = "https://identitytoolkit.googleapis.com/"
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
@@ -153,44 +151,6 @@ namespace FirebaseAdmin.Auth.Jwt
                 Operation = "VerifySessionCookieAsync()",
                 Url = "https://firebase.google.com/docs/auth/admin/manage-cookies",
                 Issuer = "https://session.firebase.google.com/",
-                Clock = clock,
-                PublicKeySource = keySource,
-                InvalidTokenCode = AuthErrorCode.InvalidSessionCookie,
-                ExpiredTokenCode = AuthErrorCode.ExpiredSessionCookie,
-            };
-            return new FirebaseTokenVerifier(args);
-        }
-
-        internal static FirebaseTokenVerifier CreateAppCheckVerifier(FirebaseApp app)
-        {
-            var projectId = app.GetProjectId();
-            if (string.IsNullOrEmpty(projectId))
-            {
-                string errorMessage = "Failed to determine project ID. Initialize the SDK with service account " +
-                      "credentials or set project ID as an app option. Alternatively, set the " +
-                      "GOOGLE_CLOUD_PROJECT environment variable.";
-                throw new ArgumentException(
-                    "unknown-error",
-                    errorMessage);
-            }
-
-            var keySource = new HttpPublicKeySource(
-                AppCheckCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
-            return CreateAppCheckVerifier(projectId, keySource);
-        }
-
-        internal static FirebaseTokenVerifier CreateAppCheckVerifier(
-            string projectId,
-            IPublicKeySource keySource,
-            IClock clock = null)
-        {
-            var args = new FirebaseTokenVerifierArgs()
-            {
-                ProjectId = projectId,
-                ShortName = "app check",
-                Operation = "VerifyAppCheckAsync()",
-                Url = "https://firebase.google.com/docs/app-check/",
-                Issuer = "https://firebaseappcheck.googleapis.com/",
                 Clock = clock,
                 PublicKeySource = keySource,
                 InvalidTokenCode = AuthErrorCode.InvalidSessionCookie,

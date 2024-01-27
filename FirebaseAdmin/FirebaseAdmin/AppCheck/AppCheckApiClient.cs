@@ -1,156 +1,213 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net.Http;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-using FirebaseAdmin.Auth;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using static Google.Apis.Requests.BatchRequest;
+using FirebaseAdmin.Util;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
+using Google.Apis.Json;
+using Google.Apis.Util;
 
-namespace FirebaseAdmin.Check
+namespace FirebaseAdmin.AppCheck
 {
     /// <summary>
     /// Class that facilitates sending requests to the Firebase App Check backend API.
     /// </summary>
-    /// <returns>A task that completes with the creation of a new App Check token.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if an error occurs while creating the custom token.</exception>
-    /// <value>The Firebase app instance.</value>
-    internal class AppCheckApiClient
+    internal sealed class AppCheckApiClient : IDisposable
     {
-        private const string ApiUrlFormat = "https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken";
+        private const string AppCheckUrlFormat = "https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken";
         private const string OneTimeUseTokenVerificationUrlFormat = "https://firebaseappcheck.googleapis.com/v1beta/projects/{projectId}:verifyAppCheckToken";
-        private readonly FirebaseApp app;
-        private string projectId;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AppCheckApiClient"/> class.
-        /// </summary>
-        /// <param name="value"> Initailize FirebaseApp. </param>
-        public AppCheckApiClient(FirebaseApp value)
+        private readonly ErrorHandlingHttpClient<FirebaseAppCheckException> httpClient;
+        private readonly string projectId;
+
+        internal AppCheckApiClient(Args args)
         {
-            if (value == null || value.Options == null)
+            string noProjectId = "Project ID is required to access app check service. Use a service account "
+                    + "credential or set the project ID explicitly via AppOptions. Alternatively "
+                    + "you can set the project ID via the GOOGLE_CLOUD_PROJECT environment "
+                    + "variable.";
+            if (string.IsNullOrEmpty(args.ProjectId))
             {
-                throw new ArgumentException("Argument passed to admin.appCheck() must be a valid Firebase app instance.");
+                throw new FirebaseAppCheckException(
+                    ErrorCode.InvalidArgument,
+                    noProjectId,
+                    AppCheckErrorCode.InvalidArgument);
             }
 
-            this.app = value;
-            this.projectId = this.app.Options.ProjectId;
+            this.httpClient = new ErrorHandlingHttpClient<FirebaseAppCheckException>(
+                new ErrorHandlingHttpClientArgs<FirebaseAppCheckException>()
+                {
+                    HttpClientFactory = args.ClientFactory.ThrowIfNull(nameof(args.ClientFactory)),
+                    Credential = args.Credential.ThrowIfNull(nameof(args.Credential)),
+                    RequestExceptionHandler = AppCheckErrorHandler.Instance,
+                    ErrorResponseHandler = AppCheckErrorHandler.Instance,
+                    DeserializeExceptionHandler = AppCheckErrorHandler.Instance,
+                    RetryOptions = args.RetryOptions,
+                });
+            this.projectId = args.ProjectId;
+        }
+
+        internal static string ClientVersion
+        {
+            get
+            {
+                return $"fire-admin-dotnet/{FirebaseApp.GetSdkVersion()}";
+            }
+        }
+
+        public void Dispose()
+        {
+            this.httpClient.Dispose();
         }
 
         /// <summary>
         /// Exchange a signed custom token to App Check token.
         /// </summary>
-        /// <param name="customToken"> The custom token to be exchanged. </param>
-        /// <param name="appId"> The mobile App ID.</param>
-        /// <returns>A <see cref="Task{AppCheckToken}"/> A promise that fulfills with a `AppCheckToken`.</returns>
+        /// <param name="customToken">The custom token to be exchanged.</param>
+        /// <param name="appId">The mobile App ID.</param>
+        /// <returns>A promise that fulfills with a `AppCheckToken`.</returns>
         public async Task<AppCheckToken> ExchangeTokenAsync(string customToken, string appId)
         {
             if (string.IsNullOrEmpty(customToken))
             {
-                throw new ArgumentNullException("First argument passed to customToken must be a valid Firebase app instance.");
+                throw new FirebaseAppCheckException(
+                    ErrorCode.InvalidArgument,
+                    "customToken must be a non-empty string.",
+                    AppCheckErrorCode.InvalidArgument);
             }
 
             if (string.IsNullOrEmpty(appId))
             {
-                throw new ArgumentNullException("Second argument passed to appId must be a valid Firebase app instance.");
+                throw new FirebaseAppCheckException(
+                    ErrorCode.InvalidArgument,
+                    "appId must be a non-empty string.",
+                    AppCheckErrorCode.InvalidArgument);
             }
 
+            var body = new ExchangeTokenRequest()
+            {
+                CustomToken = customToken,
+            };
+
             var url = this.GetUrl(appId);
-            var content = new StringContent(JsonConvert.SerializeObject(new { customToken }), Encoding.UTF8, "application/json");
             var request = new HttpRequestMessage()
             {
                 Method = HttpMethod.Post,
                 RequestUri = new Uri(url),
-                Content = content,
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
             };
-            request.Headers.Add("X-Firebase-Client", "fire-admin-node/" + $"{FirebaseApp.GetSdkVersion()}");
-            var httpClient = new HttpClient();
-            var response = await httpClient.SendAsync(request).ConfigureAwait(false);
-            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                throw new InvalidOperationException($"BadRequest: {errorContent}");
-            }
-            else if (!response.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException("network error");
-            }
+            AddCommonHeaders(request);
 
-            JObject responseData = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-            string tokenValue = responseData["data"]["token"].ToString();
-            int ttlValue = this.StringToMilliseconds(responseData["data"]["ttl"].ToString());
-            AppCheckToken appCheckToken = new (tokenValue, ttlValue);
-            return appCheckToken;
+            try
+            {
+                var response = await this.httpClient
+                    .SendAndDeserializeAsync<ExchangeTokenResponse>(request)
+                    .ConfigureAwait(false);
+
+                var appCheck = this.ToAppCheckToken(response.Result);
+
+                return appCheck;
+            }
+            catch (HttpRequestException ex)
+            {
+                throw AppCheckErrorHandler.Instance.HandleHttpRequestException(ex);
+            }
         }
 
-        /// <summary>
-        /// Exchange a signed custom token to App Check token.
-        /// </summary>
-        /// <param name="token"> The custom token to be exchanged. </param>
-        /// <returns>A alreadyConsumed is true.</returns>
-        public async Task<bool> VerifyReplayProtection(string token)
+        public async Task<bool> VerifyReplayProtectionAsync(string token)
         {
             if (string.IsNullOrEmpty(token))
             {
-                throw new ArgumentException("invalid-argument", "`token` must be a non-empty string.");
+                throw new FirebaseAppCheckException(
+                    ErrorCode.InvalidArgument,
+                    "`tokne` must be a non-empty string.",
+                    AppCheckErrorCode.InvalidArgument);
             }
 
-            string url = this.GetVerifyTokenUrl();
+            var body = new VerifyTokenRequest()
+            {
+                AppCheckToken = token,
+            };
 
+            string url = this.GetVerifyTokenUrl();
             var request = new HttpRequestMessage()
             {
                 Method = HttpMethod.Post,
                 RequestUri = new Uri(url),
-                Content = new StringContent(token),
+                Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
             };
+            AddCommonHeaders(request);
 
-            var httpClient = new HttpClient();
-            var response = await httpClient.SendAsync(request).ConfigureAwait(false);
+            bool ret = false;
 
-            var responseData = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-            bool alreadyConsumed = (bool)responseData["data"]["alreadyConsumed"];
-            return alreadyConsumed;
-        }
-
-        /// <summary>
-        /// Get Verify Token Url .
-        /// </summary>
-        /// <returns>A formatted verify token url.</returns>
-        private string GetVerifyTokenUrl()
-        {
-            var urlParams = new Dictionary<string, string>
+            try
             {
-                { "projectId", this.projectId },
-            };
+                var response = await this.httpClient
+                    .SendAndDeserializeAsync<VerifyTokenResponse>(request)
+                    .ConfigureAwait(false);
 
-            string baseUrl = this.FormatString(OneTimeUseTokenVerificationUrlFormat, urlParams);
-            return this.FormatString(baseUrl, null);
-        }
-
-        /// <summary>
-        /// Get url from FirebaseApp Id .
-        /// </summary>
-        /// <param name="appId">The FirebaseApp Id.</param>
-        /// <returns>A formatted verify token url.</returns>
-        private string GetUrl(string appId)
-        {
-            if (string.IsNullOrEmpty(this.projectId))
+                ret = response.Result.AlreadyConsumed;
+            }
+            catch (HttpRequestException e)
             {
-                this.projectId = this.app.GetProjectId();
+                AppCheckErrorHandler.Instance.HandleHttpRequestException(e);
             }
 
+            return ret;
+        }
+
+        internal static AppCheckApiClient Create(FirebaseApp app)
+        {
+            var args = new Args
+            {
+                ClientFactory = app.Options.HttpClientFactory,
+                Credential = app.Options.Credential,
+                ProjectId = app.Options.ProjectId,
+                RetryOptions = RetryOptions.Default,
+            };
+
+            return new AppCheckApiClient(args);
+        }
+
+        private static void AddCommonHeaders(HttpRequestMessage request)
+        {
+            request.Headers.Add("X-Firebase-Client", ClientVersion);
+        }
+
+        private AppCheckToken ToAppCheckToken(ExchangeTokenResponse resp)
+        {
+            if (resp == null || string.IsNullOrEmpty(resp.Token))
+            {
+                throw new FirebaseAppCheckException(
+                    ErrorCode.PermissionDenied,
+                    "Token is not valid",
+                    AppCheckErrorCode.AppCheckTokenExpired);
+            }
+
+            if (string.IsNullOrEmpty(resp.Ttl) || !resp.Ttl.EndsWith("s"))
+            {
+                throw new FirebaseAppCheckException(
+                    ErrorCode.InvalidArgument,
+                    "`ttl` must be a valid duration string with the suffix `s`.",
+                    AppCheckErrorCode.InvalidArgument);
+            }
+
+            return new AppCheckToken(resp.Token, this.StringToMilliseconds(resp.Ttl));
+        }
+
+        private string GetUrl(string appId)
+        {
             if (string.IsNullOrEmpty(this.projectId))
             {
                 string errorMessage = "Failed to determine project ID. Initialize the SDK with service account " +
                       "credentials or set project ID as an app option. Alternatively, set the " +
                       "GOOGLE_CLOUD_PROJECT environment variable.";
-                throw new ArgumentException(
-                    "unknown-error",
-                    errorMessage);
+
+                throw new FirebaseAppCheckException(
+                    ErrorCode.Unknown,
+                    errorMessage,
+                    AppCheckErrorCode.UnknownError);
             }
 
             var urlParams = new Dictionary<string, string>
@@ -158,41 +215,74 @@ namespace FirebaseAdmin.Check
                 { "projectId", this.projectId },
                 { "appId", appId },
             };
-            string baseUrl = this.FormatString(ApiUrlFormat, urlParams);
-            return baseUrl;
+
+            return HttpUtils.FormatString(AppCheckUrlFormat, urlParams);
         }
 
-        /// <summary>
-        /// Converts a duration string with the suffix `s` to milliseconds.
-        /// </summary>
-        /// <param name="duration">The duration as a string with the suffix "s" preceded by the number of seconds.</param>
-        /// <returns> The duration in milliseconds.</returns>
         private int StringToMilliseconds(string duration)
         {
-            if (string.IsNullOrEmpty(duration) || !duration.EndsWith("s"))
-            {
-                throw new ArgumentException("invalid-argument", "`ttl` must be a valid duration string with the suffix `s`.");
-            }
-
             string modifiedString = duration.Remove(duration.Length - 1);
             return int.Parse(modifiedString) * 1000;
         }
 
-        /// <summary>
-        /// Formats a string of form 'project/{projectId}/{api}' and replaces with corresponding arguments {projectId: '1234', api: 'resource'}.
-        /// </summary>
-        /// <param name="str">The original string where the param need to be replaced.</param>
-        /// <param name="urlParams">The optional parameters to replace in thestring.</param>
-        /// <returns> The resulting formatted string. </returns>
-        private string FormatString(string str, Dictionary<string, string> urlParams)
+        private string GetVerifyTokenUrl()
         {
-            string formatted = str;
-            foreach (var key in urlParams.Keys)
+            if (string.IsNullOrEmpty(this.projectId))
             {
-                formatted = Regex.Replace(formatted, $"{{{key}}}", urlParams[key]);
+                string errorMessage = "Failed to determine project ID. Initialize the SDK with service account " +
+                      "credentials or set project ID as an app option. Alternatively, set the " +
+                      "GOOGLE_CLOUD_PROJECT environment variable.";
+
+                throw new FirebaseAppCheckException(
+                    ErrorCode.Unknown,
+                    errorMessage,
+                    AppCheckErrorCode.UnknownError);
             }
 
-            return formatted;
+            var urlParams = new Dictionary<string, string>
+            {
+                { "projectId", this.projectId },
+            };
+
+            return HttpUtils.FormatString(OneTimeUseTokenVerificationUrlFormat, urlParams);
+        }
+
+        internal sealed class Args
+        {
+            internal HttpClientFactory ClientFactory { get; set; }
+
+            internal GoogleCredential Credential { get; set; }
+
+            internal string ProjectId { get; set; }
+
+            internal RetryOptions RetryOptions { get; set; }
+        }
+
+        internal class ExchangeTokenRequest
+        {
+            [Newtonsoft.Json.JsonProperty("customToken")]
+            public string CustomToken { get; set; }
+        }
+
+        internal class ExchangeTokenResponse
+        {
+            [Newtonsoft.Json.JsonProperty("token")]
+            public string Token { get; set; }
+
+            [Newtonsoft.Json.JsonProperty("ttl")]
+            public string Ttl { get; set; }
+        }
+
+        internal class VerifyTokenRequest
+        {
+            [Newtonsoft.Json.JsonProperty("appCheckToken")]
+            public string AppCheckToken { get; set; }
+        }
+
+        internal class VerifyTokenResponse
+        {
+            [Newtonsoft.Json.JsonProperty("alreadyConsumed")]
+            public bool AlreadyConsumed { get; set; }
         }
     }
 }

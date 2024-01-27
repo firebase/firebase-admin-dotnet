@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
 
@@ -28,6 +29,17 @@ namespace FirebaseAdmin.Util
         internal static readonly HttpMethod Patch = new HttpMethod("PATCH");
 
         private HttpUtils() { }
+
+        public static string FormatString(string str, Dictionary<string, string> urlParams)
+        {
+            string formatted = str;
+            foreach (var key in urlParams.Keys)
+            {
+                formatted = Regex.Replace(formatted, $"{{{key}}}", urlParams[key]);
+            }
+
+            return formatted;
+        }
 
         internal static string EncodeQueryParams(IDictionary<string, object> queryParams)
         {

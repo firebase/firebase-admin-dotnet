@@ -1,17 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Jwt.Tests;
-using FirebaseAdmin.Check;
-using Google.Apis.Auth.OAuth2;
-using Moq;
+using Google.Apis.Auth;
+using Google.Apis.Util;
+using Newtonsoft.Json;
 using Xunit;
 
-namespace FirebaseAdmin.Tests.AppCheck
+namespace FirebaseAdmin.AppCheck.Tests
 {
     public class AppCheckTokenVerifierTest
     {
@@ -21,89 +19,29 @@ namespace FirebaseAdmin.Tests.AppCheck
             new object[] { string.Empty },
         };
 
-        private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromAccessToken("test-token");
-
-        [Fact]
-        public void ProjectIdFromOptions()
+        public static readonly IEnumerable<object[]> InvalidTokens = new List<object[]>
         {
-            var app = FirebaseApp.Create(new AppOptions()
-            {
-                Credential = MockCredential,
-                ProjectId = "explicit-project-id",
-            });
-            var verifier = AppCheckTokenVerify.Create(app);
-            Assert.Equal("explicit-project-id", verifier.ProjectId);
-        }
+            new object[] { "TestToken" },
+            new object[] { "Test.Token" },
+            new object[] { "Test.Token.Test.Token" },
+        };
 
-        [Fact]
-        public void ProjectIdFromServiceAccount()
+        public static readonly IEnumerable<object[]> InvalidAudiences = new List<object[]>
         {
-            var app = FirebaseApp.Create(new AppOptions()
-            {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
-            });
-            var verifier = AppCheckTokenVerify.Create(app);
-            Assert.Equal("test-project", verifier.ProjectId);
-        }
+            new object[] { new List<string> { "incorrectAudience" } },
+            new object[] { new List<string> { "12345678", "project_id" } },
+            new object[] { new List<string> { "projects/" + "12345678", "project_id" } },
+        };
 
-        [Theory]
-        [MemberData(nameof(InvalidStrings))]
-        public void InvalidProjectId(string projectId)
-        {
-            var args = FullyPopulatedArgs();
-            args.ProjectId = projectId;
-
-            Assert.Throws<ArgumentException>(() => new AppCheckTokenVerify(args));
-        }
+        private readonly string appId = "1:1234:android:1234";
 
         [Fact]
         public void NullKeySource()
         {
             var args = FullyPopulatedArgs();
-            args.PublicKeySource = null;
+            args.KeySource = null;
 
-            Assert.Throws<ArgumentNullException>(() => new AppCheckTokenVerify(args));
-        }
-
-        [Theory]
-        [MemberData(nameof(InvalidStrings))]
-        public void InvalidShortName(string shortName)
-        {
-            var args = FullyPopulatedArgs();
-            args.ShortName = shortName;
-
-            Assert.Throws<ArgumentException>(() => new AppCheckTokenVerify(args));
-        }
-
-        [Theory]
-        [MemberData(nameof(InvalidStrings))]
-        public void InvalidIssuer(string issuer)
-        {
-            var args = FullyPopulatedArgs();
-            args.Issuer = issuer;
-
-            Assert.Throws<ArgumentException>(() => new AppCheckTokenVerify(args));
-        }
-
-        [Theory]
-        [MemberData(nameof(InvalidStrings))]
-        public void InvalidOperation(string operation)
-        {
-            var args = FullyPopulatedArgs();
-            args.Operation = operation;
-
-            Assert.Throws<ArgumentException>(() => new AppCheckTokenVerify(args));
-        }
-
-        [Theory]
-        [MemberData(nameof(InvalidStrings))]
-        public void InvalidUrl(string url)
-        {
-            var args = FullyPopulatedArgs();
-            args.Url = url;
-
-            Assert.Throws<ArgumentException>(() => new AppCheckTokenVerify(args));
+            Assert.Throws<ArgumentNullException>(() => new AppCheckTokenVerifier(args));
         }
 
         [Fact]
@@ -111,28 +49,138 @@ namespace FirebaseAdmin.Tests.AppCheck
         {
             var args = FullyPopulatedArgs();
 
-            var verifier = new AppCheckTokenVerify(args);
+            var verifier = new AppCheckTokenVerifier(args);
 
             Assert.Equal("test-project", verifier.ProjectId);
         }
 
-        [Fact]
-        public void Dispose()
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public async Task VerifyWithNullEmptyToken(string token)
         {
-            FirebaseApp.DeleteAll();
+            var args = FullyPopulatedArgs();
+            var tokenVerifier = new AppCheckTokenVerifier(args);
+
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await tokenVerifier.VerifyTokenAsync(token));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("App Check token must not be null or empty.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidArgument, ex.AppCheckErrorCode);
         }
 
-        private static FirebaseTokenVerifierArgs FullyPopulatedArgs()
+        [Theory]
+        [MemberData(nameof(InvalidStrings))]
+        public async Task VerifyWithInvalidProjectId(string projectId)
         {
-            return new FirebaseTokenVerifierArgs
+            var args = FullyPopulatedArgs();
+            args.ProjectId = projectId;
+            var tokenVerifier = new AppCheckTokenVerifier(args);
+
+            string token = "test-token";
+
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await tokenVerifier.VerifyTokenAsync(token));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("Must initialize app with a cert credential or set your Firebase project ID as the GOOGLE_CLOUD_PROJECT environment variable to verify an App Check token.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidCredential, ex.AppCheckErrorCode);
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidTokens))]
+        public async Task VerifyWithInvalidToken(string token)
+        {
+            var args = FullyPopulatedArgs();
+            var tokenVerifier = new AppCheckTokenVerifier(args);
+
+            var ex = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                async () => await tokenVerifier.VerifyTokenAsync(token));
+
+            Assert.Equal(ErrorCode.InvalidArgument, ex.ErrorCode);
+            Assert.Equal("Incorrect number of segments in app check token.", ex.Message);
+            Assert.Equal(AppCheckErrorCode.InvalidArgument, ex.AppCheckErrorCode);
+        }
+
+        [Theory]
+        [MemberData(nameof(InvalidAudiences))]
+        public async Task CheckInvalidAudience(List<string> aud)
+        {
+            string token = await this.GeneratorAppCheckTokenAsync(aud).ConfigureAwait(false);
+            string expected = "The provided app check token has incorrect \"aud\" (audience) claim";
+            var args = FullyPopulatedArgs();
+            AppCheckTokenVerifier verifier = new AppCheckTokenVerifier(args);
+            var result = await Assert.ThrowsAsync<FirebaseAppCheckException>(() => verifier.VerifyTokenAsync(token)).ConfigureAwait(false);
+            Assert.Contains(expected, result.Message);
+        }
+
+        [Fact]
+        public async Task CheckEmptyAudience()
+        {
+            string token = await this.GeneratorAppCheckTokenAsync([]).ConfigureAwait(false);
+            var args = FullyPopulatedArgs();
+            AppCheckTokenVerifier verifier = new AppCheckTokenVerifier(args);
+            var result = await Assert.ThrowsAsync<FirebaseAppCheckException>(() => verifier.VerifyTokenAsync(token)).ConfigureAwait(false);
+            Assert.Equal("Failed to verify app check signature.", result.Message);
+        }
+
+        [Fact]
+        public async Task VerifyToken()
+        {
+            List<string> aud = new List<string> { "12345678", "projects/test-project" };
+            string token = await this.GeneratorAppCheckTokenAsync(aud).ConfigureAwait(false);
+
+            var args = FullyPopulatedArgs();
+            AppCheckTokenVerifier verifier = new AppCheckTokenVerifier(args);
+            await Assert.ThrowsAsync<FirebaseAppCheckException>(() => verifier.VerifyTokenAsync(token)).ConfigureAwait(false);
+        }
+
+        private static AppCheckTokenVerifier.Args FullyPopulatedArgs()
+        {
+            return new AppCheckTokenVerifier.Args
             {
                 ProjectId = "test-project",
-                ShortName = "short name",
-                Operation = "VerifyToken()",
-                Url = "https://firebase.google.com",
-                Issuer = "https://firebase.google.com/",
-                PublicKeySource = JwtTestUtils.DefaultKeySource,
+                Clock = null,
+                KeySource = JwtTestUtils.DefaultKeySource,
             };
         }
+
+        private async Task<string> GeneratorAppCheckTokenAsync(List<string> audience)
+        {
+            DateTime unixEpoch = new DateTime(
+                    1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var header = new JsonWebSignature.Header()
+            {
+                Algorithm = "RS256",
+                KeyId = "FGQdnRlzAmKyKr6-Hg_kMQrBkj_H6i6ADnBQz4OI6BU",
+            };
+
+            var signer = EmulatorSigner.Instance;
+            CancellationToken cancellationToken = default;
+            int issued = (int)(SystemClock.Default.UtcNow - unixEpoch).TotalSeconds;
+            var keyId = await signer.GetKeyIdAsync(cancellationToken).ConfigureAwait(false);
+            var payload = new CustomTokenPayload()
+            {
+                Subject = this.appId,
+                Issuer = "https://firebaseappcheck.googleapis.com/" + this.appId,
+                AppId = this.appId,
+                Audience = audience,
+                ExpirationTimeSeconds = 60,
+                IssuedAtTimeSeconds = issued,
+                Ttl = "180000",
+            };
+
+            return await JwtUtils.CreateSignedJwtAsync(
+                header, payload, signer).ConfigureAwait(false);
+        }
+    }
+
+    internal class CustomTokenPayload : JsonWebToken.Payload
+    {
+        [JsonPropertyAttribute("app_id")]
+        public string AppId { get; set; }
+
+        [JsonPropertyAttribute("ttl")]
+        public string Ttl { get; set; }
     }
 }

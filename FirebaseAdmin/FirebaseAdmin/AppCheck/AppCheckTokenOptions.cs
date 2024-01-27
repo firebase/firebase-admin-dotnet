@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace FirebaseAdmin.Auth.Jwt
+﻿namespace FirebaseAdmin.AppCheck
 {
     /// <summary>
     /// Representing App Check token options.
