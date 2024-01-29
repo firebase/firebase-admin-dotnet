@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -23,6 +24,8 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Util;
 using Google.Apis.Http;
 using Google.Apis.Util;
+using Newtonsoft.Json;
+using static Google.Apis.Requests.BatchRequest;
 using RSAKey = System.Security.Cryptography.RSA;
 
 namespace FirebaseAdmin.Auth.Jwt
@@ -74,11 +77,15 @@ namespace FirebaseAdmin.Auth.Jwt
                                 Method = HttpMethod.Get,
                                 RequestUri = new Uri(this.certUrl),
                             };
+
                             var response = await httpClient
                                 .SendAndDeserializeAsync<Dictionary<string, string>>(request, cancellationToken)
                                 .ConfigureAwait(false);
+                            if (this.certUrl != "https://firebaseappcheck.googleapis.com/v1/jwks")
+                            {
+                                this.cachedKeys = this.ParseKeys(response);
+                            }
 
-                            this.cachedKeys = this.ParseKeys(response);
                             var cacheControl = response.HttpResponse.Headers.CacheControl;
                             if (cacheControl?.MaxAge != null)
                             {

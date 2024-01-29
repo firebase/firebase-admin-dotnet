@@ -18,6 +18,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Google.Apis.Auth;
 using Xunit;
+#pragma warning disable SYSLIB0027
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
