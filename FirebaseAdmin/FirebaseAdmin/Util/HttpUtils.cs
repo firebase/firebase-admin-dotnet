@@ -30,17 +30,6 @@ namespace FirebaseAdmin.Util
 
         private HttpUtils() { }
 
-        public static string FormatString(string str, Dictionary<string, string> urlParams)
-        {
-            string formatted = str;
-            foreach (var key in urlParams.Keys)
-            {
-                formatted = Regex.Replace(formatted, $"{{{key}}}", urlParams[key]);
-            }
-
-            return formatted;
-        }
-
         internal static string EncodeQueryParams(IDictionary<string, object> queryParams)
         {
             var queryString = string.Empty;

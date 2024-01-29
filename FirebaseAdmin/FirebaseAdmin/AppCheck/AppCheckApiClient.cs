@@ -23,12 +23,12 @@ namespace FirebaseAdmin.AppCheck
 
         internal AppCheckApiClient(Args args)
         {
-            string noProjectId = "Project ID is required to access app check service. Use a service account "
+            if (string.IsNullOrEmpty(args.ProjectId))
+            {
+                string noProjectId = "Project ID is required to access app check service. Use a service account "
                     + "credential or set the project ID explicitly via AppOptions. Alternatively "
                     + "you can set the project ID via the GOOGLE_CLOUD_PROJECT environment "
                     + "variable.";
-            if (string.IsNullOrEmpty(args.ProjectId))
-            {
                 throw new FirebaseAppCheckException(
                     ErrorCode.InvalidArgument,
                     noProjectId,
@@ -216,7 +216,7 @@ namespace FirebaseAdmin.AppCheck
                 { "appId", appId },
             };
 
-            return HttpUtils.FormatString(AppCheckUrlFormat, urlParams);
+            return StringUtils.ReplacePlaceholders(AppCheckUrlFormat, urlParams);
         }
 
         private int StringToMilliseconds(string duration)
@@ -244,7 +244,7 @@ namespace FirebaseAdmin.AppCheck
                 { "projectId", this.projectId },
             };
 
-            return HttpUtils.FormatString(OneTimeUseTokenVerificationUrlFormat, urlParams);
+            return StringUtils.ReplacePlaceholders(OneTimeUseTokenVerificationUrlFormat, urlParams);
         }
 
         internal sealed class Args
