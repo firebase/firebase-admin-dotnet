@@ -64,19 +64,19 @@ namespace FirebaseAdmin.Auth.Tests
             if (options.UserManagerRequestHandler != null)
             {
                 args.UserManager = new Lazy<FirebaseUserManager>(
-                    this.CreateUserManager(options));
+                    () => this.CreateUserManager(options));
             }
 
             if (options.ProviderConfigRequestHandler != null)
             {
                 args.ProviderConfigManager = new Lazy<ProviderConfigManager>(
-                    this.CreateProviderConfigManager(options));
+                    () => this.CreateProviderConfigManager(options));
             }
 
             if (options.IdTokenVerifier)
             {
                 args.IdTokenVerifier = new Lazy<FirebaseTokenVerifier>(
-                    this.CreateIdTokenVerifier());
+                    () => this.CreateIdTokenVerifier());
             }
 
             if (options.SessionCookieVerifier)
@@ -84,7 +84,7 @@ namespace FirebaseAdmin.Auth.Tests
                 if (args is FirebaseAuth.Args)
                 {
                     (args as FirebaseAuth.Args).SessionCookieVerifier =
-                        new Lazy<FirebaseTokenVerifier>(this.CreateSessionCookieVerifier());
+                        new Lazy<FirebaseTokenVerifier>(() => this.CreateSessionCookieVerifier());
                 }
                 else
                 {
@@ -95,7 +95,7 @@ namespace FirebaseAdmin.Auth.Tests
 
             if (options.TokenFactory)
             {
-                args.TokenFactory = new Lazy<FirebaseTokenFactory>(this.CreateTokenFactory());
+                args.TokenFactory = new Lazy<FirebaseTokenFactory>(() => this.CreateTokenFactory());
             }
         }
 

@@ -361,7 +361,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 RetryOptions = RetryOptions.NoBackOff,
             });
             var args = FirebaseAuth.Args.CreateDefault();
-            args.UserManager = new Lazy<FirebaseUserManager>(userManager);
+            args.UserManager = new Lazy<FirebaseUserManager>(() => userManager);
             return new FirebaseAuth(args);
         }
 

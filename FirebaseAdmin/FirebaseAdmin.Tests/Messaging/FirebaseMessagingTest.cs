@@ -99,7 +99,7 @@ namespace FirebaseAdmin.Messaging.Tests
             FirebaseApp.Create(new AppOptions() { Credential = MockCredential });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
-            await Assert.ThrowsAsync<OperationCanceledException>(
+            await Assert.ThrowsAsync<TaskCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
         }
@@ -114,7 +114,7 @@ namespace FirebaseAdmin.Messaging.Tests
             });
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
-            await Assert.ThrowsAsync<OperationCanceledException>(
+            await Assert.ThrowsAsync<TaskCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
         }

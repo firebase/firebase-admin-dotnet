@@ -47,7 +47,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         private bool Verify(byte[] data, byte[] signature)
         {
             var x509cert = new X509Certificate2(File.ReadAllBytes("./resources/public_cert.pem"));
-            var rsa = (RSA)x509cert.PublicKey.Key;
+            var rsa = (RSA)x509cert.GetRSAPublicKey();
             return rsa.VerifyData(
                 data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }

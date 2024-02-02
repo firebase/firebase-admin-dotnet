@@ -339,7 +339,7 @@ namespace FirebaseAdmin.Messaging.Tests
                                             "color", new JObject()
                                             {
                                                 { "red", 0.6666667 },
-                                                { "green", 0.733333349 },
+                                                { "green", 0.73333335 },
                                                 { "blue", 0.8 },
                                                 { "alpha", 0.8666667 },
                                             }

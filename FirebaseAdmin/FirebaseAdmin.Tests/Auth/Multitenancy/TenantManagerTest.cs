@@ -77,7 +77,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
         {
             var strings = new List<string>() { null, string.Empty };
             return TestConfigs.SelectMany(
-                config => strings, (config, str) => config.Append(str).ToArray());
+                config => strings, (config, str) => config.Concat(new object[] { str }).ToArray());
         }
 
         [Theory]
@@ -669,7 +669,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
                     EmulatorHost = this.EmulatorHost,
                 });
                 var args = FirebaseAuth.Args.CreateDefault();
-                args.TenantManager = new Lazy<TenantManager>(tenantManager);
+                args.TenantManager = new Lazy<TenantManager>(() => tenantManager);
                 return new FirebaseAuth(args);
             }
 
