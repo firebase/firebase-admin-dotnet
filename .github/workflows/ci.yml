@@ -7,6 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        dotnet-version: [ 3.1.x, 6.0.x ]
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -17,12 +18,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v4
 
     - name: Setup .NET Core 2.1
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.1.x
+        dotnet-version: ${{ matrix.dotnet-version }}
 
     - name: Install dependencies
       run: dotnet msbuild /t:restore FirebaseAdmin
