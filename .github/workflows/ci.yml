@@ -26,7 +26,7 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
 
     - name: Build with dotnet
-      run: ./github/scripts/./builder.sh
+      run: .github/scripts/./builder.sh
 
     - name: Run unit tests
       run: |
