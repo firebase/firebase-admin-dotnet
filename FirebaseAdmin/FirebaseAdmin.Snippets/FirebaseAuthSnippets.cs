@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
@@ -582,9 +583,10 @@ namespace FirebaseAdmin.Snippets
             object isAdmin;
             if (user.CustomClaims.TryGetValue("admin", out isAdmin) && (bool)isAdmin)
             {
-                var claims = new Dictionary<string, object>(user.CustomClaims);
+                var claims = user.CustomClaims.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 // Add level.
-                claims["level"] = 10;
+                var level = 10;
+                claims["level"] = level;
                 // Add custom claims for additional privileges.
                 await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(user.Uid, claims);
             }

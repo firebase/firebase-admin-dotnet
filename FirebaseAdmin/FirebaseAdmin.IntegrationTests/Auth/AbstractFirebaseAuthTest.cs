@@ -17,10 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using FirebaseAdmin.Auth;
 using FirebaseAdmin.Auth.Hash;
 using Google.Apis.Auth.OAuth2;
+using Microsoft.AspNetCore.WebUtilities;
 using Xunit;
 
 namespace FirebaseAdmin.IntegrationTests.Auth
@@ -603,7 +603,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 user.Email, EmailLinkSettings);
 
             var uri = new Uri(link);
-            var query = HttpUtility.ParseQueryString(uri.Query);
+            var query = QueryHelpers.ParseQuery(uri.Query);
             Assert.Equal(ContinueUrl, query["continueUrl"]);
             Assert.Equal("verifyEmail", query["mode"]);
         }
@@ -617,7 +617,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 user.Email, EmailLinkSettings);
 
             var uri = new Uri(link);
-            var query = HttpUtility.ParseQueryString(uri.Query);
+            var query = QueryHelpers.ParseQuery(uri.Query);
             Assert.Equal(ContinueUrl, query["continueUrl"]);
 
             var request = new ResetPasswordRequest()
@@ -645,7 +645,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 user.Email, EmailLinkSettings);
 
             var uri = new Uri(link);
-            var query = HttpUtility.ParseQueryString(uri.Query);
+            var query = QueryHelpers.ParseQuery(uri.Query);
             Assert.Equal(ContinueUrl, query["continueUrl"]);
 
             var idToken = await AuthIntegrationUtils.SignInWithEmailLinkAsync(

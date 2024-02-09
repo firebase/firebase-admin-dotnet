@@ -25,14 +25,10 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
 
-    - name: Install dependencies
-      run: dotnet msbuild /t:restore FirebaseAdmin
-
     - name: Build with dotnet
-      run: |
-        dotnet msbuild FirebaseAdmin/FirebaseAdmin
-        dotnet msbuild FirebaseAdmin/FirebaseAdmin.Snippets
-        dotnet msbuild FirebaseAdmin/FirebaseAdmin.IntegrationTests
+      run: ./github/scripts/./builder.sh
 
     - name: Run unit tests
-      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
+      run: |
+        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --no-build --framework netcoreapp3.1 --configuration Release
+        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --no-build --framework net6.0 --configuration Release
