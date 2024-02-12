@@ -4,29 +4,33 @@ on: pull_request
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        dotnet-version: [ 3.1.x, 6.0.x ]
+
+    runs-on: ubuntu-latest
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       DOTNET_NOLOGO: 1
 
-    runs-on: ${{ matrix.os }}
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup .NET
+    - name: Setup .NET 6
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: 6.0.x
+
+    - name: Setup .NET 3.1
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 3.1.x
+
+    - name: Install dependencies
+      run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
 
     - name: Build with dotnet
-      run: .github/scripts/./builder.sh
+      run: dotnet build FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
 
     - name: Run unit tests
       run: |

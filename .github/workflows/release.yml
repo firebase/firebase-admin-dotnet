@@ -46,23 +46,30 @@ jobs:
     # via the 'ref' client parameter.
     steps:
     - name: Checkout source for staging
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
-    - name: Setup .NET Core 2.1
-      uses: actions/setup-dotnet@v1
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.1.x
+        dotnet-version: 6.0.x
+
+    - name: Setup .NET Core 3.1
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 3.1.x
 
     - name: Install dependencies
-      run: dotnet msbuild /t:restore FirebaseAdmin
+      run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
 
     - name: Build with dotnet
-      run: dotnet msbuild FirebaseAdmin/FirebaseAdmin
+      run: dotnet build FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
 
     - name: Run unit tests
-      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
+      run: 
+        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --no-build --framework netcoreapp3.1 --configuration Release
+        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --no-build --framework net6.0 --configuration Release
 
     - name: Run integration tests
       run: ./.github/scripts/run_integration_tests.sh
@@ -71,7 +78,7 @@ jobs:
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
     - name: Package release artifacts
-      run: dotnet pack -c Release FirebaseAdmin/FirebaseAdmin
+      run: dotnet pack FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
 
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
@@ -100,7 +107,7 @@ jobs:
 
     steps:
     - name: Checkout source for publish
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     # Download the artifacts created by the stage_release job.
     - name: Download release candidates
@@ -108,10 +115,15 @@ jobs:
       with:
         name: Release
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.2.108
+        dotnet-version: 6.0.x
+
+    - name: Setup .NET Core 3.1
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 3.1.x
 
     - name: Publish preflight check
       id: preflight
