@@ -37,4 +37,4 @@ jobs:
 
     - name: Run unit tests
       run: |
-        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --no-build --framework netcoreapp3.1 --configuration Release
+        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --configuration Release
