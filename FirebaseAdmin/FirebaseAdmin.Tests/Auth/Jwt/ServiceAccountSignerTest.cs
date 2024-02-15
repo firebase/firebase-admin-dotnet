@@ -34,7 +34,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(
                 "client@test-project.iam.gserviceaccount.com", await signer.GetKeyIdAsync());
             byte[] data = Encoding.UTF8.GetBytes("Hello world");
-            byte[] signature = signer.SignDataAsync(data).Result;
+            byte[] signature = await signer.SignDataAsync(data);
             Assert.True(this.Verify(data, signature));
         }
 

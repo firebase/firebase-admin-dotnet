@@ -92,42 +92,42 @@ namespace FirebaseAdmin.Auth.Users.Tests
         };
 
         [Fact]
-        public void NoEmail()
+        public async void NoEmail()
         {
             var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
             var auth = this.CreateFirebaseAuth(handler);
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GenerateEmailVerificationLinkAsync(null));
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GenerateEmailVerificationLinkAsync(string.Empty));
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(null));
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(string.Empty));
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GenerateSignInWithEmailLinkAsync(null, ActionCodeSettings));
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GenerateSignInWithEmailLinkAsync(string.Empty, ActionCodeSettings));
         }
 
         [Theory]
         [MemberData(nameof(InvalidActionCodeSettingsArgs))]
-        public void InvalidActionCodeSettings(ActionCodeSettings settings)
+        public async void InvalidActionCodeSettings(ActionCodeSettings settings)
         {
             var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
             var auth = this.CreateFirebaseAuth(handler);
             var email = "user@example.com";
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GenerateEmailVerificationLinkAsync(email, settings));
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GeneratePasswordResetLinkAsync(email, settings));
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.GenerateSignInWithEmailLinkAsync(email, settings));
         }
 
@@ -264,13 +264,13 @@ namespace FirebaseAdmin.Auth.Users.Tests
         }
 
         [Fact]
-        public void SignInWithEmailLinkNoSettings()
+        public async void SignInWithEmailLinkNoSettings()
         {
             var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
             var auth = this.CreateFirebaseAuth(handler);
             var email = "user@example.com";
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await auth.GenerateSignInWithEmailLinkAsync(email, null));
         }
 
