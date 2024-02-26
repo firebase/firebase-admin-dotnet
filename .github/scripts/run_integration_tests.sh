@@ -25,6 +25,6 @@ gpg --quiet --batch --yes --decrypt --passphrase="${FIREBASE_SERVICE_ACCT_KEY}" 
 
 echo "${FIREBASE_API_KEY}" > FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_apikey.txt
 
-dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --no-restore --no-build --framework netcoreapp3.1
-dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --no-restore --no-build --framework net462
-dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --no-restore --no-build --framework net6.0
+dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework netcoreapp3.1
+dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net462
+dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net6.0
