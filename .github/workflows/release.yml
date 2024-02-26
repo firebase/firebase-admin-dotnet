@@ -50,15 +50,14 @@ jobs:
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
-    - name: Setup .NET 6
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
-
-    - name: Setup .NET Core 3.1
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 3.1.x
+        dotnet-version: |
+          3.1.x
+          6.0.x
+          7.0.x
+          8.0.x
 
     - name: Install dependencies
       run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
@@ -67,9 +66,7 @@ jobs:
       run: dotnet build FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
 
     - name: Run unit tests
-      run: |
-        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --no-build --framework netcoreapp3.1 --configuration Release
-        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --no-build --framework net6.0 --configuration Release
+      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests --configuration Release --no-restore --no-build
 
     - name: Run integration tests
       run: ./.github/scripts/run_integration_tests.sh
@@ -78,7 +75,7 @@ jobs:
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
     - name: Package release artifacts
-      run: dotnet pack FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
+      run: dotnet pack FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore --no-build
 
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
@@ -115,15 +112,14 @@ jobs:
       with:
         name: Release
 
-    - name: Setup .NET 6
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
-
-    - name: Setup .NET Core 3.1
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 3.1.x
+        dotnet-version: |
+          3.1.x
+          6.0.x
+          7.0.x
+          8.0.x
 
     - name: Publish preflight check
       id: preflight
