@@ -7,6 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        framework-version: [net462, net6.0]
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -17,21 +18,19 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v4
 
-    - name: Setup .NET Core 2.1
-      uses: actions/setup-dotnet@v1
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.1.x
+        dotnet-version: 6.0.x
 
     - name: Install dependencies
-      run: dotnet msbuild /t:restore FirebaseAdmin
+      run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
 
     - name: Build with dotnet
-      run: |
-        dotnet msbuild FirebaseAdmin/FirebaseAdmin
-        dotnet msbuild FirebaseAdmin/FirebaseAdmin.Snippets
-        dotnet msbuild FirebaseAdmin/FirebaseAdmin.IntegrationTests
+      run: dotnet build FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
 
     - name: Run unit tests
-      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
+      run: |
+        dotnet test FirebaseAdmin/FirebaseAdmin.Tests --configuration Release --no-restore --no-build --framework ${{ matrix.framework-version }}

@@ -45,7 +45,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         internal void Verify(string token, string uid, IDictionary<string, object> claims = null)
         {
-            string[] segments = token.Split(".");
+            string[] segments = token.Split('.');
             Assert.Equal(3, segments.Length);
 
             var header = JwtUtils.Decode<JsonWebSignature.Header>(segments[0]);
@@ -99,7 +99,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             : base(issuer, tenantId)
             {
                 var x509cert = new X509Certificate2(publicKey);
-                this.rsa = (RSA)x509cert.PublicKey.Key;
+                this.rsa = (RSA)x509cert.GetRSAPublicKey();
             }
 
             protected override void AssertSignature(string tokenData, string signature)

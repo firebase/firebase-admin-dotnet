@@ -72,7 +72,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.GetOidcProviderConfigAsync("oidc.provider");
 
             this.AssertOidcProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Get, request.Method);
             config.AssertRequest("oauthIdpConfigs/oidc.provider", request);
@@ -148,7 +148,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.CreateProviderConfigAsync(args);
 
             this.AssertOidcProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Post, request.Method);
             config.AssertRequest("oauthIdpConfigs?oauthIdpConfigId=oidc.provider", request);
@@ -184,7 +184,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.CreateProviderConfigAsync(args);
 
             this.AssertOidcProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Post, request.Method);
             config.AssertRequest(
@@ -271,7 +271,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.UpdateProviderConfigAsync(args);
 
             this.AssertOidcProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(ProviderTestConfig.PatchMethod, request.Method);
             var mask = "clientId,clientSecret,displayName,enabled,issuer,responseType.code,responseType.idToken";
@@ -307,7 +307,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var provider = await auth.UpdateProviderConfigAsync(args);
 
             this.AssertOidcProviderConfig(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(ProviderTestConfig.PatchMethod, request.Method);
             config.AssertRequest(
@@ -382,7 +382,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
             await auth.DeleteProviderConfigAsync("oidc.provider");
 
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Delete, request.Method);
             config.AssertRequest("oauthIdpConfigs/oidc.provider", request);

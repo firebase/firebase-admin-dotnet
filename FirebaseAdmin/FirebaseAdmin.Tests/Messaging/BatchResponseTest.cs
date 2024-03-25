@@ -31,7 +31,7 @@ namespace FirebaseAdmin.Tests.Messaging
 
             Assert.Equal(0, batchResponse.SuccessCount);
             Assert.Equal(0, batchResponse.FailureCount);
-            Assert.Equal(0, batchResponse.Responses.Count);
+            Assert.Empty(batchResponse.Responses);
         }
 
         [Fact]

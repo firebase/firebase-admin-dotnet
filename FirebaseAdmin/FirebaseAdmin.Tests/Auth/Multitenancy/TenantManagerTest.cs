@@ -77,7 +77,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
         {
             var strings = new List<string>() { null, string.Empty };
             return TestConfigs.SelectMany(
-                config => strings, (config, str) => config.Append(str).ToArray());
+                config => strings, (config, str) => config.Concat(new object[] { str }).ToArray());
         }
 
         [Theory]
@@ -93,7 +93,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var provider = await auth.TenantManager.GetTenantAsync("tenant1");
 
             AssertTenant(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Get, request.Method);
             config.AssertRequest("tenants/tenant1", request);
@@ -152,7 +152,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var provider = await auth.TenantManager.CreateTenantAsync(args);
 
             AssertTenant(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Post, request.Method);
             config.AssertRequest("tenants", request);
@@ -178,7 +178,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var provider = await auth.TenantManager.CreateTenantAsync(new TenantArgs());
 
             AssertTenant(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Post, request.Method);
             config.AssertRequest("tenants", request);
@@ -239,7 +239,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var provider = await auth.TenantManager.UpdateTenantAsync("tenant1", args);
 
             AssertTenant(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpUtils.Patch, request.Method);
             var mask = "allowPasswordSignup,displayName,enableEmailLinkSignin";
@@ -270,7 +270,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var provider = await auth.TenantManager.UpdateTenantAsync("tenant1", args);
 
             AssertTenant(provider);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpUtils.Patch, request.Method);
             config.AssertRequest("tenants/tenant1?updateMask=displayName", request);
@@ -354,7 +354,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 
             await auth.TenantManager.DeleteTenantAsync("tenant1");
 
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Delete, request.Method);
             config.AssertRequest("tenants/tenant1", request);
@@ -669,7 +669,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
                     EmulatorHost = this.EmulatorHost,
                 });
                 var args = FirebaseAuth.Args.CreateDefault();
-                args.TenantManager = new Lazy<TenantManager>(tenantManager);
+                args.TenantManager = new Lazy<TenantManager>(() => tenantManager);
                 return new FirebaseAuth(args);
             }
 

@@ -564,7 +564,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             Assert.Equal("token", userPage.NextPageToken);
             Assert.Equal(3, userPage.Count());
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             config.AssertRequest(
                 "accounts:batchGet?maxResults=3", Assert.Single(handler.Requests));
 
@@ -1302,7 +1302,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ReservedClaims(TestConfig config)
+        public async void ReservedClaims(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1314,14 +1314,14 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     { key, "value" },
                 };
 
-                Assert.ThrowsAsync<ArgumentException>(
+                await Assert.ThrowsAsync<ArgumentException>(
                     async () => await auth.SetCustomUserClaimsAsync("user1", customClaims));
             }
         }
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void UpdateUserNoUid(TestConfig config)
+        public async void UpdateUserNoUid(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1330,12 +1330,12 @@ namespace FirebaseAdmin.Auth.Users.Tests
             {
                 EmailVerified = true,
             };
-            Assert.ThrowsAsync<ArgumentException>(async () => await auth.UpdateUserAsync(args));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await auth.UpdateUserAsync(args));
         }
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void UpdateUserInvalidUid(TestConfig config)
+        public async void UpdateUserInvalidUid(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1345,7 +1345,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 EmailVerified = true,
                 Uid = new string('a', 129),
             };
-            Assert.ThrowsAsync<ArgumentException>(async () => await auth.UpdateUserAsync(args));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await auth.UpdateUserAsync(args));
         }
 
         [Theory]
@@ -1487,7 +1487,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void EmptyNameClaims(TestConfig config)
+        public async void EmptyNameClaims(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1496,13 +1496,13 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     { string.Empty, "value" },
             };
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.SetCustomUserClaimsAsync("user1", emptyClaims));
         }
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void LargeClaimsOverLimit(TestConfig config)
+        public async void LargeClaimsOverLimit(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1511,7 +1511,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 { "testClaim", new string('a', 1001) },
             };
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.SetCustomUserClaimsAsync("user1", largeClaims));
         }
 
@@ -1721,7 +1721,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             await auth.RevokeRefreshTokensAsync("user1");
 
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
@@ -1732,31 +1732,31 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void RevokeRefreshTokensNoUid(TestConfig config)
+        public async void RevokeRefreshTokensNoUid(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await auth.RevokeRefreshTokensAsync(null));
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.RevokeRefreshTokensAsync(string.Empty));
         }
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void RevokeRefreshTokensInvalidUid(TestConfig config)
+        public async void RevokeRefreshTokensInvalidUid(TestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
 
             var uid = new string('a', 129);
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.RevokeRefreshTokensAsync(uid));
         }
 
         [Theory]
         [MemberData(nameof(MainTenantTestConfigs))]
-        public void CreateSessionCookieNoIdToken(TestConfig config)
+        public async void CreateSessionCookieNoIdToken(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
@@ -1765,31 +1765,31 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 ExpiresIn = TimeSpan.FromHours(1),
             };
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync(null, options));
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync(string.Empty, options));
         }
 
         [Theory]
         [MemberData(nameof(MainTenantTestConfigs))]
-        public void CreateSessionCookieNoOptions(TestConfig config)
+        public async void CreateSessionCookieNoOptions(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
 
-            Assert.ThrowsAsync<ArgumentNullException>(
+            await Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await auth.CreateSessionCookieAsync("idToken", null));
         }
 
         [Theory]
         [MemberData(nameof(MainTenantTestConfigs))]
-        public void CreateSessionCookieNoExpiresIn(TestConfig config)
+        public async void CreateSessionCookieNoExpiresIn(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
 
-            Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.CreateSessionCookieAsync(
                     "idToken", new SessionCookieOptions()));
         }
@@ -1846,7 +1846,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             var result = await auth.CreateSessionCookieAsync(idToken, options);
 
             Assert.Equal("cookie", result);
-            Assert.Equal(1, handler.Requests.Count);
+            Assert.Single(handler.Requests);
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.LastRequestBody);
             Assert.Equal(2, request.Count);
             Assert.Equal(idToken, request["idToken"]);
