@@ -339,10 +339,10 @@ namespace FirebaseAdmin.Messaging.Tests
                                             "color", new JObject()
                                             {
                                                 { "red", 0.6666667 },
-                                                #if NET462_OR_GREATER
-                                                { "green", 0.733333349 },
-                                                #else
+                                                #if NET6_0_OR_GREATER
                                                 { "green", 0.73333335 },
+                                                #else
+                                                { "green", 0.733333349 },
                                                 #endif
                                                 { "blue", 0.8 },
                                                 { "alpha", 0.8666667 },
