@@ -30,7 +30,8 @@ namespace FirebaseAdmin.IntegrationTests
                     Credential = GoogleCredential.FromFile(ServiceAccountFile),
                 };
                 return FirebaseApp.Create(options);
-            }, true);
+            },
+            true);
 
         public static FirebaseApp EnsureDefaultApp()
         {

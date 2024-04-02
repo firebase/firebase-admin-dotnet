@@ -18,6 +18,7 @@ using Google.Apis.Auth.OAuth2;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace FirebaseAdmin.Auth.Tests
 {
     public class FirebaseAuthTest : IDisposable

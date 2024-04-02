@@ -93,7 +93,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                     Credential = GoogleCredential.FromAccessToken(token),
                     ServiceAccountId = serviceAcct.Id,
                     ProjectId = serviceAcct.ProjectId,
-                }, "IAMSignApp");
+                },
+                "IAMSignApp");
 
             try
             {

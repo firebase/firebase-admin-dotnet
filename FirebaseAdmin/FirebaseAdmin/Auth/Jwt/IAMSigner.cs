@@ -56,8 +56,7 @@ namespace FirebaseAdmin.Auth.Jwt
                     RetryOptions = retryOptions,
                 });
             this.keyId = new Lazy<Task<string>>(
-                async () => await DiscoverServiceAccountIdAsync(clientFactory)
-                    .ConfigureAwait(false), true);
+                async () => await DiscoverServiceAccountIdAsync(clientFactory).ConfigureAwait(false), true);
         }
 
         public string Algorithm => JwtUtils.AlgorithmRS256;
@@ -98,7 +97,8 @@ namespace FirebaseAdmin.Auth.Jwt
                         + "with service account credentials or specify a service account "
                         + "ID with iam.serviceAccounts.signBlob permission. Please refer to "
                         + "https://firebase.google.com/docs/auth/admin/create-custom-tokens for "
-                        + "more details on creating custom tokens.", e);
+                        + "more details on creating custom tokens.",
+                    e);
             }
         }
 

@@ -60,7 +60,8 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     { "topic", "test-topic" },
                     { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
-                }, message);
+                },
+                message);
         }
 
         [Fact]
