@@ -250,7 +250,7 @@ namespace FirebaseAdmin.Tests
         {
             var version = FirebaseApp.GetSdkVersion();
 
-            var segments = version.Split(".");
+            var segments = version.Split('.');
             Assert.Equal(3, segments.Length);
             int result;
             Assert.All(segments, (segment) => int.TryParse(segment, out result));

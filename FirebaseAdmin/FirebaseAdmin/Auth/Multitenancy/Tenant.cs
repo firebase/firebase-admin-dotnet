@@ -53,17 +53,17 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// <summary>
         /// Gets the tenant display name.
         /// </summary>
-        public string DisplayName => args.DisplayName;
+        public string DisplayName => this.args.DisplayName;
 
         /// <summary>
         /// Gets a value indicating whether the email sign-in provider is enabled.
         /// </summary>
-        public bool PasswordSignUpAllowed => args.PasswordSignUpAllowed ?? false;
+        public bool PasswordSignUpAllowed => this.args.PasswordSignUpAllowed ?? false;
 
         /// <summary>
         /// Gets a value indicating whether the email link sign-in is enabled.
         /// </summary>
-        public bool EmailLinkSignInEnabled => args.EmailLinkSignInEnabled ?? false;
+        public bool EmailLinkSignInEnabled => this.args.EmailLinkSignInEnabled ?? false;
 
         private string ExtractResourceId(string resourceName)
         {
