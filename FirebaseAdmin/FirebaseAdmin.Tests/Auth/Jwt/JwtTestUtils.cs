@@ -20,12 +20,15 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Tests;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util;
 using Xunit;
+
+#pragma warning disable SYSLIB0027
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {

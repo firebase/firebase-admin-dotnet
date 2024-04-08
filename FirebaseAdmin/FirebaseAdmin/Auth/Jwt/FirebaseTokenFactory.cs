@@ -39,6 +39,8 @@ namespace FirebaseAdmin.Auth.Jwt
             + "google.identity.identitytoolkit.v1.IdentityToolkit";
 
         public const int TokenDurationSeconds = 3600;
+        public const int OneMinuteInSeconds = 60;
+        public const int OneDayInMillis = 24 * 60 * 60 * 1000;
         public static readonly DateTime UnixEpoch = new DateTime(
             1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -58,7 +60,8 @@ namespace FirebaseAdmin.Auth.Jwt
             "jti",
             "nbf",
             "nonce",
-            "sub");
+            "sub",
+            "app_id");
 
         internal FirebaseTokenFactory(Args args)
         {
@@ -178,8 +181,14 @@ namespace FirebaseAdmin.Auth.Jwt
             [JsonPropertyAttribute("uid")]
             public string Uid { get; set; }
 
+            [JsonPropertyAttribute("app_id")]
+            public string AppId { get; set; }
+
             [JsonPropertyAttribute("tenant_id")]
             public string TenantId { get; set; }
+
+            [JsonPropertyAttribute("ttl")]
+            public string Ttl { get; set; }
 
             [JsonPropertyAttribute("claims")]
             public IDictionary<string, object> Claims { get; set; }

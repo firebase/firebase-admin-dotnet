@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
+#pragma warning disable SYSLIB0027
 
 namespace FirebaseAdmin.Auth.Jwt.Tests
 {
