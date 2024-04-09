@@ -28,9 +28,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      DOTNET_NOLOGO: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
 
     steps:
     - name: Checkout source for staging
@@ -38,6 +38,7 @@ jobs:
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
         
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
