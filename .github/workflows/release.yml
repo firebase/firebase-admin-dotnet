@@ -46,23 +46,24 @@ jobs:
     # via the 'ref' client parameter.
     steps:
     - name: Checkout source for staging
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
-    - name: Setup .NET Core 2.1
-      uses: actions/setup-dotnet@v1
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.1.x
+        dotnet-version: 6.0.x
 
     - name: Install dependencies
-      run: dotnet msbuild /t:restore FirebaseAdmin
+      run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
 
     - name: Build with dotnet
-      run: dotnet msbuild FirebaseAdmin/FirebaseAdmin
+      run: dotnet build FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
 
     - name: Run unit tests
-      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests
+      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests --configuration Release --no-restore --no-build
 
     - name: Run integration tests
       run: ./.github/scripts/run_integration_tests.sh
@@ -71,7 +72,7 @@ jobs:
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
     - name: Package release artifacts
-      run: dotnet pack -c Release FirebaseAdmin/FirebaseAdmin
+      run: dotnet pack FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore --no-build
 
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
@@ -100,7 +101,7 @@ jobs:
 
     steps:
     - name: Checkout source for publish
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     # Download the artifacts created by the stage_release job.
     - name: Download release candidates
@@ -108,28 +109,23 @@ jobs:
       with:
         name: Release
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 2.2.108
+        dotnet-version: 6.0.x
 
     - name: Publish preflight check
       id: preflight
       run: ./.github/scripts/publish_preflight_check.sh
 
-    # We pull this action from a custom fork of a contributor until
-    # https://github.com/actions/create-release/pull/32 is merged. Also note that v1 of
-    # this action does not support the "body" parameter.
+    # See: https://cli.github.com/manual/gh_release_create
     - name: Create release tag
-      uses: fleskesvor/create-release@1a72e235c178bf2ae6c51a8ae36febc24568c5fe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.preflight.outputs.version }}
-        release_name: Firebase Admin .NET SDK ${{ steps.preflight.outputs.version }}
-        body: ${{ steps.preflight.outputs.changelog }}
-        draft: false
-        prerelease: false
+      run: gh release create ${{ steps.preflight.outputs.version }}
+            --title "Firebase Admin .NET SDK ${{ steps.preflight.outputs.version }}"
+            --notes '${{ steps.preflight.outputs.changelog }}'
 
     - name: Publish to Nuget
       run: ./.github/scripts/publish_package.sh

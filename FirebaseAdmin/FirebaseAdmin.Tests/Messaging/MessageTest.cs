@@ -60,7 +60,8 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     { "topic", "test-topic" },
                     { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
-                }, message);
+                },
+                message);
         }
 
         [Fact]
@@ -339,7 +340,11 @@ namespace FirebaseAdmin.Messaging.Tests
                                             "color", new JObject()
                                             {
                                                 { "red", 0.6666667 },
+                                                #if NET6_0_OR_GREATER
+                                                { "green", 0.73333335 },
+                                                #else
                                                 { "green", 0.733333349 },
+                                                #endif
                                                 { "blue", 0.8 },
                                                 { "alpha", 0.8666667 },
                                             }
