@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.67.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.3" /> 
