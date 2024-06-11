@@ -31,6 +31,7 @@ namespace FirebaseAdmin.Auth
         private Optional<string> photoUrl;
         private Optional<string> phoneNumber;
         private Optional<IReadOnlyDictionary<string, object>> customClaims;
+        private Optional<List<MfaEnrollment>> mfa;
         private bool? disabled = null;
         private bool? emailVerified = null;
 
@@ -87,6 +88,15 @@ namespace FirebaseAdmin.Auth
         {
             get => this.disabled ?? false;
             set => this.disabled = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the Mfa info of the user.
+        /// </summary>
+        public List<MfaEnrollment> Mfa
+        {
+            get => this.mfa?.Value;
+            set => this.mfa = this.Wrap(value);
         }
 
         /// <summary>
@@ -322,6 +332,14 @@ namespace FirebaseAdmin.Auth
                 this.EmailVerified = args.emailVerified;
                 this.Password = CheckPassword(args.Password);
                 this.ValidSince = args.ValidSince;
+                if (args.mfa != null)
+                {
+                    List<MfaEnrollment.UpdateUserRequest> mfaEnrollments = new List<MfaEnrollment.UpdateUserRequest>();
+                    foreach (MfaEnrollment mfaEnrollment in args.mfa.Value)
+                    {
+                        mfaEnrollments.Add(mfaEnrollment.ToUpdateUserRequest());
+                    }
+                }
 
                 if (args.displayName != null)
                 {
@@ -398,6 +416,9 @@ namespace FirebaseAdmin.Auth
 
             [JsonProperty("validSince")]
             public long? ValidSince { get; set; }
+
+            [JsonProperty("mfa")]
+            public MfaEnrollment[] Mfa { get; set; }
 
             private void AddDeleteAttribute(string attribute)
             {
