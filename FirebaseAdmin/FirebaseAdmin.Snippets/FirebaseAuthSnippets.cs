@@ -130,6 +130,15 @@ namespace FirebaseAdmin.Snippets
                 DisplayName = "John Doe",
                 PhotoUrl = "http://www.example.com/12345678/photo.png",
                 Disabled = false,
+                Mfa = new List<MfaEnrollmentArgs>
+                {
+                    new MfaEnrollmentArgs
+                    {
+                        PhoneInfo = "+11234567890",
+                        MfaFactorId = MfaFactorIdType.Phone,
+                        DisplayName = "John Does personal phone",
+                    },
+                },
             };
             UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
             // See the UserRecord reference doc for the contents of userRecord.
@@ -458,6 +467,16 @@ namespace FirebaseAdmin.Snippets
                 DisplayName = "Jane Doe",
                 PhotoUrl = "http://www.example.com/12345678/photo.png",
                 Disabled = true,
+                Mfa = new List<MfaEnrollmentArgs>()
+                {
+                    new MfaEnrollmentArgs()
+                    {
+                        PhoneInfo = "+11234567890",
+                        MfaFactorId = MfaFactorIdType.Phone,
+                        MfaEnrollmentId = "CoolId",
+                        EnrolledAt = DateTime.UtcNow,
+                    },
+                },
             };
             UserRecord userRecord = await FirebaseAuth.DefaultInstance.UpdateUserAsync(args);
             // See the UserRecord reference doc for the contents of userRecord.

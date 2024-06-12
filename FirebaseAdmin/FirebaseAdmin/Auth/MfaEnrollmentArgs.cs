@@ -34,7 +34,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the when the user enrolled this second factor.
         /// </summary>
-        public long EnrolledAt { get; set; }
+        public DateTime EnrolledAt { get; set; }
 
         /// <summary>
         /// Gets or sets the phone info of the mfa enrollment.
@@ -164,7 +164,7 @@ namespace FirebaseAdmin.Auth
             public string DisplayName { get; set; }
 
             [JsonProperty("enrolledAt")]
-            public long EnrolledAt { get; set; }
+            public DateTime EnrolledAt { get; set; }
 
             [JsonProperty("phoneInfo")]
             public string PhoneInfo { get; set; }

@@ -53,6 +53,15 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                 DisplayName = "Random User",
                 PhotoUrl = "https://example.com/photo.png",
                 Password = "password",
+                Mfa = rand.Next(9) <= 3 ? new List<MfaEnrollmentArgs>
+                {
+                    new MfaEnrollmentArgs()
+                    {
+                        DisplayName = "Random Factor",
+                        PhoneInfo = $"+1{string.Join(string.Empty, phoneDigits)}",
+                        MfaFactorId = MfaFactorIdType.Phone,
+                    },
+                } : null,
             };
         }
 
