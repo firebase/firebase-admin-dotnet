@@ -61,7 +61,8 @@ namespace FirebaseAdmin.IntegrationTests.Auth
                         PhoneInfo = $"+1{string.Join(string.Empty, phoneDigits)}",
                         MfaFactorId = MfaFactorIdType.Phone,
                     },
-                } : null,
+                }
+                : null,
             };
         }
 
