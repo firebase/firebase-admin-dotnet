@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Auth
 {
@@ -9,6 +9,10 @@ namespace FirebaseAdmin.Auth
     /// </summary>
     public sealed class MfaEnrollment
     {
+        private Optional<string> displayName;
+        private Optional<string> phoneInfo;
+        private Optional<object> totpInfo;
+
         /// <summary>
         /// Gets or sets the Mfa enrollments ID.
         /// </summary>
@@ -17,7 +21,11 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the Mfa enrollments display name.
         /// </summary>
-        public string DisplayName { get; set; }
+        public string DisplayName
+        {
+            get => this.displayName?.Value;
+            set => this.displayName = this.Wrap(value);
+        }
 
         /// <summary>
         /// Gets or sets the when the user enrolled this second factor.
@@ -27,12 +35,20 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the phone info of the mfa enrollment.
         /// </summary>
-        public string PhoneInfo { get; set; }
+        public string PhoneInfo
+        {
+            get => this.phoneInfo?.Value;
+            set => this.phoneInfo = this.Wrap(value);
+        }
 
         /// <summary>
-        /// Gets or sets the email info of the mfa enrollment.
+        /// Gets or sets Totp info of the mfa enrollment. NOTE: this is only here so that the totp field can be deleted, no values can really be assigned to totp via the admin sdk.
         /// </summary>
-        public EmailInfo EmailInfo { get; set; }
+        public object TotpInfo
+        {
+            get => this.totpInfo?.Value;
+            set => this.totpInfo = this.Wrap(value);
+        }
 
         /// <summary>
         /// Gets or sets unobfuscated phone info of the mfa enrollment.
@@ -60,33 +76,77 @@ namespace FirebaseAdmin.Auth
             return email;
         }
 
+        internal static string CheckPhoneNumber(string phoneNumber, bool required = false)
+        {
+            if (phoneNumber == null)
+            {
+                if (required)
+                {
+                    throw new ArgumentNullException(nameof(phoneNumber));
+                }
+            }
+            else if (phoneNumber == string.Empty)
+            {
+                throw new ArgumentException("Phone number must not be empty.");
+            }
+            else if (!phoneNumber.StartsWith("+"))
+            {
+                throw new ArgumentException(
+                    "Phone number must be a valid, E.164 compliant identifier starting with a '+' sign.");
+            }
+
+            return phoneNumber;
+        }
+
+
+        internal CreateUserRequest ToCreateUserRequest()
+        {
+            return new CreateUserRequest(this);
+        }
+
         internal UpdateUserRequest ToUpdateUserRequest()
         {
             return new UpdateUserRequest(this);
+        }
+
+        private Optional<T> Wrap<T>(T value)
+        {
+            return new Optional<T>(value);
+        }
+
+        internal sealed class CreateUserRequest
+        {
+            internal CreateUserRequest(MfaEnrollment enrollment)
+            {
+                if (enrollment.PhoneInfo == null)
+                {
+                    throw new ArgumentException("Cannot enroll user to invalid phone number!");
+                }
+
+                this.DisplayName = enrollment.DisplayName;
+
+                this.PhoneInfo = enrollment.PhoneInfo;
+            }
+
+            [JsonProperty("displayName")]
+            public string DisplayName { get; set; }
+
+            [JsonProperty("phoneInfo")]
+            public string PhoneInfo { get; set; }
         }
 
         internal sealed class UpdateUserRequest
         {
             internal UpdateUserRequest(MfaEnrollment enrollment)
             {
-                if (enrollment.PhoneInfo != null && enrollment.EmailInfo != null)
+                if (enrollment.MfaEnrollmentId != "phone")
                 {
-                    throw new ArgumentException("Cannot have two differing enrollment types in the same enrollment!");
-                }
-
-                if (enrollment.PhoneInfo == null && enrollment.EmailInfo == null)
-                {
-                    throw new ArgumentException("Must have atleast one enrolled authentication method!");
-                }
-
-                if (enrollment.EmailInfo != null)
-                {
-                    this.EmailInfo = new EmailInfo { EmailAddress = CheckEmail(enrollment.EmailInfo.EmailAddress) };
+                    throw new ArgumentException("Unsupported second factor: " + enrollment.MfaEnrollmentId);
                 }
 
                 this.DisplayName = enrollment.DisplayName;
                 this.EnrolledAt = enrollment.EnrolledAt;
-                this.PhoneInfo = enrollment.PhoneInfo;
+                this.PhoneInfo = CheckPhoneNumber(enrollment.PhoneInfo, true);
                 this.UnobfuscatedPhoneInfo = enrollment.UnobfuscatedPhoneInfo;
             }
 
@@ -107,6 +167,20 @@ namespace FirebaseAdmin.Auth
 
             [JsonProperty("unobfuscatedPhoneInfo")]
             public string UnobfuscatedPhoneInfo { get; set; }
+        }
+
+        /// <summary>
+        /// Wraps a nullable value. Used to differentiate between parameters that have not been set, and
+        /// the parameters that have been explicitly set to null.
+        /// </summary>
+        private class Optional<T>
+        {
+            internal Optional(T value)
+            {
+                this.Value = value;
+            }
+
+            internal T Value { get; private set; }
         }
     }
 }

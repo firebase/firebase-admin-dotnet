@@ -290,6 +290,22 @@ namespace FirebaseAdmin.Auth
                 this.PhoneNumber = CheckPhoneNumber(args.PhoneNumber);
                 this.PhotoUrl = CheckPhotoUrl(args.PhotoUrl);
                 this.Uid = CheckUid(args.Uid);
+
+                if (args.mfa != null)
+                {
+                    if (args.mfa.Value != null)
+                    {
+                        List<MfaEnrollment.CreateUserRequest> mfaEnrollments = new List<MfaEnrollment.CreateUserRequest>();
+                        foreach (MfaEnrollment mfaEnrollment in args.mfa.Value)
+                        {
+                            mfaEnrollments.Add(mfaEnrollment.ToCreateUserRequest());
+                        }
+                    }
+                    else
+                    {
+                        this.Mfa = null;
+                    }
+                }
             }
 
             [JsonProperty("disabled")]
@@ -315,6 +331,9 @@ namespace FirebaseAdmin.Auth
 
             [JsonProperty("localId")]
             public string Uid { get; set; }
+
+            [JsonProperty("mfa")]
+            public List<MfaEnrollment> Mfa { get; set; }
         }
 
         internal sealed class UpdateUserRequest
@@ -334,10 +353,17 @@ namespace FirebaseAdmin.Auth
                 this.ValidSince = args.ValidSince;
                 if (args.mfa != null)
                 {
-                    List<MfaEnrollment.UpdateUserRequest> mfaEnrollments = new List<MfaEnrollment.UpdateUserRequest>();
-                    foreach (MfaEnrollment mfaEnrollment in args.mfa.Value)
+                    if (args.mfa.Value != null)
                     {
-                        mfaEnrollments.Add(mfaEnrollment.ToUpdateUserRequest());
+                        List<MfaEnrollment.UpdateUserRequest> mfaEnrollments = new List<MfaEnrollment.UpdateUserRequest>();
+                        foreach (MfaEnrollment mfaEnrollment in args.mfa.Value)
+                        {
+                            mfaEnrollments.Add(mfaEnrollment.ToUpdateUserRequest());
+                        }
+                    }
+                    else
+                    {
+                        this.Mfa = null;
                     }
                 }
 
@@ -418,7 +444,7 @@ namespace FirebaseAdmin.Auth
             public long? ValidSince { get; set; }
 
             [JsonProperty("mfa")]
-            public MfaEnrollment[] Mfa { get; set; }
+            public List<MfaEnrollment> Mfa { get; set; }
 
             private void AddDeleteAttribute(string attribute)
             {
