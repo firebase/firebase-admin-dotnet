@@ -206,7 +206,7 @@ namespace FirebaseAdmin.Auth.Users
             /// Gets or sets when the enrollment was made.
             /// </summary>
             [JsonProperty("enrolledAt")]
-            public string EnrolledAt { get; set; }
+            public DateTime EnrolledAt { get; set; }
 
             /// <summary>
             /// Gets or sets the totpInfo object of the mfa enrollment.

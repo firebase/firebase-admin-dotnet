@@ -176,13 +176,13 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal("test", enrollment.MfaEnrollmentId);
             Assert.Equal("test name", enrollment.DisplayName);
             Assert.Equal("+10987654321", enrollment.PhoneInfo);
-            Assert.Equal("2014-10-02T15:01:23Z", enrollment.EnrolledAt);
+            Assert.Equal(DateTime.Parse("2014-10-02T15:01:23Z").ToUniversalTime(), enrollment.EnrolledAt);
             Assert.Equal(MfaFactorIdType.Phone, enrollment.MfaFactorId);
 
             enrollment = userRecord.Mfa[1];
             Assert.Equal("test2", enrollment.MfaEnrollmentId);
             Assert.Equal("test name2", enrollment.DisplayName);
-            Assert.Equal("2014-10-03T15:01:23Z", enrollment.EnrolledAt);
+            Assert.Equal(DateTime.Parse("2014-10-03T15:01:23Z").ToUniversalTime(), enrollment.EnrolledAt);
             Assert.Equal(MfaFactorIdType.Totp, enrollment.MfaFactorId);
 
             var metadata = userRecord.UserMetaData;

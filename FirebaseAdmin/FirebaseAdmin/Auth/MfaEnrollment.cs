@@ -63,7 +63,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets the when the user enrolled this second factor.
         /// </summary>
-        public string EnrolledAt { get; }
+        public DateTime EnrolledAt { get; }
 
         /// <summary>
         /// Gets the phone info of the mfa enrollment.

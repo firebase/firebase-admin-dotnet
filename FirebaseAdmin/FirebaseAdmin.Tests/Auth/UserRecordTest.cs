@@ -110,21 +110,21 @@ namespace FirebaseAdmin.Auth.Tests
                         MfaEnrollmentId = "mfa1",
                         DisplayName = "SecondFactor",
                         PhoneInfo = "*********321",
-                        EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                        EnrolledAt = DateTime.Parse("2014-10-03T15:01:23Z"),
                     },
                     new GetAccountInfoResponse.MfaEnrollment()
                     {
                         MfaEnrollmentId = "mfa2",
                         DisplayName = "SecondSecondFactor",
                         PhoneInfo = "*********322",
-                        EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                        EnrolledAt = DateTime.Parse("2014-10-03T15:01:23Z"),
                     },
                     new GetAccountInfoResponse.MfaEnrollment()
                     {
                         MfaEnrollmentId = "totp",
                         DisplayName = "totp",
                         TotpInfo = new(),
-                        EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                        EnrolledAt = DateTime.Parse("2014-10-03T15:01:23Z"),
                     },
                 },
             };
@@ -169,7 +169,7 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("mfa1", mfaEnrollment.MfaEnrollmentId);
             Assert.Equal("SecondFactor", mfaEnrollment.DisplayName);
             Assert.Equal("*********321", mfaEnrollment.PhoneInfo);
-            Assert.Equal("2014 - 10 - 03T15:01:23Z", mfaEnrollment.EnrolledAt);
+            Assert.Equal(DateTime.Parse("2014-10-03T15:01:23Z"), mfaEnrollment.EnrolledAt);
             Assert.Equal(MfaFactorIdType.Phone, mfaEnrollment.MfaFactorId);
             Assert.Null(mfaEnrollment.UnobfuscatedPhoneInfo);
 
@@ -177,14 +177,14 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("mfa2", mfaEnrollment.MfaEnrollmentId);
             Assert.Equal("SecondSecondFactor", mfaEnrollment.DisplayName);
             Assert.Equal("*********322", mfaEnrollment.PhoneInfo);
-            Assert.Equal("2014 - 10 - 03T15:01:23Z", mfaEnrollment.EnrolledAt);
+            Assert.Equal(DateTime.Parse("2014-10-03T15:01:23Z"), mfaEnrollment.EnrolledAt);
             Assert.Equal(MfaFactorIdType.Phone, mfaEnrollment.MfaFactorId);
             Assert.Null(mfaEnrollment.UnobfuscatedPhoneInfo);
 
             mfaEnrollment = user.Mfa[2];
             Assert.Equal("totp", mfaEnrollment.MfaEnrollmentId);
             Assert.Equal("totp", mfaEnrollment.DisplayName);
-            Assert.Equal("2014 - 10 - 03T15:01:23Z", mfaEnrollment.EnrolledAt);
+            Assert.Equal(DateTime.Parse("2014-10-03T15:01:23Z"), mfaEnrollment.EnrolledAt);
             Assert.Equal(MfaFactorIdType.Totp, mfaEnrollment.MfaFactorId);
             Assert.Null(mfaEnrollment.UnobfuscatedPhoneInfo);
             Assert.Null(mfaEnrollment.PhoneInfo);

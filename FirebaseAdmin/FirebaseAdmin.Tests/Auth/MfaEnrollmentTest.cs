@@ -51,12 +51,12 @@ namespace FirebaseAdmin.Tests.Auth
             {
                 MfaEnrollmentId = "testId",
                 PhoneInfo = "+10987654321",
-                EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                EnrolledAt = DateTime.Parse("2014-10-03T15:01:23Z"),
             });
 
             Assert.Equal("testId", enrollment.MfaEnrollmentId);
             Assert.Equal("+10987654321", enrollment.PhoneInfo);
-            Assert.Equal("2014 - 10 - 03T15:01:23Z", enrollment.EnrolledAt);
+            Assert.Equal(DateTime.Parse("2014-10-03T15:01:23Z"), enrollment.EnrolledAt);
             Assert.Equal(MfaFactorIdType.Phone, enrollment.MfaFactorId);
         }
 
@@ -67,11 +67,11 @@ namespace FirebaseAdmin.Tests.Auth
             {
                 MfaEnrollmentId = "testId",
                 TotpInfo = new(),
-                EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                EnrolledAt = DateTime.Parse("2014-10-03T15:01:23Z"),
             });
 
             Assert.Equal("testId", enrollment.MfaEnrollmentId);
-            Assert.Equal("2014 - 10 - 03T15:01:23Z", enrollment.EnrolledAt);
+            Assert.Equal(DateTime.Parse("2014 - 10 - 03T15:01:23Z"), enrollment.EnrolledAt);
             Assert.Equal(MfaFactorIdType.Totp, enrollment.MfaFactorId);
         }
     }
