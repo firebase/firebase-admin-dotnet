@@ -255,6 +255,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Empty(userRecord.ProviderData);
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Null(userRecord.Mfa);
 
             config.AssertRequest("accounts:lookup", handler.Requests[0]);
             var request = NewtonsoftJsonSerializer.Instance
@@ -324,6 +325,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Empty(userRecord.ProviderData);
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Null(userRecord.Mfa);
 
             config.AssertRequest("accounts:lookup", handler.Requests[0]);
             var request = NewtonsoftJsonSerializer.Instance
