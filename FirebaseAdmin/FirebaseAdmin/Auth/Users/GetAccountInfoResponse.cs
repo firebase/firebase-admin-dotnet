@@ -135,6 +135,12 @@ namespace FirebaseAdmin.Auth.Users
             /// </summary>
             [JsonProperty(PropertyName = "tenantId")]
             public string TenantId { get; set; }
+
+            /// <summary>
+            /// Gets or sets the user's Mfa enrollments.
+            /// </summary>
+            [JsonProperty(PropertyName = "mfa")]
+            public List<MfaEnrollment> Mfa { get; set; }
         }
 
         /// <summary>
@@ -177,6 +183,70 @@ namespace FirebaseAdmin.Auth.Users
             /// </summary>
             [JsonProperty(PropertyName = "providerId")]
             public string ProviderID { get; set; }
+        }
+
+        /// <summary>
+        /// Json data binding, for mfa info.
+        /// </summary>
+        internal sealed class MfaEnrollment
+        {
+            /// <summary>
+            /// Gets or sets the Mfa enrollment id.
+            /// </summary>
+            [JsonProperty("mfaEnrollmentId")]
+            public string MfaEnrollmentId { get; set; }
+
+            /// <summary>
+            /// Gets or sets the Mfa display name.
+            /// </summary>
+            [JsonProperty("displayName")]
+            public string DisplayName { get; set; }
+
+            /// <summary>
+            /// Gets or sets when the enrollment was made.
+            /// </summary>
+            [JsonProperty("enrolledAt")]
+            public string EnrolledAt { get; set; }
+
+            /// <summary>
+            /// Gets or sets the totpInfo object of the mfa enrollment.
+            /// </summary>
+            [JsonProperty("totpInfo")]
+            public TotpInfoResponse TotpInfo { get; set; }
+
+            /// <summary>
+            /// Gets or sets the phone info of the mfa enrollment.
+            /// </summary>
+            [JsonProperty("phoneInfo")]
+            public string PhoneInfo { get; set; }
+
+            /// <summary>
+            /// Gets or sets the email info, of the enrollment.
+            /// </summary>
+            [JsonProperty("emailInfo")]
+            public EmailInfoResponse EmailInfo { get; set; }
+
+            /// <summary>
+            /// Gets or sets the unobfuscated phone info, of the enrollment.
+            /// </summary>
+            [JsonProperty("unobfuscatedPhoneInfo")]
+            public string UnobfuscatedPhoneInfo { get; set; }
+
+            /// <summary>
+            /// Json data binding, for the email info response field.
+            /// </summary>
+            internal sealed class EmailInfoResponse
+            {
+                [JsonProperty("emailAddress")]
+                public string EmailAddress { get; set; }
+            }
+
+            /// <summary>
+            /// Json data binding, for the totp info response field.
+            /// </summary>
+            internal sealed class TotpInfoResponse
+            {
+            }
         }
     }
 }

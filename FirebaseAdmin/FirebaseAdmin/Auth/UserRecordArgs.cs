@@ -31,7 +31,7 @@ namespace FirebaseAdmin.Auth
         private Optional<string> photoUrl;
         private Optional<string> phoneNumber;
         private Optional<IReadOnlyDictionary<string, object>> customClaims;
-        private Optional<List<MfaEnrollment>> mfa;
+        private Optional<List<MfaEnrollmentArgs>> mfa;
         private bool? disabled = null;
         private bool? emailVerified = null;
 
@@ -93,7 +93,7 @@ namespace FirebaseAdmin.Auth
         /// <summary>
         /// Gets or sets the Mfa info of the user.
         /// </summary>
-        public List<MfaEnrollment> Mfa
+        public List<MfaEnrollmentArgs> Mfa
         {
             get => this.mfa?.Value;
             set => this.mfa = this.Wrap(value);
@@ -295,8 +295,8 @@ namespace FirebaseAdmin.Auth
                 {
                     if (args.mfa.Value != null)
                     {
-                        List<MfaEnrollment.CreateUserRequest> mfaEnrollments = new List<MfaEnrollment.CreateUserRequest>();
-                        foreach (MfaEnrollment mfaEnrollment in args.mfa.Value)
+                        List<MfaEnrollmentArgs.CreateUserRequest> mfaEnrollments = new List<MfaEnrollmentArgs.CreateUserRequest>();
+                        foreach (MfaEnrollmentArgs mfaEnrollment in args.mfa.Value)
                         {
                             mfaEnrollments.Add(mfaEnrollment.ToCreateUserRequest());
                         }
@@ -333,7 +333,7 @@ namespace FirebaseAdmin.Auth
             public string Uid { get; set; }
 
             [JsonProperty("mfa")]
-            public List<MfaEnrollment> Mfa { get; set; }
+            public List<MfaEnrollmentArgs> Mfa { get; set; }
         }
 
         internal sealed class UpdateUserRequest
@@ -355,8 +355,8 @@ namespace FirebaseAdmin.Auth
                 {
                     if (args.mfa.Value != null)
                     {
-                        List<MfaEnrollment.UpdateUserRequest> mfaEnrollments = new List<MfaEnrollment.UpdateUserRequest>();
-                        foreach (MfaEnrollment mfaEnrollment in args.mfa.Value)
+                        List<MfaEnrollmentArgs.UpdateUserRequest> mfaEnrollments = new List<MfaEnrollmentArgs.UpdateUserRequest>();
+                        foreach (MfaEnrollmentArgs mfaEnrollment in args.mfa.Value)
                         {
                             mfaEnrollments.Add(mfaEnrollment.ToUpdateUserRequest());
                         }
@@ -444,7 +444,7 @@ namespace FirebaseAdmin.Auth
             public long? ValidSince { get; set; }
 
             [JsonProperty("mfa")]
-            public List<MfaEnrollment> Mfa { get; set; }
+            public List<MfaEnrollmentArgs> Mfa { get; set; }
 
             private void AddDeleteAttribute(string attribute)
             {

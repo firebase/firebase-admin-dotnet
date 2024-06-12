@@ -103,6 +103,30 @@ namespace FirebaseAdmin.Auth.Tests
                         PhoneNumber = "+10987654321",
                     },
                 },
+                Mfa = new List<GetAccountInfoResponse.MfaEnrollment>()
+                {
+                    new GetAccountInfoResponse.MfaEnrollment()
+                    {
+                        MfaEnrollmentId = "mfa1",
+                        DisplayName = "SecondFactor",
+                        PhoneInfo = "*********321",
+                        EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                    },
+                    new GetAccountInfoResponse.MfaEnrollment()
+                    {
+                        MfaEnrollmentId = "mfa2",
+                        DisplayName = "SecondSecondFactor",
+                        PhoneInfo = "*********322",
+                        EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                    },
+                    new GetAccountInfoResponse.MfaEnrollment()
+                    {
+                        MfaEnrollmentId = "totp",
+                        DisplayName = "totp",
+                        TotpInfo = new(),
+                        EnrolledAt = "2014 - 10 - 03T15:01:23Z",
+                    },
+                },
             };
             var user = new UserRecord(response);
 
@@ -140,6 +164,30 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.Equal("user@other.com", provider.Email);
             Assert.Equal("+10987654321", provider.PhoneNumber);
             Assert.Equal("https://other.com/user.png", provider.PhotoUrl);
+
+            var mfaEnrollment = user.Mfa[0];
+            Assert.Equal("mfa1", mfaEnrollment.MfaEnrollmentId);
+            Assert.Equal("SecondFactor", mfaEnrollment.DisplayName);
+            Assert.Equal("*********321", mfaEnrollment.PhoneInfo);
+            Assert.Equal("2014 - 10 - 03T15:01:23Z", mfaEnrollment.EnrolledAt);
+            Assert.Equal(MfaFactorIdType.Phone, mfaEnrollment.MfaFactorId);
+            Assert.Null(mfaEnrollment.UnobfuscatedPhoneInfo);
+
+            mfaEnrollment = user.Mfa[1];
+            Assert.Equal("mfa2", mfaEnrollment.MfaEnrollmentId);
+            Assert.Equal("SecondSecondFactor", mfaEnrollment.DisplayName);
+            Assert.Equal("*********322", mfaEnrollment.PhoneInfo);
+            Assert.Equal("2014 - 10 - 03T15:01:23Z", mfaEnrollment.EnrolledAt);
+            Assert.Equal(MfaFactorIdType.Phone, mfaEnrollment.MfaFactorId);
+            Assert.Null(mfaEnrollment.UnobfuscatedPhoneInfo);
+
+            mfaEnrollment = user.Mfa[2];
+            Assert.Equal("totp", mfaEnrollment.MfaEnrollmentId);
+            Assert.Equal("totp", mfaEnrollment.DisplayName);
+            Assert.Equal("2014 - 10 - 03T15:01:23Z", mfaEnrollment.EnrolledAt);
+            Assert.Equal(MfaFactorIdType.Totp, mfaEnrollment.MfaFactorId);
+            Assert.Null(mfaEnrollment.UnobfuscatedPhoneInfo);
+            Assert.Null(mfaEnrollment.PhoneInfo);
 
             var metadata = user.UserMetaData;
             Assert.NotNull(metadata);

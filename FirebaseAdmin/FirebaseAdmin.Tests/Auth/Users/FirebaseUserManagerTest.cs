@@ -76,6 +76,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Empty(userRecord.ProviderData);
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Null(userRecord.Mfa);
 
             config.AssertRequest("accounts:lookup", handler.Requests[0]);
             var request = NewtonsoftJsonSerializer.Instance
@@ -113,6 +114,20 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 ],
                 ""createdAt"": 100,
                 ""lastLoginAt"": 150,
+                ""mfa"": [
+                    {
+                    ""mfaEnrollmentId"": ""test"",
+                    ""displayName"": ""test name"",
+                    ""enrolledAt"": ""2014-10-02T15:01:23Z"",
+                    ""phoneInfo"": ""+10987654321""
+                    },
+                    {
+                    ""mfaEnrollmentId"": ""test2"",
+                    ""displayName"": ""test name2"",
+                    ""enrolledAt"": ""2014-10-03T15:01:23Z"",
+                    ""totpInfo"": {}
+                    },
+                ],
             }";
             var handler = new MockMessageHandler()
             {
@@ -156,6 +171,19 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal("user@other.com", provider.Email);
             Assert.Equal("+10987654321", provider.PhoneNumber);
             Assert.Equal("https://other.com/user.png", provider.PhotoUrl);
+
+            var enrollment = userRecord.Mfa[0];
+            Assert.Equal("test", enrollment.MfaEnrollmentId);
+            Assert.Equal("test name", enrollment.DisplayName);
+            Assert.Equal("+10987654321", enrollment.PhoneInfo);
+            Assert.Equal("2014-10-02T15:01:23Z", enrollment.EnrolledAt);
+            Assert.Equal(MfaFactorIdType.Phone, enrollment.MfaFactorId);
+
+            enrollment = userRecord.Mfa[1];
+            Assert.Equal("test2", enrollment.MfaEnrollmentId);
+            Assert.Equal("test name2", enrollment.DisplayName);
+            Assert.Equal("2014-10-03T15:01:23Z", enrollment.EnrolledAt);
+            Assert.Equal(MfaFactorIdType.Totp, enrollment.MfaFactorId);
 
             var metadata = userRecord.UserMetaData;
             Assert.NotNull(metadata);
