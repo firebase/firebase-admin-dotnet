@@ -76,6 +76,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Empty(userRecord.ProviderData);
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Null(userRecord.Mfa);
 
             config.AssertRequest("accounts:lookup", handler.Requests[0]);
             var request = NewtonsoftJsonSerializer.Instance
@@ -113,6 +114,20 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 ],
                 ""createdAt"": 100,
                 ""lastLoginAt"": 150,
+                ""mfaInfo"": [
+                    {
+                    ""mfaEnrollmentId"": ""test"",
+                    ""displayName"": ""test name"",
+                    ""enrolledAt"": ""2014-10-02T15:01:23Z"",
+                    ""phoneInfo"": ""+10987654321""
+                    },
+                    {
+                    ""mfaEnrollmentId"": ""test2"",
+                    ""displayName"": ""test name2"",
+                    ""enrolledAt"": ""2014-10-03T15:01:23Z"",
+                    ""totpInfo"": {}
+                    },
+                ],
             }";
             var handler = new MockMessageHandler()
             {
@@ -156,6 +171,19 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal("user@other.com", provider.Email);
             Assert.Equal("+10987654321", provider.PhoneNumber);
             Assert.Equal("https://other.com/user.png", provider.PhotoUrl);
+
+            var enrollment = userRecord.Mfa[0];
+            Assert.Equal("test", enrollment.MfaEnrollmentId);
+            Assert.Equal("test name", enrollment.DisplayName);
+            Assert.Equal("+10987654321", enrollment.PhoneInfo);
+            Assert.Equal(DateTime.Parse("2014-10-02T15:01:23Z").ToUniversalTime(), enrollment.EnrolledAt);
+            Assert.Equal(MfaFactorIdType.Phone, enrollment.MfaFactorId);
+
+            enrollment = userRecord.Mfa[1];
+            Assert.Equal("test2", enrollment.MfaEnrollmentId);
+            Assert.Equal("test name2", enrollment.DisplayName);
+            Assert.Equal(DateTime.Parse("2014-10-03T15:01:23Z").ToUniversalTime(), enrollment.EnrolledAt);
+            Assert.Equal(MfaFactorIdType.Totp, enrollment.MfaFactorId);
 
             var metadata = userRecord.UserMetaData;
             Assert.NotNull(metadata);
@@ -227,6 +255,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Empty(userRecord.ProviderData);
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Null(userRecord.Mfa);
 
             config.AssertRequest("accounts:lookup", handler.Requests[0]);
             var request = NewtonsoftJsonSerializer.Instance
@@ -296,6 +325,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Empty(userRecord.ProviderData);
             Assert.Null(userRecord.UserMetaData.CreationTimestamp);
             Assert.Null(userRecord.UserMetaData.LastSignInTimestamp);
+            Assert.Null(userRecord.Mfa);
 
             config.AssertRequest("accounts:lookup", handler.Requests[0]);
             var request = NewtonsoftJsonSerializer.Instance
@@ -850,7 +880,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.Empty(request);
         }
 
@@ -881,7 +911,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.True((bool)request["disabled"]);
             Assert.Equal("Test User", request["displayName"]);
             Assert.Equal("user@example.com", request["email"]);
@@ -915,7 +945,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             Assert.Equal("user1", user.Uid);
             Assert.Equal(config.TenantId, user.TenantId);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
@@ -1125,7 +1155,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts:update", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["disableUser"]);
             Assert.Equal("Test User", request["displayName"]);
@@ -1135,7 +1165,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal("+1234567890", request["phoneNumber"]);
             Assert.Equal("https://example.com/user.png", request["photoUrl"]);
 
-            var claims = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>((string)request["customAttributes"]);
+            var claims = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>((string)request["customAttributes"]);
             Assert.True((bool)claims["admin"]);
             Assert.Equal(4L, claims["level"]);
             Assert.Equal("gold", claims["package"]);
