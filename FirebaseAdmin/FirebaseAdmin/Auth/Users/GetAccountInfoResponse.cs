@@ -139,7 +139,7 @@ namespace FirebaseAdmin.Auth.Users
             /// <summary>
             /// Gets or sets the user's Mfa enrollments.
             /// </summary>
-            [JsonProperty(PropertyName = "mfa")]
+            [JsonProperty(PropertyName = "mfaInfo")]
             public List<MfaEnrollment> Mfa { get; set; }
         }
 

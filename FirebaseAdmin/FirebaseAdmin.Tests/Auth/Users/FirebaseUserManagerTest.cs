@@ -114,7 +114,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 ],
                 ""createdAt"": 100,
                 ""lastLoginAt"": 150,
-                ""mfa"": [
+                ""mfaInfo"": [
                     {
                     ""mfaEnrollmentId"": ""test"",
                     ""displayName"": ""test name"",
@@ -880,7 +880,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.Empty(request);
         }
 
@@ -911,7 +911,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.True((bool)request["disabled"]);
             Assert.Equal("Test User", request["displayName"]);
             Assert.Equal("user@example.com", request["email"]);
@@ -945,7 +945,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             Assert.Equal("user1", user.Uid);
             Assert.Equal(config.TenantId, user.TenantId);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
@@ -1155,7 +1155,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest("accounts:update", handler.Requests[0]);
             config.AssertRequest("accounts:lookup", handler.Requests[1]);
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>(handler.Requests[0].Body);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["disableUser"]);
             Assert.Equal("Test User", request["displayName"]);
@@ -1165,7 +1165,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal("+1234567890", request["phoneNumber"]);
             Assert.Equal("https://example.com/user.png", request["photoUrl"]);
 
-            var claims = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>((string)request["customAttributes"]);
+            var claims = NewtonsoftJsonSerializer.Instance.Deserialize<JToken>((string)request["customAttributes"]);
             Assert.True((bool)claims["admin"]);
             Assert.Equal(4L, claims["level"]);
             Assert.Equal("gold", claims["package"]);
