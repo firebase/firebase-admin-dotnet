@@ -365,7 +365,7 @@ namespace FirebaseAdmin.Messaging
         {
             get
             {
-                return this.EventTimestamp.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.ffffff000'Z'");
+                return this.EventTimestamp.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.ffffff000'Z'", CultureInfo.InvariantCulture);
             }
 
             set
