@@ -236,7 +236,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         public async Task UpdateUser()
         {
             var original = await this.userBuilder.CreateUserAsync(new UserRecordArgs());
-            var updateArgs = TemporaryUserBuilder.RandomUserRecordArgs();
+            var updateArgs = TemporaryUserBuilder.RandomUserRecordArgsWithMfa();
             updateArgs.Uid = original.Uid;
             updateArgs.EmailVerified = true;
 
@@ -253,6 +253,12 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             Assert.Null(user.UserMetaData.LastSignInTimestamp);
             Assert.Equal(2, user.ProviderData.Length);
             Assert.Empty(user.CustomClaims);
+            Assert.Equal(updateArgs.Mfa[0].DisplayName, user.Mfa[0].DisplayName);
+            Assert.Equal(updateArgs.Mfa[0].PhoneInfo, user.Mfa[0].PhoneInfo);
+            Assert.Equal(updateArgs.Mfa[0].MfaFactorId, user.Mfa[0].MfaFactorId);
+            // Check that the enrolled at Timespan is within one second of the set time.
+            // The range, is because the google cloud API rounds the enrolledAt date by some milliseconds.
+            Assert.InRange<TimeSpan>(updateArgs.Mfa[0].EnrolledAt - user.Mfa[0].EnrolledAt, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(1));
         }
 
         [Fact]
@@ -656,6 +662,17 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             // Sign in with link also verifies the user's email
             user = await this.Auth.GetUserAsync(user.Uid);
             Assert.True(user.EmailVerified);
+        }
+
+        [Fact]
+        public async Task CreateUserWithMfa()
+        {
+            var user = await this.userBuilder.CreateRandomUserMithMfaAsync();
+            var userGetData = await this.Auth.GetUserAsync(user.Uid);
+
+            Assert.NotNull(userGetData);
+            Assert.NotNull(userGetData.Mfa);
+            await this.Auth.DeleteUserAsync(user.Uid);
         }
 
         private async Task<FirebaseToken> AssertValidIdTokenAsync(
