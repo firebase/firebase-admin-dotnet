@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth;
@@ -56,9 +57,31 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             };
         }
 
+        public static UserRecordArgs RandomUserRecordArgsWithMfa()
+        {
+            var userArgs = RandomUserRecordArgs();
+            userArgs.EmailVerified = true;
+            userArgs.Mfa = new List<MfaEnrollmentArgs>()
+            {
+                new MfaEnrollmentArgs
+                {
+                    PhoneInfo = userArgs.PhoneNumber,
+                    DisplayName = "test factor",
+                    EnrolledAt = DateTime.UtcNow,
+                    MfaFactorId = MfaFactorIdType.Phone,
+                },
+            };
+            return userArgs;
+        }
+
         public async Task<UserRecord> CreateRandomUserAsync()
         {
             return await this.CreateUserAsync(RandomUserRecordArgs());
+        }
+
+        public async Task<UserRecord> CreateRandomUserMithMfaAsync()
+        {
+            return await this.CreateUserAsync(RandomUserRecordArgsWithMfa());
         }
 
         public async Task<UserRecord> CreateUserAsync(UserRecordArgs args)
