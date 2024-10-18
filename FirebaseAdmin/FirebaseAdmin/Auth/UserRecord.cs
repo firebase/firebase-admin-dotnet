@@ -71,6 +71,15 @@ namespace FirebaseAdmin.Auth
                 }
             }
 
+            if (user.Mfa != null && user.Mfa.Count > 0)
+            {
+                this.Mfa = new List<MfaEnrollment>();
+                foreach (var enrollment in user.Mfa)
+                {
+                    this.Mfa.Add(new MfaEnrollment(enrollment));
+                }
+            }
+
             this.validSinceTimestampInSeconds = user.ValidSince;
 
             // newtonsoft's json deserializer will convert an iso8601 format
@@ -132,6 +141,11 @@ namespace FirebaseAdmin.Auth
         /// Gets a non-null array of provider data for this user. Possibly empty.
         /// </summary>
         public IUserInfo[] ProviderData { get; }
+
+        /// <summary>
+        /// Gets a list of Mfa data for this user. Possibly empty or null.
+        /// </summary>
+        public List<MfaEnrollment> Mfa { get; }
 
         /// <summary>
         /// Gets a timestamp that indicates the earliest point in time at which a valid ID token

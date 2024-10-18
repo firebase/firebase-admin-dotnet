@@ -276,6 +276,7 @@ namespace FirebaseAdmin.Auth.Users
             var payload = args.ToUpdateUserRequest();
             var response = await this.PostAndDeserializeAsync<JObject>(
                 "accounts:update", payload, cancellationToken).ConfigureAwait(false);
+
             if (payload.Uid != (string)response.Result["localId"])
             {
                 throw UnexpectedResponseException(
@@ -408,7 +409,9 @@ namespace FirebaseAdmin.Auth.Users
         {
             var response = await this.PostAndDeserializeAsync<GetAccountInfoResponse>(
                 "accounts:lookup", query.Build(), cancellationToken).ConfigureAwait(false);
+
             var result = response.Result;
+
             if (result == null || result.Users == null || result.Users.Count == 0)
             {
                 throw new FirebaseAuthException(
@@ -430,6 +433,7 @@ namespace FirebaseAdmin.Auth.Users
                 RequestUri = new Uri($"{this.baseUrl}/{path}"),
                 Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(body),
             };
+
             request.Headers.Add(ClientVersionHeader, ClientVersion);
             return await this.httpClient
                 .SendAndDeserializeAsync<TResult>(request, cancellationToken)
