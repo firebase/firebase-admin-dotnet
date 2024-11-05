@@ -100,6 +100,11 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(expectedUrl, uri.ToString());
         }
 
+        internal static void AssertRequest(MockMessageHandler.IncomingRequest request)
+        {
+            Assert.Contains(HttpUtils.GetMetricsHeader(), request.Headers.GetValues("X-Goog-Api-Client"));
+        }
+
         private static ISigner CreateTestSigner(string filePath)
         {
             var credential = GoogleCredential.FromFile(filePath);

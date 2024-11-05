@@ -126,6 +126,7 @@ namespace FirebaseAdmin.Messaging
             };
 
             request.Headers.Add("access_token_auth", "true");
+            request.Headers.Add("X-Goog-Api-Client", HttpUtils.GetMetricsHeader());
 
             var response = await this.httpClient
                 .SendAndDeserializeAsync<InstanceIdServiceResponse>(request)

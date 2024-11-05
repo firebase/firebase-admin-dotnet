@@ -109,6 +109,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var expectedPath = $"/v2/projects/{MockProjectId}{tenantInfo}/{expectedSuffix}";
             Assert.Equal(expectedPath, request.Url.PathAndQuery);
             Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
+            Assert.Contains(HttpUtils.GetMetricsHeader(), request.Headers.GetValues("X-Goog-Api-Client"));
         }
 
         public class InvalidListOptions : IEnumerable<object[]>

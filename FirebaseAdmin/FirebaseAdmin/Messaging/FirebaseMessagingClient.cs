@@ -404,6 +404,7 @@ namespace FirebaseAdmin.Messaging
                 this.ModifyRequest = (request) =>
                 {
                     AddCommonHeaders(request);
+                    request.Headers.Add("X-Goog-Api-Client", HttpUtils.GetMetricsHeader());
                 };
                 this.InitParameters();
             }

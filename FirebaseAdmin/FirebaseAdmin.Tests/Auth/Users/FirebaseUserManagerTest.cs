@@ -2222,6 +2222,8 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     var expectedUrl = $"https://{IdToolkitUrl}{tenant}/{expectedSuffix}";
                     Assert.Equal(expectedUrl, request.Url.ToString());
                 }
+
+                Assert.Equal(HttpUtils.GetMetricsHeader(), request.Headers.GetValues("X-Goog-Api-Client").First());
             }
 
             private IDictionary<string, object> GetUserResponseDictionary(string response = null)
