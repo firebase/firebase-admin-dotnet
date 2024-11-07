@@ -61,6 +61,13 @@ namespace FirebaseAdmin.Messaging
         public IReadOnlyDictionary<string, string> Data { get; set; }
 
         /// <summary>
+        /// Gets or sets a boolean indicating whether messages will be allowed to be delivered to
+        /// the app while the device is in direct boot mode.
+        /// </summary>
+        [JsonProperty("direct_boot_ok")]
+        public bool? DirectBootOk { get; set; }
+
+        /// <summary>
         /// Gets or sets the Android notification to be included in the message.
         /// </summary>
         [JsonProperty("notification")]
@@ -165,6 +172,7 @@ namespace FirebaseAdmin.Messaging
                 TimeToLive = this.TimeToLive,
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data?.Copy(),
+                DirectBootOk = this.DirectBootOk,
                 FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             var totalSeconds = copy.TimeToLive?.TotalSeconds ?? 0;

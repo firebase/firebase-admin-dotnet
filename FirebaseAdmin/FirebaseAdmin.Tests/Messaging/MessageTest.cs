@@ -260,6 +260,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "k1", "v1" },
                         { "k2", "v2" },
                     },
+                    DirectBootOk = true,
                     Notification = new AndroidNotification()
                     {
                         Title = "title",
@@ -310,6 +311,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "ttl", "0.010000000s" },
                         { "restricted_package_name", "test-pkg-name" },
                         { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
+                        { "direct_boot_ok", true },
                         {
                             "notification", new JObject()
                             {
@@ -424,6 +426,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 {
                     { "key", "value" },
                 },
+                DirectBootOk = false,
                 Notification = new AndroidNotification()
                 {
                     Title = "title",
@@ -437,6 +440,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Priority, copy.Priority);
             Assert.Equal(original.TimeToLive, copy.TimeToLive);
             Assert.Equal(original.Data, copy.Data);
+            Assert.Equal(original.DirectBootOk, copy.DirectBootOk);
             Assert.Equal(original.Notification.Title, copy.Notification.Title);
         }
 
