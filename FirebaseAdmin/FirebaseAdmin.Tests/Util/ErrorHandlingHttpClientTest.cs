@@ -47,6 +47,7 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Single(response.Result);
             Assert.Equal("bar", response.Result["foo"]);
             Assert.Equal(1, handler.Calls);
+            Assert.Equal(HttpUtils.GetMetricsHeader(), handler.LastRequestHeaders.GetValues("X-Goog-Api-Client").First());
         }
 
         [Fact]
@@ -69,6 +70,7 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Single(response.Result);
             Assert.Equal("bar", response.Result["foo"]);
             Assert.Equal(1, handler.Calls);
+            Assert.Equal(HttpUtils.GetMetricsHeader(), handler.LastRequestHeaders.GetValues("X-Goog-Api-Client").First());
             Assert.Equal(
                 "Bearer test-token",
                 handler.LastRequestHeaders.GetValues("Authorization").First());
@@ -166,6 +168,7 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Equal("bar", response.Result["foo"]);
             Assert.Equal(1, handler.Calls);
             Assert.Equal(1, deserializer.Count);
+            Assert.Equal(HttpUtils.GetMetricsHeader(), handler.LastRequestHeaders.GetValues("X-Goog-Api-Client").First());
         }
 
         [Fact]
@@ -244,6 +247,7 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Null(exception.InnerException);
             Assert.NotNull(exception.HttpResponse);
             Assert.Equal(5, handler.Calls);
+            Assert.Equal(HttpUtils.GetMetricsHeader(), handler.LastRequestHeaders.GetValues("X-Goog-Api-Client").First());
         }
 
         [Fact]
@@ -267,6 +271,7 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Same(handler.Exception, exception.InnerException);
             Assert.Null(exception.HttpResponse);
             Assert.Equal(5, handler.Calls);
+            Assert.Equal(HttpUtils.GetMetricsHeader(), handler.LastRequestHeaders.GetValues("X-Goog-Api-Client").First());
         }
 
         [Fact]

@@ -44,6 +44,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(2, keys.Count);
             Assert.Equal(2, handler.Calls);
             Assert.NotSame(keys, keys2);
+            JwtTestUtils.AssertRequest(handler.Requests[0]);
+            JwtTestUtils.AssertRequest(handler.Requests[1]);
         }
 
         [Fact]
@@ -77,6 +79,8 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(2, keys.Count);
             Assert.Equal(2, handler.Calls);
             Assert.NotSame(keys, keys3);
+            JwtTestUtils.AssertRequest(handler.Requests[0]);
+            JwtTestUtils.AssertRequest(handler.Requests[1]);
         }
 
         [Fact]

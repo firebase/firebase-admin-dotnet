@@ -57,6 +57,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
             Assert.Equal(2, handler.Calls);
             Assert.Equal("Bearer token", handler.LastRequestHeaders.Authorization?.ToString());
+            JwtTestUtils.AssertRequest(handler.Requests[1]);
         }
 
         [Fact]
@@ -112,6 +113,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
                 handler.LastRequestBody);
             Assert.Equal(Convert.ToBase64String(data), req.BytesToSign);
             Assert.Equal(1, handler.Calls);
+            JwtTestUtils.AssertRequest(Assert.Single(handler.Requests));
         }
 
         [Fact]

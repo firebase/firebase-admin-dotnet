@@ -331,6 +331,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             this.CheckException(exception, expectedMessage, AuthErrorCode.RevokedSessionCookie);
             Assert.Equal(1, handler.Calls);
             JwtTestUtils.AssertRevocationCheckRequest(null, handler.Requests[0].Url);
+            JwtTestUtils.AssertRequest(Assert.Single(handler.Requests));
         }
 
         [Theory]
@@ -355,6 +356,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Equal("testuser", decoded.Uid);
             Assert.Equal(1, handler.Calls);
             JwtTestUtils.AssertRevocationCheckRequest(null, handler.Requests[0].Url);
+            JwtTestUtils.AssertRequest(Assert.Single(handler.Requests));
         }
 
         [Theory]
@@ -381,6 +383,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.NotNull(exception.HttpResponse);
             Assert.Equal(1, handler.Calls);
             JwtTestUtils.AssertRevocationCheckRequest(null, handler.Requests[0].Url);
+            JwtTestUtils.AssertRequest(Assert.Single(handler.Requests));
         }
 
         private void CheckException(

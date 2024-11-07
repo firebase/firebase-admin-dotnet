@@ -372,6 +372,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(
                 FirebaseUserManager.ClientVersion,
                 message.Headers.GetValues(FirebaseUserManager.ClientVersionHeader).First());
+            Assert.Equal(HttpUtils.GetMetricsHeader(), message.Headers.GetValues("X-Goog-Api-Client").First());
         }
     }
 }

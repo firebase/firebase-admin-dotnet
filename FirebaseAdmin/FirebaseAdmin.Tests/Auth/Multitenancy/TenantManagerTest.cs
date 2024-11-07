@@ -690,6 +690,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
                 }
 
                 Assert.Contains(ClientVersion, request.Headers.GetValues("X-Client-Version"));
+                Assert.Contains(HttpUtils.GetMetricsHeader(), request.Headers.GetValues("X-Goog-Api-Client"));
             }
         }
 

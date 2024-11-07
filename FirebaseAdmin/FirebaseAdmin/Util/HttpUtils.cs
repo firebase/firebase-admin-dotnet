@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -49,6 +50,11 @@ namespace FirebaseAdmin.Util
             var mask = CreateUpdateMask(dictionary);
             mask.Sort();
             return mask;
+        }
+
+        internal static string GetMetricsHeader()
+        {
+            return $"gl-dotnet/{Environment.Version} fire-admin/{FirebaseApp.GetSdkVersion()}";
         }
 
         private static List<string> CreateUpdateMask(JObject dictionary)

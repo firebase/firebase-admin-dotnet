@@ -59,6 +59,7 @@ namespace FirebaseAdmin.Util
         internal async Task<DeserializedResponseInfo<TResult>> SendAndDeserializeAsync<TResult>(
             HttpRequestMessage request, CancellationToken cancellationToken = default)
         {
+            request.Headers.Add("X-Goog-Api-Client", HttpUtils.GetMetricsHeader());
             var info = await this.SendAndReadAsync(request, cancellationToken)
                 .ConfigureAwait(false);
             try

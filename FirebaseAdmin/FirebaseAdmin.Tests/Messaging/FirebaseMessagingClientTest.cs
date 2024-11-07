@@ -173,6 +173,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal("projects/fir-adminintegrationtests/messages/8580920590356323124", response.Responses[0].MessageId);
             Assert.Equal("projects/fir-adminintegrationtests/messages/5903525881088369386", response.Responses[1].MessageId);
             Assert.Equal(2, handler.Calls);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -245,6 +246,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotNull(exception.HttpResponse);
 
             Assert.Equal(2, handler.Calls);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -311,6 +313,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotNull(exception.HttpResponse);
 
             Assert.Equal(2, handler.Calls);
+            this.CheckHeaders(handler.LastRequestHeaders);
         }
 
         [Fact]
@@ -404,6 +407,7 @@ Vary: Referer
             Assert.Equal("fire-admin-dotnet", userAgent.Product.Name);
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, VersionHeader));
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, ApiFormatHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, $"X-Goog-Api-Client: {HttpUtils.GetMetricsHeader()}"));
         }
 
         [Fact]
@@ -486,6 +490,7 @@ Vary: Referer
             Assert.Equal(1, handler.Calls);
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, VersionHeader));
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, ApiFormatHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, $"X-Goog-Api-Client: {HttpUtils.GetMetricsHeader()}"));
         }
 
         [Fact]
@@ -564,6 +569,7 @@ Content-Type: application/json; charset=UTF-8
             Assert.Equal(1, handler.Calls);
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, VersionHeader));
             Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, ApiFormatHeader));
+            Assert.Equal(2, this.CountLinesWithPrefix(handler.LastRequestBody, $"X-Goog-Api-Client: {HttpUtils.GetMetricsHeader()}"));
         }
 
         [Fact]
@@ -778,6 +784,9 @@ Content-Type: application/json; charset=UTF-8
 
             var apiFormatHeader = header.GetValues("X-GOOG-API-FORMAT-VERSION").First();
             Assert.Equal("2", apiFormatHeader);
+
+            var metricsHeader = header.GetValues("X-Goog-Api-Client").First();
+            Assert.Equal(HttpUtils.GetMetricsHeader(), metricsHeader);
         }
 
         private int CountLinesWithPrefix(string body, string linePrefix)
