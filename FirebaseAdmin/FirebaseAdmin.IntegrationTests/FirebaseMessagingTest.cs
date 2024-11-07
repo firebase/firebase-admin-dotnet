@@ -45,6 +45,7 @@ namespace FirebaseAdmin.IntegrationTests
                     Priority = Priority.Normal,
                     TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
+                    DirectBootOk = true,
                 },
             };
             var id = await FirebaseMessaging.DefaultInstance.SendAsync(message, dryRun: true);
@@ -69,6 +70,7 @@ namespace FirebaseAdmin.IntegrationTests
                     Priority = Priority.Normal,
                     TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
+                    DirectBootOk = false,
                 },
             };
             var message2 = new Message()
@@ -84,6 +86,7 @@ namespace FirebaseAdmin.IntegrationTests
                     Priority = Priority.Normal,
                     TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
+                    DirectBootOk = true,
                 },
             };
             var response = await FirebaseMessaging.DefaultInstance.SendEachAsync(new[] { message1, message2 }, dryRun: true);
