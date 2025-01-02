@@ -20,15 +20,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install Mono
-      run: |
-        sudo apt update
-        sudo apt install -y mono-complete
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
+
+    - name: Install Mono
+      run: |
+        sudo apt update
+        sudo apt install -y mono-complete
 
     - name: Install dependencies
       run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
