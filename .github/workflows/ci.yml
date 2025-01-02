@@ -26,6 +26,7 @@ jobs:
         dotnet-version: 6.0.x
 
     - name: Install Mono
+      if: matrix.framework-version == 'net462'
       run: |
         sudo apt update
         sudo apt install -y mono-complete
