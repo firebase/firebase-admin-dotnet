@@ -56,6 +56,11 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
+    - name: Install Mono
+      run: |
+        sudo apt update
+        sudo apt install -y mono-complete
+
     - name: Install dependencies
       run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
 
