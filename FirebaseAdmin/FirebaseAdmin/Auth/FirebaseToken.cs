@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -57,10 +58,22 @@ namespace FirebaseAdmin.Auth
         public long ExpirationTimeSeconds { get; }
 
         /// <summary>
+        /// Gets the expiration time claim that identifies the expiration time
+        /// on or after which the token MUST NOT be accepted for processing.
+        /// </summary>
+        public DateTimeOffset ExpiredAt => DateTimeOffset.FromUnixTimeSeconds(ExpirationTimeSeconds);
+
+        /// <summary>
         /// Gets the issued at claim that identifies the time (in seconds) at which the JWT was
         /// issued.
         /// </summary>
         public long IssuedAtTimeSeconds { get; }
+
+        /// <summary>
+        /// Gets the issued at claim that identifies the time at which the JWT was
+        /// issued.
+        /// </summary>
+        public DateTimeOffset IssuedAt => DateTimeOffset.FromUnixTimeSeconds(IssuedAtTimeSeconds);
 
         /// <summary>
         /// Gets the User ID of the user to which this ID token belongs. This is same as
