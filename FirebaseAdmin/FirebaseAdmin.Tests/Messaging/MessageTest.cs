@@ -293,6 +293,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         DefaultLightSettings = false,
                         Visibility = NotificationVisibility.PUBLIC,
                         NotificationCount = 10,
+                        Proxy = NotificationProxy.IfPriorityLowered,
                     },
                     FcmOptions = new AndroidFcmOptions()
                     {
@@ -359,6 +360,7 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "visibility", "PUBLIC" },
                                 { "vibrate_timings", new JArray() { "1s", "1.001000000s" } },
                                 { "event_time", "2020-06-27T20:29:06.032691000Z" },
+                                { "proxy", "IF_PRIORITY_LOWERED" },
                             }
                         },
                         {
@@ -493,6 +495,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 DefaultLightSettings = false,
                 Visibility = NotificationVisibility.PUBLIC,
                 NotificationCount = 10,
+                Proxy = NotificationProxy.IfPriorityLowered,
             };
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidNotification>(json);
@@ -523,6 +526,7 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.DefaultLightSettings, copy.DefaultLightSettings);
             Assert.Equal(original.Visibility, copy.Visibility);
             Assert.Equal(original.NotificationCount, copy.NotificationCount);
+            Assert.Equal(original.Proxy, copy.Proxy);
         }
 
         [Fact]

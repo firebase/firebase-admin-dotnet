@@ -225,6 +225,12 @@ namespace FirebaseAdmin.Messaging
         public int? NotificationCount { get; set; }
 
         /// <summary>
+        /// Gets or sets the proxy behavior of this notification.
+        /// </summary>
+        [JsonIgnore]
+        public NotificationProxy? Proxy { get; set; }
+
+        /// <summary>
         /// Gets or sets the string representation of the <see cref="NotificationPriority"/> property.
         /// </summary>
         [JsonProperty("notification_priority")]
@@ -312,7 +318,7 @@ namespace FirebaseAdmin.Messaging
                         return;
                     default:
                         throw new ArgumentException(
-                            $"Invalid visibility value: {value}. Only 'PUBLIC', 'PRIVATE', ''SECRET' are allowed.");
+                            $"Invalid visibility value: {value}. Only 'PUBLIC', 'PRIVATE', 'SECRET' are allowed.");
                 }
             }
         }
@@ -380,6 +386,47 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
+        /// Gets or sets the string representation of the <see cref="NotificationProxy"/> property.
+        /// </summary>
+        [JsonProperty("proxy")]
+        private string ProxyString
+        {
+            get
+            {
+                switch (this.Proxy)
+                {
+                    case NotificationProxy.Allow:
+                        return "ALLOW";
+                    case NotificationProxy.Deny:
+                        return "DENY";
+                    case NotificationProxy.IfPriorityLowered:
+                        return "IF_PRIORITY_LOWERED";
+                    default:
+                        return null;
+                }
+            }
+
+            set
+            {
+                switch (value)
+                {
+                    case "ALLOW":
+                        this.Proxy = NotificationProxy.Allow;
+                        return;
+                    case "DENY":
+                        this.Proxy = NotificationProxy.Deny;
+                        return;
+                    case "IF_PRIORITY_LOWERED":
+                        this.Proxy = NotificationProxy.IfPriorityLowered;
+                        return;
+                    default:
+                        throw new ArgumentException(
+                            $"Invalid proxy value: {value}. Only 'ALLOW', 'DENY', 'IF_PRIORITY_LOWERED' are allowed.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Copies this notification, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service.
         /// </summary>
@@ -411,6 +458,7 @@ namespace FirebaseAdmin.Messaging
                 DefaultLightSettings = this.DefaultLightSettings,
                 Visibility = this.Visibility,
                 NotificationCount = this.NotificationCount,
+                Proxy = this.Proxy,
             };
             if (copy.Color != null && !Regex.Match(copy.Color, "^#[0-9a-fA-F]{6}$").Success)
             {
