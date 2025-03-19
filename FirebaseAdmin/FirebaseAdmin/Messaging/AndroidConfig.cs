@@ -107,7 +107,7 @@ namespace FirebaseAdmin.Messaging
                         this.Priority = Messaging.Priority.High;
                         return;
                     case "normal":
-                        this.Priority = Messaging.Priority.High;
+                        this.Priority = Messaging.Priority.Normal;
                         return;
                     default:
                         throw new ArgumentException(
