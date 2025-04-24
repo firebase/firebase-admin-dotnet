@@ -103,6 +103,8 @@ jobs:
     # Use Linux for this phase, so we can reuse the same helper scripts as other Admin SDK
     # repositories.
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout source for publish
