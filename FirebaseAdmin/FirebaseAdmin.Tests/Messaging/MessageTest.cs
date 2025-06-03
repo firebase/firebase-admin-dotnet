@@ -1013,6 +1013,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         AnalyticsLabel = "label",
                         ImageUrl = "https://example.com/image.png",
                     },
+                    LiveActivityToken = "token",
                 },
             };
             var expected = new JObject()
@@ -1055,6 +1056,9 @@ namespace FirebaseAdmin.Messaging.Tests
                                 { "analytics_label", "label" },
                                 { "image", "https://example.com/image.png" },
                             }
+                        },
+                        {
+                            "live_activity_token", "token"
                         },
                     }
                 },

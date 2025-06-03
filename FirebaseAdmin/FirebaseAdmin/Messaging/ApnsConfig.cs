@@ -76,6 +76,14 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
+        /// Gets or sets the APNs token used for live activities on iOS. Refer
+        /// to <a href="https://firebase.google.com/docs/cloud-messaging/ios/live-activity">
+        /// Firebase live activity documentation</a> for more information.
+        /// </summary>
+        [JsonProperty("live_activity_token")]
+        public string LiveActivityToken { get; set; }
+
+        /// <summary>
         /// Gets or sets the APNs payload as accepted by the FCM backend servers.
         /// </summary>
         [JsonProperty("payload")]
@@ -108,6 +116,7 @@ namespace FirebaseAdmin.Messaging
                 Headers = this.Headers?.Copy(),
                 Payload = this.Payload.CopyAndValidate(),
                 FcmOptions = this.FcmOptions?.CopyAndValidate(),
+                LiveActivityToken = this.LiveActivityToken,
             };
             return copy;
         }
