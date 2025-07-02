@@ -35,7 +35,7 @@ namespace FirebaseAdmin.Auth
         /// <param name="providerUid">The providerUid.</param>
         public ProviderIdentifier(string providerId, string providerUid)
         {
-            UserRecordArgs.CheckProvider(providerId, providerUid, required: true);
+            UserRecordArgs.CheckProvider(providerId, providerUid, true, true);
             this.providerId = providerId;
             this.providerUid = providerUid;
         }
