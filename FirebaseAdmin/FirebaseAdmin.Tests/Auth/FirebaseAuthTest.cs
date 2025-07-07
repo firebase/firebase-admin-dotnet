@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
@@ -171,7 +172,7 @@ namespace FirebaseAdmin.Auth.Tests
         }
 
         [Fact]
-        public async void InvalidCredential()
+        public async Task InvalidCredential()
         {
             var options = new AppOptions
             {

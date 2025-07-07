@@ -92,7 +92,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
         };
 
         [Fact]
-        public async void NoEmail()
+        public async Task NoEmail()
         {
             var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
             var auth = this.CreateFirebaseAuth(handler);
@@ -115,7 +115,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(InvalidActionCodeSettingsArgs))]
-        public async void InvalidActionCodeSettings(ActionCodeSettings settings)
+        public async Task InvalidActionCodeSettings(ActionCodeSettings settings)
         {
             var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
             var auth = this.CreateFirebaseAuth(handler);
@@ -264,7 +264,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
         }
 
         [Fact]
-        public async void SignInWithEmailLinkNoSettings()
+        public async Task SignInWithEmailLinkNoSettings()
         {
             var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
             var auth = this.CreateFirebaseAuth(handler);
