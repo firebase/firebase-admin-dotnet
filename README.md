@@ -1,4 +1,5 @@
-[![Build Status](https://github.com/firebase/firebase-admin-dotnet/workflows/Continuous%20Integration/badge.svg)](https://github.com/firebase/firebase-admin-dotnet/actions)
+[![Continuous Integration](https://github.com/firebase/firebase-admin-dotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/firebase/firebase-admin-dotnet/actions/workflows/ci.yml)
+[![Nightly Builds](https://github.com/firebase/firebase-admin-dotnet/actions/workflows/nightly.yml/badge.svg)](https://github.com/firebase/firebase-admin-dotnet/actions/workflows/nightly.yml)
 
 # Firebase Admin .NET SDK
 
