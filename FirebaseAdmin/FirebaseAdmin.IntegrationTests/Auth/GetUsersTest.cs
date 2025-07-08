@@ -31,7 +31,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         }
 
         [Fact]
-        public async void VariousIdentifiers()
+        public async Task VariousIdentifiers()
         {
             var getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
                 new List<UserIdentifier>()
@@ -56,7 +56,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         }
 
         [Fact]
-        public async void IgnoresNonExistingUsers()
+        public async Task IgnoresNonExistingUsers()
         {
             var doesntExistId = new UidIdentifier("uid_that_doesnt_exist");
             var getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
@@ -79,7 +79,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         }
 
         [Fact]
-        public async void OnlyNonExistingUsers()
+        public async Task OnlyNonExistingUsers()
         {
             var doesntExistId = new UidIdentifier("uid_that_doesnt_exist");
             var getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
@@ -93,7 +93,7 @@ namespace FirebaseAdmin.IntegrationTests.Auth
         }
 
         [Fact]
-        public async void DedupsDuplicateUsers()
+        public async Task DedupsDuplicateUsers()
         {
             var getUsersResult = await FirebaseAuth.DefaultInstance.GetUsersAsync(
                 new List<UserIdentifier>()

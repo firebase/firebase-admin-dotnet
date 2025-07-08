@@ -1302,7 +1302,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async void ReservedClaims(TestConfig config)
+        public async Task ReservedClaims(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1321,7 +1321,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async void UpdateUserNoUid(TestConfig config)
+        public async Task UpdateUserNoUid(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1335,7 +1335,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async void UpdateUserInvalidUid(TestConfig config)
+        public async Task UpdateUserInvalidUid(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1487,7 +1487,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async void EmptyNameClaims(TestConfig config)
+        public async Task EmptyNameClaims(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1502,7 +1502,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async void LargeClaimsOverLimit(TestConfig config)
+        public async Task LargeClaimsOverLimit(TestConfig config)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
@@ -1732,7 +1732,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async void RevokeRefreshTokensNoUid(TestConfig config)
+        public async Task RevokeRefreshTokensNoUid(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = CreateUserResponse };
             var auth = config.CreateAuth(handler);
@@ -1745,7 +1745,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async void RevokeRefreshTokensInvalidUid(TestConfig config)
+        public async Task RevokeRefreshTokensInvalidUid(TestConfig config)
         {
             var auth = config.CreateAuth(new MockMessageHandler());
 
@@ -1756,7 +1756,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(MainTenantTestConfigs))]
-        public async void CreateSessionCookieNoIdToken(TestConfig config)
+        public async Task CreateSessionCookieNoIdToken(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
@@ -1773,7 +1773,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(MainTenantTestConfigs))]
-        public async void CreateSessionCookieNoOptions(TestConfig config)
+        public async Task CreateSessionCookieNoOptions(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
@@ -1784,7 +1784,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(MainTenantTestConfigs))]
-        public async void CreateSessionCookieNoExpiresIn(TestConfig config)
+        public async Task CreateSessionCookieNoExpiresIn(TestConfig config)
         {
             var handler = new MockMessageHandler() { Response = "{}" };
             var auth = (FirebaseAuth)config.CreateAuth(handler);
