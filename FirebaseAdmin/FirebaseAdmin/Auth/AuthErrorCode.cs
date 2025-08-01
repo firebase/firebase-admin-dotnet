@@ -105,5 +105,10 @@ namespace FirebaseAdmin.Auth
         /// is not already registered.
         /// </summary>
         EmailNotFound,
+
+        /// <summary>
+        /// The provided hosting link domain is not configured in Firebase Hosting or is not owned by the current project.
+        /// </summary>
+        InvalidHostingLinkDomain,
     }
 }

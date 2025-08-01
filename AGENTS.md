@@ -43,6 +43,21 @@ The Firebase Admin DotNet SDK provides C# developers with access to Firebase ser
 -   **Manifest**: The `FirebaseAdmin/FirebaseAdmin/FirebaseAdmin.csproj` file lists all dependencies.
 -   **Command**: To add a dependency, use `dotnet add package <PACKAGE_NAME>`.
 
+### How to Run Tests
+
+The unit tests can be run using the `dotnet test` command. Ensure that the required .NET frameworks (net462 and net6.0) are installed in your environment.
+
+To run the tests for a specific framework, use the `--framework` flag:
+```bash
+# Run tests for .NET 6.0
+dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net6.0
+
+# Run tests for .NET 4.6.2
+dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net462
+```
+
+**Note on Integration Tests:** The integration tests require a configured service account and other setup that is not available in all environments. It is recommended to rely on the CI for running integration tests.
+
 ## Critical Developer Journeys
 
 ### Journey 1: How to Add a New API Method
@@ -98,4 +113,4 @@ After implementing and testing a change, you must create a commit and Pull Reque
    - id: firebase-admin-dotnet-messaging (`/messaging/AGENTS.md`)
    ```
 
-**3. Pull Request**: The Pull Request title and description should be populated directly from the commit message's title and body.
+**3. Pull Request**: The Pull Request title and description should be populated directly from the commit message's title and body. The branch name should be prefixed with the agent name (e.g., `jules-my-feature`).

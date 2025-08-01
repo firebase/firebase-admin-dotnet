@@ -78,6 +78,13 @@ namespace FirebaseAdmin.Auth
                         "Dynamic link domain specified in ActionCodeSettings is not authorized")
                 },
                 {
+                    "INVALID_HOSTING_LINK_DOMAIN",
+                    new ErrorInfo(
+                        ErrorCode.InvalidArgument,
+                        AuthErrorCode.InvalidHostingLinkDomain,
+                        "The provided hosting link domain is not configured in Firebase Hosting or is not owned by the current project")
+                },
+                {
                     "PHONE_NUMBER_EXISTS",
                     new ErrorInfo(
                         ErrorCode.AlreadyExists,
