@@ -100,15 +100,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
 
-#if NET6_0_OR_GREATER
+            #if NET6_0_OR_GREATER
             await Assert.ThrowsAsync<TaskCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-#else
+            #else
             await Assert.ThrowsAsync<OperationCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-#endif
+            #endif
         }
 
         [Fact]
@@ -122,15 +122,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
 
-#if NET6_0_OR_GREATER
+            #if NET6_0_OR_GREATER
             await Assert.ThrowsAsync<TaskCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-#else
+            #else
             await Assert.ThrowsAsync<OperationCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-#endif
+            #endif
         }
 
         [Fact]
