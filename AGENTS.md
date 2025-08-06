@@ -1,8 +1,8 @@
-This document provides a detailed guide for AI agents to understand and contribute to the Firebase Admin DotNet SDK. Adhering to these guidelines is crucial for maintaining code quality, consistency, and idiomatic C# practices.
+This document provides a detailed guide for AI agents to understand and contribute to the Firebase Admin .NET SDK. Adhering to these guidelines is crucial for maintaining code quality, consistency, and idiomatic C# practices.
 
 ## High-Level Overview
 
-The Firebase Admin DotNet SDK provides C# developers with access to Firebase services on privileged environments. Its design emphasizes idiomatic C#, thread-safety, and a consistent, predictable API surface.
+The Firebase Admin .NET SDK provides C# developers with access to Firebase services on privileged environments. Its design emphasizes idiomatic C#, thread-safety, and a consistent, predictable API surface.
 
 ## Directory Structure
 
@@ -11,7 +11,7 @@ The Firebase Admin DotNet SDK provides C# developers with access to Firebase ser
     -   **`FirebaseAdmin/FirebaseAdmin/FirebaseApp.cs`**: The main entry point and initialization class for the SDK.
     -   **`FirebaseAdmin/FirebaseAdmin/Auth/`**: Source code for the Authentication service.
     -   **`FirebaseAdmin/FirebaseAdmin/Messaging/`**: Source code for the Firebase Cloud Messaging (FCM) service.
-    -   **`FirebaseAdmin/FirebaseAdmin/Internal/`**: Internal utilities and classes not meant for public consumption. Direct use of this code in public APIs is strictly forbidden.
+    -   **`FirebaseAdmin/FirebaseAdmin/Util/`**: Internal helper utilities and classes used across services (e.g. Wrapping low level http exceptions as a `FirebaseException`).
 -   **`FirebaseAdmin/FirebaseAdmin.Tests/`**: Unit tests for the SDK.
 -   **`FirebaseAdmin/FirebaseAdmin.IntegrationTests/`**: Integration tests.
 -   **`FirebaseAdmin/FirebaseAdmin.Snippets/`**: Code snippets used in documentation.
@@ -28,14 +28,29 @@ The Firebase Admin DotNet SDK provides C# developers with access to Firebase ser
 
 -   **Formatting**: Code style is enforced using `stylecop`. Run `dotnet format` to apply the rules.
 -   **Naming**:
-    -   Classes and public methods use `PascalCase`.
-    -   Private members are not explicitly prefixed, but it is preferred to prefix them with an underscore (`_`).
-    -   Constants are `PascalCase`.
+    -   Constants, classes and public methods use `PascalCase`.
+    -   Private members are not explicitly prefixed.
 
 ## Testing Philosophy
 
--   **Unit Tests**: Located in `FirebaseAdmin.Tests/`, with a file naming pattern of `*Test.cs`. `xunit` is the testing framework. Moq is the preferred library for mocking dependencies.
+-   **Unit Tests**: Located in `FirebaseAdmin.Tests/`, with a file naming pattern of `*Test.cs`. `xunit` is the testing framework.
 -   **Integration Tests**: Located in `FirebaseAdmin.IntegrationTests/`. These tests interact with live Firebase services and require a configured service account.
+
+### How to Run Tests
+
+The unit tests can be run using the `dotnet test` command. Ensure that the required .NET frameworks (net462 and net6.0) are installed in your environment.
+
+To run the tests for a specific framework, use the `--framework` flag:
+```bash
+# Run tests for .NET 6.0
+dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net6.0
+
+# Run tests for .NET 4.6.2
+dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net462
+```
+
+**Note on Integration Tests:** The integration tests require a configured service account and other setup that is not available in all environments. It is recommended to rely on the CI for running integration tests.
+
 
 ## Dependency Management
 
@@ -45,25 +60,25 @@ The Firebase Admin DotNet SDK provides C# developers with access to Firebase ser
 
 ## Critical Developer Journeys
 
-### Journey 1: How to Add a New API Method
+### Journey 1: How to Add/Update a New API Method
 
-1.  **Public Method**: Define the new public method in the relevant service class (e.g., `FirebaseAuth.cs`).
-2.  **Internal Logic**: Implement the core logic as a private method.
-3.  **HTTP Client**: Use the internal `HttpClient` to make the API call.
+1.  **Public Method**: Define the new public method or changes in the relevant service class (e.g., `FirebaseAuth.cs`).
+2.  **Internal Logic**: Implement the core logic as a private method. 
+3.  **HTTP Client**: Use the existing HTTP Client implementation for that service to make the API call.
 4.  **Error Handling**: Wrap API calls in `try-catch` blocks and throw appropriate `FirebaseException` subtypes.
-5.  **Testing**: Add a unit test in the corresponding `*Test.cs` file and an integration test in `FirebaseAdmin.IntegrationTests/`.
-6.  **Snippet**: Add a code snippet in `FirebaseAdmin.Snippets/` to demonstrate the new feature.
+5.  **Testing**: Add a unit test in the corresponding `*Test.cs` file and an integration test in `FirebaseAdmin.IntegrationTests/` where appropriate. This should be thorough and update any tests where the new changes would affect.
+6.  **Snippet**: Add or update code snippet in `FirebaseAdmin.Snippets/` to demonstrate the new feature.
 
-### Journey 2: How to Add a New Field to an Existing API Response
+### Journey 2: How to Deprecate a Field/Method in an Existing API
 
-1.  **Data Model**: Locate and modify the relevant data model class in the service's directory.
-2.  **Testing**: Update unit and integration tests to verify the presence and correctness of the new field.
+1.  **Add Deprecation Note**: Locate where the deprecated object is defined and add a deprecation warning with a note (e.g. [Obsolete("Use X instead")]).
+2.  **Remove Releted Tests and Update Snippets**: Because `Obsolete` warnings result in build errors, tests and snippets where the object is used should be removed or updated not no longer used the deprecated object.
 
 ## Critical Do's and Don'ts
 
 -   **DO**: Use the centralized `HttpClient` for all API calls.
 -   **DO**: Follow the established `async`/`await` patterns for asynchronous code.
--   **DON'T**: Expose types from the `FirebaseAdmin/FirebaseAdmin/Internal/` directory in any public API.
+-   **DON'T**: Expose types from the `FirebaseAdmin/FirebaseAdmin/Utils/` directory in any public API.
 -   **DON'T**: Introduce new third-party dependencies without a compelling reason and discussion with the maintainers.
 
 ## Commit and Pull Request Generation
@@ -72,7 +87,7 @@ After implementing and testing a change, you must create a commit and Pull Reque
 
 **1. Commit Message Format**: The commit message is critical and is used to generate the Pull Request. It MUST follow this structure:
    - **Title**: Use the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification: `type(scope): subject`.
-     - `scope` should be the service package changed (e.g., `auth`, `db`, `deps`).
+     - `scope` should be the service package changed (e.g., `auth`, `rtdb`, `deps`).
      - **Note on Scopes**: Some services use specific abbreviations. Use the abbreviation if one exists. Common abbreviations include:
        - `messaging` -> `fcm`
        - `dataconnect` -> `fdc`
@@ -83,19 +98,22 @@ After implementing and testing a change, you must create a commit and Pull Reque
    - **Body**: The body is separated from the title by a blank line and MUST contain the following, in order:
      1. A brief explanation of the problem and the solution.
      2. A summary of the testing strategy (e.g., "Added a new unit test to verify the fix.").
-     3. A **Context Sources** section that lists the `id` and repository path of every `AGENTS.md` file you used.
+     3. A **Context Sources** section that lists the `id` and repository path of every `AGENTS.md` file you used to verify context usage.
 
 **2. Example Commit Message**:
    ```
    feat(fcm): Add support for multicast messages
 
-   This change introduces a new `SendMulticast` method to the messaging client, allowing developers to send a single message to multiple tokens efficiently.
+   This change introduces a new `SendEachForMulticastAsync` method to the messaging client, allowing developers to send a single message to multiple tokens efficiently.
 
-   Testing: Added unit tests in `messaging_test.cs` with a mock server and an integration test in `integration/messaging_test.cs`.
+   Testing: Added unit tests with a mock server and an integration test in `FirebaseAdmin.IntegrationTests/MessagingTest.cs`.
 
    Context Sources Used:
-   - id: firebase-admin-dotnet (`/AGENTS.md`)
-   - id: firebase-admin-dotnet-messaging (`/messaging/AGENTS.md`)
+   - id: firebase-admin-dotnet
+   - id: firebase-admin-dotnet-messaging
    ```
 
 **3. Pull Request**: The Pull Request title and description should be populated directly from the commit message's title and body.
+
+## Metadata:
+- id: firebase-admin-dotnet
