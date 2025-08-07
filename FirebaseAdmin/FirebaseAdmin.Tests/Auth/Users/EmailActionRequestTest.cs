@@ -47,7 +47,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     new ActionCodeSettings()
                     {
                         Url = "https://example.dynamic.link",
-                        DynamicLinkDomain = string.Empty,
+                        LinkDomain = string.Empty,
                     },
                 },
                 new object[]
@@ -84,7 +84,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
         {
             Url = "https://example.dynamic.link",
             HandleCodeInApp = true,
-            DynamicLinkDomain = "custom.page.link",
+            LinkDomain = "custom.page.link",
             IosBundleId = "com.example.ios",
             AndroidPackageName = "com.example.android",
             AndroidMinimumVersion = "6",
@@ -170,7 +170,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
             Assert.True((bool)request["canHandleCodeInApp"]);
-            Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+            Assert.Equal(ActionCodeSettings.LinkDomain, request["linkDomain"]);
             Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
             Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
             Assert.Equal(
@@ -236,7 +236,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
             Assert.True((bool)request["canHandleCodeInApp"]);
-            Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+            Assert.Equal(ActionCodeSettings.LinkDomain, request["linkDomain"]);
             Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
             Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
             Assert.Equal(
@@ -294,7 +294,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
             Assert.True((bool)request["canHandleCodeInApp"]);
-            Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+            Assert.Equal(ActionCodeSettings.LinkDomain, request["linkDomain"]);
             Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
             Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
             Assert.Equal(
@@ -323,11 +323,11 @@ namespace FirebaseAdmin.Auth.Users.Tests
         }
 
         [Fact]
-        public async Task InvalidDynamicLinkDomain()
+        public async Task InvalidHostingLinkDomain()
         {
             var json = $@"{{
                 ""error"": {{
-                    ""message"": ""INVALID_DYNAMIC_LINK_DOMAIN"",
+                    ""message"": ""INVALID_HOSTING_LINK_DOMAIN"",
                 }}
             }}";
             var handler = new MockMessageHandler()
@@ -342,10 +342,9 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     "user@example.com", ActionCodeSettings));
 
             Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
-            Assert.Equal(AuthErrorCode.InvalidDynamicLinkDomain, exception.AuthErrorCode);
+            Assert.Equal(AuthErrorCode.InvalidHostingLinkDomain, exception.AuthErrorCode);
             Assert.Equal(
-                "Dynamic link domain specified in ActionCodeSettings is not authorized "
-                + "(INVALID_DYNAMIC_LINK_DOMAIN).",
+                "The provided hosting link domain is not configured in Firebase Hosting or is not owned by the current project (INVALID_HOSTING_LINK_DOMAIN).",
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);

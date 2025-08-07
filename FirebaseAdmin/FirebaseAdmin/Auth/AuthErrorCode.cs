@@ -65,6 +65,11 @@ namespace FirebaseAdmin.Auth
         InvalidDynamicLinkDomain,
 
         /// <summary>
+        /// The provided hosting link domain is not configured in Firebase Hosting or is not owned by the current project.
+        /// </summary>
+        InvalidHostingLinkDomain,
+
+        /// <summary>
         /// The specified ID token has been revoked.
         /// </summary>
         RevokedIdToken,
