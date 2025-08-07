@@ -42,6 +42,7 @@ namespace FirebaseAdmin.Auth.Users
             {
                 this.Url = settings.Url;
                 this.HandleCodeInApp = settings.HandleCodeInApp;
+                this.DynamicLinkDomain = settings.DynamicLinkDomain;
                 this.LinkDomain = settings.LinkDomain;
                 this.IosBundleId = settings.IosBundleId;
                 this.AndroidPackageName = settings.AndroidPackageName;
@@ -66,6 +67,9 @@ namespace FirebaseAdmin.Auth.Users
 
         [JsonProperty("canHandleCodeInApp")]
         internal bool? HandleCodeInApp { get; }
+
+        [JsonProperty("dynamicLinkDomain")]
+        internal string DynamicLinkDomain { get; }
 
         [JsonProperty("linkDomain")]
         internal string LinkDomain { get; }
@@ -120,9 +124,9 @@ namespace FirebaseAdmin.Auth.Users
                 }
             }
 
-            if (this.LinkDomain == string.Empty)
+            if (this.DynamicLinkDomain == string.Empty)
             {
-                throw new ArgumentException("LinkDomain must not be empty");
+                throw new ArgumentException("DynamicLinkDomain must not be empty");
             }
 
             if (this.IosBundleId == string.Empty)
