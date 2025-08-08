@@ -7,7 +7,6 @@
     <AssemblyOriginatorKeyFile>../../FirebaseAdmin.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsNotAsErrors>CS0618</WarningsNotAsErrors>
     <CodeAnalysisRuleSet>../../stylecop_test.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 

@@ -42,7 +42,9 @@ namespace FirebaseAdmin.Auth.Users
             {
                 this.Url = settings.Url;
                 this.HandleCodeInApp = settings.HandleCodeInApp;
+#pragma warning disable CS0618
                 this.DynamicLinkDomain = settings.DynamicLinkDomain;
+#pragma warning restore CS0618
                 this.LinkDomain = settings.LinkDomain;
                 this.IosBundleId = settings.IosBundleId;
                 this.AndroidPackageName = settings.AndroidPackageName;
@@ -127,6 +129,11 @@ namespace FirebaseAdmin.Auth.Users
             if (this.DynamicLinkDomain == string.Empty)
             {
                 throw new ArgumentException("DynamicLinkDomain must not be empty");
+            }
+
+            if (this.LinkDomain == string.Empty)
+            {
+                throw new ArgumentException("LinkDomain must not be empty");
             }
 
             if (this.IosBundleId == string.Empty)

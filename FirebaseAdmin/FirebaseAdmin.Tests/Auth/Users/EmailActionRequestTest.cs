@@ -47,7 +47,17 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     new ActionCodeSettings()
                     {
                         Url = "https://example.dynamic.link",
+#pragma warning disable CS0618
                         DynamicLinkDomain = string.Empty,
+#pragma warning restore CS0618
+                    },
+                },
+                new object[]
+                {
+                    new ActionCodeSettings()
+                    {
+                        Url = "https://example.dynamic.link",
+                        LinkDomain = string.Empty,
                     },
                 },
                 new object[]
@@ -84,7 +94,10 @@ namespace FirebaseAdmin.Auth.Users.Tests
         {
             Url = "https://example.dynamic.link",
             HandleCodeInApp = true,
+#pragma warning disable CS0618
             DynamicLinkDomain = "custom.page.link",
+#pragma warning restore CS0618
+            LinkDomain = "custom.page.link",
             IosBundleId = "com.example.ios",
             AndroidPackageName = "com.example.android",
             AndroidMinimumVersion = "6",
@@ -163,14 +176,17 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
                 handler.LastRequestBody);
-            Assert.Equal(10, request.Count);
+            Assert.Equal(11, request.Count);
             Assert.Equal("user@example.com", request["email"]);
             Assert.Equal("VERIFY_EMAIL", request["requestType"]);
             Assert.True((bool)request["returnOobLink"]);
 
             Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
             Assert.True((bool)request["canHandleCodeInApp"]);
+#pragma warning disable CS0618
             Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+#pragma warning restore CS0618
+            Assert.Equal(ActionCodeSettings.LinkDomain, request["linkDomain"]);
             Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
             Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
             Assert.Equal(
@@ -229,14 +245,17 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
                 handler.LastRequestBody);
-            Assert.Equal(10, request.Count);
+            Assert.Equal(11, request.Count);
             Assert.Equal("user@example.com", request["email"]);
             Assert.Equal("PASSWORD_RESET", request["requestType"]);
             Assert.True((bool)request["returnOobLink"]);
 
             Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
             Assert.True((bool)request["canHandleCodeInApp"]);
+#pragma warning disable CS0618
             Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+#pragma warning restore CS0618
+            Assert.Equal(ActionCodeSettings.LinkDomain, request["linkDomain"]);
             Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
             Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
             Assert.Equal(
@@ -287,14 +306,17 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
                 handler.LastRequestBody);
-            Assert.Equal(10, request.Count);
+            Assert.Equal(11, request.Count);
             Assert.Equal("user@example.com", request["email"]);
             Assert.Equal("EMAIL_SIGNIN", request["requestType"]);
             Assert.True((bool)request["returnOobLink"]);
 
             Assert.Equal(ActionCodeSettings.Url, request["continueUrl"]);
             Assert.True((bool)request["canHandleCodeInApp"]);
+#pragma warning disable CS0618
             Assert.Equal(ActionCodeSettings.DynamicLinkDomain, request["dynamicLinkDomain"]);
+#pragma warning restore CS0618
+            Assert.Equal(ActionCodeSettings.LinkDomain, request["linkDomain"]);
             Assert.Equal(ActionCodeSettings.IosBundleId, request["iOSBundleId"]);
             Assert.Equal(ActionCodeSettings.AndroidPackageName, request["androidPackageName"]);
             Assert.Equal(
@@ -349,45 +371,6 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 exception.Message);
             Assert.NotNull(exception.HttpResponse);
             Assert.Null(exception.InnerException);
-        }
-
-        [Fact]
-        public async Task EmailVerificationLinkWithLinkDomainSettings()
-        {
-            var handler = new MockMessageHandler() { Response = GenerateEmailLinkResponse };
-            var auth = this.CreateFirebaseAuth(handler);
-            var settings = new ActionCodeSettings()
-            {
-                Url = "https://example.dynamic.link",
-                HandleCodeInApp = true,
-                LinkDomain = "custom.page.link",
-                IosBundleId = "com.example.ios",
-                AndroidPackageName = "com.example.android",
-                AndroidMinimumVersion = "6",
-                AndroidInstallApp = true,
-            };
-
-            var link = await auth.GenerateEmailVerificationLinkAsync(
-                "user@example.com", settings);
-
-            Assert.Equal("https://mock-oob-link.for.auth.tests", link);
-
-            var request = NewtonsoftJsonSerializer.Instance.Deserialize<Dictionary<string, object>>(
-                handler.LastRequestBody);
-            Assert.Equal(10, request.Count);
-            Assert.Equal("user@example.com", request["email"]);
-            Assert.Equal("VERIFY_EMAIL", request["requestType"]);
-            Assert.True((bool)request["returnOobLink"]);
-
-            Assert.Equal(settings.Url, request["continueUrl"]);
-            Assert.True((bool)request["canHandleCodeInApp"]);
-            Assert.Equal(settings.LinkDomain, request["linkDomain"]);
-            Assert.Equal(settings.IosBundleId, request["iOSBundleId"]);
-            Assert.Equal(settings.AndroidPackageName, request["androidPackageName"]);
-            Assert.Equal(
-                settings.AndroidMinimumVersion, request["androidMinimumVersion"]);
-            Assert.True((bool)request["androidInstallApp"]);
-            this.AssertRequest(handler.Requests[0]);
         }
 
         [Fact]

@@ -9,7 +9,6 @@
     <SignAssembly>true</SignAssembly>
     <Deterministic>true</Deterministic>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsNotAsErrors>CS0618</WarningsNotAsErrors>
     <Description>
       Firebase Admin SDK enables server-side .NET developers to integrate Firebase into their
       services and applications.
