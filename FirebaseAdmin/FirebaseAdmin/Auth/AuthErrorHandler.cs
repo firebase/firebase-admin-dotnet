@@ -209,7 +209,8 @@ namespace FirebaseAdmin.Auth
 
             /// <summary>
             /// Gets the Firebase Auth error code extracted from the response. Returns empty string
-            /// if the error code cannot be determined.
+            /// if the error code cannot be determined. These error messages take the form
+            /// <c>{"error": {"message": "CODE : OPTIONAL DETAILS"}}</c>.
             /// </summary>
             internal string Code
             {
@@ -218,7 +219,7 @@ namespace FirebaseAdmin.Auth
                     var separator = this.GetSeparator();
                     if (separator != -1)
                     {
-                        return this.Message.Substring(0, separator);
+                        return this.Message.Substring(0, separator).Trim();
                     }
 
                     return this.Message ?? string.Empty;

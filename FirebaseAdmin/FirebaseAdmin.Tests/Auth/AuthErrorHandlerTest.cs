@@ -115,6 +115,31 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.EndsWith($" ({code}): Some details.", error.Message);
         }
 
+        [Theory]
+        [MemberData(nameof(AuthErrorCodes))]
+        public void KnownErrorCodeWithDetailsAndWhiteSpace(
+            string code, ErrorCode expectedCode, AuthErrorCode expectedAuthCode)
+        {
+            var json = $@"{{
+                ""error"": {{
+                    ""message"": ""{code} : Some details. "",
+                }}
+            }}";
+            var resp = new HttpResponseMessage()
+            {
+                StatusCode = HttpStatusCode.ServiceUnavailable,
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
+            };
+
+            var error = AuthErrorHandler.Instance.HandleHttpErrorResponse(resp, json);
+
+            Assert.Equal(expectedCode, error.ErrorCode);
+            Assert.Equal(expectedAuthCode, error.AuthErrorCode);
+            Assert.Same(resp, error.HttpResponse);
+            Assert.Null(error.InnerException);
+            Assert.EndsWith($" ({code}): Some details.", error.Message);
+        }
+
         [Fact]
         public void UnknownErrorCode()
         {
