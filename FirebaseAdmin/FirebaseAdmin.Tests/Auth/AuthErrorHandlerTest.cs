@@ -63,6 +63,12 @@ namespace FirebaseAdmin.Auth.Tests
                     ErrorCode.NotFound,
                     AuthErrorCode.EmailNotFound,
                 },
+                new object[]
+                {
+                    "INVALID_HOSTING_LINK_DOMAIN",
+                    ErrorCode.InvalidArgument,
+                    AuthErrorCode.InvalidHostingLinkDomain,
+                },
             };
 
         [Theory]

@@ -643,7 +643,7 @@ namespace FirebaseAdmin.Snippets
                 AndroidPackageName = "com.example.android",
                 AndroidInstallApp = true,
                 AndroidMinimumVersion = "12",
-                DynamicLinkDomain = "coolapp.page.link",
+                LinkDomain = "coolapp.page.link",
             };
             // [END init_action_code_settings]
             return actionCodeSettings;

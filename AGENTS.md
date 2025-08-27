@@ -72,7 +72,7 @@ dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net462
 ### Journey 2: How to Deprecate a Field/Method in an Existing API
 
 1.  **Add Deprecation Note**: Locate where the deprecated object is defined and add a deprecation warning with a note (e.g. [Obsolete("Use X instead")]).
-2.  **Remove Releted Tests and Update Snippets**: Because `Obsolete` warnings result in build errors, tests and snippets where the object is used should be removed or updated not no longer used the deprecated object.
+2.  **Suppress Obsolete Warnings**: Because `Obsolete` warnings result in build errors, tests and snippets where the object is used should be marked using `#pragma` directives to suppress warnings where the object is used.
 
 ## Critical Do's and Don'ts
 
