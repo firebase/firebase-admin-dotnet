@@ -50,11 +50,20 @@ namespace FirebaseAdmin.Auth
         public bool HandleCodeInApp { get; set; }
 
         /// <summary>
+        /// Gets or sets the hosting link domain to use for the current link if it is to be opened
+        /// using <c>handleCodeInApp</c>, as multiple hosting link domains can be configured per
+        /// project. This setting provides the ability to explicitly choose one. If none is provided,
+        /// the default hosting domain is used.
+        /// </summary>
+        public string LinkDomain { get; set; }
+
+        /// <summary>
         /// Gets or sets the dynamic link domain to use for the current link if it is to be opened
         /// using Firebase Dynamic Links, as multiple dynamic link domains can be configured per
         /// project. This setting provides the ability to explicitly choose one. If none is provided,
         /// the oldest domain is used by default.
         /// </summary>
+        [System.Obsolete("DynamicLinkDomain is deprecated, use LinkDomain instead")]
         public string DynamicLinkDomain { get; set; }
 
         /// <summary>
