@@ -36,6 +36,13 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             HandleCodeInApp = false,
         };
 
+        private static readonly ActionCodeSettings InvalidEmailLinkSettingsWithCustomDomain = new ActionCodeSettings()
+        {
+            Url = ContinueUrl,
+            HandleCodeInApp = true,
+            LinkDomain = "cool.link.domain",
+        };
+
         private readonly AbstractAuthFixture<T> fixture;
         private readonly TemporaryUserBuilder userBuilder;
 
@@ -656,6 +663,18 @@ namespace FirebaseAdmin.IntegrationTests.Auth
             // Sign in with link also verifies the user's email
             user = await this.Auth.GetUserAsync(user.Uid);
             Assert.True(user.EmailVerified);
+        }
+
+        [Fact]
+        public async Task AuthErrorCodeParse()
+        {
+            var user = await this.userBuilder.CreateRandomUserAsync();
+
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                () => this.Auth.GeneratePasswordResetLinkAsync(
+                    user.Email, InvalidEmailLinkSettingsWithCustomDomain));
+            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
+            Assert.Equal(AuthErrorCode.InvalidHostingLinkDomain, exception.AuthErrorCode);
         }
 
         private async Task<FirebaseToken> AssertValidIdTokenAsync(
