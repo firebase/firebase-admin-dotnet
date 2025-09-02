@@ -38,6 +38,7 @@ namespace FirebaseAdmin
             this.ProjectId = options.ProjectId;
             this.ServiceAccountId = options.ServiceAccountId;
             this.HttpClientFactory = options.HttpClientFactory;
+            this.TokenCertUrl = options.TokenCertUrl;
         }
 
         /// <summary>
@@ -66,5 +67,10 @@ namespace FirebaseAdmin
         /// Gets or sets the HttpClientFactory to use when making Firebase requests.
         /// </summary>
         public HttpClientFactory HttpClientFactory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the TokenCertUrl to use custom public key url.
+        /// </summary>
+        public string TokenCertUrl { get; set; }
     }
 }
