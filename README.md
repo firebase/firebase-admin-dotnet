@@ -66,7 +66,7 @@ Admin .NET SDK supports the following frameworks:
 
 Support for .NET 6.0 and 7.0 is now deprecated.
 The next major version of the Admin SDK will terminate support for these
-versions. Developers are advised to upgrade to .NET 8.0+
+versions. Use .NET 8.0 or higher when deploying the Admin SDK.
 accordingly.
 
 This is consistent with the frameworks supported by other .NET libraries
