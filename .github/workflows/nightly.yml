@@ -71,7 +71,7 @@ jobs:
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
     - name: Archive artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Release
         path: FirebaseAdmin/FirebaseAdmin/bin/Release
