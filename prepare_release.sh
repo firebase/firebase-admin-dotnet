@@ -106,10 +106,10 @@ fi
 #  VALIDATE REPO  #
 ###################
 
-# Ensure the checked out branch is master
+# Ensure the checked out branch is main
 CHECKED_OUT_BRANCH="$(git branch | grep "*" | awk -F ' ' '{print $2}')"
-if [[ $CHECKED_OUT_BRANCH != "master" ]]; then
-    read -p "[WARN] You are on the '${CHECKED_OUT_BRANCH}' branch, not 'master'. Continue? (y/N) " CONTINUE
+if [[ $CHECKED_OUT_BRANCH != "main" ]]; then
+    read -p "[WARN] You are on the '${CHECKED_OUT_BRANCH}' branch, not 'main'. Continue? (y/N) " CONTINUE
     case $CONTINUE in
         y|Y) ;;
         *) echo "[INFO] You chose not to continue." ;
