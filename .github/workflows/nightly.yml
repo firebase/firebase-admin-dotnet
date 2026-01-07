@@ -34,13 +34,13 @@ jobs:
 
     steps:
     - name: Checkout source for staging
-      uses: actions/checkout@v5
+      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
         
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
       with:
         dotnet-version: 6.0.x
 
@@ -71,14 +71,14 @@ jobs:
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
     - name: Archive artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: Release
         path: FirebaseAdmin/FirebaseAdmin/bin/Release
     
     - name: Send email on failure
       if: failure()
-      uses: firebase/firebase-admin-node/.github/actions/send-email@main
+      uses: firebase/firebase-admin-node/.github/actions/send-email@2e2b36a84ba28679bcb7aecdacabfec0bded2d48 # Admin Node SDK v13.6.0
       with:
         api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
         domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
@@ -93,7 +93,7 @@ jobs:
 
     - name: Send email on cancelled
       if: cancelled()
-      uses: firebase/firebase-admin-node/.github/actions/send-email@main
+      uses: firebase/firebase-admin-node/.github/actions/send-email@2e2b36a84ba28679bcb7aecdacabfec0bded2d48 # Admin Node SDK v13.6.0
       with:
         api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
         domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
