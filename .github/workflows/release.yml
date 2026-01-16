@@ -105,6 +105,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: Release
     permissions:
+      # Used to create a short-lived OIDC token which is given to NuGet to identify this workflow job
+      # See: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#adding-permissions-settings
+      # and https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing
+      id-token: write
       contents: write
 
     steps:
@@ -136,10 +140,17 @@ jobs:
             --title "Firebase Admin .NET SDK ${{ steps.preflight.outputs.version }}"
             --notes '${{ steps.preflight.outputs.changelog }}'
 
+    # Login to NuGet using OIDC and generate a short-lived NuGet API key
+    - name: Nuget login
+      uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1
+      id: nuget_login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+        
     - name: Publish to Nuget
       run: ./.github/scripts/publish_package.sh
       env:
-        NUGET_KEY: ${{ secrets.NUGET_KEY }}
+        NUGET_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
         VERSION: ${{ steps.preflight.outputs.version }}
 
     # Post to Twitter if explicitly opted-in by adding the label 'release:tweet'.
