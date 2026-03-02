@@ -68,6 +68,20 @@ namespace FirebaseAdmin.Messaging
         public bool? DirectBootOk { get; set; }
 
         /// <summary>
+        /// Gets or sets a boolean indicating whether messages will be allowed to be delivered to
+        /// the app while the device is on a bandwidth constrained network.
+        /// </summary>
+        [JsonProperty("bandwidth_constrained_ok")]
+        public bool? BandwidthConstrainedOk { get; set; }
+
+        /// <summary>
+        /// Gets or sets a boolean indicating whether messages will be allowed to be delivered to
+        /// the app while the device is on a restricted satellite network.
+        /// </summary>
+        [JsonProperty("restricted_satellite_ok")]
+        public bool? RestrictedSatelliteOk { get; set; }
+
+        /// <summary>
         /// Gets or sets the Android notification to be included in the message.
         /// </summary>
         [JsonProperty("notification")]
@@ -173,6 +187,8 @@ namespace FirebaseAdmin.Messaging
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data?.Copy(),
                 DirectBootOk = this.DirectBootOk,
+                BandwidthConstrainedOk = this.BandwidthConstrainedOk,
+                RestrictedSatelliteOk = this.RestrictedSatelliteOk,
                 FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             var totalSeconds = copy.TimeToLive?.TotalSeconds ?? 0;
