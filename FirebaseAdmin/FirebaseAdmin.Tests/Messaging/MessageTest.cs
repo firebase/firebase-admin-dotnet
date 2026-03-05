@@ -261,6 +261,8 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "k2", "v2" },
                     },
                     DirectBootOk = true,
+                    BandwidthConstrainedOk = true,
+                    RestrictedSatelliteOk = true,
                     Notification = new AndroidNotification()
                     {
                         Title = "title",
@@ -313,6 +315,8 @@ namespace FirebaseAdmin.Messaging.Tests
                         { "restricted_package_name", "test-pkg-name" },
                         { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
                         { "direct_boot_ok", true },
+                        { "bandwidth_constrained_ok", true },
+                        { "restricted_satellite_ok", true },
                         {
                             "notification", new JObject()
                             {
@@ -429,6 +433,8 @@ namespace FirebaseAdmin.Messaging.Tests
                     { "key", "value" },
                 },
                 DirectBootOk = false,
+                BandwidthConstrainedOk = true,
+                RestrictedSatelliteOk = false,
                 Notification = new AndroidNotification()
                 {
                     Title = "title",
@@ -443,6 +449,8 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.TimeToLive, copy.TimeToLive);
             Assert.Equal(original.Data, copy.Data);
             Assert.Equal(original.DirectBootOk, copy.DirectBootOk);
+            Assert.Equal(original.BandwidthConstrainedOk, copy.BandwidthConstrainedOk);
+            Assert.Equal(original.RestrictedSatelliteOk, copy.RestrictedSatelliteOk);
             Assert.Equal(original.Notification.Title, copy.Notification.Title);
         }
 
