@@ -78,7 +78,7 @@ jobs:
     
     - name: Send email on failure
       if: failure()
-      uses: firebase/firebase-admin-node/.github/actions/send-email@2e2b36a84ba28679bcb7aecdacabfec0bded2d48 # Admin Node SDK v13.6.0
+      uses: firebase/firebase-admin-node/.github/actions/send-email@4d4426dbb4ef022d86bbf09bfd55bbabcdcd8087 # Admin Node SDK v13.6.1
       with:
         api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
         domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
@@ -93,7 +93,7 @@ jobs:
 
     - name: Send email on cancelled
       if: cancelled()
-      uses: firebase/firebase-admin-node/.github/actions/send-email@2e2b36a84ba28679bcb7aecdacabfec0bded2d48 # Admin Node SDK v13.6.0
+      uses: firebase/firebase-admin-node/.github/actions/send-email@4d4426dbb4ef022d86bbf09bfd55bbabcdcd8087 # Admin Node SDK v13.6.1
       with:
         api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
         domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
