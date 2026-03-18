@@ -27,7 +27,7 @@ namespace FirebaseAdmin.Snippets
             // [START initialize_sdk_with_service_account]
             FirebaseApp.Create(new AppOptions()
             {
-                Credential = GoogleCredential.FromFile("path/to/serviceAccountKey.json"),
+                Credential = CredentialFactory.FromFile<ServiceAccountCredential>("path/to/serviceAccountKey.json").ToGoogleCredential(),
             });
             // [END initialize_sdk_with_service_account]
         }
@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Snippets
             // [START initialize_sdk_with_refresh_token]
             FirebaseApp.Create(new AppOptions()
             {
-                Credential = GoogleCredential.FromFile("path/to/refreshToken.json"),
+                Credential = CredentialFactory.FromFile<RefreshTokenCredential>("path/to/refreshToken.json").ToGoogleCredential(),
             });
             // [END initialize_sdk_with_refresh_token]
         }

@@ -107,7 +107,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
         private static ISigner CreateTestSigner(string filePath)
         {
-            var credential = GoogleCredential.FromFile(filePath);
+            var credential = CredentialFactory.FromFile<ServiceAccountCredential>(filePath).ToGoogleCredential();
             return new ServiceAccountSigner(credential.ToServiceAccountCredential());
         }
 

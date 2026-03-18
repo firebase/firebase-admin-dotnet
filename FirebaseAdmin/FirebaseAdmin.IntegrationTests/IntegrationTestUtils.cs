@@ -27,7 +27,7 @@ namespace FirebaseAdmin.IntegrationTests
             {
                 var options = new AppOptions()
                 {
-                    Credential = GoogleCredential.FromFile(ServiceAccountFile),
+                    Credential = CredentialFactory.FromFile<ServiceAccountCredential>(ServiceAccountFile).ToGoogleCredential(),
                 };
                 return FirebaseApp.Create(options);
             },
