@@ -28,8 +28,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         [Fact]
         public async Task Signer()
         {
-            var credential = CredentialFactory.FromFile<ServiceAccountCredential>("./resources/service_account.json").ToGoogleCredential();
-            var serviceAccount = (ServiceAccountCredential)credential.UnderlyingCredential;
+            var serviceAccount = CredentialFactory.FromFile<ServiceAccountCredential>("./resources/service_account.json");
             var signer = new ServiceAccountSigner(serviceAccount);
             Assert.Equal(
                 "client@test-project.iam.gserviceaccount.com", await signer.GetKeyIdAsync());
