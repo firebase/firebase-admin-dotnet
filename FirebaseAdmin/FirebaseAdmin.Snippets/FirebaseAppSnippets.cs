@@ -1,4 +1,4 @@
-﻿// Copyright 2018, Google Inc. All rights reserved.
+// Copyright 2018, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ namespace FirebaseAdmin.Snippets
             // [START initialize_sdk_with_refresh_token]
             FirebaseApp.Create(new AppOptions()
             {
-                Credential = CredentialFactory.FromFile<RefreshTokenCredential>("path/to/refreshToken.json").ToGoogleCredential(),
+                Credential = CredentialFactory.FromFile<UserCredential>("path/to/refreshToken.json").ToGoogleCredential(),
             });
             // [END initialize_sdk_with_refresh_token]
         }
