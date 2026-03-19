@@ -142,7 +142,7 @@ namespace FirebaseAdmin.Tests
         [Fact]
         public void ServiceAccountCredentialScoping()
         {
-            var credential = GoogleCredential.FromFile("./resources/service_account.json");
+            var credential = CredentialFactory.FromFile<ServiceAccountCredential>("./resources/service_account.json").ToGoogleCredential();
             var options = new AppOptions()
             {
                 Credential = credential,
@@ -195,7 +195,7 @@ namespace FirebaseAdmin.Tests
         {
             var options = new AppOptions()
             {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
+                Credential = CredentialFactory.FromFile<ServiceAccountCredential>("./resources/service_account.json").ToGoogleCredential(),
             };
             var app = FirebaseApp.Create(options);
             Assert.Equal("test-project", app.GetProjectId());

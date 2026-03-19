@@ -61,7 +61,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         {
             var app = FirebaseApp.Create(new AppOptions()
             {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
+                Credential = CredentialFactory.FromFile<ServiceAccountCredential>("./resources/service_account.json").ToGoogleCredential(),
             });
             var verifier = FirebaseTokenVerifier.CreateIdTokenVerifier(app);
             Assert.Equal("test-project", verifier.ProjectId);

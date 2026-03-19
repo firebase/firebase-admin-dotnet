@@ -26,7 +26,7 @@ namespace FirebaseAdmin.Messaging.Tests
     public class FirebaseMessagingTest : IDisposable
     {
         private static readonly GoogleCredential MockCredential =
-            GoogleCredential.FromFile("./resources/service_account.json");
+            CredentialFactory.FromFile<ServiceAccountCredential>("./resources/service_account.json").ToGoogleCredential();
 
         [Fact]
         public void GetMessagingWithoutApp()

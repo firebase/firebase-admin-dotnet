@@ -147,7 +147,7 @@ namespace FirebaseAdmin.Auth.Tests
         {
             var options = new AppOptions
             {
-                Credential = GoogleCredential.FromFile("./resources/service_account.json"),
+                Credential = CredentialFactory.FromFile<ServiceAccountCredential>("./resources/service_account.json").ToGoogleCredential(),
             };
             var app = FirebaseApp.Create(options);
 
