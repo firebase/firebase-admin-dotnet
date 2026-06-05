@@ -22,16 +22,24 @@ namespace FirebaseAdmin.Messaging
     /// <summary>
     /// Represents a message that can be sent via Firebase Cloud Messaging (FCM). Contains payload
     /// information as well as the recipient information. The recipient information must be
-    /// specified by setting exactly one of the <see cref="Token"/>, <see cref="Topic"/> or
-    /// <see cref="Condition"/> fields.
+    /// specified by setting exactly one of the <see cref="Token"/>, <see cref="Fid"/>,
+    /// <see cref="Topic"/> or <see cref="Condition"/> fields.
     /// </summary>
     public sealed class Message
     {
         /// <summary>
         /// Gets or sets the registration token of the device to which the message should be sent.
+        /// Deprecated. Use <see cref="Fid"/> instead.
         /// </summary>
+        [Obsolete("Deprecated. Use Fid instead.")]
         [JsonProperty("token")]
         public string Token { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Firebase Installation ID (FID) of the device to which the message should be sent.
+        /// </summary>
+        [JsonProperty("fid")]
+        public string Fid { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the FCM topic to which the message should be sent. Topic names
@@ -116,10 +124,12 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         internal Message CopyAndValidate()
         {
+#pragma warning disable CS0618
             // Copy and validate the leaf-level properties
             var copy = new Message()
             {
                 Token = this.Token,
+                Fid = this.Fid,
                 Topic = this.Topic,
                 Condition = this.Condition,
                 Data = this.Data?.Copy(),
@@ -127,13 +137,14 @@ namespace FirebaseAdmin.Messaging
             };
             var list = new List<string>()
             {
-                copy.Token, copy.Topic, copy.Condition,
+                copy.Token, copy.Fid, copy.Topic, copy.Condition,
             };
+#pragma warning restore CS0618
             var targets = list.FindAll((target) => !string.IsNullOrEmpty(target));
             if (targets.Count != 1)
             {
                 throw new ArgumentException(
-                    "Exactly one of Token, Topic or Condition is required.");
+                    "Exactly one of Token, Fid, Topic or Condition is required.");
             }
 
             var topic = copy.UnprefixedTopic;

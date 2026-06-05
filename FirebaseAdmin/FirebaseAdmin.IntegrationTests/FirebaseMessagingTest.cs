@@ -120,11 +120,13 @@ namespace FirebaseAdmin.IntegrationTests
                     TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
                 },
+#pragma warning disable CS0618
                 Tokens = new[]
                 {
                     "token1",
                     "token2",
                 },
+#pragma warning restore CS0618
             };
             var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(multicastMessage, dryRun: true);
             Assert.NotNull(response);

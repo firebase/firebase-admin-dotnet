@@ -26,8 +26,13 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void EmptyMessage()
         {
+#pragma warning disable CS0618
             var message = new Message() { Token = "test-token" };
+#pragma warning restore CS0618
             this.AssertJsonEquals(new JObject() { { "token", "test-token" } }, message);
+
+            message = new Message() { Fid = "test-fid" };
+            this.AssertJsonEquals(new JObject() { { "fid", "test-fid" } }, message);
 
             message = new Message() { Topic = "test-topic" };
             this.AssertJsonEquals(new JObject() { { "topic", "test-topic" } }, message);
@@ -148,6 +153,51 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void MessageDeserializationWithFid()
+        {
+            var original = new Message()
+            {
+                Fid = "test-fid",
+                Data = new Dictionary<string, string>() { { "key", "value" } },
+                Notification = new Notification()
+                {
+                    Title = "title",
+                    Body = "body",
+                },
+                Android = new AndroidConfig()
+                {
+                    RestrictedPackageName = "test-pkg-name",
+                },
+                Apns = new ApnsConfig()
+                {
+                    Aps = new Aps()
+                    {
+                        AlertString = "test-alert",
+                    },
+                },
+                Webpush = new WebpushConfig()
+                {
+                    Data = new Dictionary<string, string>() { { "key", "value" } },
+                },
+                FcmOptions = new FcmOptions()
+                {
+                    AnalyticsLabel = "label",
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<Message>(json);
+            Assert.Equal(original.Fid, copy.Fid);
+            Assert.Equal(original.Data, copy.Data);
+            Assert.Equal(original.Notification.Title, copy.Notification.Title);
+            Assert.Equal(original.Notification.Body, copy.Notification.Body);
+            Assert.Equal(
+                original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
+            Assert.Equal(original.Apns.Aps.AlertString, copy.Apns.Aps.AlertString);
+            Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
+            Assert.Equal(original.FcmOptions.AnalyticsLabel, copy.FcmOptions.AnalyticsLabel);
+        }
+
+        [Fact]
         public void MessageCopy()
         {
             var original = new Message()
@@ -169,6 +219,23 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void MessageWithFidOnly()
+        {
+            var original = new Message()
+            {
+                Fid = "test-fid",
+                Data = new Dictionary<string, string>(),
+                Notification = new Notification(),
+                Android = new AndroidConfig(),
+                Apns = new ApnsConfig(),
+                Webpush = new WebpushConfig(),
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.Equal("test-fid", copy.Fid);
+        }
+
+        [Fact]
         public void MessageWithoutTarget()
         {
             Assert.Throws<ArgumentException>(() => new Message().CopyAndValidate());
@@ -179,14 +246,18 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var message = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token",
+#pragma warning restore CS0618
                 Topic = "test-topic",
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
 
             message = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token",
+#pragma warning restore CS0618
                 Condition = "test-condition",
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
@@ -200,7 +271,43 @@ namespace FirebaseAdmin.Messaging.Tests
 
             message = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token",
+#pragma warning restore CS0618
+                Topic = "test-topic",
+                Condition = "test-condition",
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+
+            message = new Message()
+            {
+                Fid = "test-fid",
+#pragma warning disable CS0618
+                Token = "test-token",
+#pragma warning restore CS0618
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+
+            message = new Message()
+            {
+                Fid = "test-fid",
+                Topic = "test-topic",
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+
+            message = new Message()
+            {
+                Fid = "test-fid",
+                Condition = "test-condition",
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+
+            message = new Message()
+            {
+                Fid = "test-fid",
+#pragma warning disable CS0618
+                Token = "test-token",
+#pragma warning restore CS0618
                 Topic = "test-topic",
                 Condition = "test-condition",
             };

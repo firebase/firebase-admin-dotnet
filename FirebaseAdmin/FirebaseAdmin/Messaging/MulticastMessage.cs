@@ -1,4 +1,4 @@
-﻿// Copyright 2018, Google Inc. All rights reserved.
+// Copyright 2018, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,16 +19,22 @@ namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// Represents a message that can be sent to multiple devices via Firebase Cloud Messaging (FCM).
-    /// Contains payload information as well as the list of device registration tokens to which the
-    /// message should be sent. A single <c>MulticastMessage</c> may contain up to 500 registration
-    /// tokens.
+    /// Contains payload information as well as the list of device registration tokens and/or
+    /// Firebase Installation IDs (FIDs) to which the message should be sent. A single
+    /// <c>MulticastMessage</c> may contain up to 500 tokens and FIDs combined.
     /// </summary>
     public sealed class MulticastMessage
     {
         /// <summary>
         /// Gets or sets the registration tokens for the devices to which the message should be distributed.
         /// </summary>
+        [Obsolete("Deprecated. Use Fids instead.")]
         public IReadOnlyList<string> Tokens { get; set; }
+
+        /// <summary>
+        /// Gets or sets the installation IDs (FIDs) for the devices to which the message should be distributed.
+        /// </summary>
+        public IReadOnlyList<string> Fids { get; set; }
 
         /// <summary>
         /// Gets or sets a collection of key-value pairs that will be added to the message as data
@@ -58,14 +64,27 @@ namespace FirebaseAdmin.Messaging
 
         internal List<Message> GetMessageList()
         {
+#pragma warning disable CS0618
             var tokens = this.Tokens;
+#pragma warning restore CS0618
+            var fids = this.Fids;
 
-            if (tokens == null || tokens.Count > 500)
+            var tokensCopy = tokens != null ? new List<string>(tokens) : null;
+            var fidsCopy = fids != null ? new List<string>(fids) : null;
+
+            var tokensCount = tokensCopy?.Count ?? 0;
+            var fidsCount = fidsCopy?.Count ?? 0;
+            var totalCount = tokensCount + fidsCount;
+
+            if (totalCount == 0)
             {
-                throw new ArgumentException("Tokens must be non-null and contain at most 500 tokens.");
+                throw new ArgumentException("tokens and fids cannot be both null or empty");
             }
 
-            var tokensCopy = new List<string>(tokens);
+            if (totalCount > 500)
+            {
+                throw new ArgumentException("Total number of tokens and fids must not exceed 500.");
+            }
 
             var templateMessage = new Message
             {
@@ -76,20 +95,45 @@ namespace FirebaseAdmin.Messaging
                 Webpush = this.Webpush?.CopyAndValidate(),
             };
 
-            var messages = new List<Message>(tokensCopy.Count);
+            var messages = new List<Message>(totalCount);
 
-            foreach (var token in tokensCopy)
+            if (tokensCopy != null)
             {
-                var message = new Message
+                foreach (var token in tokensCopy)
                 {
-                    Android = templateMessage.Android,
-                    Apns = templateMessage.Apns,
-                    Data = templateMessage.Data,
-                    Notification = templateMessage.Notification,
-                    Webpush = templateMessage.Webpush,
-                    Token = token,
-                };
-                messages.Add(message);
+                    var message = new Message
+                    {
+                        Android = templateMessage.Android,
+                        Apns = templateMessage.Apns,
+                        Data = templateMessage.Data,
+                        Notification = templateMessage.Notification,
+                        Webpush = templateMessage.Webpush,
+                    };
+
+#pragma warning disable CS0618
+                    message.Token = token;
+#pragma warning restore CS0618
+
+                    messages.Add(message);
+                }
+            }
+
+            if (fidsCopy != null)
+            {
+                foreach (var fid in fidsCopy)
+                {
+                    var message = new Message
+                    {
+                        Android = templateMessage.Android,
+                        Apns = templateMessage.Apns,
+                        Data = templateMessage.Data,
+                        Notification = templateMessage.Notification,
+                        Webpush = templateMessage.Webpush,
+                        Fid = fid,
+                    };
+
+                    messages.Add(message);
+                }
             }
 
             return messages;

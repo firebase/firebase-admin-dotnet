@@ -160,11 +160,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token1",
+#pragma warning restore CS0618
             };
             var message2 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token2",
+#pragma warning restore CS0618
             };
 
             var response = await client.SendEachAsync(new[] { message1, message2 });
@@ -225,11 +229,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token1",
+#pragma warning restore CS0618
             };
             var message2 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token2",
+#pragma warning restore CS0618
             };
 
             var response = await client.SendEachAsync(new[] { message1, message2 });
@@ -292,11 +300,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token1",
+#pragma warning restore CS0618
             };
             var message2 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token2",
+#pragma warning restore CS0618
             };
 
             var response = await client.SendEachAsync(new[] { message1, message2 });
@@ -389,11 +401,15 @@ Vary: Referer
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token1",
+#pragma warning restore CS0618
             };
             var message2 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token2",
+#pragma warning restore CS0618
             };
 
             var response = await client.SendAllAsync(new[] { message1, message2 });
@@ -467,11 +483,15 @@ Vary: Referer
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token1",
+#pragma warning restore CS0618
             };
             var message2 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token2",
+#pragma warning restore CS0618
             };
 
             var response = await client.SendAllAsync(new[] { message1, message2 });
@@ -546,11 +566,15 @@ Content-Type: application/json; charset=UTF-8
             });
             var message1 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token1",
+#pragma warning restore CS0618
             };
             var message2 = new Message()
             {
+#pragma warning disable CS0618
                 Token = "test-token2",
+#pragma warning restore CS0618
             };
 
             var response = await client.SendAllAsync(new[] { message1, message2 });
