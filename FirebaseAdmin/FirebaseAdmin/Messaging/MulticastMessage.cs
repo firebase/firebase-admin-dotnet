@@ -78,12 +78,12 @@ namespace FirebaseAdmin.Messaging
 
             if (totalCount == 0)
             {
-                throw new ArgumentException("tokens and fids cannot be both null or empty");
+                throw new ArgumentException("Tokens and Fids cannot be both null or empty.");
             }
 
             if (totalCount > 500)
             {
-                throw new ArgumentException("Total number of tokens and fids must not exceed 500.");
+                throw new ArgumentException("Total number of Tokens and Fids must not exceed 500.");
             }
 
             var templateMessage = new Message
