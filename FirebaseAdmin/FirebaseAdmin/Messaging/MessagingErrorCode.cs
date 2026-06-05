@@ -50,7 +50,7 @@ namespace FirebaseAdmin.Messaging
         Unavailable,
 
         /// <summary>
-        /// App instance was unregistered from FCM. This usually means that the token used is no
+        /// App instance was unregistered from FCM. This usually means that the token or FID used is no
         /// longer valid and a new one must be used.
         /// </summary>
         Unregistered,
