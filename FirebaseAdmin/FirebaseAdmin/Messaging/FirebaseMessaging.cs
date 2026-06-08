@@ -250,7 +250,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// Unlike <see cref="SendMulticastAsync(MulticastMessage)"/>, this method makes an
         /// HTTP call for each token in the given multicast message.
         /// </summary>
@@ -266,7 +267,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// Unlike <see cref="SendMulticastAsync(MulticastMessage, CancellationToken)"/>, this
         /// method makes an HTTP call for each token in the given multicast message.
         /// </summary>
@@ -284,7 +286,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// Unlike <see cref="SendMulticastAsync(MulticastMessage, bool)"/>, this method makes an
         /// HTTP call for each token in the given multicast message.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
@@ -307,7 +310,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// Unlike <see cref="SendMulticastAsync(MulticastMessage, bool, CancellationToken)"/>,
         /// this method makes an HTTP call for each token in the given multicast message.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
@@ -412,7 +416,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
@@ -427,7 +432,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// </summary>
         /// <exception cref="FirebaseMessagingException">If an error occurs while sending the
         /// messages.</exception>
@@ -444,7 +450,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
         /// actually sent to the recipients. Instead, the FCM service performs all the necessary
         /// validations, and emulates the send operation. This is a good way to check if a
@@ -466,7 +473,8 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Sends the given multicast message to all the FCM registration tokens specified in it.
+        /// Sends the given multicast message to all the FCM registration tokens and FIDs specified in it.
+        /// The order of responses in the <see cref="BatchResponse"/> corresponds to the order of tokens, followed by the order of FIDs.
         /// <para>If the <paramref name="dryRun"/> option is set to true, the message will not be
         /// actually sent to the recipients. Instead, the FCM service performs all the necessary
         /// validations, and emulates the send operation. This is a good way to check if a
