@@ -141,7 +141,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 GenerateResponse = (incomingRequest) =>
                 {
                     string name;
-                    if (incomingRequest.Body.Contains("test-token1"))
+                    if (incomingRequest.Body.Contains("test-fid1"))
                     {
                         name = "projects/fir-adminintegrationtests/messages/8580920590356323124";
                     }
@@ -160,15 +160,11 @@ namespace FirebaseAdmin.Messaging.Tests
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token1",
-#pragma warning restore CS0618
+                Fid = "test-fid1",
             };
             var message2 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token2",
-#pragma warning restore CS0618
+                Fid = "test-fid2",
             };
 
             var response = await client.SendEachAsync(new[] { message1, message2 });
@@ -189,7 +185,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 GenerateResponse = (incomingRequest) =>
                 {
                     string name;
-                    if (incomingRequest.Body.Contains("test-token1"))
+                    if (incomingRequest.Body.Contains("test-fid1"))
                     {
                         name = "projects/fir-adminintegrationtests/messages/8580920590356323124";
                         return new FirebaseMessagingClient.SingleMessageResponse()
@@ -201,8 +197,8 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         return @"{
                                     ""error"": {
-                                        ""status"": ""INVALID_ARGUMENT"",
-                                        ""message"": ""The registration token is not a valid FCM registration token"",
+                                        ""status"": ""NOT_FOUND"",
+                                        ""message"": ""Requested entity was not found."",
                                         ""details"": [
                                             {
                                                 ""@type"": ""type.googleapis.com/google.firebase.fcm.v1.FcmError"",
@@ -215,13 +211,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
                 GenerateStatusCode = (incomingRequest) =>
                 {
-                    if (incomingRequest.Body.Contains("test-token1"))
+                    if (incomingRequest.Body.Contains("test-fid1"))
                     {
                         return HttpStatusCode.OK;
                     }
                     else
                     {
-                        return HttpStatusCode.InternalServerError;
+                        return HttpStatusCode.NotFound;
                     }
                 },
             };
@@ -229,15 +225,11 @@ namespace FirebaseAdmin.Messaging.Tests
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token1",
-#pragma warning restore CS0618
+                Fid = "test-fid1",
             };
             var message2 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token2",
-#pragma warning restore CS0618
+                Fid = "test-fid2",
             };
 
             var response = await client.SendEachAsync(new[] { message1, message2 });
@@ -248,8 +240,8 @@ namespace FirebaseAdmin.Messaging.Tests
 
             var exception = response.Responses[1].Exception;
             Assert.NotNull(exception);
-            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
-            Assert.Equal("The registration token is not a valid FCM registration token", exception.Message);
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal("Requested entity was not found.", exception.Message);
             Assert.Equal(MessagingErrorCode.Unregistered, exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
 
@@ -266,7 +258,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 GenerateResponse = (incomingRequest) =>
                 {
                     string name;
-                    if (incomingRequest.Body.Contains("test-token1"))
+                    if (incomingRequest.Body.Contains("test-fid1"))
                     {
                         name = "projects/fir-adminintegrationtests/messages/8580920590356323124";
                         return new FirebaseMessagingClient.SingleMessageResponse()
@@ -278,21 +270,21 @@ namespace FirebaseAdmin.Messaging.Tests
                     {
                         return @"{
                                     ""error"": {
-                                        ""status"": ""INVALID_ARGUMENT"",
-                                        ""message"": ""The registration token is not a valid FCM registration token"",
+                                        ""status"": ""NOT_FOUND"",
+                                        ""message"": ""Requested entity was not found."",
                                     }
                                 }";
                     }
                 },
                 GenerateStatusCode = (incomingRequest) =>
                 {
-                    if (incomingRequest.Body.Contains("test-token1"))
+                    if (incomingRequest.Body.Contains("test-fid1"))
                     {
                         return HttpStatusCode.OK;
                     }
                     else
                     {
-                        return HttpStatusCode.InternalServerError;
+                        return HttpStatusCode.NotFound;
                     }
                 },
             };
@@ -300,15 +292,11 @@ namespace FirebaseAdmin.Messaging.Tests
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token1",
-#pragma warning restore CS0618
+                Fid = "test-fid1",
             };
             var message2 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token2",
-#pragma warning restore CS0618
+                Fid = "test-fid2",
             };
 
             var response = await client.SendEachAsync(new[] { message1, message2 });
@@ -319,8 +307,8 @@ namespace FirebaseAdmin.Messaging.Tests
 
             var exception = response.Responses[1].Exception;
             Assert.NotNull(exception);
-            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
-            Assert.Equal("The registration token is not a valid FCM registration token", exception.Message);
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal("Requested entity was not found.", exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
 
@@ -401,15 +389,11 @@ Vary: Referer
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token1",
-#pragma warning restore CS0618
+                Fid = "test-fid1",
             };
             var message2 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token2",
-#pragma warning restore CS0618
+                Fid = "test-fid2",
             };
 
             var response = await client.SendAllAsync(new[] { message1, message2 });
@@ -448,7 +432,7 @@ Vary: Referer
 Content-Type: application/http
 Content-ID: response-
 
-HTTP/1.1 400 Bad Request
+HTTP/1.1 404 Not Found
 Content-Type: application/json; charset=UTF-8
 Vary: Origin
 Vary: X-Origin
@@ -456,15 +440,15 @@ Vary: Referer
 
 {
   ""error"": {
-    ""code"": 400,
-    ""message"": ""The registration token is not a valid FCM registration token"",
+    ""code"": 404,
+    ""message"": ""Requested entity was not found."",
     ""details"": [
         {
             ""@type"": ""type.googleapis.com/google.firebase.fcm.v1.FcmError"",
             ""errorCode"": ""UNREGISTERED""
         }
     ],
-    ""status"": ""INVALID_ARGUMENT""
+    ""status"": ""NOT_FOUND""
   }
 }
 
@@ -483,15 +467,11 @@ Vary: Referer
             var client = this.CreateMessagingClient(factory);
             var message1 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token1",
-#pragma warning restore CS0618
+                Fid = "test-fid1",
             };
             var message2 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token2",
-#pragma warning restore CS0618
+                Fid = "test-fid2",
             };
 
             var response = await client.SendAllAsync(new[] { message1, message2 });
@@ -502,8 +482,8 @@ Vary: Referer
 
             var exception = response.Responses[1].Exception;
             Assert.NotNull(exception);
-            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
-            Assert.Equal("The registration token is not a valid FCM registration token", exception.Message);
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal("Requested entity was not found.", exception.Message);
             Assert.Equal(MessagingErrorCode.Unregistered, exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
 
@@ -535,14 +515,14 @@ Vary: Referer
 Content-Type: application/http
 Content-ID: response-
 
-HTTP/1.1 400 Bad Request
+HTTP/1.1 404 Not Found
 Content-Type: application/json; charset=UTF-8
 
 {
   ""error"": {
-    ""code"": 400,
-    ""message"": ""The registration token is not a valid FCM registration token"",
-    ""status"": ""INVALID_ARGUMENT""
+    ""code"": 404,
+    ""message"": ""Requested entity was not found."",
+    ""status"": ""NOT_FOUND""
   }
 }
 
@@ -566,15 +546,11 @@ Content-Type: application/json; charset=UTF-8
             });
             var message1 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token1",
-#pragma warning restore CS0618
+                Fid = "test-fid1",
             };
             var message2 = new Message()
             {
-#pragma warning disable CS0618
-                Token = "test-token2",
-#pragma warning restore CS0618
+                Fid = "test-fid2",
             };
 
             var response = await client.SendAllAsync(new[] { message1, message2 });
@@ -585,8 +561,8 @@ Content-Type: application/json; charset=UTF-8
 
             var exception = response.Responses[1].Exception;
             Assert.NotNull(exception);
-            Assert.Equal(ErrorCode.InvalidArgument, exception.ErrorCode);
-            Assert.Equal("The registration token is not a valid FCM registration token", exception.Message);
+            Assert.Equal(ErrorCode.NotFound, exception.ErrorCode);
+            Assert.Equal("Requested entity was not found.", exception.Message);
             Assert.Null(exception.MessagingErrorCode);
             Assert.NotNull(exception.HttpResponse);
 
