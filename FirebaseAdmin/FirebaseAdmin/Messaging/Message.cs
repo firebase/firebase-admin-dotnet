@@ -144,7 +144,7 @@ namespace FirebaseAdmin.Messaging
             if (targets.Count != 1)
             {
                 throw new ArgumentException(
-                    "Exactly one of Token, Fid, Topic or Condition is required.");
+                    "Exactly one of Token, FID, Topic or Condition is required.");
             }
 
             var topic = copy.UnprefixedTopic;
