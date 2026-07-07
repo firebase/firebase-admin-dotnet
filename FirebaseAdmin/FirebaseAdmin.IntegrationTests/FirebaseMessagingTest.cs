@@ -120,17 +120,48 @@ namespace FirebaseAdmin.IntegrationTests
                     TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
                 },
+#pragma warning disable CS0618
                 Tokens = new[]
                 {
                     "token1",
                     "token2",
                 },
+#pragma warning restore CS0618
             };
             var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(multicastMessage, dryRun: true);
             Assert.NotNull(response);
             Assert.Equal(2, response.FailureCount);
             Assert.NotNull(response.Responses[0].Exception);
             Assert.NotNull(response.Responses[1].Exception);
+        }
+
+        [Fact]
+        public async Task SendEachForMulticastFids()
+        {
+            var multicastMessage = new MulticastMessage
+            {
+                Notification = new Notification()
+                {
+                    Title = "Title",
+                    Body = "Body",
+                },
+                Android = new AndroidConfig()
+                {
+                    Priority = Priority.Normal,
+                    TimeToLive = TimeSpan.FromHours(1),
+                    RestrictedPackageName = "com.google.firebase.testing",
+                },
+                Fids = new[]
+                {
+                    "fid1",
+                    "fid2",
+                },
+            };
+            var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(multicastMessage, dryRun: true);
+            Assert.NotNull(response);
+            Assert.Equal(2, response.FailureCount);
+            Assert.Equal(MessagingErrorCode.Unregistered, response.Responses[0].Exception.MessagingErrorCode);
+            Assert.Equal(MessagingErrorCode.Unregistered, response.Responses[1].Exception.MessagingErrorCode);
         }
 
         [Fact]

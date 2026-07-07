@@ -102,6 +102,40 @@ namespace FirebaseAdmin.Snippets
             // [END platform_error_code]
         }
 
+        internal static async Task PlatformErrorCodeWithFid(string fid)
+        {
+            // [START platform_error_code_fid]
+            var notification = CreateNotificationWithFid(fid);
+            try
+            {
+                await FirebaseMessaging.DefaultInstance.SendAsync(notification);
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                // All exceptions contain a platform-level error code. Applications can inspect
+                // both the platform-level error code and any service-level error codes when
+                // implementing error handling logic.
+                if (ex.MessagingErrorCode == MessagingErrorCode.Unregistered)
+                {
+                    // Service-level error code
+                    Console.WriteLine("App instance has been unregistered");
+                    RemoveFidFromDatabase(fid);
+                }
+                else if (ex.ErrorCode == ErrorCode.Unavailable)
+                {
+                    // Platform-level error code
+                    Console.WriteLine("FCM service is temporarily unavailable");
+                    ScheduleForRetry(notification, TimeSpan.FromHours(1));
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to send notification: {ex.Message}");
+                }
+            }
+
+            // [END platform_error_code_fid]
+        }
+
         internal static async Task HttpResponse(string deviceToken)
         {
             // [START http_response]
@@ -133,13 +167,58 @@ namespace FirebaseAdmin.Snippets
             // [END http_response]
         }
 
+        internal static async Task HttpResponseWithFid(string fid)
+        {
+            // [START http_response_fid]
+            var notification = CreateNotificationWithFid(fid);
+            try
+            {
+                await FirebaseMessaging.DefaultInstance.SendAsync(notification);
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                // If the exception was caused by a backend service error, applications can
+                // inspect the original error response received from the backend service to
+                // implement more advanced error handling behavior.
+                var response = ex.HttpResponse;
+                if (response != null)
+                {
+                    Console.WriteLine($"FCM service responded with HTTP {response.StatusCode}");
+                    foreach (var entry in response.Headers)
+                    {
+                        Console.WriteLine($">>> {entry.Key}: {entry.Value}");
+                    }
+
+                    var body = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine(">>>");
+                    Console.WriteLine($">>> {body}");
+                }
+            }
+
+            // [END http_response_fid]
+        }
+
         private static void PerformPrivilegedOperation(string uid) { }
 
         private static Message CreateNotification(string deviceToken)
         {
             return new Message()
             {
+#pragma warning disable CS0618
                 Token = deviceToken,
+#pragma warning restore CS0618
+                Notification = new Notification()
+                {
+                    Title = "Test notification",
+                },
+            };
+        }
+
+        private static Message CreateNotificationWithFid(string fid)
+        {
+            return new Message()
+            {
+                Fid = fid,
                 Notification = new Notification()
                 {
                     Title = "Test notification",
@@ -148,6 +227,8 @@ namespace FirebaseAdmin.Snippets
         }
 
         private static void RemoveTokenFromDatabase(string deviceToken) { }
+
+        private static void RemoveFidFromDatabase(string fid) { }
 
         private static void ScheduleForRetry(Message message, TimeSpan waitTime) { }
     }
