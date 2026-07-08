@@ -35,7 +35,9 @@ namespace FirebaseAdmin.Snippets
                     { "score", "850" },
                     { "time", "2:45" },
                 },
+#pragma warning disable CS0618
                 Token = registrationToken,
+#pragma warning restore CS0618
             };
 
             // Send a message to the device corresponding to the provided
@@ -105,7 +107,9 @@ namespace FirebaseAdmin.Snippets
                     { "score", "850" },
                     { "time", "2:45" },
                 },
+#pragma warning disable CS0618
                 Token = "token",
+#pragma warning restore CS0618
             };
 
             // [START send_dry_run]
@@ -131,7 +135,9 @@ namespace FirebaseAdmin.Snippets
                         Title = "Price drop",
                         Body = "5% off all electronics",
                     },
+#pragma warning disable CS0618
                     Token = registrationToken,
+#pragma warning restore CS0618
                 },
                 new Message()
                 {
@@ -164,7 +170,9 @@ namespace FirebaseAdmin.Snippets
             };
             var message = new MulticastMessage()
             {
+#pragma warning disable CS0618
                 Tokens = registrationTokens,
+#pragma warning restore CS0618
                 Data = new Dictionary<string, string>()
                 {
                     { "score", "850" },
@@ -191,7 +199,9 @@ namespace FirebaseAdmin.Snippets
             };
             var message = new MulticastMessage()
             {
+#pragma warning disable CS0618
                 Tokens = registrationTokens,
+#pragma warning restore CS0618
                 Data = new Dictionary<string, string>()
                 {
                     { "score", "850" },

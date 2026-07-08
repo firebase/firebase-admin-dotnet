@@ -2,8 +2,13 @@ name: Continuous Integration
 
 on: pull_request
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    permissions:
+      contents: read
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -18,7 +23,9 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
 
     - name: Setup .NET
       uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
