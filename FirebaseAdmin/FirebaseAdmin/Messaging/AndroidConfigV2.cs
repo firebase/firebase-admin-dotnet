@@ -132,8 +132,12 @@ namespace FirebaseAdmin.Messaging
                 var ttl = TimeSpan.FromSeconds(seconds);
                 if (segments.Length == 2)
                 {
-                    var subsecondNanos = long.Parse(segments[1].TrimStart('0'));
-                    ttl = ttl.Add(TimeSpan.FromMilliseconds(subsecondNanos / 1e6));
+                    var trimmed = segments[1].TrimStart('0');
+                    if (trimmed.Length > 0)
+                    {
+                        var subsecondNanos = long.Parse(trimmed);
+                        ttl = ttl.Add(TimeSpan.FromMilliseconds(subsecondNanos / 1e6));
+                    }
                 }
 
                 this.TimeToLive = ttl;

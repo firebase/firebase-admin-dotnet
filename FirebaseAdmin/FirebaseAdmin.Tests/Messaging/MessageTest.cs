@@ -797,6 +797,14 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void AndroidConfigV2ZeroFractionalTtlDeserialization()
+        {
+            var json = @"{ ""ttl"": ""1.000000000s"" }";
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfigV2>(json);
+            Assert.Equal(TimeSpan.FromSeconds(1), copy.TimeToLive);
+        }
+
+        [Fact]
         public void AndroidConfigCopy()
         {
 #pragma warning disable CS0618
