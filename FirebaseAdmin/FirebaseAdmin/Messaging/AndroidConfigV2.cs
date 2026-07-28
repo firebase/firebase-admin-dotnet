@@ -1,4 +1,4 @@
-// Copyright 2018, Google Inc. All rights reserved.
+// Copyright 2026, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,11 +19,9 @@ using Newtonsoft.Json;
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Represents the Android-specific options that can be included in a <see cref="Message"/>.
-    /// Deprecated. Use <see cref="AndroidConfigV2"/> instead.
+    /// Represents the Android-specific options that can be included in a <see cref="Message"/> for V2 configuration.
     /// </summary>
-    [Obsolete("Deprecated. Use AndroidConfigV2 instead.")]
-    public sealed class AndroidConfig
+    public sealed class AndroidConfigV2
     {
         /// <summary>
         /// Gets or sets a collapse key for the message. Collapse key serves as an identifier for a
@@ -33,12 +31,6 @@ namespace FirebaseAdmin.Messaging
         /// </summary>
         [JsonProperty("collapse_key")]
         public string CollapseKey { get; set; }
-
-        /// <summary>
-        /// Gets or sets the priority of the message.
-        /// </summary>
-        [JsonIgnore]
-        public Priority? Priority { get; set; }
 
         /// <summary>
         /// Gets or sets the time-to-live duration of the message.
@@ -84,54 +76,22 @@ namespace FirebaseAdmin.Messaging
         public bool? RestrictedSatelliteOk { get; set; }
 
         /// <summary>
-        /// Gets or sets the Android notification to be included in the message.
+        /// Gets or sets the RemoteNotification payload configuration.
         /// </summary>
-        [JsonProperty("notification")]
-        public AndroidNotification Notification { get; set; }
+        [JsonProperty("remote_notification")]
+        public AndroidRemoteNotification RemoteNotification { get; set; }
+
+        /// <summary>
+        /// Gets or sets the BackgroundSync payload configuration.
+        /// </summary>
+        [JsonProperty("background_sync")]
+        public AndroidBackgroundSyncMessage BackgroundSync { get; set; }
 
         /// <summary>
         /// Gets or sets the FCM options to be included in the message.
         /// </summary>
         [JsonProperty("fcm_options")]
         public AndroidFcmOptions FcmOptions { get; set; }
-
-        /// <summary>
-        /// Gets or sets the string representation of <see cref="Priority"/> as accepted by the FCM
-        /// backend service.
-        /// </summary>
-        [JsonProperty("priority")]
-        private string PriorityString
-        {
-            get
-            {
-                switch (this.Priority)
-                {
-                    case Messaging.Priority.High:
-                        return "high";
-                    case Messaging.Priority.Normal:
-                        return "normal";
-                    default:
-                        return null;
-                }
-            }
-
-            set
-            {
-                switch (value)
-                {
-                    case "high":
-                        this.Priority = Messaging.Priority.High;
-                        return;
-                    case "normal":
-                        this.Priority = Messaging.Priority.Normal;
-                        return;
-                    default:
-                        throw new ArgumentException(
-                            $"Invalid priority value: {value}. Only 'high' and 'normal'"
-                            + " are allowed.");
-                }
-            }
-        }
 
         /// <summary>
         /// Gets or sets the string representation of <see cref="TimeToLive"/> as accepted by the
@@ -161,6 +121,12 @@ namespace FirebaseAdmin.Messaging
 
             set
             {
+                if (value == null)
+                {
+                    this.TimeToLive = null;
+                    return;
+                }
+
                 var segments = value.TrimEnd('s').Split('.');
                 var seconds = long.Parse(segments[0]);
                 var ttl = TimeSpan.FromSeconds(seconds);
@@ -175,32 +141,38 @@ namespace FirebaseAdmin.Messaging
         }
 
         /// <summary>
-        /// Copies this Android config, and validates the content of it to ensure that it can be
+        /// Copies this Android V2 config, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service.
         /// </summary>
-        internal AndroidConfig CopyAndValidate()
+        internal AndroidConfigV2 CopyAndValidate()
         {
-            // Copy and validate the leaf-level properties
-            var copy = new AndroidConfig()
+            var copy = new AndroidConfigV2()
             {
                 CollapseKey = this.CollapseKey,
-                Priority = this.Priority,
                 TimeToLive = this.TimeToLive,
                 RestrictedPackageName = this.RestrictedPackageName,
                 Data = this.Data?.Copy(),
                 DirectBootOk = this.DirectBootOk,
                 BandwidthConstrainedOk = this.BandwidthConstrainedOk,
                 RestrictedSatelliteOk = this.RestrictedSatelliteOk,
+                RemoteNotification = this.RemoteNotification?.CopyAndValidate(),
+                BackgroundSync = this.BackgroundSync?.CopyAndValidate(),
                 FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
+
             var totalSeconds = copy.TimeToLive?.TotalSeconds ?? 0;
             if (totalSeconds < 0)
             {
                 throw new ArgumentException("TTL must not be negative.");
             }
 
-            // Copy and validate the child properties
-            copy.Notification = this.Notification?.CopyAndValidate();
+            var hasRemote = copy.RemoteNotification != null;
+            var hasSync = copy.BackgroundSync != null;
+            if (hasRemote == hasSync)
+            {
+                throw new ArgumentException("Exactly one of RemoteNotification or BackgroundSync must be specified on AndroidConfigV2.");
+            }
+
             return copy;
         }
     }
