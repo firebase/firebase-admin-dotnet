@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Newtonsoft.Json;
 
 namespace FirebaseAdmin.Messaging
@@ -108,15 +109,15 @@ namespace FirebaseAdmin.Messaging
                     return null;
                 }
 
-                var totalSeconds = this.TimeToLive.Value.TotalSeconds;
-                var seconds = (long)Math.Floor(totalSeconds);
-                var subsecondNanos = (long)((totalSeconds - seconds) * 1e9);
+                var ticks = this.TimeToLive.Value.Ticks;
+                var seconds = ticks / TimeSpan.TicksPerSecond;
+                var subsecondNanos = (ticks % TimeSpan.TicksPerSecond) * 100;
                 if (subsecondNanos > 0)
                 {
-                    return string.Format("{0}.{1:D9}s", seconds, subsecondNanos);
+                    return string.Format(CultureInfo.InvariantCulture, "{0}.{1:D9}s", seconds, subsecondNanos);
                 }
 
-                return string.Format("{0}s", seconds);
+                return string.Format(CultureInfo.InvariantCulture, "{0}s", seconds);
             }
 
             set
@@ -128,16 +129,13 @@ namespace FirebaseAdmin.Messaging
                 }
 
                 var segments = value.TrimEnd('s').Split('.');
-                var seconds = long.Parse(segments[0]);
+                var seconds = long.Parse(segments[0], CultureInfo.InvariantCulture);
                 var ttl = TimeSpan.FromSeconds(seconds);
                 if (segments.Length == 2)
                 {
-                    var trimmed = segments[1].TrimStart('0');
-                    if (trimmed.Length > 0)
-                    {
-                        var subsecondNanos = long.Parse(trimmed);
-                        ttl = ttl.Add(TimeSpan.FromMilliseconds(subsecondNanos / 1e6));
-                    }
+                    var fractionStr = segments[1].PadRight(9, '0').Substring(0, 9);
+                    var nanoseconds = long.Parse(fractionStr, CultureInfo.InvariantCulture);
+                    ttl = ttl.Add(TimeSpan.FromTicks(nanoseconds / 100));
                 }
 
                 this.TimeToLive = ttl;

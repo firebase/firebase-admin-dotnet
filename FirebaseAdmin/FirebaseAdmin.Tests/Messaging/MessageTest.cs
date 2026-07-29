@@ -805,6 +805,23 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void AndroidConfigV2FractionalTtlDeserialization()
+        {
+            var json = @"{ ""ttl"": ""1.5s"" }";
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfigV2>(json);
+            Assert.Equal(TimeSpan.FromSeconds(1.5), copy.TimeToLive);
+        }
+
+        [Fact]
+        public void AndroidNotificationV2EventTimeDeserialization()
+        {
+            var json = @"{ ""event_time"": ""2026-07-28T22:00:00Z"" }";
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidNotificationV2>(json);
+            Assert.Equal(DateTimeKind.Utc, copy.EventTimestamp.Value.Kind);
+            Assert.Equal(new DateTime(2026, 7, 28, 22, 0, 0, DateTimeKind.Utc), copy.EventTimestamp);
+        }
+
+        [Fact]
         public void AndroidConfigCopy()
         {
 #pragma warning disable CS0618

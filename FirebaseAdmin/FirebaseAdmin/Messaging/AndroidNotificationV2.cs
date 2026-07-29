@@ -412,7 +412,10 @@ namespace FirebaseAdmin.Messaging
                     throw new ArgumentException("Invalid event timestamp. Event timestamp should be a non-empty string");
                 }
 
-                this.EventTimestamp = DateTime.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.None);
+                this.EventTimestamp = DateTime.Parse(
+                    value,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
             }
         }
 
