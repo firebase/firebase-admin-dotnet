@@ -39,14 +39,14 @@ jobs:
 
     steps:
     - name: Checkout source for staging
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
         persist-credentials: false
         
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: 6.0.x
 
@@ -77,7 +77,7 @@ jobs:
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
     - name: Archive artifacts
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: Release
         path: FirebaseAdmin/FirebaseAdmin/bin/Release
