@@ -40,6 +40,7 @@ namespace FirebaseAdmin.IntegrationTests
                     Body = "Body",
                     ImageUrl = "https://example.com/image.png",
                 },
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     Priority = Priority.Normal,
@@ -49,6 +50,7 @@ namespace FirebaseAdmin.IntegrationTests
                     BandwidthConstrainedOk = true,
                     RestrictedSatelliteOk = true,
                 },
+#pragma warning restore CS0618
             };
             var id = await FirebaseMessaging.DefaultInstance.SendAsync(message, dryRun: true);
             Assert.True(!string.IsNullOrEmpty(id));
@@ -67,6 +69,7 @@ namespace FirebaseAdmin.IntegrationTests
                     Body = "Body",
                     ImageUrl = "https://example.com/image.png",
                 },
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     Priority = Priority.Normal,
@@ -76,6 +79,7 @@ namespace FirebaseAdmin.IntegrationTests
                     BandwidthConstrainedOk = false,
                     RestrictedSatelliteOk = false,
                 },
+#pragma warning restore CS0618
             };
             var message2 = new Message()
             {
@@ -85,6 +89,7 @@ namespace FirebaseAdmin.IntegrationTests
                     Title = "Title",
                     Body = "Body",
                 },
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     Priority = Priority.Normal,
@@ -94,6 +99,7 @@ namespace FirebaseAdmin.IntegrationTests
                     BandwidthConstrainedOk = true,
                     RestrictedSatelliteOk = true,
                 },
+#pragma warning restore CS0618
             };
             var response = await FirebaseMessaging.DefaultInstance.SendEachAsync(new[] { message1, message2 }, dryRun: true);
             Assert.NotNull(response);
@@ -114,13 +120,13 @@ namespace FirebaseAdmin.IntegrationTests
                     Title = "Title",
                     Body = "Body",
                 },
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     Priority = Priority.Normal,
                     TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
                 },
-#pragma warning disable CS0618
                 Tokens = new[]
                 {
                     "token1",
@@ -145,12 +151,14 @@ namespace FirebaseAdmin.IntegrationTests
                     Title = "Title",
                     Body = "Body",
                 },
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     Priority = Priority.Normal,
                     TimeToLive = TimeSpan.FromHours(1),
                     RestrictedPackageName = "com.google.firebase.testing",
                 },
+#pragma warning restore CS0618
                 Fids = new[]
                 {
                     "fid1",
