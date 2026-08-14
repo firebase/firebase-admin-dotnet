@@ -94,6 +94,16 @@ namespace FirebaseAdmin.Auth
         /// </summary>
         public string Password { get; set; }
 
+        /// <summary>
+        /// Gets or sets the user's provider info to be linked to the user account.
+        /// </summary>
+        public ProviderUserInfoArgs ProviderToLink { get; set; }
+
+        /// <summary>
+        /// Gets or sets IDs of providers to be unlinked from the user account.
+        /// </summary>
+        public IEnumerable<string> ProvidersToDelete { get; set; }
+
         internal long? ValidSince { get; set; }
 
         internal IReadOnlyDictionary<string, object> CustomClaims
@@ -169,11 +179,11 @@ namespace FirebaseAdmin.Auth
         // TODO(rsgowman): Once we upgrade our floor from .NET4.5 to .NET4.7, we can return a tuple
         // here, making this more like the other CheckX methods. i.e.:
         //     internal static (string, string) CheckProvider(...)
-        internal static void CheckProvider(string providerId, string providerUid, bool required = false)
+        internal static void CheckProvider(string providerId, string providerUid, bool providerIdRequired, bool providerUidRequired)
         {
             if (providerId == null)
             {
-                if (required)
+                if (providerIdRequired)
                 {
                     throw new ArgumentNullException(nameof(providerId));
                 }
@@ -185,7 +195,7 @@ namespace FirebaseAdmin.Auth
 
             if (providerUid == null)
             {
-                if (required)
+                if (providerUidRequired)
                 {
                     throw new ArgumentNullException(nameof(providerUid));
                 }
@@ -349,16 +359,76 @@ namespace FirebaseAdmin.Auth
                     }
                 }
 
+                // Keeping track of provider IDs being updated, to make sure a single ID
+                // is not updated in two places.
+                var providerIdsToUpdate = new HashSet<string>();
+
                 if (args.phoneNumber != null)
                 {
                     var phoneNumber = args.phoneNumber.Value;
                     if (phoneNumber == null)
                     {
+                        providerIdsToUpdate.Add("phone");
                         this.AddDeleteProvider("phone");
                     }
                     else
                     {
                         this.PhoneNumber = CheckPhoneNumber(phoneNumber);
+                    }
+                }
+
+                if (args.ProvidersToDelete != null)
+                {
+                    foreach (var providerToDelete in args.ProvidersToDelete)
+                    {
+                        CheckProvider(providerToDelete, null, true, false);
+
+                        if (!providerIdsToUpdate.Add(providerToDelete))
+                        {
+                            throw new ArgumentException(
+                                $"Update request includes more than one update for Provider ID '{providerToDelete}'");
+                        }
+
+                        this.AddDeleteProvider(providerToDelete);
+                    }
+                }
+
+                if (args.ProviderToLink != null)
+                {
+                    CheckProvider(args.ProviderToLink.ProviderId, args.ProviderToLink.Uid, true, true);
+                    this.ProviderToLink = new ProviderUserInfo(args.ProviderToLink);
+
+                    var providerIdToLink = this.ProviderToLink.ProviderId;
+
+                    if (!providerIdsToUpdate.Add(providerIdToLink))
+                    {
+                        throw new ArgumentException(
+                            $"Update request includes more than one update for Provider ID '{providerIdToLink}'");
+                    }
+
+                    if (providerIdToLink == "email")
+                    {
+                        if (!string.IsNullOrEmpty(this.Email))
+                        {
+                            throw new FirebaseAuthException(
+                                ErrorCode.InvalidArgument,
+                                "Both UpdateRequest.Email and UpdateRequest.ProviderToLink.ProviderId='email' were set. To link to the email/password provider, only specify the UpdateRequest.Email field.");
+                        }
+
+                        this.Email = this.ProviderToLink.Uid;
+                        this.ProviderToLink = null;
+                    }
+                    else if (providerIdToLink == "phone")
+                    {
+                        if (!string.IsNullOrEmpty(this.PhoneNumber))
+                        {
+                            throw new FirebaseAuthException(
+                                ErrorCode.InvalidArgument,
+                                "Both UpdateRequest.PhoneNumber and UpdateRequest.ProviderToLink.ProviderId='phone' were set. To link to a phone provider, only specify the UpdateRequest.PhoneNumber field.");
+                        }
+
+                        this.PhoneNumber = this.ProviderToLink.Uid;
+                        this.ProviderToLink = null;
                     }
                 }
             }
@@ -398,6 +468,9 @@ namespace FirebaseAdmin.Auth
 
             [JsonProperty("validSince")]
             public long? ValidSince { get; set; }
+
+            [JsonProperty("linkProviderUserInfo")]
+            public ProviderUserInfo ProviderToLink { get; set; }
 
             private void AddDeleteAttribute(string attribute)
             {

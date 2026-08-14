@@ -34,21 +34,39 @@ namespace FirebaseAdmin.Auth.Users.Tests
 {
     public class FirebaseUserManagerTest
     {
-        public static readonly IEnumerable<object[]> TestConfigs = new List<object[]>()
+        public static readonly TheoryData<TestConfig> TestConfigs = new TheoryData<TestConfig>()
         {
-            new object[] { TestConfig.ForFirebaseAuth() },
-            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1") },
-            new object[] { TestConfig.ForFirebaseAuth().WithEmulator() },
-            new object[] { TestConfig.ForTenantAwareFirebaseAuth("tenant1").WithEmulator() },
+            TestConfig.ForFirebaseAuth(),
+            TestConfig.ForTenantAwareFirebaseAuth("tenant1"),
+            TestConfig.ForFirebaseAuth().WithEmulator(),
+            TestConfig.ForTenantAwareFirebaseAuth("tenant1").WithEmulator(),
         };
 
-        public static readonly IEnumerable<object[]> MainTenantTestConfigs = new List<object[]>()
+        public static readonly TheoryData<TestConfig> MainTenantTestConfigs = new TheoryData<TestConfig>()
         {
-            new object[] { TestConfig.ForFirebaseAuth() },
-            new object[] { TestConfig.ForFirebaseAuth().WithEmulator() },
+            TestConfig.ForFirebaseAuth(),
+            TestConfig.ForFirebaseAuth().WithEmulator(),
         };
 
         private const string CreateUserResponse = @"{""localId"": ""user1""}";
+
+        public static TheoryData<TestConfig, string, string> UpdateUserInvalidProviderToLinkTestData
+        {
+            get
+            {
+                var data = new TheoryData<TestConfig, string, string>();
+
+                foreach (var testConfigObj in TestConfigs)
+                {
+                    var testConfig = (TestConfig)testConfigObj[0];
+
+                    data.Add(testConfig, "google_user1", string.Empty); // Empty provider ID
+                    data.Add(testConfig, string.Empty, "google.com"); // Empty provider UID
+                }
+
+                return data;
+            }
+        }
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
@@ -1107,6 +1125,12 @@ namespace FirebaseAdmin.Auth.Users.Tests
                     { "package", "gold" },
             };
 
+            var providerToLink = new ProviderUserInfoArgs()
+            {
+                Uid = "google_user1",
+                ProviderId = "google.com",
+            };
+
             var user = await auth.UpdateUserAsync(new UserRecordArgs()
             {
                 CustomClaims = customClaims,
@@ -1118,6 +1142,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
                 PhoneNumber = "+1234567890",
                 PhotoUrl = "https://example.com/user.png",
                 Uid = "user1",
+                ProviderToLink = providerToLink,
             });
 
             Assert.Equal("user1", user.Uid);
@@ -1134,6 +1159,13 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal("secret", request["password"]);
             Assert.Equal("+1234567890", request["phoneNumber"]);
             Assert.Equal("https://example.com/user.png", request["photoUrl"]);
+
+            var expectedProviderUserInfo = new JObject
+            {
+                { "Uid", "google_user1" },
+                { "ProviderId", "google.com" },
+            };
+            Assert.Equal(expectedProviderUserInfo, request["linkProviderUserInfo"]);
 
             var claims = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>((string)request["customAttributes"]);
             Assert.True((bool)claims["admin"]);
@@ -1166,6 +1198,37 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.True((bool)request["emailVerified"]);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateUserLinkProvider(TestConfig config)
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, config.GetUserResponse() },
+            };
+            var auth = config.CreateAuth(handler);
+
+            var user = await auth.UpdateUserAsync(new UserRecordArgs()
+            {
+                Uid = "user1",
+                ProviderToLink = new ProviderUserInfoArgs()
+                {
+                    Uid = "google_user1",
+                    ProviderId = "google.com",
+                },
+            });
+
+            Assert.Equal("user1", user.Uid);
+            Assert.Equal(2, handler.Requests.Count);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            Assert.Equal(2, request.Count);
+            Assert.Equal("user1", request["localId"]);
+            var expectedProviderUserInfo = new JObject();
+            expectedProviderUserInfo.Add("Uid", "google_user1");
+            expectedProviderUserInfo.Add("ProviderId", "google.com");
+            Assert.Equal(expectedProviderUserInfo, request["linkProviderUserInfo"]);
         }
 
         [Theory]
@@ -1212,6 +1275,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             {
                 PhoneNumber = null,
                 Uid = "user1",
+                ProvidersToDelete = new List<string>() { "google.com" },
             });
 
             Assert.Equal("user1", user.Uid);
@@ -1223,7 +1287,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal(2, request.Count);
             Assert.Equal("user1", request["localId"]);
             Assert.Equal(
-                new JArray() { "phone" },
+                new JArray() { "phone", "google.com" },
                 request["deleteProvider"]);
         }
 
@@ -1481,6 +1545,110 @@ namespace FirebaseAdmin.Auth.Users.Tests
             };
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
+        [MemberData(nameof(UpdateUserInvalidProviderToLinkTestData))]
+        public async Task UpdateUserInvalidProviderToLink(TestConfig config, string uid, string providerId)
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = config.CreateAuth(handler);
+
+            var args = new UserRecordArgs()
+            {
+                ProviderToLink = new ProviderUserInfoArgs()
+                {
+                    Uid = uid,
+                    ProviderId = providerId,
+                },
+                Uid = "user1",
+            };
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateUserInvalidEmailProviderToLink(TestConfig config)
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = config.CreateAuth(handler);
+
+            // Phone provider updated in 2 places in the same request
+            var args = new UserRecordArgs()
+            {
+                ProviderToLink = new ProviderUserInfoArgs()
+                {
+                    Uid = "foo@bar.com",
+                    ProviderId = "email",
+                },
+                Uid = "user1",
+                Email = "foo@bar.com",
+            };
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.UpdateUserAsync(args));
+
+            const string expectedError = "Both UpdateRequest.Email and UpdateRequest.ProviderToLink.ProviderId='email' " +
+                                         "were set. To link to the email/password provider, only specify the " +
+                                         "UpdateRequest.Email field.";
+
+            Assert.Equal(expectedError, exception.Message);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateUserInvalidPhoneProviderToLink(TestConfig config)
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = config.CreateAuth(handler);
+
+            // Phone provider updated in 2 places in the same request
+            var args = new UserRecordArgs()
+            {
+                ProviderToLink = new ProviderUserInfoArgs()
+                {
+                    Uid = "+11234567891",
+                    ProviderId = "phone",
+                },
+                Uid = "user1",
+                PhoneNumber = "+11234567891",
+            };
+            var exception = await Assert.ThrowsAsync<FirebaseAuthException>(
+                async () => await auth.UpdateUserAsync(args));
+
+            const string expectedError = "Both UpdateRequest.PhoneNumber and UpdateRequest.ProviderToLink.ProviderId='phone'" +
+                                         " were set. To link to a phone provider, only specify the " +
+                                         "UpdateRequest.PhoneNumber field.";
+
+            Assert.Equal(expectedError, exception.Message);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateUserInvalidProvidersToDelete(TestConfig config)
+        {
+            var handler = new MockMessageHandler() { Response = CreateUserResponse };
+            var auth = config.CreateAuth(handler);
+
+            // Empty provider ID
+            var args = new UserRecordArgs()
+            {
+                ProvidersToDelete = new List<string>() { "google.com", string.Empty },
+                Uid = "user1",
+            };
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await auth.UpdateUserAsync(args));
+            Assert.Empty(handler.Requests);
+
+            // Phone provider updates in two places
+            args.PhoneNumber = null;
+            args.ProvidersToDelete = new List<string>() { "google.com", "phone" };
+            await Assert.ThrowsAsync<ArgumentException>(
                 async () => await auth.UpdateUserAsync(args));
             Assert.Empty(handler.Requests);
         }
