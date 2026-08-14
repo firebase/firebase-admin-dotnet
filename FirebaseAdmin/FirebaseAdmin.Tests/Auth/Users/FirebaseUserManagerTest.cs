@@ -1200,7 +1200,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public async Task UpdateUserRemoveProviders(TestConfig config)
+        public async Task UpdateUserRemovePhoneProviderAutomatically(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -1224,6 +1224,44 @@ namespace FirebaseAdmin.Auth.Users.Tests
             Assert.Equal("user1", request["localId"]);
             Assert.Equal(
                 new JArray() { "phone" },
+                request["deleteProvider"]);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestConfigs))]
+        public async Task UpdateUserRemoveProviders(TestConfig config)
+        {
+            const string user = @"{ 
+                ""localId"": ""user1"",
+                ""providerUserInfo"": [{
+                    ""rawId"": ""googleuid"",
+                    ""providerId"": ""google.com""
+                }]
+            }";
+
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { CreateUserResponse, config.GetUserResponse(user) },
+            };
+
+            var auth = config.CreateAuth(handler);
+
+            var userRecord = await auth.UpdateUserAsync(new UserRecordArgs()
+            {
+                Uid = "user1",
+                ProvidersToDelete = new[] { "google.com" },
+            });
+
+            Assert.Equal("user1", userRecord.Uid);
+            Assert.Equal(config.TenantId, userRecord.TenantId);
+            Assert.Equal(2, handler.Requests.Count);
+            config.AssertRequest("accounts:update", handler.Requests[0]);
+            config.AssertRequest("accounts:lookup", handler.Requests[1]);
+            var request = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(handler.Requests[0].Body);
+            Assert.Equal(2, request.Count);
+            Assert.Equal("user1", request["localId"]);
+            Assert.Equal(
+                new JArray() { "google.com" },
                 request["deleteProvider"]);
         }
 
