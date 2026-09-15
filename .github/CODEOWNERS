@@ -1,9 +1,0 @@
-# Code owners for the Firebase Admin .NET SDK.
-#
-# This file controls who is tagged for review for any given pull request.
-# Approval from a code owner is mandatory before a pull request can be merged.
-#
-# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-
-# Default owners for everything in the repository.
-*       @firebase/firebase-admin-sdk-approvers
