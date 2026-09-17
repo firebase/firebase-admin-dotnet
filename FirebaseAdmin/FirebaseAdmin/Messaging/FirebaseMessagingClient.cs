@@ -38,7 +38,11 @@ namespace FirebaseAdmin.Messaging
         private const string FcmSendUrl = FcmBaseUrl + "/v1/projects/{0}/messages:send";
         private const string FcmBatchUrl = FcmBaseUrl + "/batch";
 
+        private static readonly System.Text.RegularExpressions.Regex TopicNamePattern =
+            new System.Text.RegularExpressions.Regex("^(/topics/)?(private/)?[a-zA-Z0-9-_.~%]+$");
+
         private readonly ErrorHandlingHttpClient<FirebaseMessagingException> httpClient;
+        private readonly string projectId;
         private readonly string sendUrl;
         private readonly string restPath;
         private readonly FCMClientService fcmClientService;
@@ -54,6 +58,7 @@ namespace FirebaseAdmin.Messaging
                     + "variable.");
             }
 
+            this.projectId = args.ProjectId;
             this.httpClient = new ErrorHandlingHttpClient<FirebaseMessagingException>(
                 new ErrorHandlingHttpClientArgs<FirebaseMessagingException>()
                 {
@@ -210,6 +215,40 @@ namespace FirebaseAdmin.Messaging
             }
         }
 
+        /// <summary>
+        /// Subscribes a list of registration tokens to a topic.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
+        /// <param name="topic">The topic name to subscribe to.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about
+        /// the topic subscription operations.</returns>
+        public async Task<TopicManagementResponse> SubscribeToTopicAsync(
+            IReadOnlyList<string> registrationTokens,
+            string topic,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await this.SendTopicManagementRequestAsync(registrationTokens, topic, true, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Unsubscribes a list of registration tokens from a topic.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
+        /// <param name="topic">The topic name to unsubscribe from.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about
+        /// the topic unsubscription operations.</returns>
+        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
+            IReadOnlyList<string> registrationTokens,
+            string topic,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await this.SendTopicManagementRequestAsync(registrationTokens, topic, false, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public void Dispose()
         {
             this.httpClient.Dispose();
@@ -233,6 +272,214 @@ namespace FirebaseAdmin.Messaging
         {
             request.Headers.Add("X-Firebase-Client", ClientVersion);
             request.Headers.Add("X-GOOG-API-FORMAT-VERSION", "2");
+        }
+
+        private static void ValidateRegistrationTokens(IReadOnlyList<string> registrationTokens)
+        {
+            if (registrationTokens == null)
+            {
+                throw new ArgumentNullException(nameof(registrationTokens), "Registration token list must not be null");
+            }
+
+            if (registrationTokens.Count == 0)
+            {
+                throw new ArgumentException("Registration token list must not be empty");
+            }
+
+            if (registrationTokens.Count > 1000)
+            {
+                throw new ArgumentException("Registration token list must not contain more than 1000 tokens");
+            }
+
+            foreach (var token in registrationTokens)
+            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    throw new ArgumentException("Registration tokens must not be null or empty");
+                }
+            }
+        }
+
+        private static void ValidateTopic(string topic)
+        {
+            if (string.IsNullOrEmpty(topic))
+            {
+                throw new ArgumentException("Topic must not be null or empty");
+            }
+
+            if (!TopicNamePattern.IsMatch(topic))
+            {
+                throw new ArgumentException($"Invalid topic name: '{topic}'");
+            }
+        }
+
+        private static bool IsAlreadyExists(FirebaseMessagingException e)
+        {
+            if (e.HttpResponse != null && (int)e.HttpResponse.StatusCode == 409)
+            {
+                return true;
+            }
+
+            if (e.ErrorCode == ErrorCode.AlreadyExists || e.ErrorCode == ErrorCode.Conflict)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static string ExtractReason(FirebaseMessagingException e)
+        {
+            if (e.MessagingErrorCode.HasValue)
+            {
+                return e.MessagingErrorCode.Value.ToString().ToUpperInvariant();
+            }
+
+            if (e.ErrorCode == ErrorCode.NotFound)
+            {
+                return "NOT_FOUND";
+            }
+
+            if (e.ErrorCode == ErrorCode.InvalidArgument)
+            {
+                return "INVALID_ARGUMENT";
+            }
+
+            if (e.ErrorCode == ErrorCode.Internal)
+            {
+                return "INTERNAL";
+            }
+
+            if (e.ErrorCode == ErrorCode.ResourceExhausted)
+            {
+                return "RESOURCE_EXHAUSTED";
+            }
+
+            if (e.ErrorCode == ErrorCode.PermissionDenied)
+            {
+                return "PERMISSION_DENIED";
+            }
+
+            if (e.ErrorCode == ErrorCode.Unauthenticated)
+            {
+                return "UNAUTHENTICATED";
+            }
+
+            if (e.ErrorCode == ErrorCode.DeadlineExceeded)
+            {
+                return "DEADLINE_EXCEEDED";
+            }
+
+            if (e.ErrorCode == ErrorCode.Unavailable)
+            {
+                return "UNAVAILABLE";
+            }
+
+            return e.ErrorCode.ToString().ToUpperInvariant();
+        }
+
+        private async Task<TopicManagementResponse> SendTopicManagementRequestAsync(
+            IReadOnlyList<string> registrationTokens,
+            string topic,
+            bool isSubscribe,
+            CancellationToken cancellationToken)
+        {
+            ValidateRegistrationTokens(registrationTokens);
+            ValidateTopic(topic);
+
+            var cleanTopic = topic.StartsWith("/topics/") ? topic.Substring("/topics/".Length) : topic;
+            var encodedTopic = Uri.EscapeDataString(cleanTopic);
+
+            var semaphore = new SemaphoreSlim(Math.Min(registrationTokens.Count, 100));
+            var tasks = new List<Task<TopicResult>>(registrationTokens.Count);
+
+            for (int i = 0; i < registrationTokens.Count; i++)
+            {
+                var index = i;
+                var token = registrationTokens[i];
+                tasks.Add(this.SendSingleTopicRequestAsync(
+                    token, encodedTopic, isSubscribe, index, semaphore, cancellationToken));
+            }
+
+            var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var successCount = 0;
+            var errors = new List<ErrorInfo>();
+
+            foreach (var result in results)
+            {
+                if (result.IsSuccess)
+                {
+                    successCount++;
+                }
+                else
+                {
+                    errors.Add(new ErrorInfo(result.Index, result.Reason));
+                }
+            }
+
+            return new TopicManagementResponse(successCount, errors);
+        }
+
+        private async Task<TopicResult> SendSingleTopicRequestAsync(
+            string token,
+            string encodedTopic,
+            bool isSubscribe,
+            int index,
+            SemaphoreSlim semaphore,
+            CancellationToken cancellationToken)
+        {
+            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                var encodedToken = Uri.EscapeDataString(token);
+                HttpRequestMessage request;
+                if (isSubscribe)
+                {
+                    var url = $"{FcmBaseUrl}/v1/projects/{this.projectId}/registrations/{encodedToken}/topicSubscriptions?topic_name={encodedTopic}";
+                    request = new HttpRequestMessage()
+                    {
+                        Method = HttpMethod.Post,
+                        RequestUri = new Uri(url),
+                        Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(new { }),
+                        Version = new Version(2, 0),
+                    };
+                }
+                else
+                {
+                    var url = $"{FcmBaseUrl}/v1/projects/{this.projectId}/registrations/{encodedToken}/topicSubscriptions/{encodedTopic}?allow_missing=true";
+                    request = new HttpRequestMessage()
+                    {
+                        Method = HttpMethod.Delete,
+                        RequestUri = new Uri(url),
+                        Version = new Version(2, 0),
+                    };
+                }
+
+                AddCommonHeaders(request);
+                request.Headers.Add("X-Goog-Api-Client", HttpUtils.GetMetricsHeader());
+
+                await this.httpClient.SendAndDeserializeAsync<object>(request, cancellationToken)
+                    .ConfigureAwait(false);
+                return TopicResult.Success(index);
+            }
+            catch (FirebaseMessagingException e)
+            {
+                if (isSubscribe && IsAlreadyExists(e))
+                {
+                    return TopicResult.Success(index);
+                }
+
+                var reason = ExtractReason(e);
+                return TopicResult.Failure(index, reason);
+            }
+            catch (Exception)
+            {
+                return TopicResult.Failure(index, "UNKNOWN_ERROR");
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         private async Task<BatchResponse> SendBatchRequestAsync(
@@ -351,6 +598,26 @@ namespace FirebaseAdmin.Messaging
             internal string ProjectId { get; set; }
 
             internal RetryOptions RetryOptions { get; set; }
+        }
+
+        private sealed class TopicResult
+        {
+            private TopicResult(int index, bool isSuccess, string reason)
+            {
+                this.Index = index;
+                this.IsSuccess = isSuccess;
+                this.Reason = reason;
+            }
+
+            public int Index { get; }
+
+            public bool IsSuccess { get; }
+
+            public string Reason { get; }
+
+            public static TopicResult Success(int index) => new TopicResult(index, true, null);
+
+            public static TopicResult Failure(int index, string reason) => new TopicResult(index, false, reason);
         }
 
         private sealed class FCMClientService : BaseClientService

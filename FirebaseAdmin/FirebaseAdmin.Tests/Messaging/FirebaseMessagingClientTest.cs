@@ -1084,6 +1084,135 @@ Content-Type: application/json; charset=UTF-8
             Assert.Equal(5, handler.Calls);
         }
 
+        [Fact]
+        public async Task SubscribeToTopicAsync()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+
+            var response = await client.SubscribeToTopicAsync(new[] { "token1", "token2" }, "test-topic");
+
+            Assert.Equal(2, response.SuccessCount);
+            Assert.Equal(0, response.FailureCount);
+            Assert.Empty(response.Errors);
+            Assert.Equal(2, handler.Calls);
+            this.CheckHeaders(handler.LastRequestHeaders);
+        }
+
+        [Fact]
+        public async Task SubscribeToTopicAsync_409AlreadyExists()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.Conflict,
+                Response = @"{
+                    ""error"": {
+                        ""status"": ""ALREADY_EXISTS"",
+                        ""message"": ""Already subscribed.""
+                    }
+                }",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+
+            var response = await client.SubscribeToTopicAsync(new[] { "token1" }, "test-topic");
+
+            Assert.Equal(1, response.SuccessCount);
+            Assert.Equal(0, response.FailureCount);
+            Assert.Empty(response.Errors);
+        }
+
+        [Fact]
+        public async Task UnsubscribeFromTopicAsync()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+
+            var response = await client.UnsubscribeFromTopicAsync(new[] { "token1" }, "test-topic");
+
+            Assert.Equal(1, response.SuccessCount);
+            Assert.Equal(0, response.FailureCount);
+            Assert.Empty(response.Errors);
+            Assert.Contains("/v1/projects/test-project/registrations/token1/topicSubscriptions/test-topic?allow_missing=true", handler.Requests.Last().Url.ToString());
+        }
+
+        [Fact]
+        public async Task UnsubscribeFromTopicAsync_404NotFound()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                Response = @"{
+                    ""error"": {
+                        ""status"": ""NOT_FOUND"",
+                        ""message"": ""Not found.""
+                    }
+                }",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+
+            var response = await client.UnsubscribeFromTopicAsync(new[] { "token1" }, "test-topic");
+
+            Assert.Equal(0, response.SuccessCount);
+            Assert.Equal(1, response.FailureCount);
+            Assert.Single(response.Errors);
+            Assert.Equal(0, response.Errors[0].Index);
+            Assert.Equal("registration-token-not-registered", response.Errors[0].Reason);
+        }
+
+        [Fact]
+        public async Task TopicManagement_FcmErrorDetails()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                Response = @"{
+                    ""error"": {
+                        ""status"": ""NOT_FOUND"",
+                        ""message"": ""Requested entity was not found."",
+                        ""details"": [
+                            {
+                                ""@type"": ""type.googleapis.com/google.firebase.fcm.v1.FcmError"",
+                                ""errorCode"": ""UNREGISTERED""
+                            }
+                        ]
+                    }
+                }",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+
+            var response = await client.SubscribeToTopicAsync(new[] { "token1" }, "test-topic");
+
+            Assert.Equal(0, response.SuccessCount);
+            Assert.Equal(1, response.FailureCount);
+            Assert.Single(response.Errors);
+            Assert.Equal(0, response.Errors[0].Index);
+            Assert.Equal("unregistered", response.Errors[0].Reason);
+        }
+
+        [Fact]
+        public async Task TopicManagement_InvalidArguments()
+        {
+            var factory = new MockHttpClientFactory(new MockMessageHandler());
+            var client = this.CreateMessagingClient(factory);
+
+            await Assert.ThrowsAsync<ArgumentNullException>(() => client.SubscribeToTopicAsync(null, "topic"));
+            await Assert.ThrowsAsync<ArgumentException>(() => client.SubscribeToTopicAsync(new string[0], "topic"));
+            await Assert.ThrowsAsync<ArgumentException>(() => client.SubscribeToTopicAsync(new[] { string.Empty }, "topic"));
+            await Assert.ThrowsAsync<ArgumentException>(() => client.SubscribeToTopicAsync(new[] { "token" }, string.Empty));
+            await Assert.ThrowsAsync<ArgumentException>(() => client.SubscribeToTopicAsync(new[] { "token" }, "invalid topic name with spaces!"));
+        }
+
         private FirebaseMessagingClient CreateMessagingClient(HttpClientFactory factory)
         {
             return new FirebaseMessagingClient(new FirebaseMessagingClient.Args()
