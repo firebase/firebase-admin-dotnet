@@ -39,7 +39,9 @@ namespace FirebaseAdmin.Messaging
         private const string FcmBatchUrl = FcmBaseUrl + "/batch";
 
         private static readonly System.Text.RegularExpressions.Regex TopicNamePattern =
-            new System.Text.RegularExpressions.Regex("^(/topics/)?(private/)?[a-zA-Z0-9-_.~%]+$");
+            new System.Text.RegularExpressions.Regex(
+                "^(/topics/)?(private/)?[a-zA-Z0-9-_.~%]+$",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
 
         private readonly ErrorHandlingHttpClient<FirebaseMessagingException> httpClient;
         private readonly string projectId;
@@ -390,34 +392,36 @@ namespace FirebaseAdmin.Messaging
             var cleanTopic = topic.StartsWith("/topics/") ? topic.Substring("/topics/".Length) : topic;
             var encodedTopic = Uri.EscapeDataString(cleanTopic);
 
-            var semaphore = new SemaphoreSlim(Math.Min(registrationTokens.Count, 100));
-            var tasks = new List<Task<TopicResult>>(registrationTokens.Count);
-
-            for (int i = 0; i < registrationTokens.Count; i++)
+            using (var semaphore = new SemaphoreSlim(Math.Min(registrationTokens.Count, 100)))
             {
-                var index = i;
-                var token = registrationTokens[i];
-                tasks.Add(this.SendSingleTopicRequestAsync(
-                    token, encodedTopic, isSubscribe, index, semaphore, cancellationToken));
-            }
+                var tasks = new List<Task<TopicResult>>(registrationTokens.Count);
 
-            var results = await Task.WhenAll(tasks).ConfigureAwait(false);
-            var successCount = 0;
-            var errors = new List<ErrorInfo>();
-
-            foreach (var result in results)
-            {
-                if (result.IsSuccess)
+                for (int i = 0; i < registrationTokens.Count; i++)
                 {
-                    successCount++;
+                    var index = i;
+                    var token = registrationTokens[i];
+                    tasks.Add(this.SendSingleTopicRequestAsync(
+                        token, encodedTopic, isSubscribe, index, semaphore, cancellationToken));
                 }
-                else
-                {
-                    errors.Add(new ErrorInfo(result.Index, result.Reason));
-                }
-            }
 
-            return new TopicManagementResponse(successCount, errors);
+                var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+                var successCount = 0;
+                var errors = new List<ErrorInfo>();
+
+                foreach (var result in results)
+                {
+                    if (result.IsSuccess)
+                    {
+                        successCount++;
+                    }
+                    else
+                    {
+                        errors.Add(new ErrorInfo(result.Index, result.Reason));
+                    }
+                }
+
+                return new TopicManagementResponse(successCount, errors);
+            }
         }
 
         private async Task<TopicResult> SendSingleTopicRequestAsync(
@@ -471,6 +475,10 @@ namespace FirebaseAdmin.Messaging
 
                 var reason = ExtractReason(e);
                 return TopicResult.Failure(index, reason);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception)
             {

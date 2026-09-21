@@ -17,6 +17,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
@@ -1211,6 +1212,26 @@ Content-Type: application/json; charset=UTF-8
             await Assert.ThrowsAsync<ArgumentException>(() => client.SubscribeToTopicAsync(new[] { string.Empty }, "topic"));
             await Assert.ThrowsAsync<ArgumentException>(() => client.SubscribeToTopicAsync(new[] { "token" }, string.Empty));
             await Assert.ThrowsAsync<ArgumentException>(() => client.SubscribeToTopicAsync(new[] { "token" }, "invalid topic name with spaces!"));
+        }
+
+        [Fact]
+        public async Task TopicManagement_Cancellation()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+            var client = this.CreateMessagingClient(factory);
+
+            using (var cts = new CancellationTokenSource())
+            {
+                cts.Cancel();
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                    () => client.SubscribeToTopicAsync(new[] { "token1" }, "test-topic", cts.Token));
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                    () => client.UnsubscribeFromTopicAsync(new[] { "token1" }, "test-topic", cts.Token));
+            }
         }
 
         private FirebaseMessagingClient CreateMessagingClient(HttpClientFactory factory)
