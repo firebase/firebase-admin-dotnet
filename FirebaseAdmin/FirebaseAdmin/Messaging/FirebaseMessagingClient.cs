@@ -37,6 +37,7 @@ namespace FirebaseAdmin.Messaging
         private const string FcmBaseUrl = "https://fcm.googleapis.com";
         private const string FcmSendUrl = FcmBaseUrl + "/v1/projects/{0}/messages:send";
         private const string FcmBatchUrl = FcmBaseUrl + "/batch";
+        private const int MaxConcurrentTopicRequests = 100;
 
         private static readonly System.Text.RegularExpressions.Regex TopicNamePattern =
             new System.Text.RegularExpressions.Regex(
@@ -392,7 +393,7 @@ namespace FirebaseAdmin.Messaging
             var cleanTopic = topic.StartsWith("/topics/") ? topic.Substring("/topics/".Length) : topic;
             var encodedTopic = Uri.EscapeDataString(cleanTopic);
 
-            using (var semaphore = new SemaphoreSlim(Math.Min(registrationTokens.Count, 100)))
+            using (var semaphore = new SemaphoreSlim(Math.Min(registrationTokens.Count, MaxConcurrentTopicRequests)))
             {
                 var tasks = new List<Task<TopicResult>>(registrationTokens.Count);
 
@@ -444,7 +445,7 @@ namespace FirebaseAdmin.Messaging
                     {
                         Method = HttpMethod.Post,
                         RequestUri = new Uri(url),
-                        Content = NewtonsoftJsonSerializer.Instance.CreateJsonHttpContent(new { }),
+                        Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json"),
                         Version = new Version(2, 0),
                     };
                 }
