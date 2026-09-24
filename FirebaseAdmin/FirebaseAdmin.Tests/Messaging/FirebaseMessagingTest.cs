@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Tests;
@@ -100,15 +101,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
 
-            #if NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
             await Assert.ThrowsAsync<TaskCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-            #else
+#else
             await Assert.ThrowsAsync<OperationCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-            #endif
+#endif
         }
 
         [Fact]
@@ -122,15 +123,15 @@ namespace FirebaseAdmin.Messaging.Tests
             var canceller = new CancellationTokenSource();
             canceller.Cancel();
 
-            #if NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
             await Assert.ThrowsAsync<TaskCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-            #else
+#else
             await Assert.ThrowsAsync<OperationCanceledException>(
                 async () => await FirebaseMessaging.DefaultInstance.SendAsync(
                     new Message() { Topic = "test-topic" }, canceller.Token));
-            #endif
+#endif
         }
 
         [Fact]
@@ -138,7 +139,7 @@ namespace FirebaseAdmin.Messaging.Tests
         {
             var handler = new MockMessageHandler()
             {
-                Response = @"{""results"":[{}]}",
+                Response = "{}",
             };
             var factory = new MockHttpClientFactory(handler);
 
@@ -155,11 +156,38 @@ namespace FirebaseAdmin.Messaging.Tests
             var response = await messaging.SubscribeToTopicAsync(new List<string> { "test-token" }, "test-topic");
             Assert.Equal(0, response.FailureCount);
             Assert.Equal(1, response.SuccessCount);
+            Assert.Contains("/v1/projects/test-project/registrations/test-token/topicSubscriptions?topic_name=test-topic", handler.Requests.Last().Url.ToString());
             app.Delete();
         }
 
         [Fact]
         public async Task UnsubscribeWithClientFactory()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "{}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+
+            var app = FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromAccessToken("test-token"),
+                HttpClientFactory = factory,
+                ProjectId = "test-project",
+            });
+            FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
+            Assert.NotNull(messaging);
+            Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
+
+            var response = await messaging.UnsubscribeFromTopicAsync(new List<string> { "test-token" }, "test-topic");
+            Assert.Equal(0, response.FailureCount);
+            Assert.Equal(1, response.SuccessCount);
+            Assert.Contains("/v1/projects/test-project/registrations/test-token/topicSubscriptions/test-topic?allow_missing=true", handler.Requests.Last().Url.ToString());
+            app.Delete();
+        }
+
+        [Fact]
+        public async Task SubscribeLegacyWithClientFactory()
         {
             var handler = new MockMessageHandler()
             {
@@ -177,9 +205,40 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotNull(messaging);
             Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
 
-            var response = await messaging.UnsubscribeFromTopicAsync(new List<string> { "test-token" }, "test-topic");
+#pragma warning disable CS0618
+            var response = await messaging.SubscribeToTopicLegacyAsync(new List<string> { "test-token" }, "test-topic");
+#pragma warning restore CS0618
             Assert.Equal(0, response.FailureCount);
             Assert.Equal(1, response.SuccessCount);
+            Assert.Contains("iid.googleapis.com/iid/v1:batchAdd", handler.Requests.Last().Url.ToString());
+            app.Delete();
+        }
+
+        [Fact]
+        public async Task UnsubscribeLegacyWithClientFactory()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = @"{""results"":[{}]}",
+            };
+            var factory = new MockHttpClientFactory(handler);
+
+            var app = FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromAccessToken("test-token"),
+                HttpClientFactory = factory,
+                ProjectId = "test-project",
+            });
+            FirebaseMessaging messaging = FirebaseMessaging.GetMessaging(app);
+            Assert.NotNull(messaging);
+            Assert.Same(messaging, FirebaseMessaging.GetMessaging(app));
+
+#pragma warning disable CS0618
+            var response = await messaging.UnsubscribeFromTopicLegacyAsync(new List<string> { "test-token" }, "test-topic");
+#pragma warning restore CS0618
+            Assert.Equal(0, response.FailureCount);
+            Assert.Equal(1, response.SuccessCount);
+            Assert.Contains("iid.googleapis.com/iid/v1:batchRemove", handler.Requests.Last().Url.ToString());
             app.Delete();
         }
 
