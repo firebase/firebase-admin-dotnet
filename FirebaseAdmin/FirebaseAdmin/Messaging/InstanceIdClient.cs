@@ -224,5 +224,5 @@ namespace FirebaseAdmin.Messaging
                 }
             }
         }
-  }
+    }
 }
