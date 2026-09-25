@@ -1,4 +1,4 @@
-// Copyright 2018, Google Inc. All rights reserved.
+// Copyright 2026, Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,29 +23,27 @@ using Newtonsoft.Json;
 namespace FirebaseAdmin.Messaging
 {
     /// <summary>
-    /// Represents the Android-specific notification options that can be included in a
-    /// <see cref="Message"/>.
-    /// Deprecated. Use <see cref="AndroidNotificationV2"/> instead.
+    /// Represents the Android-specific notification options that can be included in an
+    /// <see cref="AndroidRemoteNotification"/>.
     /// </summary>
-    [Obsolete("Deprecated. Use AndroidNotificationV2 instead.")]
-    public sealed class AndroidNotification
+    public sealed class AndroidNotificationV2
     {
         /// <summary>
-        /// Gets or sets the title of the Android notification. When provided, overrides the title
+        /// Gets or sets the title of the Android V2 notification. When provided, overrides the title
         /// set via <see cref="Notification.Title"/>.
         /// </summary>
         [JsonProperty("title")]
         public string Title { get; set; }
 
         /// <summary>
-        /// Gets or sets the body text of the Android notification. When provided, overrides the body
+        /// Gets or sets the body text of the Android V2 notification. When provided, overrides the body
         /// set via <see cref="Notification.Body"/>.
         /// </summary>
         [JsonProperty("body")]
         public string Body { get; set; }
 
         /// <summary>
-        /// Gets or sets the icon of the Android notification.
+        /// Gets or sets the icon of the Android V2 notification.
         /// </summary>
         [JsonProperty("icon")]
         public string Icon { get; set; }
@@ -136,7 +134,7 @@ namespace FirebaseAdmin.Messaging
         /// the notification is automatically dismissed. When set to true, the notification persists.
         /// </summary>
         [JsonProperty("sticky")]
-        public bool Sticky { get; set; }
+        public bool? Sticky { get; set; }
 
         /// <summary>
         /// Gets or sets the time that the event in the notification occurred for notifications
@@ -144,7 +142,7 @@ namespace FirebaseAdmin.Messaging
         /// are sorted by this time.
         /// </summary>
         [JsonIgnore]
-        public DateTime EventTimestamp { get; set; }
+        public DateTime? EventTimestamp { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether or not this notification is relevant only to
@@ -153,7 +151,7 @@ namespace FirebaseAdmin.Messaging
         /// See <a href="https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging">Wear OS guides</a>.
         /// </summary>
         [JsonProperty("local_only")]
-        public bool LocalOnly { get; set; }
+        public bool? LocalOnly { get; set; }
 
         /// <summary>
         /// Gets or sets the relative priority for this notification. Priority is an indication of how much of
@@ -174,7 +172,7 @@ namespace FirebaseAdmin.Messaging
         /// terminated by 's'.Example: "3.5s".
         /// </summary>
         [JsonIgnore]
-        public long[] VibrateTimingsMillis { get; set; }
+        public IReadOnlyList<long> VibrateTimingsMillis { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether or not to use the default vibration timings. If set to true, use the Android
@@ -184,14 +182,14 @@ namespace FirebaseAdmin.Messaging
         /// the default value is used instead of the user-specified <see cref="VibrateTimingsMillis"/>.
         /// </summary>
         [JsonProperty("default_vibrate_timings")]
-        public bool DefaultVibrateTimings { get; set; }
+        public bool? DefaultVibrateTimings { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether or not to use the default sound. If set to true, use the Android framework's
         /// default sound for the notification. Default values are specified in config.xml.
         /// </summary>
         [JsonProperty("default_sound")]
-        public bool DefaultSound { get; set; }
+        public bool? DefaultSound { get; set; }
 
         /// <summary>
         /// Gets or sets the settings to control the notification's LED blinking rate and color if LED is
@@ -207,7 +205,7 @@ namespace FirebaseAdmin.Messaging
         /// the user-specified <see cref="LightSettings"/> is used instead of the default value.
         /// </summary>
         [JsonProperty("default_light_settings")]
-        public bool DefaultLightSettings { get; set; }
+        public bool? DefaultLightSettings { get; set; }
 
         /// <summary>
         /// Gets or sets the visibility of this notification.
@@ -227,13 +225,15 @@ namespace FirebaseAdmin.Messaging
         public int? NotificationCount { get; set; }
 
         /// <summary>
-        /// Gets or sets the proxy behavior of this notification.
+        /// Gets or sets the request-scoped identifier of this notification. If not specified, each
+        /// request creates a new notification. If specified and a notification with the same tag is
+        /// already active, the new notification replaces the old one in the notification drawer.
         /// </summary>
-        [JsonIgnore]
-        public NotificationProxy? Proxy { get; set; }
+        [JsonProperty("id")]
+        public int? Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the string representation of the <see cref="NotificationPriority"/> property.
+        /// Gets or sets the string representation of the <see cref="Priority"/> property.
         /// </summary>
         [JsonProperty("notification_priority")]
         private string PriorityString
@@ -259,6 +259,12 @@ namespace FirebaseAdmin.Messaging
 
             set
             {
+                if (value == null)
+                {
+                    this.Priority = null;
+                    return;
+                }
+
                 switch (value)
                 {
                     case "PRIORITY_MIN":
@@ -278,14 +284,14 @@ namespace FirebaseAdmin.Messaging
                         return;
                     default:
                         throw new ArgumentException(
-                            $"Invalid priority value: {value}. Only 'PRIORITY_MIN', 'PRIORITY_LOW', ''PRIORITY_DEFAULT' "
-                            + "'PRIORITY_HIGH','PRIORITY_MAX' are allowed.");
+                            $"Invalid priority value: {value}. Only 'PRIORITY_MIN', 'PRIORITY_LOW', 'PRIORITY_DEFAULT', "
+                            + "'PRIORITY_HIGH', 'PRIORITY_MAX' are allowed.");
                 }
             }
         }
 
         /// <summary>
-        /// Gets or sets the string representation of the <see cref="NotificationVisibility"/> property.
+        /// Gets or sets the string representation of the <see cref="Visibility"/> property.
         /// </summary>
         [JsonProperty("visibility")]
         private string VisibilityString
@@ -307,6 +313,12 @@ namespace FirebaseAdmin.Messaging
 
             set
             {
+                if (value == null)
+                {
+                    this.Visibility = null;
+                    return;
+                }
+
                 switch (value)
                 {
                     case "PUBLIC":
@@ -333,12 +345,12 @@ namespace FirebaseAdmin.Messaging
         {
             get
             {
-                var timingsStringList = new List<string>();
                 if (this.VibrateTimingsMillis == null)
                 {
                     return null;
                 }
 
+                var timingsStringList = new List<string>();
                 foreach (var value in this.VibrateTimingsMillis)
                 {
                     timingsStringList.Add(TimeConverter.LongMillisToString(value));
@@ -349,13 +361,18 @@ namespace FirebaseAdmin.Messaging
 
             set
             {
+                if (value == null)
+                {
+                    this.VibrateTimingsMillis = null;
+                    return;
+                }
+
                 if (value.Count == 0)
                 {
                     throw new ArgumentException("Invalid VibrateTimingsMillis. VibrateTimingsMillis should be a non-empty list of strings");
                 }
 
                 var timingsLongList = new List<long>();
-
                 foreach (var timingString in value)
                 {
                     timingsLongList.Add(TimeConverter.StringToLongMillis(timingString));
@@ -373,58 +390,32 @@ namespace FirebaseAdmin.Messaging
         {
             get
             {
-                return this.EventTimestamp.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.ffffff000'Z'", CultureInfo.InvariantCulture);
+                if (this.EventTimestamp == null)
+                {
+                    return null;
+                }
+
+                return this.EventTimestamp.Value.ToUniversalTime().ToString(
+                    "yyyy-MM-dd'T'HH:mm:ss.ffffff000'Z'", CultureInfo.InvariantCulture);
             }
 
             set
             {
+                if (value == null)
+                {
+                    this.EventTimestamp = null;
+                    return;
+                }
+
                 if (string.IsNullOrEmpty(value))
                 {
                     throw new ArgumentException("Invalid event timestamp. Event timestamp should be a non-empty string");
                 }
 
-                this.EventTimestamp = DateTime.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.None);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the string representation of the <see cref="NotificationProxy"/> property.
-        /// </summary>
-        [JsonProperty("proxy")]
-        private string ProxyString
-        {
-            get
-            {
-                switch (this.Proxy)
-                {
-                    case NotificationProxy.Allow:
-                        return "ALLOW";
-                    case NotificationProxy.Deny:
-                        return "DENY";
-                    case NotificationProxy.IfPriorityLowered:
-                        return "IF_PRIORITY_LOWERED";
-                    default:
-                        return null;
-                }
-            }
-
-            set
-            {
-                switch (value)
-                {
-                    case "ALLOW":
-                        this.Proxy = NotificationProxy.Allow;
-                        return;
-                    case "DENY":
-                        this.Proxy = NotificationProxy.Deny;
-                        return;
-                    case "IF_PRIORITY_LOWERED":
-                        this.Proxy = NotificationProxy.IfPriorityLowered;
-                        return;
-                    default:
-                        throw new ArgumentException(
-                            $"Invalid proxy value: {value}. Only 'ALLOW', 'DENY', 'IF_PRIORITY_LOWERED' are allowed.");
-                }
+                this.EventTimestamp = DateTime.Parse(
+                    value,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
             }
         }
 
@@ -432,9 +423,9 @@ namespace FirebaseAdmin.Messaging
         /// Copies this notification, and validates the content of it to ensure that it can be
         /// serialized into the JSON format expected by the FCM service.
         /// </summary>
-        internal AndroidNotification CopyAndValidate()
+        internal AndroidNotificationV2 CopyAndValidate()
         {
-            var copy = new AndroidNotification()
+            var copy = new AndroidNotificationV2()
             {
                 Title = this.Title,
                 Body = this.Body,
@@ -454,14 +445,15 @@ namespace FirebaseAdmin.Messaging
                 EventTimestamp = this.EventTimestamp,
                 LocalOnly = this.LocalOnly,
                 Priority = this.Priority,
-                VibrateTimingsMillis = this.VibrateTimingsMillis,
+                VibrateTimingsMillis = this.VibrateTimingsMillis?.ToList(),
                 DefaultVibrateTimings = this.DefaultVibrateTimings,
                 DefaultSound = this.DefaultSound,
                 DefaultLightSettings = this.DefaultLightSettings,
                 Visibility = this.Visibility,
                 NotificationCount = this.NotificationCount,
-                Proxy = this.Proxy,
+                Id = this.Id,
             };
+
             if (copy.Color != null && !Regex.Match(copy.Color, "^#[0-9a-fA-F]{6}$").Success)
             {
                 throw new ArgumentException("Color must be in the form #RRGGBB.");
