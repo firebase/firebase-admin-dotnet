@@ -107,5 +107,5 @@ namespace FirebaseAdmin.Tests
                 return new FirebaseException(args.Code, args.Message, response: args.HttpResponse);
             }
         }
-  }
+    }
 }
