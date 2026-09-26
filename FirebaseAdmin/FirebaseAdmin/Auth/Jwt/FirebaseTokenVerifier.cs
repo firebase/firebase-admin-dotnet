@@ -102,8 +102,11 @@ namespace FirebaseAdmin.Auth.Jwt
                     "Must initialize FirebaseApp with a project ID to verify ID tokens.");
             }
 
+            var tokenCertUrl = string.IsNullOrEmpty(app.Options.TokenCertUrl)
+                ? IdTokenCertUrl
+                : app.Options.TokenCertUrl;
             var keySource = new HttpPublicKeySource(
-                IdTokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
+                tokenCertUrl, SystemClock.Default, app.Options.HttpClientFactory);
             var args = CreateIdTokenVerifierArgs();
             args.ProjectId = projectId;
             args.TenantId = tenantId;
