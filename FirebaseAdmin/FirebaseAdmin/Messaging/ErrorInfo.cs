@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace FirebaseAdmin.Messaging
 {
@@ -27,8 +27,18 @@ namespace FirebaseAdmin.Messaging
         public ErrorInfo(int index, string reason)
         {
             this.Index = index;
-            this.Reason = ErrorCodes.ContainsKey(reason)
-              ? ErrorCodes[reason] : UnknownError;
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                this.Reason = UnknownError;
+            }
+            else if (ErrorCodes.TryGetValue(reason, out var mapped))
+            {
+                this.Reason = mapped;
+            }
+            else
+            {
+                this.Reason = reason.ToLowerInvariant().Replace('_', '-');
+            }
         }
 
         /// <summary>
