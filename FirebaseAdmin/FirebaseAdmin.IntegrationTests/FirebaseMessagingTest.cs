@@ -171,9 +171,9 @@ namespace FirebaseAdmin.IntegrationTests
                 new List<string> { "token1", "token2" }, "test-topic");
             Assert.NotNull(response);
             Assert.Equal(2, response.FailureCount);
-            Assert.Equal("invalid-argument", response.Errors[0].Reason);
+            Assert.Equal("permission-denied", response.Errors[0].Reason);
             Assert.Equal(0, response.Errors[0].Index);
-            Assert.Equal("invalid-argument", response.Errors[1].Reason);
+            Assert.Equal("permission-denied", response.Errors[1].Reason);
             Assert.Equal(1, response.Errors[1].Index);
         }
 
@@ -184,9 +184,9 @@ namespace FirebaseAdmin.IntegrationTests
                 new List<string> { "token1", "token2" }, "test-topic");
             Assert.NotNull(response);
             Assert.Equal(2, response.FailureCount);
-            Assert.Equal("invalid-argument", response.Errors[0].Reason);
+            Assert.Equal("permission-denied", response.Errors[0].Reason);
             Assert.Equal(0, response.Errors[0].Index);
-            Assert.Equal("invalid-argument", response.Errors[1].Reason);
+            Assert.Equal("permission-denied", response.Errors[1].Reason);
             Assert.Equal(1, response.Errors[1].Index);
         }
     }

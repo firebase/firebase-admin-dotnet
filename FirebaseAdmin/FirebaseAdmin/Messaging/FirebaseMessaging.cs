@@ -503,9 +503,37 @@ namespace FirebaseAdmin.Messaging
         /// Subscribes a list of registration tokens to a topic.
         /// </summary>
         /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
-        /// <param name="topic">The topic name to subscribe to. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <param name="topic">The topic name to subscribe to.</param>
         /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic subscription operations.</returns>
         public async Task<TopicManagementResponse> SubscribeToTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic)
+        {
+            return await this.SubscribeToTopicAsync(registrationTokens, topic, default)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Subscribes a list of registration tokens to a topic.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
+        /// <param name="topic">The topic name to subscribe to.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic subscription operations.</returns>
+        public async Task<TopicManagementResponse> SubscribeToTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic, CancellationToken cancellationToken)
+        {
+            return await this.messagingClient.SubscribeToTopicAsync(registrationTokens, topic, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Subscribes a list of registration tokens to a topic using the legacy Instance ID API.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to subscribe.</param>
+        /// <param name="topic">The topic name to subscribe to.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>.</returns>
+        [Obsolete("Use SubscribeToTopicAsync instead.")]
+        public async Task<TopicManagementResponse> SubscribeToTopicLegacyAsync(
             IReadOnlyList<string> registrationTokens, string topic)
         {
             return await this.instanceIdClient.SubscribeToTopicAsync(registrationTokens, topic)
@@ -516,9 +544,37 @@ namespace FirebaseAdmin.Messaging
         /// Unsubscribes a list of registration tokens from a topic.
         /// </summary>
         /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
-        /// <param name="topic">The topic name to unsubscribe from. /topics/ will be prepended to the topic name provided if absent.</param>
+        /// <param name="topic">The topic name to unsubscribe from.</param>
         /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic unsubscription operations.</returns>
         public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic)
+        {
+            return await this.UnsubscribeFromTopicAsync(registrationTokens, topic, default)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Unsubscribes a list of registration tokens from a topic.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
+        /// <param name="topic">The topic name to unsubscribe from.</param>
+        /// <param name="cancellationToken">A cancellation token to monitor the asynchronous operation.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>, giving details about the topic unsubscription operations.</returns>
+        public async Task<TopicManagementResponse> UnsubscribeFromTopicAsync(
+            IReadOnlyList<string> registrationTokens, string topic, CancellationToken cancellationToken)
+        {
+            return await this.messagingClient.UnsubscribeFromTopicAsync(registrationTokens, topic, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Unsubscribes a list of registration tokens from a topic using the legacy Instance ID API.
+        /// </summary>
+        /// <param name="registrationTokens">A list of registration tokens to unsubscribe.</param>
+        /// <param name="topic">The topic name to unsubscribe from.</param>
+        /// <returns>A task that completes with a <see cref="TopicManagementResponse"/>.</returns>
+        [Obsolete("Use UnsubscribeFromTopicAsync instead.")]
+        public async Task<TopicManagementResponse> UnsubscribeFromTopicLegacyAsync(
             IReadOnlyList<string> registrationTokens, string topic)
         {
             return await this.instanceIdClient.UnsubscribeFromTopicAsync(registrationTokens, topic)
