@@ -67,12 +67,6 @@ namespace FirebaseAdmin.AppCheck
             this.httpClient.Dispose();
         }
 
-        internal static AppCheckClient Create(FirebaseApp app)
-        {
-            return new AppCheckClient(
-                app.Options.HttpClientFactory, app.Options.Credential, app.GetProjectId());
-        }
-
         /// <summary>
         /// Consumes the given App Check token, and returns whether it had already been consumed.
         /// The token must be verified locally before calling this method.
