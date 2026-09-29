@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.AppCheck;
 using FirebaseAdmin.Auth.Jwt;
@@ -206,6 +207,17 @@ namespace FirebaseAdmin.Tests.AppCheck
             var response = await this.CreateVerifier().VerifyTokenAsync(token);
 
             Assert.Equal(AppId, response.AppId);
+        }
+
+        [Fact]
+        public async Task Cancelled()
+        {
+            var canceller = new CancellationTokenSource();
+            canceller.Cancel();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => this.CreateVerifier().VerifyTokenAsync(this.CreateToken(), null, canceller.Token));
+            Assert.Equal(0, this.keyHandler.Calls);
         }
 
         [Fact]

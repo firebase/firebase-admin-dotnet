@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,9 @@ namespace FirebaseAdmin.Tests.AppCheck
     {
         private static readonly GoogleCredential MockCredential =
             GoogleCredential.FromAccessToken("test-token");
+
+        private static readonly RSA Key = CreateRsaKey();
+        private static readonly RSA OtherKey = CreateRsaKey();
 
         [Fact]
         public void GetAppCheckWithoutApp()
@@ -93,9 +97,9 @@ namespace FirebaseAdmin.Tests.AppCheck
             var handler = new MockMessageHandler() { Response = Jwks() };
             FirebaseApp.Create(this.CreateOptions(handler));
 
-            // Valid header and claims, invalid signature: fails only after the keys are fetched.
+            // Valid header and claims, wrong signing key: fails only after the keys are fetched.
             var exception = await Assert.ThrowsAsync<FirebaseAppCheckException>(
-                () => FirebaseAppCheck.DefaultInstance.VerifyTokenAsync(UnsignedToken()));
+                () => FirebaseAppCheck.DefaultInstance.VerifyTokenAsync(CreateToken(OtherKey)));
 
             Assert.Equal(AppCheckErrorCode.InvalidAppCheckToken, exception.AppCheckErrorCode);
             Assert.Equal("Failed to verify App Check token signature.", exception.Message);
@@ -103,14 +107,46 @@ namespace FirebaseAdmin.Tests.AppCheck
             Assert.Equal("https://firebaseappcheck.googleapis.com/v1/jwks", request.Url.ToString());
         }
 
+        [Fact]
+        public async Task VerifyTokenWithConsume()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { Jwks(), @"{""alreadyConsumed"": true}" },
+            };
+            FirebaseApp.Create(this.CreateOptions(handler));
+            var options = new VerifyAppCheckTokenOptions() { Consume = true };
+
+            var response = await FirebaseAppCheck.DefaultInstance.VerifyTokenAsync(
+                CreateToken(Key), options);
+
+            Assert.Equal("test-app-id", response.AppId);
+            Assert.True(response.AlreadyConsumed);
+            Assert.Equal(2, handler.Requests.Count);
+            Assert.False(handler.Requests[0].Headers.Contains("Authorization"));
+            var replayRequest = handler.Requests[1];
+            Assert.Equal(
+                "https://firebaseappcheck.googleapis.com/v1beta/projects/test-project:verifyAppCheckToken",
+                replayRequest.Url.ToString());
+            Assert.Equal(
+                "Bearer test-token", replayRequest.Headers.GetValues("Authorization").Single());
+        }
+
         public void Dispose()
         {
             FirebaseApp.DeleteAll();
         }
 
+        private static RSA CreateRsaKey()
+        {
+            var rsa = RSA.Create();
+            rsa.KeySize = 2048;
+            return rsa;
+        }
+
         private static string Jwks()
         {
-            var parameters = RSA.Create().ExportParameters(false);
+            var parameters = Key.ExportParameters(false);
             var jwk = new Dictionary<string, string>()
             {
                 { "kid", "k1" },
@@ -122,7 +158,7 @@ namespace FirebaseAdmin.Tests.AppCheck
             return NewtonsoftJsonSerializer.Instance.Serialize(new { keys = new[] { jwk } });
         }
 
-        private static string UnsignedToken()
+        private static string CreateToken(RSA signingKey)
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var header = new { alg = "RS256", typ = "JWT", kid = "k1" };
@@ -134,7 +170,10 @@ namespace FirebaseAdmin.Tests.AppCheck
                 iat = now,
                 exp = now + 3600,
             };
-            return $"{Encode(header)}.{Encode(payload)}.{Encode("invalid-signature")}";
+            var unsigned = $"{Encode(header)}.{Encode(payload)}";
+            var signature = signingKey.SignData(
+                Encoding.ASCII.GetBytes(unsigned), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            return $"{unsigned}.{JwtUtils.UrlSafeBase64Encode(signature)}";
         }
 
         private static string Encode(object value)
