@@ -20,11 +20,6 @@ namespace FirebaseAdmin.AppCheck
     public enum AppCheckErrorCode
     {
         /// <summary>
-        /// One or more arguments specified in the request were invalid.
-        /// </summary>
-        InvalidArgument,
-
-        /// <summary>
         /// The provided App Check token is invalid or malformed.
         /// </summary>
         InvalidAppCheckToken,
@@ -33,11 +28,6 @@ namespace FirebaseAdmin.AppCheck
         /// The provided App Check token has expired.
         /// </summary>
         AppCheckTokenExpired,
-
-        /// <summary>
-        /// Internal error encountered during App Check token verification.
-        /// </summary>
-        InternalError,
 
         /// <summary>
         /// App Check verification service is temporarily unavailable or returned an error.
