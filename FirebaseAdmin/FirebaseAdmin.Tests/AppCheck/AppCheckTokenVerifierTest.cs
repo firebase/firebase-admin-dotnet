@@ -199,6 +199,16 @@ namespace FirebaseAdmin.Tests.AppCheck
         }
 
         [Fact]
+        public async Task TypeHeaderIsCaseInsensitive()
+        {
+            var token = this.CreateToken(header: new Dictionary<string, object>() { { "typ", "jwt" } });
+
+            var response = await this.CreateVerifier().VerifyTokenAsync(token);
+
+            Assert.Equal(AppId, response.AppId);
+        }
+
+        [Fact]
         public async Task UnknownKeyId()
         {
             var token = this.CreateToken(header: new Dictionary<string, object>() { { "kid", "k2" } });

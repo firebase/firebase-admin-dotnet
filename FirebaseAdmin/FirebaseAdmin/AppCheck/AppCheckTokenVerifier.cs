@@ -129,7 +129,7 @@ namespace FirebaseAdmin.AppCheck
             {
                 error = "App Check token has no 'kid' header.";
             }
-            else if (header.Type != "JWT")
+            else if (!string.Equals(header.Type, "JWT", StringComparison.OrdinalIgnoreCase))
             {
                 error = "App Check token has incorrect type header. Expected JWT but got "
                     + $"{header.Type}.";
