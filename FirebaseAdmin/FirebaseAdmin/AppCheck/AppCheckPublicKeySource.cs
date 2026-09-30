@@ -42,14 +42,18 @@ namespace FirebaseAdmin.AppCheck
         private readonly SemaphoreSlim cacheLock = new SemaphoreSlim(1, 1);
         private readonly IClock clock;
         private readonly HttpClientFactory clientFactory;
+        private readonly RetryOptions retryOptions;
         private IReadOnlyDictionary<string, PublicKey> cachedKeys;
         private DateTime expirationTime;
         private DateTime lastFetchTime;
+        private FirebaseAppCheckException lastFetchError;
 
-        internal AppCheckPublicKeySource(IClock clock, HttpClientFactory clientFactory)
+        internal AppCheckPublicKeySource(
+            IClock clock, HttpClientFactory clientFactory, RetryOptions retryOptions = null)
         {
             this.clock = clock.ThrowIfNull(nameof(clock));
             this.clientFactory = clientFactory.ThrowIfNull(nameof(clientFactory));
+            this.retryOptions = retryOptions;
         }
 
         /// <summary>
@@ -77,12 +81,24 @@ namespace FirebaseAdmin.AppCheck
             try
             {
                 var now = this.clock.UtcNow;
-                if (this.cachedKeys == null
-                    || now >= this.expirationTime
-                    || (forceRefresh && now - this.lastFetchTime >= MinRefreshInterval))
+                var usable = this.cachedKeys != null && now < this.expirationTime;
+                var rateLimited = now - this.lastFetchTime < MinRefreshInterval;
+                if (!usable)
                 {
-                    this.lastFetchTime = now;
-                    await this.RefreshAsync(now, cancellationToken).ConfigureAwait(false);
+                    if (this.lastFetchError != null && rateLimited)
+                    {
+                        throw new FirebaseAppCheckException(
+                            this.lastFetchError.ErrorCode,
+                            $"Failed to fetch App Check public keys. {this.lastFetchError.Message}",
+                            AppCheckErrorCode.ServiceError,
+                            inner: this.lastFetchError);
+                    }
+
+                    await this.FetchKeysAsync(now, cancellationToken).ConfigureAwait(false);
+                }
+                else if (forceRefresh && !rateLimited)
+                {
+                    await this.FetchKeysAsync(now, cancellationToken).ConfigureAwait(false);
                 }
 
                 return this.cachedKeys;
@@ -90,6 +106,21 @@ namespace FirebaseAdmin.AppCheck
             finally
             {
                 this.cacheLock.Release();
+            }
+        }
+
+        private async Task FetchKeysAsync(DateTime now, CancellationToken cancellationToken)
+        {
+            this.lastFetchTime = now;
+            try
+            {
+                await this.RefreshAsync(now, cancellationToken).ConfigureAwait(false);
+                this.lastFetchError = null;
+            }
+            catch (FirebaseAppCheckException e)
+            {
+                this.lastFetchError = e;
+                throw;
             }
         }
 
@@ -150,6 +181,7 @@ namespace FirebaseAdmin.AppCheck
                     ErrorResponseHandler = AppCheckErrorHandler.Instance,
                     RequestExceptionHandler = AppCheckErrorHandler.Instance,
                     DeserializeExceptionHandler = AppCheckErrorHandler.Instance,
+                    RetryOptions = this.retryOptions,
                 });
         }
 

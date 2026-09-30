@@ -22,6 +22,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FirebaseAdmin.AppCheck;
 using FirebaseAdmin.Auth.Jwt;
+using FirebaseAdmin.Util;
 using Google.Apis.Json;
 using Xunit;
 
@@ -183,6 +184,95 @@ namespace FirebaseAdmin.Tests.AppCheck
             Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
             Assert.Equal(AppCheckErrorCode.ServiceError, exception.AppCheckErrorCode);
             Assert.NotNull(exception.HttpResponse);
+        }
+
+        [Fact]
+        public async Task TransientErrorIsRetried()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = new List<string>() { "unavailable", Jwks(Jwk("k1", Key1)) },
+            };
+            handler.GenerateStatusCode = (_) => handler.Requests.Count == 1
+                ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK;
+            var keySource = new AppCheckPublicKeySource(
+                new MockClock(), new MockHttpClientFactory(handler), RetryOptions.NoBackOff);
+
+            var key = await keySource.GetPublicKeyAsync("k1");
+
+            Assert.Equal("k1", key.Id);
+            Assert.Equal(2, handler.Calls);
+        }
+
+        [Fact]
+        public async Task FetchFailureIsRateLimited()
+        {
+            var clock = new MockClock();
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = "test error",
+            };
+            var keySource = new AppCheckPublicKeySource(clock, new MockHttpClientFactory(handler));
+            await Assert.ThrowsAsync<FirebaseAppCheckException>(() => keySource.GetPublicKeyAsync("k1"));
+            clock.UtcNow = clock.UtcNow.AddSeconds(29);
+
+            var exception = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                () => keySource.GetPublicKeyAsync("k1"));
+
+            Assert.Equal(1, handler.Calls);
+            Assert.Equal(ErrorCode.Internal, exception.ErrorCode);
+            Assert.Equal(AppCheckErrorCode.ServiceError, exception.AppCheckErrorCode);
+            Assert.StartsWith("Failed to fetch App Check public keys.", exception.Message);
+            Assert.IsType<FirebaseAppCheckException>(exception.InnerException);
+
+            handler.StatusCode = HttpStatusCode.OK;
+            handler.Response = Jwks(Jwk("k1", Key1));
+            clock.UtcNow = clock.UtcNow.AddSeconds(1);
+            Assert.NotNull(await keySource.GetPublicKeyAsync("k1"));
+            Assert.Equal(2, handler.Calls);
+        }
+
+        [Fact]
+        public async Task ExpiredKeysRefreshFailureIsRateLimited()
+        {
+            var clock = new MockClock();
+            var handler = new MockMessageHandler() { Response = Jwks(Jwk("k1", Key1)) };
+            var keySource = new AppCheckPublicKeySource(clock, new MockHttpClientFactory(handler));
+            await keySource.GetPublicKeyAsync("k1");
+
+            handler.StatusCode = HttpStatusCode.InternalServerError;
+            clock.UtcNow = clock.UtcNow.AddHours(6);
+            await Assert.ThrowsAsync<FirebaseAppCheckException>(() => keySource.GetPublicKeyAsync("k1"));
+            clock.UtcNow = clock.UtcNow.AddSeconds(29);
+            await Assert.ThrowsAsync<FirebaseAppCheckException>(() => keySource.GetPublicKeyAsync("k1"));
+            Assert.Equal(2, handler.Calls);
+
+            handler.StatusCode = HttpStatusCode.OK;
+            clock.UtcNow = clock.UtcNow.AddSeconds(1);
+            Assert.NotNull(await keySource.GetPublicKeyAsync("k1"));
+            Assert.Equal(3, handler.Calls);
+        }
+
+        [Fact]
+        public async Task ShortMaxAgeIsNotRateLimited()
+        {
+            var clock = new MockClock();
+            var handler = new MockMessageHandler()
+            {
+                Response = Jwks(Jwk("k1", Key1)),
+                ApplyHeaders = (headers, _) => headers.CacheControl = new CacheControlHeaderValue()
+                {
+                    MaxAge = TimeSpan.FromSeconds(10),
+                },
+            };
+            var keySource = new AppCheckPublicKeySource(clock, new MockHttpClientFactory(handler));
+
+            await keySource.GetPublicKeyAsync("k1");
+            clock.UtcNow = clock.UtcNow.AddSeconds(10);
+            await keySource.GetPublicKeyAsync("k1");
+
+            Assert.Equal(2, handler.Calls);
         }
 
         private static RSA CreateRsaKey()

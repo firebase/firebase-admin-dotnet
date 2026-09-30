@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Util;
 using Google.Apis.Util;
 
 namespace FirebaseAdmin.AppCheck
@@ -45,7 +46,7 @@ namespace FirebaseAdmin.AppCheck
             this.client = new AppCheckClient(clientFactory, app.Options.Credential, projectId);
             this.verifier = new AppCheckTokenVerifier(
                 projectId,
-                new AppCheckPublicKeySource(SystemClock.Default, clientFactory),
+                new AppCheckPublicKeySource(SystemClock.Default, clientFactory, RetryOptions.Default),
                 this.client,
                 SystemClock.Default);
         }
