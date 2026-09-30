@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Jwt;
 using Google.Apis.Auth;
+using Google.Apis.Json;
 using Google.Apis.Util;
 using Newtonsoft.Json;
 
@@ -33,6 +34,8 @@ namespace FirebaseAdmin.AppCheck
     {
         private const string AppCheckIssuer = "https://firebaseappcheck.googleapis.com/";
         private const long ClockSkewSeconds = 60;
+
+        private static readonly long MaxUnixSeconds = DateTimeOffset.MaxValue.ToUnixTimeSeconds();
 
         private readonly string projectId;
         private readonly AppCheckPublicKeySource keySource;
@@ -71,8 +74,10 @@ namespace FirebaseAdmin.AppCheck
             try
             {
                 header = JwtUtils.Decode<JsonWebSignature.Header>(segments[0]);
-                payload = JwtUtils.Decode<DecodedAppCheckToken.Args>(segments[1]);
-                claims = JwtUtils.Decode<Dictionary<string, object>>(segments[1]);
+                var payloadJson = JwtUtils.Base64Decode(segments[1]);
+                var serializer = NewtonsoftJsonSerializer.Instance;
+                payload = serializer.Deserialize<DecodedAppCheckToken.Args>(payloadJson);
+                claims = serializer.Deserialize<Dictionary<string, object>>(payloadJson);
                 signature = JwtUtils.Base64DecodeToBytes(segments[2]);
             }
             catch (Exception e) when (e is FormatException || e is JsonException)
@@ -149,6 +154,16 @@ namespace FirebaseAdmin.AppCheck
             else if (string.IsNullOrEmpty(payload.Subject))
             {
                 error = "App Check token has no or empty subject (sub) claim.";
+            }
+            else if (payload.IssuedAtTimeSeconds < 0 || payload.IssuedAtTimeSeconds > MaxUnixSeconds)
+            {
+                error = "App Check token has invalid issued-at (iat) claim: "
+                    + $"{payload.IssuedAtTimeSeconds}.";
+            }
+            else if (payload.ExpirationTimeSeconds < 0 || payload.ExpirationTimeSeconds > MaxUnixSeconds)
+            {
+                error = "App Check token has invalid expiration (exp) claim: "
+                    + $"{payload.ExpirationTimeSeconds}.";
             }
             else if (payload.IssuedAtTimeSeconds - ClockSkewSeconds > now)
             {

@@ -162,6 +162,22 @@ namespace FirebaseAdmin.Tests.AppCheck
             Assert.Equal(0, this.keyHandler.Calls);
         }
 
+        [Theory]
+        [InlineData("iat", -1L)]
+        [InlineData("iat", 253402300800L)]
+        [InlineData("iat", long.MinValue)]
+        [InlineData("exp", -1L)]
+        [InlineData("exp", 253402300800L)]
+        [InlineData("exp", long.MaxValue)]
+        public async Task InvalidTimestamp(string name, long value)
+        {
+            var token = this.CreateToken(payload: new Dictionary<string, object>() { { name, value } });
+
+            var exception = await this.AssertInvalidToken(token);
+            Assert.Contains($"({name}) claim: {value}.", exception.Message);
+            Assert.Equal(0, this.keyHandler.Calls);
+        }
+
         [Fact]
         public async Task IssuedInFuture()
         {
