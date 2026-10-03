@@ -70,9 +70,17 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Gets or sets the Android-specific information to be included in the message.
+        /// Deprecated. Use <see cref="AndroidV2"/> instead.
         /// </summary>
+        [Obsolete("Deprecated. Use AndroidV2 instead.")]
         [JsonProperty("android")]
         public AndroidConfig Android { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Android V2-specific information to be included in the message.
+        /// </summary>
+        [JsonProperty("androidV2")]
+        public AndroidConfigV2 AndroidV2 { get; set; }
 
         /// <summary>
         /// Gets or sets the Webpush-specific information to be included in the message.
@@ -133,6 +141,11 @@ namespace FirebaseAdmin.Messaging
                 Topic = this.Topic,
                 Condition = this.Condition,
                 Data = this.Data?.Copy(),
+                Notification = this.Notification?.CopyAndValidate(),
+                Android = this.Android?.CopyAndValidate(),
+                AndroidV2 = this.AndroidV2?.CopyAndValidate(),
+                Webpush = this.Webpush?.CopyAndValidate(),
+                Apns = this.Apns?.CopyAndValidate(),
                 FcmOptions = this.FcmOptions?.CopyAndValidate(),
             };
             var list = new List<string>()
@@ -153,11 +166,13 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException("Malformed topic name.");
             }
 
-            // Copy and validate the child properties
-            copy.Notification = this.Notification?.CopyAndValidate();
-            copy.Android = this.Android?.CopyAndValidate();
-            copy.Webpush = this.Webpush?.CopyAndValidate();
-            copy.Apns = this.Apns?.CopyAndValidate();
+#pragma warning disable CS0618
+            if (copy.Android != null && copy.AndroidV2 != null)
+            {
+                throw new ArgumentException("Android and AndroidV2 are mutually exclusive properties on Message.");
+            }
+#pragma warning restore CS0618
+
             return copy;
         }
     }
