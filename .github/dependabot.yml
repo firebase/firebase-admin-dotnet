@@ -4,8 +4,44 @@ updates:
     directory: "/FirebaseAdmin"
     schedule:
       interval: "weekly"
+    groups:
+      google-minor-and-patch:
+        patterns:
+          - "Google.*"
+        update-types:
+          - "minor"
+          - "patch"
+      microsoft-minor-and-patch:
+        patterns:
+          - "Microsoft.*"
+        update-types:
+          - "minor"
+          - "patch"
+      system-minor-and-patch:
+        patterns:
+          - "System.*"
+        update-types:
+          - "minor"
+          - "patch"
+      other-minor-and-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "Google.*"
+          - "Microsoft.*"
+          - "System.*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
