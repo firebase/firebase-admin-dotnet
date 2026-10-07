@@ -880,7 +880,7 @@ namespace FirebaseAdmin.Snippets
                 }
                 catch (FirebaseAuthException)
                 {
-                    return this.Unauthorized();
+                    return this.StatusCode(StatusCodes.Status401Unauthorized, "Failed to create a session cookie");
                 }
             }
 
@@ -974,7 +974,7 @@ namespace FirebaseAdmin.Snippets
 
                 // User did not sign in recently. To guard against ID token theft, require
                 // re-authentication.
-                return this.Unauthorized();
+                return this.StatusCode(StatusCodes.Status401Unauthorized, "Recent sign in required");
                 // [END check_auth_time]
             }
 
@@ -992,7 +992,7 @@ namespace FirebaseAdmin.Snippets
                         return ViewContentForAdmin(decodedToken);
                     }
 
-                    return this.Unauthorized();
+                    return this.StatusCode(StatusCodes.Status401Unauthorized, "Insufficient permissions");
                 }
                 catch (FirebaseAuthException)
                 {
