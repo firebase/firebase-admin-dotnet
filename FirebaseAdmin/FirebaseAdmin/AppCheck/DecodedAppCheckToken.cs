@@ -29,8 +29,10 @@ namespace FirebaseAdmin.AppCheck
             this.Issuer = args.Issuer;
             this.Subject = args.Subject;
             this.Audience = args.Audience?.ToImmutableList() ?? ImmutableList<string>.Empty;
-            this.ExpirationTime = DateTimeOffset.FromUnixTimeSeconds(args.ExpirationTimeSeconds);
-            this.IssuedAtTime = DateTimeOffset.FromUnixTimeSeconds(args.IssuedAtTimeSeconds);
+            this.ExpirationTime = DateTimeOffset.FromUnixTimeSeconds(
+                args.ExpirationTimeSeconds.GetValueOrDefault());
+            this.IssuedAtTime = DateTimeOffset.FromUnixTimeSeconds(
+                args.IssuedAtTimeSeconds.GetValueOrDefault());
             this.Jti = args.Jti;
             this.Provider = args.Provider;
             this.Claims = args.Claims ?? ImmutableDictionary<string, object>.Empty;
@@ -89,10 +91,10 @@ namespace FirebaseAdmin.AppCheck
             internal List<string> Audience { get; set; }
 
             [JsonProperty("exp")]
-            internal long ExpirationTimeSeconds { get; set; }
+            internal long? ExpirationTimeSeconds { get; set; }
 
             [JsonProperty("iat")]
-            internal long IssuedAtTimeSeconds { get; set; }
+            internal long? IssuedAtTimeSeconds { get; set; }
 
             [JsonProperty("jti")]
             internal string Jti { get; set; }

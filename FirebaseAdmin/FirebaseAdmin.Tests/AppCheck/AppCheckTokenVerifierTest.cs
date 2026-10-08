@@ -178,6 +178,18 @@ namespace FirebaseAdmin.Tests.AppCheck
             Assert.Equal(0, this.keyHandler.Calls);
         }
 
+        [Theory]
+        [InlineData("iat", "issued-at")]
+        [InlineData("exp", "expiration")]
+        public async Task MissingTimestamp(string name, string description)
+        {
+            var token = this.CreateToken(payload: new Dictionary<string, object>() { { name, null } });
+
+            var exception = await this.AssertInvalidToken(token);
+            Assert.Equal($"App Check token has no {description} ({name}) claim.", exception.Message);
+            Assert.Equal(0, this.keyHandler.Calls);
+        }
+
         [Fact]
         public async Task IssuedInFuture()
         {

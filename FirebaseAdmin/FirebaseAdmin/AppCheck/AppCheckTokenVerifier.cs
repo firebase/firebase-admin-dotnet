@@ -155,10 +155,18 @@ namespace FirebaseAdmin.AppCheck
             {
                 error = "App Check token has no or empty subject (sub) claim.";
             }
+            else if (payload.IssuedAtTimeSeconds == null)
+            {
+                error = "App Check token has no issued-at (iat) claim.";
+            }
             else if (payload.IssuedAtTimeSeconds < 0 || payload.IssuedAtTimeSeconds > MaxUnixSeconds)
             {
                 error = "App Check token has invalid issued-at (iat) claim: "
                     + $"{payload.IssuedAtTimeSeconds}.";
+            }
+            else if (payload.ExpirationTimeSeconds == null)
+            {
+                error = "App Check token has no expiration (exp) claim.";
             }
             else if (payload.ExpirationTimeSeconds < 0 || payload.ExpirationTimeSeconds > MaxUnixSeconds)
             {
