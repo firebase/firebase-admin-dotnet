@@ -152,11 +152,22 @@ namespace FirebaseAdmin.AppCheck
                 }
 
                 var rsa = RSA.Create();
-                rsa.ImportParameters(new RSAParameters()
+                try
                 {
-                    Modulus = JwtUtils.Base64DecodeToBytes(jwk.N),
-                    Exponent = JwtUtils.Base64DecodeToBytes(jwk.E),
-                });
+                    rsa.ImportParameters(new RSAParameters()
+                    {
+                        Modulus = JwtUtils.Base64DecodeToBytes(jwk.N),
+                        Exponent = JwtUtils.Base64DecodeToBytes(jwk.E),
+                    });
+                }
+                catch (Exception e) when (e is FormatException || e is CryptographicException)
+                {
+                    // Skip malformed keys, consistent with unsupported keys above. If no usable
+                    // keys remain, a FirebaseAppCheckException is thrown below.
+                    rsa.Dispose();
+                    continue;
+                }
+
                 builder[jwk.Kid] = new PublicKey(jwk.Kid, rsa);
             }
 

@@ -154,6 +154,37 @@ namespace FirebaseAdmin.Tests.AppCheck
         }
 
         [Fact]
+        public async Task SkipsMalformedKeys()
+        {
+            var malformed = Jwk("k2", Key2);
+            malformed["n"] = "not*valid*base64";
+            var handler = new MockMessageHandler() { Response = Jwks(Jwk("k1", Key1), malformed) };
+            var keySource = new AppCheckPublicKeySource(new MockClock(), new MockHttpClientFactory(handler));
+
+            Assert.NotNull(await keySource.GetPublicKeyAsync("k1"));
+            Assert.Null(await keySource.GetPublicKeyAsync("k2"));
+        }
+
+        [Fact]
+        public async Task OnlyMalformedKeys()
+        {
+            var clock = new MockClock();
+            var malformed = Jwk("k1", Key1);
+            malformed["e"] = "not*valid*base64";
+            var handler = new MockMessageHandler() { Response = Jwks(malformed) };
+            var keySource = new AppCheckPublicKeySource(clock, new MockHttpClientFactory(handler));
+
+            var exception = await Assert.ThrowsAsync<FirebaseAppCheckException>(
+                () => keySource.GetPublicKeyAsync("k1"));
+            Assert.Equal("No valid public keys present in the JWKS response.", exception.Message);
+            Assert.Equal(AppCheckErrorCode.ServiceError, exception.AppCheckErrorCode);
+
+            // The failure is recorded, so retries within the refresh interval are rate limited.
+            await Assert.ThrowsAsync<FirebaseAppCheckException>(() => keySource.GetPublicKeyAsync("k1"));
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
         public async Task NoValidKeys()
         {
             var handler = new MockMessageHandler() { Response = @"{""keys"": []}" };
