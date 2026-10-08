@@ -256,6 +256,8 @@ namespace FirebaseAdmin.Tests.AppCheck
             Assert.Equal(AppCheckErrorCode.ServiceError, exception.AppCheckErrorCode);
             Assert.StartsWith("Failed to fetch App Check public keys.", exception.Message);
             Assert.IsType<FirebaseAppCheckException>(exception.InnerException);
+            Assert.NotNull(exception.HttpResponse);
+            Assert.Same(((FirebaseAppCheckException)exception.InnerException).HttpResponse, exception.HttpResponse);
 
             handler.StatusCode = HttpStatusCode.OK;
             handler.Response = Jwks(Jwk("k1", Key1));

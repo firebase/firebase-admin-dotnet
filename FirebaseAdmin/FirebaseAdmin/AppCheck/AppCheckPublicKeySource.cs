@@ -91,7 +91,8 @@ namespace FirebaseAdmin.AppCheck
                             this.lastFetchError.ErrorCode,
                             $"Failed to fetch App Check public keys. {this.lastFetchError.Message}",
                             AppCheckErrorCode.ServiceError,
-                            inner: this.lastFetchError);
+                            inner: this.lastFetchError,
+                            response: this.lastFetchError.HttpResponse);
                     }
 
                     await this.FetchKeysAsync(now, cancellationToken).ConfigureAwait(false);
