@@ -438,7 +438,7 @@ namespace FirebaseAdmin.Auth.Users
 
         internal sealed class Args
         {
-            internal HttpClientFactory ClientFactory { get; set; }
+            internal IHttpClientFactory ClientFactory { get; set; }
 
             internal GoogleCredential Credential { get; set; }
 
