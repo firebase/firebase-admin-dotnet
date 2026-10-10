@@ -43,11 +43,11 @@ namespace FirebaseAdmin.Auth.Jwt
         private readonly SemaphoreSlim cacheLock = new SemaphoreSlim(1, 1);
         private readonly string certUrl;
         private readonly IClock clock;
-        private readonly HttpClientFactory clientFactory;
+        private readonly IHttpClientFactory clientFactory;
         private DateTime expirationTime;
         private IReadOnlyList<PublicKey> cachedKeys;
 
-        public HttpPublicKeySource(string certUrl, IClock clock, HttpClientFactory clientFactory)
+        public HttpPublicKeySource(string certUrl, IClock clock, IHttpClientFactory clientFactory)
         {
             this.certUrl = certUrl.ThrowIfNullOrEmpty(nameof(certUrl));
             this.clock = clock.ThrowIfNull(nameof(clock));

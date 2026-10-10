@@ -375,7 +375,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
         {
             internal FirebaseApp App { get; set; }
 
-            internal HttpClientFactory ClientFactory { get; set; }
+            internal IHttpClientFactory ClientFactory { get; set; }
 
             internal GoogleCredential Credential { get; set; }
 
