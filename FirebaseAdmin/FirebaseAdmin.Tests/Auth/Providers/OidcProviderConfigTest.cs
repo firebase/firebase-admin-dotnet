@@ -19,7 +19,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Multitenancy.Tests;
 using FirebaseAdmin.Tests;
+using FirebaseAdmin.Util;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -58,6 +61,22 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 ]
             }}",
         };
+
+        public static IEnumerable<object[]> MalformedProviderIds()
+        {
+            var ids = new List<string>()
+            {
+                "oidc.",
+                "oidc..",
+                "oidc.provider.",
+                "oidc.provider/../other",
+                "oidc.provider?foo=bar",
+                "oidc.provider#frag",
+                "oidc.provider%2fother",
+            };
+            return ProviderTestConfig.TestConfigs.SelectMany(
+                config => ids, (config, id) => config.Concat(new object[] { id }).ToArray());
+        }
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
@@ -102,27 +121,15 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
-        public async Task GetConfigMalformedProviderId(ProviderTestConfig config)
+        [MemberData(nameof(MalformedProviderIds))]
+        public async Task GetConfigMalformedProviderId(ProviderTestConfig config, string providerId)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
-            var malformedIds = new[]
-            {
-                "oidc.",
-                "oidc.provider/../other",
-                "oidc.provider?foo=bar",
-                "oidc.provider#frag",
-                "oidc.provider%2fother",
-            };
 
-            foreach (var providerId in malformedIds)
-            {
-                var exception = await Assert.ThrowsAsync<ArgumentException>(
-                    () => auth.GetOidcProviderConfigAsync(providerId));
-                Assert.Equal($"Invalid OIDC provider ID: {providerId}", exception.Message);
-            }
-
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.GetOidcProviderConfigAsync(providerId));
+            Assert.Equal($"Invalid OIDC provider ID: {providerId}", exception.Message);
             Assert.Empty(handler.Requests);
         }
 
@@ -405,12 +412,12 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             };
             var auth = config.CreateAuth(handler);
 
-            await auth.DeleteProviderConfigAsync("oidc.provider");
+            await auth.DeleteProviderConfigAsync("oidc.my-provider_1.v2");
 
             Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Delete, request.Method);
-            config.AssertRequest("oauthIdpConfigs/oidc.provider", request);
+            config.AssertRequest("oauthIdpConfigs/oidc.my-provider_1.v2", request);
         }
 
         [Theory]
@@ -439,27 +446,16 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
-        public async Task DeleteConfigMalformedProviderId(ProviderTestConfig config)
+        [MemberData(nameof(MalformedProviderIds))]
+        public async Task DeleteConfigMalformedProviderId(
+            ProviderTestConfig config, string providerId)
         {
             var handler = new MockMessageHandler();
             var auth = config.CreateAuth(handler);
-            var malformedIds = new[]
-            {
-                "oidc.",
-                "oidc.provider/../other",
-                "oidc.provider?foo=bar",
-                "oidc.provider#frag",
-                "oidc.provider%2fother",
-            };
 
-            foreach (var providerId in malformedIds)
-            {
-                var exception = await Assert.ThrowsAsync<ArgumentException>(
-                    () => auth.DeleteProviderConfigAsync(providerId));
-                Assert.Equal($"Invalid OIDC provider ID: {providerId}", exception.Message);
-            }
-
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.DeleteProviderConfigAsync(providerId));
+            Assert.Equal($"Invalid OIDC provider ID: {providerId}", exception.Message);
             Assert.Empty(handler.Requests);
         }
 
@@ -681,6 +677,40 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Empty(handler.Requests);
         }
 
+        [Fact]
+        public void EmptyTenantId()
+        {
+            var args = CreateManagerArgs();
+            args.TenantId = string.Empty;
+
+            var exception = Assert.Throws<ArgumentException>(() => new ProviderConfigManager(args));
+            Assert.Equal("Tenant ID must not be empty.", exception.Message);
+        }
+
+        [Theory]
+        [MemberData(
+            nameof(TenantManagerTest.MalformedTenantIdData),
+            MemberType = typeof(TenantManagerTest))]
+        public void MalformedTenantId(string tenantId)
+        {
+            var args = CreateManagerArgs();
+            args.TenantId = tenantId;
+
+            var exception = Assert.Throws<ArgumentException>(() => new ProviderConfigManager(args));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
+        }
+
+        private static ProviderConfigManager.Args CreateManagerArgs()
+        {
+            return new ProviderConfigManager.Args
+            {
+                Credential = GoogleCredential.FromAccessToken("test-token"),
+                ProjectId = "project1",
+                ClientFactory = new MockHttpClientFactory(new MockMessageHandler()),
+                RetryOptions = RetryOptions.NoBackOff,
+            };
+        }
+
         private void AssertOidcProviderConfig(OidcProviderConfig provider)
         {
             Assert.Equal("oidc.provider", provider.ProviderId);
@@ -732,6 +762,22 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         ProviderId = "oidc.",
                     },
                     "Invalid OIDC provider ID: oidc.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc..",
+                    },
+                    "Invalid OIDC provider ID: oidc..",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider.",
+                    },
+                    "Invalid OIDC provider ID: oidc.provider.",
                 };
                 yield return new object[]
                 {
@@ -843,6 +889,22 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         ProviderId = "oidc.",
                     },
                     "Invalid OIDC provider ID: oidc.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc..",
+                    },
+                    "Invalid OIDC provider ID: oidc..",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider.",
+                    },
+                    "Invalid OIDC provider ID: oidc.provider.",
                 };
                 yield return new object[]
                 {

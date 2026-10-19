@@ -64,7 +64,11 @@ namespace FirebaseAdmin.Auth.Users
             }
 
             this.TenantId = args.TenantId;
-            if (this.TenantId != null)
+            if (this.TenantId == string.Empty)
+            {
+                throw new ArgumentException("Tenant ID must not be empty.");
+            }
+            else if (this.TenantId != null)
             {
                 TenantManager.ValidateTenantId(this.TenantId);
             }

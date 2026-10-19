@@ -34,10 +34,9 @@ namespace FirebaseAdmin.Auth.Providers
 
         protected override string ProviderIdParam => "oauthIdpConfigId";
 
-        protected override string ValidateProviderId(string providerId)
-        {
-            return ValidateProviderId(providerId, "oidc.", "OIDC");
-        }
+        protected override string ProviderIdPrefix => "oidc.";
+
+        protected override string ProviderDisplayName => "OIDC";
 
         protected override async Task<OidcProviderConfig> SendAndDeserializeAsync(
             ApiClient client, HttpRequestMessage request, CancellationToken cancellationToken)

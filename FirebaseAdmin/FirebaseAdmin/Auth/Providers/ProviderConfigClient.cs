@@ -39,6 +39,10 @@ namespace FirebaseAdmin.Auth.Providers
 
         protected abstract string ProviderIdParam { get; }
 
+        protected abstract string ProviderIdPrefix { get; }
+
+        protected abstract string ProviderDisplayName { get; }
+
         internal async Task<T> GetProviderConfigAsync(
             ApiClient client, string providerId, CancellationToken cancellationToken)
         {
@@ -115,30 +119,6 @@ namespace FirebaseAdmin.Auth.Providers
                 validateAndCreate, new PageManager());
         }
 
-        protected static string ValidateProviderId(
-            string providerId, string prefix, string providerName)
-        {
-            if (string.IsNullOrEmpty(providerId))
-            {
-                throw new ArgumentException("Provider ID cannot be null or empty.");
-            }
-
-            if (!providerId.StartsWith(prefix))
-            {
-                throw new ArgumentException(
-                    $"{providerName} provider ID must have the prefix '{prefix}'.");
-            }
-
-            if (providerId == prefix || Uri.EscapeDataString(providerId) != providerId)
-            {
-                throw new ArgumentException($"Invalid {providerName} provider ID: {providerId}");
-            }
-
-            return providerId;
-        }
-
-        protected abstract string ValidateProviderId(string providerId);
-
         protected abstract Task<T> SendAndDeserializeAsync(
             ApiClient client, HttpRequestMessage request, CancellationToken cancellationToken);
 
@@ -149,6 +129,28 @@ namespace FirebaseAdmin.Auth.Providers
         {
             var uriString = $"{path}{HttpUtils.EncodeQueryParams(queryParams)}";
             return new Uri(uriString, UriKind.Relative);
+        }
+
+        private string ValidateProviderId(string providerId)
+        {
+            if (string.IsNullOrEmpty(providerId))
+            {
+                throw new ArgumentException("Provider ID cannot be null or empty.");
+            }
+
+            if (!providerId.StartsWith(this.ProviderIdPrefix, StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    $"{this.ProviderDisplayName} provider ID must have the prefix '{this.ProviderIdPrefix}'.");
+            }
+
+            if (!Utils.IsSafeUrlSegment(providerId))
+            {
+                throw new ArgumentException(
+                    $"Invalid {this.ProviderDisplayName} provider ID: {providerId}");
+            }
+
+            return providerId;
         }
 
         /// <summary>

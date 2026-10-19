@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using FirebaseAdmin.Auth.Multitenancy.Tests;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -39,11 +40,9 @@ namespace FirebaseAdmin.Auth.Multitenancy
         }
 
         [Theory]
-        [InlineData(".")]
-        [InlineData("..")]
-        [InlineData("../other")]
-        [InlineData("tenant/1")]
-        [InlineData("tenant?foo=bar")]
+        [MemberData(
+            nameof(TenantManagerTest.MalformedTenantIdData),
+            MemberType = typeof(TenantManagerTest))]
         public void MalformedTenantId(string tenantId)
         {
             var args = TenantAwareFirebaseAuth.Args.CreateDefault(tenantId);

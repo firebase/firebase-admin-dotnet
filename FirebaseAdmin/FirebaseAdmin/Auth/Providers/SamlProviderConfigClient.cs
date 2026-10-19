@@ -34,10 +34,9 @@ namespace FirebaseAdmin.Auth.Providers
 
         protected override string ProviderIdParam => "inboundSamlConfigId";
 
-        protected override string ValidateProviderId(string providerId)
-        {
-            return ValidateProviderId(providerId, "saml.", "SAML");
-        }
+        protected override string ProviderIdPrefix => "saml.";
+
+        protected override string ProviderDisplayName => "SAML";
 
         protected override async Task<SamlProviderConfig> SendAndDeserializeAsync(
             ApiClient client, HttpRequestMessage request, CancellationToken cancellationToken)

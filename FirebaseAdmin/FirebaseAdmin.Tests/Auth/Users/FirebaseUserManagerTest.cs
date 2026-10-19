@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using FirebaseAdmin.Auth.Hash;
 using FirebaseAdmin.Auth.Jwt;
 using FirebaseAdmin.Auth.Jwt.Tests;
+using FirebaseAdmin.Auth.Multitenancy.Tests;
 using FirebaseAdmin.Auth.Tests;
 using FirebaseAdmin.Tests;
 using FirebaseAdmin.Util;
@@ -2092,7 +2093,21 @@ namespace FirebaseAdmin.Auth.Users.Tests
             var args = CreateArgs();
             args.TenantId = string.Empty;
 
-            Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
+            var exception = Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
+            Assert.Equal("Tenant ID must not be empty.", exception.Message);
+        }
+
+        [Theory]
+        [MemberData(
+            nameof(TenantManagerTest.MalformedTenantIdData),
+            MemberType = typeof(TenantManagerTest))]
+        public void MalformedTenantId(string tenantId)
+        {
+            var args = CreateArgs();
+            args.TenantId = tenantId;
+
+            var exception = Assert.Throws<ArgumentException>(() => new FirebaseUserManager(args));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
         }
 
         private static FirebaseUserManager.Args CreateArgs()

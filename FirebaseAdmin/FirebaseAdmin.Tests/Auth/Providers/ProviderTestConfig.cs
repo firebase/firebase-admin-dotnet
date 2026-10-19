@@ -84,11 +84,17 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         public static IEnumerator<object[]> WithTestConfigs(IEnumerator<object[]> args)
         {
+            var argsList = new List<object[]>();
+            while (args.MoveNext())
+            {
+                argsList.Add(args.Current);
+            }
+
             foreach (var config in TestConfigs)
             {
-                while (args.MoveNext())
+                foreach (var arg in argsList)
                 {
-                    yield return config.Concat(args.Current).ToArray();
+                    yield return config.Concat(arg).ToArray();
                 }
             }
         }

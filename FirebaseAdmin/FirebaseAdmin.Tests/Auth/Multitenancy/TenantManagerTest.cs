@@ -36,6 +36,20 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             new object[] { TestConfig.WithEmulator },
         };
 
+        public static readonly IEnumerable<string> MalformedTenantIdStrings = new List<string>()
+        {
+            ".",
+            "..",
+            "...",
+            "../other",
+            "victim.",
+            "tenant/1",
+            "tenant?foo=bar",
+            "tenant#frag",
+            "tenant%2e%2e",
+            "tenant\\1",
+        };
+
         private const string TenantResponse = @"{
             ""name"": ""projects/project1/tenants/tenant1"",
             ""displayName"": ""Test Tenant"",
@@ -80,21 +94,16 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
                 config => strings, (config, str) => config.Concat(new object[] { str }).ToArray());
         }
 
+        public static IEnumerable<object[]> MalformedTenantIdData()
+        {
+            return MalformedTenantIdStrings.Select(str => new object[] { str });
+        }
+
         public static IEnumerable<object[]> MalformedTenantIds()
         {
-            var strings = new List<string>()
-            {
-                ".",
-                "..",
-                "../other",
-                "tenant/1",
-                "tenant?foo=bar",
-                "tenant#frag",
-                "tenant%2e%2e",
-                "tenant\\1",
-            };
             return TestConfigs.SelectMany(
-                config => strings, (config, str) => config.Concat(new object[] { str }).ToArray());
+                config => MalformedTenantIdStrings,
+                (config, str) => config.Concat(new object[] { str }).ToArray());
         }
 
         [Theory]
@@ -399,12 +408,12 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             };
             var auth = config.CreateFirebaseAuth(handler);
 
-            await auth.TenantManager.DeleteTenantAsync("tenant1");
+            await auth.TenantManager.DeleteTenantAsync("tenant-a1b2c");
 
             Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpMethod.Delete, request.Method);
-            config.AssertRequest("tenants/tenant1", request);
+            config.AssertRequest("tenants/tenant-a1b2c", request);
         }
 
         [Theory]
@@ -644,9 +653,9 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
         {
             var auth = config.CreateFirebaseAuth();
 
-            var tenantAwareAuth = auth.TenantManager.AuthForTenant("tenant1");
+            var tenantAwareAuth = auth.TenantManager.AuthForTenant("tenant-a1b2c");
 
-            Assert.Equal("tenant1", tenantAwareAuth.TenantId);
+            Assert.Equal("tenant-a1b2c", tenantAwareAuth.TenantId);
         }
 
         [Theory]
