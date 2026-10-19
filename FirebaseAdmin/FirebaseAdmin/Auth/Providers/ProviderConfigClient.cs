@@ -129,7 +129,7 @@ namespace FirebaseAdmin.Auth.Providers
                     $"{providerName} provider ID must have the prefix '{prefix}'.");
             }
 
-            if (providerId.Length == prefix.Length || Uri.EscapeDataString(providerId) != providerId)
+            if (providerId == prefix || Uri.EscapeDataString(providerId) != providerId)
             {
                 throw new ArgumentException($"Invalid {providerName} provider ID: {providerId}");
             }
