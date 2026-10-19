@@ -115,6 +115,28 @@ namespace FirebaseAdmin.Auth.Providers
                 validateAndCreate, new PageManager());
         }
 
+        protected static string ValidateProviderId(
+            string providerId, string prefix, string providerName)
+        {
+            if (string.IsNullOrEmpty(providerId))
+            {
+                throw new ArgumentException("Provider ID cannot be null or empty.");
+            }
+
+            if (!providerId.StartsWith(prefix))
+            {
+                throw new ArgumentException(
+                    $"{providerName} provider ID must have the prefix '{prefix}'.");
+            }
+
+            if (providerId.Length == prefix.Length || Uri.EscapeDataString(providerId) != providerId)
+            {
+                throw new ArgumentException($"Invalid {providerName} provider ID: {providerId}");
+            }
+
+            return providerId;
+        }
+
         protected abstract string ValidateProviderId(string providerId);
 
         protected abstract Task<T> SendAndDeserializeAsync(

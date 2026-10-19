@@ -36,22 +36,7 @@ namespace FirebaseAdmin.Auth.Providers
 
         protected override string ValidateProviderId(string providerId)
         {
-            if (string.IsNullOrEmpty(providerId))
-            {
-                throw new ArgumentException("Provider ID cannot be null or empty.");
-            }
-
-            if (!providerId.StartsWith("oidc."))
-            {
-                throw new ArgumentException("OIDC provider ID must have the prefix 'oidc.'.");
-            }
-
-            if (providerId.Length == "oidc.".Length || Uri.EscapeDataString(providerId) != providerId)
-            {
-                throw new ArgumentException($"Invalid OIDC provider ID: {providerId}");
-            }
-
-            return providerId;
+            return ValidateProviderId(providerId, "oidc.", "OIDC");
         }
 
         protected override async Task<OidcProviderConfig> SendAndDeserializeAsync(

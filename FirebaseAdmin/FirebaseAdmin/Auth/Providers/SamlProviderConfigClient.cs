@@ -36,22 +36,7 @@ namespace FirebaseAdmin.Auth.Providers
 
         protected override string ValidateProviderId(string providerId)
         {
-            if (string.IsNullOrEmpty(providerId))
-            {
-                throw new ArgumentException("Provider ID cannot be null or empty.");
-            }
-
-            if (!providerId.StartsWith("saml."))
-            {
-                throw new ArgumentException("SAML provider ID must have the prefix 'saml.'.");
-            }
-
-            if (providerId.Length == "saml.".Length || Uri.EscapeDataString(providerId) != providerId)
-            {
-                throw new ArgumentException($"Invalid SAML provider ID: {providerId}");
-            }
-
-            return providerId;
+            return ValidateProviderId(providerId, "saml.", "SAML");
         }
 
         protected override async Task<SamlProviderConfig> SendAndDeserializeAsync(
