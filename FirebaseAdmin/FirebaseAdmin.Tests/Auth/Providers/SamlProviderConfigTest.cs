@@ -107,6 +107,31 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task GetConfigMalformedProviderId(ProviderTestConfig config)
+        {
+            var handler = new MockMessageHandler();
+            var auth = config.CreateAuth(handler);
+            var malformedIds = new[]
+            {
+                "saml.",
+                "saml.provider/../other",
+                "saml.provider?foo=bar",
+                "saml.provider#frag",
+                "saml.provider%2fother",
+            };
+
+            foreach (var providerId in malformedIds)
+            {
+                var exception = await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.GetSamlProviderConfigAsync(providerId));
+                Assert.Equal($"Invalid SAML provider ID: {providerId}", exception.Message);
+            }
+
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
         public async Task GetConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -389,6 +414,31 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var request = Assert.Single(handler.Requests);
             Assert.Equal(HttpMethod.Delete, request.Method);
             config.AssertRequest("inboundSamlConfigs/saml.provider", request);
+        }
+
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task DeleteConfigMalformedProviderId(ProviderTestConfig config)
+        {
+            var handler = new MockMessageHandler();
+            var auth = config.CreateAuth(handler);
+            var malformedIds = new[]
+            {
+                "saml.",
+                "saml.provider/../other",
+                "saml.provider?foo=bar",
+                "saml.provider#frag",
+                "saml.provider%2fother",
+            };
+
+            foreach (var providerId in malformedIds)
+            {
+                var exception = await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.DeleteProviderConfigAsync(providerId));
+                Assert.Equal($"Invalid SAML provider ID: {providerId}", exception.Message);
+            }
+
+            Assert.Empty(handler.Requests);
         }
 
         [Theory]
@@ -679,6 +729,30 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 {
                     new SamlProviderConfigArgs()
                     {
+                        ProviderId = "saml.",
+                    },
+                    "Invalid SAML provider ID: saml.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider/../other",
+                    },
+                    "Invalid SAML provider ID: saml.provider/../other",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider&extra=1",
+                    },
+                    "Invalid SAML provider ID: saml.provider&extra=1",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
                         ProviderId = "saml.provider",
                     },
                     "IDP entity ID must not be null or empty.",
@@ -817,6 +891,30 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         ProviderId = "oidc.provider",
                     },
                     "SAML provider ID must have the prefix 'saml.'.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.",
+                    },
+                    "Invalid SAML provider ID: saml.",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider/../other",
+                    },
+                    "Invalid SAML provider ID: saml.provider/../other",
+                };
+                yield return new object[]
+                {
+                    new SamlProviderConfigArgs()
+                    {
+                        ProviderId = "saml.provider&extra=1",
+                    },
+                    "Invalid SAML provider ID: saml.provider&extra=1",
                 };
                 yield return new object[]
                 {

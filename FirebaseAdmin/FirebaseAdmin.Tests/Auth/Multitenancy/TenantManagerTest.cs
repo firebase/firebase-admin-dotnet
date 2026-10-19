@@ -80,6 +80,23 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
                 config => strings, (config, str) => config.Concat(new object[] { str }).ToArray());
         }
 
+        public static IEnumerable<object[]> MalformedTenantIds()
+        {
+            var strings = new List<string>()
+            {
+                ".",
+                "..",
+                "../other",
+                "tenant/1",
+                "tenant?foo=bar",
+                "tenant#frag",
+                "tenant%2e%2e",
+                "tenant\\1",
+            };
+            return TestConfigs.SelectMany(
+                config => strings, (config, str) => config.Concat(new object[] { str }).ToArray());
+        }
+
         [Theory]
         [MemberData(nameof(TestConfigs))]
         public async Task GetTenant(TestConfig config)
@@ -108,6 +125,19 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.TenantManager.GetTenantAsync(tenantId));
             Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(MalformedTenantIds))]
+        public async Task GetTenantMalformedId(TestConfig config, string tenantId)
+        {
+            var handler = new MockMessageHandler();
+            var auth = config.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.TenantManager.GetTenantAsync(tenantId));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
+            Assert.Empty(handler.Requests);
         }
 
         [Theory]
@@ -297,6 +327,23 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
         }
 
         [Theory]
+        [MemberData(nameof(MalformedTenantIds))]
+        public async Task UpdateTenantMalformedId(TestConfig config, string tenantId)
+        {
+            var handler = new MockMessageHandler();
+            var auth = config.CreateFirebaseAuth(handler);
+            var args = new TenantArgs()
+            {
+                DisplayName = "Test Tenant",
+            };
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.TenantManager.UpdateTenantAsync(tenantId, args));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
         [MemberData(nameof(TestConfigs))]
         public async Task UpdateTenantNullArgs(TestConfig config)
         {
@@ -369,6 +416,19 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var exception = await Assert.ThrowsAsync<ArgumentException>(
                 () => auth.TenantManager.DeleteTenantAsync(tenantId));
             Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(MalformedTenantIds))]
+        public async Task DeleteTenantMalformedId(TestConfig config, string tenantId)
+        {
+            var handler = new MockMessageHandler();
+            var auth = config.CreateFirebaseAuth(handler);
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => auth.TenantManager.DeleteTenantAsync(tenantId));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
+            Assert.Empty(handler.Requests);
         }
 
         [Theory]
@@ -612,6 +672,17 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var exception = Assert.Throws<ArgumentException>(
                 () => auth.TenantManager.AuthForTenant(tenantId));
             Assert.Equal("Tenant ID cannot be null or empty.", exception.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(MalformedTenantIds))]
+        public void AuthForTenantMalformedTenantId(TestConfig config, string tenantId)
+        {
+            var auth = config.CreateFirebaseAuth();
+
+            var exception = Assert.Throws<ArgumentException>(
+                () => auth.TenantManager.AuthForTenant(tenantId));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
         }
 
         [Theory]

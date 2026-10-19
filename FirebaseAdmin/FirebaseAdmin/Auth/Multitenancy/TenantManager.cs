@@ -114,10 +114,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// ID.</exception>
         public async Task<Tenant> GetTenantAsync(string tenantId, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             var request = new HttpRequestMessage()
             {
@@ -207,10 +204,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
         public async Task<Tenant> UpdateTenantAsync(
             string tenantId, TenantArgs args, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             var updateMask = HttpUtils.CreateUpdateMask(args.ThrowIfNull(nameof(args)));
             if (updateMask.Count == 0)
@@ -262,10 +256,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// ID.</exception>
         public async Task DeleteTenantAsync(string tenantId, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             var request = new HttpRequestMessage()
             {
@@ -305,10 +296,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// </exception>
         public TenantAwareFirebaseAuth AuthForTenant(string tenantId)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             TenantAwareFirebaseAuth auth;
             lock (this.tenantsLock)
@@ -359,6 +347,19 @@ namespace FirebaseAdmin.Auth.Multitenancy
             };
 
             return new TenantManager(args);
+        }
+
+        internal static void ValidateTenantId(string tenantId)
+        {
+            if (string.IsNullOrEmpty(tenantId))
+            {
+                throw new ArgumentException("Tenant ID cannot be null or empty.");
+            }
+
+            if (tenantId == "." || tenantId == ".." || Uri.EscapeDataString(tenantId) != tenantId)
+            {
+                throw new ArgumentException($"Invalid tenant ID: {tenantId}");
+            }
         }
 
         private async Task<T> SendAndDeserializeAsync<T>(

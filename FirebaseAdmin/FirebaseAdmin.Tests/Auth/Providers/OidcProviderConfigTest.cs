@@ -103,6 +103,31 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task GetConfigMalformedProviderId(ProviderTestConfig config)
+        {
+            var handler = new MockMessageHandler();
+            var auth = config.CreateAuth(handler);
+            var malformedIds = new[]
+            {
+                "oidc.",
+                "oidc.provider/../other",
+                "oidc.provider?foo=bar",
+                "oidc.provider#frag",
+                "oidc.provider%2fother",
+            };
+
+            foreach (var providerId in malformedIds)
+            {
+                var exception = await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.GetOidcProviderConfigAsync(providerId));
+                Assert.Equal($"Invalid OIDC provider ID: {providerId}", exception.Message);
+            }
+
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
         public async Task GetConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -415,6 +440,31 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        public async Task DeleteConfigMalformedProviderId(ProviderTestConfig config)
+        {
+            var handler = new MockMessageHandler();
+            var auth = config.CreateAuth(handler);
+            var malformedIds = new[]
+            {
+                "oidc.",
+                "oidc.provider/../other",
+                "oidc.provider?foo=bar",
+                "oidc.provider#frag",
+                "oidc.provider%2fother",
+            };
+
+            foreach (var providerId in malformedIds)
+            {
+                var exception = await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.DeleteProviderConfigAsync(providerId));
+                Assert.Equal($"Invalid OIDC provider ID: {providerId}", exception.Message);
+            }
+
+            Assert.Empty(handler.Requests);
+        }
+
+        [Theory]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
         public async Task DeleteConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -679,6 +729,30 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 {
                     new OidcProviderConfigArgs()
                     {
+                        ProviderId = "oidc.",
+                    },
+                    "Invalid OIDC provider ID: oidc.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider/../other",
+                    },
+                    "Invalid OIDC provider ID: oidc.provider/../other",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider&extra=1",
+                    },
+                    "Invalid OIDC provider ID: oidc.provider&extra=1",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
                         ProviderId = "oidc.provider",
                     },
                     "Client ID must not be null or empty.",
@@ -761,6 +835,30 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         ProviderId = "saml.provider",
                     },
                     "OIDC provider ID must have the prefix 'oidc.'.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.",
+                    },
+                    "Invalid OIDC provider ID: oidc.",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider/../other",
+                    },
+                    "Invalid OIDC provider ID: oidc.provider/../other",
+                };
+                yield return new object[]
+                {
+                    new OidcProviderConfigArgs()
+                    {
+                        ProviderId = "oidc.provider&extra=1",
+                    },
+                    "Invalid OIDC provider ID: oidc.provider&extra=1",
                 };
                 yield return new object[]
                 {

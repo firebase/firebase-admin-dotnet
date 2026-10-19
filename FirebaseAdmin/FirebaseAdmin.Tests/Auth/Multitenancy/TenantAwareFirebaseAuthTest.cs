@@ -38,6 +38,21 @@ namespace FirebaseAdmin.Auth.Multitenancy
             Assert.Throws<ArgumentException>(() => new TenantAwareFirebaseAuth(args));
         }
 
+        [Theory]
+        [InlineData(".")]
+        [InlineData("..")]
+        [InlineData("../other")]
+        [InlineData("tenant/1")]
+        [InlineData("tenant?foo=bar")]
+        public void MalformedTenantId(string tenantId)
+        {
+            var args = TenantAwareFirebaseAuth.Args.CreateDefault(tenantId);
+
+            var exception = Assert.Throws<ArgumentException>(
+                () => new TenantAwareFirebaseAuth(args));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
+        }
+
         [Fact]
         public void UseAfterDelete()
         {

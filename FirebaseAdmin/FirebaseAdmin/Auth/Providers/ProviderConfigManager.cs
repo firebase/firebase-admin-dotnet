@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Apis.Auth.OAuth2;
@@ -37,9 +38,14 @@ namespace FirebaseAdmin.Auth.Providers
         {
             args.ThrowIfNull(nameof(args));
             this.TenantId = args.TenantId;
-            if (this.TenantId == string.Empty)
+            if (this.TenantId != null)
             {
-                throw new ArgumentException("Tenant ID must not be empty.");
+                if (this.TenantId == string.Empty)
+                {
+                    throw new ArgumentException("Tenant ID must not be empty.");
+                }
+
+                TenantManager.ValidateTenantId(this.TenantId);
             }
 
             var clientArgs = new ErrorHandlingHttpClientArgs<FirebaseAuthException>()

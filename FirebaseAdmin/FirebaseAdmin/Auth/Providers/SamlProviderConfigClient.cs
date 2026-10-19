@@ -46,6 +46,11 @@ namespace FirebaseAdmin.Auth.Providers
                 throw new ArgumentException("SAML provider ID must have the prefix 'saml.'.");
             }
 
+            if (providerId.Length == "saml.".Length || Uri.EscapeDataString(providerId) != providerId)
+            {
+                throw new ArgumentException($"Invalid SAML provider ID: {providerId}");
+            }
+
             return providerId;
         }
 

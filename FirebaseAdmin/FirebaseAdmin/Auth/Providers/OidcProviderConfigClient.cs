@@ -46,6 +46,11 @@ namespace FirebaseAdmin.Auth.Providers
                 throw new ArgumentException("OIDC provider ID must have the prefix 'oidc.'.");
             }
 
+            if (providerId.Length == "oidc.".Length || Uri.EscapeDataString(providerId) != providerId)
+            {
+                throw new ArgumentException($"Invalid OIDC provider ID: {providerId}");
+            }
+
             return providerId;
         }
 
