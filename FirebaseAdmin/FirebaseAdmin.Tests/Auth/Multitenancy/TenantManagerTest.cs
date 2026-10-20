@@ -242,7 +242,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(HttpUtils.Patch, request.Method);
-            var mask = "allowPasswordSignup,displayName,enableEmailLinkSignin";
+            var mask = "allowPasswordSignup%2CdisplayName%2CenableEmailLinkSignin";
             config.AssertRequest($"tenants/tenant1?updateMask={mask}", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
@@ -527,7 +527,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var customOptions = new ListTenantsOptions()
             {
                 PageSize = 3,
-                PageToken = "custom-token",
+                PageToken = "custom+token=1&2#3",
             };
 
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(customOptions);
@@ -540,7 +540,8 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             Assert.All(tenants, AssertTenant);
 
             Assert.Equal(2, handler.Requests.Count);
-            config.AssertRequest("tenants?pageSize=3&pageToken=custom-token", handler.Requests[0]);
+            config.AssertRequest(
+                "tenants?pageSize=3&pageToken=custom%2Btoken%3D1%262%233", handler.Requests[0]);
             config.AssertRequest("tenants?pageSize=3&pageToken=token", handler.Requests[1]);
         }
 

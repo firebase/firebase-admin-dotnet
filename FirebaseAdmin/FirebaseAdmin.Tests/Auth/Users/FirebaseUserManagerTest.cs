@@ -520,7 +520,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             var customOptions = new ListUsersOptions()
             {
                 PageSize = 3,
-                PageToken = "custom-token",
+                PageToken = "custom+token=1&2#3",
             };
 
             var pagedEnumerable = auth.ListUsersAsync(customOptions);
@@ -538,7 +538,8 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest(
-                "accounts:batchGet?maxResults=3&nextPageToken=custom-token", handler.Requests[0]);
+                "accounts:batchGet?maxResults=3&nextPageToken=custom%2Btoken%3D1%262%233",
+                handler.Requests[0]);
             config.AssertRequest(
                 "accounts:batchGet?maxResults=3&nextPageToken=token", handler.Requests[1]);
         }

@@ -278,8 +278,8 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             this.AssertSamlProviderConfig(provider);
             var request = Assert.Single(handler.Requests);
             Assert.Equal(ProviderTestConfig.PatchMethod, request.Method);
-            var mask = "displayName,enabled,idpConfig.idpCertificates,idpConfig.idpEntityId,idpConfig.ssoUrl,"
-                + "spConfig.callbackUri,spConfig.spEntityId";
+            var mask = "displayName%2Cenabled%2CidpConfig.idpCertificates%2CidpConfig.idpEntityId%2CidpConfig.ssoUrl%2C"
+                + "spConfig.callbackUri%2CspConfig.spEntityId";
             config.AssertRequest(
                 $"inboundSamlConfigs/saml.provider?updateMask={mask}", request);
 
@@ -555,7 +555,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var customOptions = new ListProviderConfigsOptions()
             {
                 PageSize = 3,
-                PageToken = "custom-token",
+                PageToken = "custom+token=1&2#3",
             };
 
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(customOptions);
@@ -569,7 +569,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest(
-                "inboundSamlConfigs?pageSize=3&pageToken=custom-token", handler.Requests[0]);
+                "inboundSamlConfigs?pageSize=3&pageToken=custom%2Btoken%3D1%262%233", handler.Requests[0]);
             config.AssertRequest(
                 "inboundSamlConfigs?pageSize=3&pageToken=token", handler.Requests[1]);
         }
