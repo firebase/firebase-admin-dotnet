@@ -791,6 +791,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         $"Invalid OIDC provider ID: {providerId}",
                     };
                 }
+
                 yield return new object[]
                 {
                     new OidcProviderConfigArgs()
@@ -897,6 +898,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         $"Invalid OIDC provider ID: {providerId}",
                     };
                 }
+
                 yield return new object[]
                 {
                     new OidcProviderConfigArgs()

@@ -745,6 +745,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         $"Invalid SAML provider ID: {providerId}",
                     };
                 }
+
                 yield return new object[]
                 {
                     new SamlProviderConfigArgs()
@@ -907,6 +908,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                         $"Invalid SAML provider ID: {providerId}",
                     };
                 }
+
                 yield return new object[]
                 {
                     new SamlProviderConfigArgs()
