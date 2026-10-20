@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using Google.Apis.Json;
@@ -36,7 +37,7 @@ namespace FirebaseAdmin.Util
             if (queryParams != null && queryParams.Count > 0)
             {
                 var list = queryParams.OrderBy(kvp => kvp.Key)
-                    .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value?.ToString() ?? string.Empty)}");
+                    .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(Convert.ToString(kvp.Value, CultureInfo.InvariantCulture))}");
                 queryString = "?" + string.Join("&", list);
             }
 

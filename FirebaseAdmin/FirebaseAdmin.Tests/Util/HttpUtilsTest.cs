@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 using Xunit;
 
 namespace FirebaseAdmin.Util.Tests
@@ -39,6 +41,26 @@ namespace FirebaseAdmin.Util.Tests
             Assert.Equal(
                 "?key%20with%20spaces=&pageSize=100&pageToken=token%2B1%3D2%263%234%2F5",
                 HttpUtils.EncodeQueryParams(queryParams));
+        }
+
+        [Fact]
+        public void EncodeQueryParamsUsesInvariantCulture()
+        {
+            var originalCulture = Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("fr-FR");
+                var queryParams = new Dictionary<string, object>()
+                {
+                    { "ratio", 1.5 },
+                };
+
+                Assert.Equal("?ratio=1.5", HttpUtils.EncodeQueryParams(queryParams));
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = originalCulture;
+            }
         }
     }
 }
