@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Util;
 using Google.Api.Gax;
 using Google.Apis.Auth.OAuth2;
@@ -40,6 +41,10 @@ namespace FirebaseAdmin.Auth.Providers
             if (this.TenantId == string.Empty)
             {
                 throw new ArgumentException("Tenant ID must not be empty.");
+            }
+            else if (this.TenantId != null)
+            {
+                TenantManager.ValidateTenantId(this.TenantId);
             }
 
             var clientArgs = new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
@@ -113,13 +118,13 @@ namespace FirebaseAdmin.Auth.Providers
             string providerId, CancellationToken cancellationToken)
         {
             providerId.ThrowIfNullOrEmpty(nameof(providerId));
-            if (providerId.StartsWith("oidc."))
+            if (providerId.StartsWith("oidc.", StringComparison.Ordinal))
             {
                 await OidcProviderConfigClient.Instance
                     .DeleteProviderConfigAsync(this.apiClient, providerId, cancellationToken)
                     .ConfigureAwait(false);
             }
-            else if (providerId.StartsWith("saml."))
+            else if (providerId.StartsWith("saml.", StringComparison.Ordinal))
             {
                 await SamlProviderConfigClient.Instance
                     .DeleteProviderConfigAsync(this.apiClient, providerId, cancellationToken)

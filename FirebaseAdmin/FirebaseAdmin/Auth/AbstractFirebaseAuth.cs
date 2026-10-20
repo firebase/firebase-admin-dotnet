@@ -988,8 +988,8 @@ namespace FirebaseAdmin.Auth
         /// Looks up an OIDC auth provider configuration by the provided ID.
         /// </summary>
         /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
-        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
-        /// contain the <c>oidc.</c> prefix.</exception>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty, does not
+        /// contain the <c>oidc.</c> prefix, or is otherwise malformed.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
         /// <param name="providerId">The ID of the OIDC provider config to return.</param>
@@ -1003,8 +1003,8 @@ namespace FirebaseAdmin.Auth
         /// Looks up an OIDC auth provider configuration by the provided ID.
         /// </summary>
         /// <returns>A task that completes with a <see cref="OidcProviderConfig"/>.</returns>
-        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
-        /// contain the <c>oidc.</c> prefix.</exception>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty, does not
+        /// contain the <c>oidc.</c> prefix, or is otherwise malformed.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
         /// <param name="providerId">The ID of the OIDC provider config to return.</param>
@@ -1022,8 +1022,8 @@ namespace FirebaseAdmin.Auth
         /// Looks up a SAML auth provider configuration by the provided ID.
         /// </summary>
         /// <returns>A task that completes with a <see cref="SamlProviderConfig"/>.</returns>
-        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
-        /// contain the <c>saml.</c> prefix.</exception>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty, does not
+        /// contain the <c>saml.</c> prefix, or is otherwise malformed.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
         /// <param name="providerId">The ID of the SAML provider config to return.</param>
@@ -1037,8 +1037,8 @@ namespace FirebaseAdmin.Auth
         /// Looks up a SAML auth provider configuration by the provided ID.
         /// </summary>
         /// <returns>A task that completes with a <see cref="SamlProviderConfig"/>.</returns>
-        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
-        /// contain the <c>saml.</c> prefix.</exception>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty, does not
+        /// contain the <c>saml.</c> prefix, or is otherwise malformed.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
         /// <param name="providerId">The ID of the SAML provider config to return.</param>
@@ -1134,8 +1134,9 @@ namespace FirebaseAdmin.Auth
         /// Deletes the specified auth provider configuration.
         /// </summary>
         /// <returns>A task that completes when the provider configuration is deleted.</returns>
-        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
-        /// contain either the <c>oidc.</c> or <c>saml.</c> prefix.</exception>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty, does not
+        /// contain either the <c>oidc.</c> or <c>saml.</c> prefix, or is otherwise
+        /// malformed.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
         /// <param name="providerId">ID of the provider configuration to delete.</param>
@@ -1149,8 +1150,9 @@ namespace FirebaseAdmin.Auth
         /// Deletes the specified auth provider configuration.
         /// </summary>
         /// <returns>A task that completes when the provider configuration is deleted.</returns>
-        /// <exception cref="ArgumentException">If the provider ID is null, empty or does not
-        /// contain either the <c>oidc.</c> or <c>saml.</c> prefix.</exception>
+        /// <exception cref="ArgumentException">If the provider ID is null, empty, does not
+        /// contain either the <c>oidc.</c> or <c>saml.</c> prefix, or is otherwise
+        /// malformed.</exception>
         /// <exception cref="FirebaseAuthException">If the specified provider config does not
         /// exist.</exception>
         /// <param name="providerId">ID of the provider configuration to delete.</param>
