@@ -23,7 +23,7 @@ namespace FirebaseAdmin.Auth
         private const string IdToolkitUrl = "identitytoolkit.googleapis.com/{0}/projects/{1}{2}";
 
         private static readonly Regex SafeUrlSegmentPattern =
-            new Regex("^[a-zA-Z0-9-_.~]+$", RegexOptions.Compiled);
+            new Regex("\\A[a-zA-Z0-9-_.~]+\\z", RegexOptions.Compiled);
 
         internal static string EmulatorHostFromEnvironment =>
             Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");

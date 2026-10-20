@@ -31,6 +31,20 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 {
     public class OidcProviderConfigTest
     {
+        public static readonly IEnumerable<string> MalformedProviderIdStrings = new List<string>()
+        {
+            "oidc.",
+            "oidc..",
+            "oidc.\n",
+            "oidc.provider\n",
+            "oidc.provider.",
+            "oidc.provider/../other",
+            "oidc.provider?foo=bar",
+            "oidc.provider#frag",
+            "oidc.provider%2fother",
+            "oidc.provider&extra=1",
+        };
+
         private const string OidcProviderConfigResponse = @"{
             ""name"": ""projects/mock-project-id/oauthIdpConfigs/oidc.provider"",
             ""clientId"": ""CLIENT_ID"",
@@ -64,18 +78,9 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         public static IEnumerable<object[]> MalformedProviderIds()
         {
-            var ids = new List<string>()
-            {
-                "oidc.",
-                "oidc..",
-                "oidc.provider.",
-                "oidc.provider/../other",
-                "oidc.provider?foo=bar",
-                "oidc.provider#frag",
-                "oidc.provider%2fother",
-            };
             return ProviderTestConfig.TestConfigs.SelectMany(
-                config => ids, (config, id) => config.Concat(new object[] { id }).ToArray());
+                config => MalformedProviderIdStrings,
+                (config, id) => config.Concat(new object[] { id }).ToArray());
         }
 
         [Theory]
@@ -115,9 +120,12 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         {
             var auth = config.CreateAuth();
 
-            var exception = await Assert.ThrowsAsync<ArgumentException>(
-                () => auth.GetOidcProviderConfigAsync("saml.provider"));
-            Assert.Equal("OIDC provider ID must have the prefix 'oidc.'.", exception.Message);
+            foreach (var providerId in new[] { "saml.provider", "\uFEFFoidc.provider" })
+            {
+                var exception = await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.GetOidcProviderConfigAsync(providerId));
+                Assert.Equal("OIDC provider ID must have the prefix 'oidc.'.", exception.Message);
+            }
         }
 
         [Theory]
@@ -438,11 +446,20 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         {
             var auth = config.CreateAuth();
 
-            var exception = await Assert.ThrowsAsync<ArgumentException>(
-                () => auth.DeleteProviderConfigAsync("unknown.provider"));
-            Assert.Equal(
-                "Provider ID must have 'oidc.' or 'saml.' as the prefix.",
-                exception.Message);
+            var invalidProviderIds = new[]
+            {
+                "unknown.provider",
+                "\uFEFFoidc.provider",
+                "\uFEFFsaml.provider",
+            };
+            foreach (var providerId in invalidProviderIds)
+            {
+                var exception = await Assert.ThrowsAsync<ArgumentException>(
+                    () => auth.DeleteProviderConfigAsync(providerId));
+                Assert.Equal(
+                    "Provider ID must have 'oidc.' or 'saml.' as the prefix.",
+                    exception.Message);
+            }
         }
 
         [Theory]
@@ -759,42 +776,21 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 {
                     new OidcProviderConfigArgs()
                     {
-                        ProviderId = "oidc.",
+                        ProviderId = "\uFEFFoidc.provider",
                     },
-                    "Invalid OIDC provider ID: oidc.",
+                    "OIDC provider ID must have the prefix 'oidc.'.",
                 };
-                yield return new object[]
+                foreach (var providerId in MalformedProviderIdStrings)
                 {
-                    new OidcProviderConfigArgs()
+                    yield return new object[]
                     {
-                        ProviderId = "oidc..",
-                    },
-                    "Invalid OIDC provider ID: oidc..",
-                };
-                yield return new object[]
-                {
-                    new OidcProviderConfigArgs()
-                    {
-                        ProviderId = "oidc.provider.",
-                    },
-                    "Invalid OIDC provider ID: oidc.provider.",
-                };
-                yield return new object[]
-                {
-                    new OidcProviderConfigArgs()
-                    {
-                        ProviderId = "oidc.provider/../other",
-                    },
-                    "Invalid OIDC provider ID: oidc.provider/../other",
-                };
-                yield return new object[]
-                {
-                    new OidcProviderConfigArgs()
-                    {
-                        ProviderId = "oidc.provider&extra=1",
-                    },
-                    "Invalid OIDC provider ID: oidc.provider&extra=1",
-                };
+                        new OidcProviderConfigArgs()
+                        {
+                            ProviderId = providerId,
+                        },
+                        $"Invalid OIDC provider ID: {providerId}",
+                    };
+                }
                 yield return new object[]
                 {
                     new OidcProviderConfigArgs()
@@ -886,42 +882,21 @@ namespace FirebaseAdmin.Auth.Providers.Tests
                 {
                     new OidcProviderConfigArgs()
                     {
-                        ProviderId = "oidc.",
+                        ProviderId = "\uFEFFoidc.provider",
                     },
-                    "Invalid OIDC provider ID: oidc.",
+                    "OIDC provider ID must have the prefix 'oidc.'.",
                 };
-                yield return new object[]
+                foreach (var providerId in MalformedProviderIdStrings)
                 {
-                    new OidcProviderConfigArgs()
+                    yield return new object[]
                     {
-                        ProviderId = "oidc..",
-                    },
-                    "Invalid OIDC provider ID: oidc..",
-                };
-                yield return new object[]
-                {
-                    new OidcProviderConfigArgs()
-                    {
-                        ProviderId = "oidc.provider.",
-                    },
-                    "Invalid OIDC provider ID: oidc.provider.",
-                };
-                yield return new object[]
-                {
-                    new OidcProviderConfigArgs()
-                    {
-                        ProviderId = "oidc.provider/../other",
-                    },
-                    "Invalid OIDC provider ID: oidc.provider/../other",
-                };
-                yield return new object[]
-                {
-                    new OidcProviderConfigArgs()
-                    {
-                        ProviderId = "oidc.provider&extra=1",
-                    },
-                    "Invalid OIDC provider ID: oidc.provider&extra=1",
-                };
+                        new OidcProviderConfigArgs()
+                        {
+                            ProviderId = providerId,
+                        },
+                        $"Invalid OIDC provider ID: {providerId}",
+                    };
+                }
                 yield return new object[]
                 {
                     new OidcProviderConfigArgs()
