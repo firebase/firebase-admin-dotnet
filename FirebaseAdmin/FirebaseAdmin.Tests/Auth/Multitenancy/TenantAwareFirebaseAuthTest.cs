@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using FirebaseAdmin.Auth.Multitenancy.Tests;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -36,6 +37,19 @@ namespace FirebaseAdmin.Auth.Multitenancy
             var args = TenantAwareFirebaseAuth.Args.CreateDefault(string.Empty);
 
             Assert.Throws<ArgumentException>(() => new TenantAwareFirebaseAuth(args));
+        }
+
+        [Theory]
+        [MemberData(
+            nameof(TenantManagerTest.MalformedTenantIdData),
+            MemberType = typeof(TenantManagerTest))]
+        public void MalformedTenantId(string tenantId)
+        {
+            var args = TenantAwareFirebaseAuth.Args.CreateDefault(tenantId);
+
+            var exception = Assert.Throws<ArgumentException>(
+                () => new TenantAwareFirebaseAuth(args));
+            Assert.Equal($"Invalid tenant ID: {tenantId}", exception.Message);
         }
 
         [Fact]

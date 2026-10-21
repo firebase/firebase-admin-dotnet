@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Text.RegularExpressions;
 using Google.Apis.Auth.OAuth2;
 
 namespace FirebaseAdmin.Auth
@@ -20,6 +21,9 @@ namespace FirebaseAdmin.Auth
     internal class Utils
     {
         private const string IdToolkitUrl = "identitytoolkit.googleapis.com/{0}/projects/{1}{2}";
+
+        private static readonly Regex SafeUrlSegmentPattern =
+            new Regex("\\A[a-zA-Z0-9_.~-]+\\z", RegexOptions.Compiled);
 
         internal static string EmulatorHostFromEnvironment =>
             Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
@@ -50,6 +54,16 @@ namespace FirebaseAdmin.Auth
             }
 
             return original;
+        }
+
+        internal static bool IsSafeUrlSegment(string segment)
+        {
+            // Check for a trailing dot in C# before matching so we reject ".", "..", "...", and
+            // trailing-dot segments in O(1) while keeping the regex to a single quantifier with
+            // zero backtracking on failure.
+            return !string.IsNullOrEmpty(segment)
+                && !segment.EndsWith(".", StringComparison.Ordinal)
+                && SafeUrlSegmentPattern.IsMatch(segment);
         }
 
         internal class UrlOptions

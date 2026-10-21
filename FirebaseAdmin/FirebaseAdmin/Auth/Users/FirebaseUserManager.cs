@@ -18,6 +18,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth.Multitenancy;
 using FirebaseAdmin.Util;
 using Google.Api.Gax.Rest;
 using Google.Apis.Auth.OAuth2;
@@ -66,6 +67,10 @@ namespace FirebaseAdmin.Auth.Users
             if (this.TenantId == string.Empty)
             {
                 throw new ArgumentException("Tenant ID must not be empty.");
+            }
+            else if (this.TenantId != null)
+            {
+                TenantManager.ValidateTenantId(this.TenantId);
             }
 
             this.EmulatorHost = args.EmulatorHost;

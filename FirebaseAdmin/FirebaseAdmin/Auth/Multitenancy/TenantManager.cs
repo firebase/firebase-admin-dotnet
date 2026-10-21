@@ -92,7 +92,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// </summary>
         /// <param name="tenantId">A tenant identifier string.</param>
         /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
-        /// <exception cref="ArgumentException">If tenant ID argument is null or empty.</exception>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null, empty, or
+        /// malformed.</exception>
         /// <exception cref="FirebaseAuthException">If a tenant cannot be found with the specified
         /// ID.</exception>
         public async Task<Tenant> GetTenantAsync(string tenantId)
@@ -108,16 +109,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
-        /// <exception cref="ArgumentException">If the tenant ID argument is null or empty.
-        /// </exception>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null, empty, or
+        /// malformed.</exception>
         /// <exception cref="FirebaseAuthException">If a tenant cannot be found with the specified
         /// ID.</exception>
         public async Task<Tenant> GetTenantAsync(string tenantId, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             var request = new HttpRequestMessage()
             {
@@ -176,8 +174,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// <param name="tenantId">ID of the tenant to be updated.</param>
         /// <param name="args">Properties to be updated in the tenant.</param>
         /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
-        /// <exception cref="ArgumentException">If <paramref name="tenantId"/> is null or empty,
-        /// or if <paramref name="args"/> does not contain any values.
+        /// <exception cref="ArgumentException">If <paramref name="tenantId"/> is null, empty, or
+        /// malformed, or if <paramref name="args"/> does not contain any values.
         /// </exception>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.
         /// </exception>
@@ -197,8 +195,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A task that completes with a <see cref="Tenant"/>.</returns>
-        /// <exception cref="ArgumentException">If <paramref name="tenantId"/> is null or empty,
-        /// or if <paramref name="args"/> does not contain any values.
+        /// <exception cref="ArgumentException">If <paramref name="tenantId"/> is null, empty, or
+        /// malformed, or if <paramref name="args"/> does not contain any values.
         /// </exception>
         /// <exception cref="ArgumentNullException">If <paramref name="args"/> is null.
         /// </exception>
@@ -207,10 +205,7 @@ namespace FirebaseAdmin.Auth.Multitenancy
         public async Task<Tenant> UpdateTenantAsync(
             string tenantId, TenantArgs args, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             var updateMask = HttpUtils.CreateUpdateMask(args.ThrowIfNull(nameof(args)));
             if (updateMask.Count == 0)
@@ -239,8 +234,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// </summary>
         /// <param name="tenantId">A tenant identifier string.</param>
         /// <returns>A task that completes when the tenant is deleted.</returns>
-        /// <exception cref="ArgumentException">If the tenant ID argument is null or empty.
-        /// </exception>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null, empty, or
+        /// malformed.</exception>
         /// <exception cref="FirebaseAuthException">If a tenant cannot be found with the specified
         /// ID.</exception>
         public async Task DeleteTenantAsync(string tenantId)
@@ -256,16 +251,13 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// <param name="cancellationToken">A cancellation token to monitor the asynchronous
         /// operation.</param>
         /// <returns>A task that completes when the tenant is deleted.</returns>
-        /// <exception cref="ArgumentException">If the tenant ID argument is null or empty.
-        /// </exception>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null, empty, or
+        /// malformed.</exception>
         /// <exception cref="FirebaseAuthException">If a tenant cannot be found with the specified
         /// ID.</exception>
         public async Task DeleteTenantAsync(string tenantId, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             var request = new HttpRequestMessage()
             {
@@ -301,14 +293,11 @@ namespace FirebaseAdmin.Auth.Multitenancy
         /// </summary>
         /// <param name="tenantId">A tenant identifier string.</param>
         /// <returns>An object that can be used to perform tenant-aware operations.</returns>
-        /// <exception cref="ArgumentException">If the tenant ID argument is null or empty.
-        /// </exception>
+        /// <exception cref="ArgumentException">If the tenant ID argument is null, empty, or
+        /// malformed.</exception>
         public TenantAwareFirebaseAuth AuthForTenant(string tenantId)
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
+            ValidateTenantId(tenantId);
 
             TenantAwareFirebaseAuth auth;
             lock (this.tenantsLock)
@@ -359,6 +348,19 @@ namespace FirebaseAdmin.Auth.Multitenancy
             };
 
             return new TenantManager(args);
+        }
+
+        internal static void ValidateTenantId(string tenantId)
+        {
+            if (string.IsNullOrEmpty(tenantId))
+            {
+                throw new ArgumentException("Tenant ID cannot be null or empty.");
+            }
+
+            if (!Utils.IsSafeUrlSegment(tenantId))
+            {
+                throw new ArgumentException($"Invalid tenant ID: {tenantId}");
+            }
         }
 
         private async Task<T> SendAndDeserializeAsync<T>(

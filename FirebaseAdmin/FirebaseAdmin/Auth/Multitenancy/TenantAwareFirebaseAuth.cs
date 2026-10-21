@@ -28,11 +28,8 @@ namespace FirebaseAdmin.Auth.Multitenancy
         internal TenantAwareFirebaseAuth(Args args)
         : base(args)
         {
+            TenantManager.ValidateTenantId(args.TenantId);
             this.TenantId = args.TenantId;
-            if (string.IsNullOrEmpty(this.TenantId))
-            {
-                throw new ArgumentException("Tenant ID cannot be null or empty.");
-            }
         }
 
         /// <summary>
