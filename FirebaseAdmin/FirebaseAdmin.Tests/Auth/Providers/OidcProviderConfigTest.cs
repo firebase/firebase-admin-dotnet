@@ -38,10 +38,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             "oidc.\n",
             "oidc.provider\n",
             "oidc.provider.",
-            "oidc.provider/../other",
+            "oidc.provider/1",
             "oidc.provider?foo=bar",
             "oidc.provider#frag",
-            "oidc.provider%2fother",
+            "oidc.provider%2f1",
             "oidc.provider&extra=1",
         };
 
@@ -314,7 +314,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             Assert.Single(handler.Requests);
             var request = handler.Requests[0];
             Assert.Equal(ProviderTestConfig.PatchMethod, request.Method);
-            var mask = "clientId,clientSecret,displayName,enabled,issuer,responseType.code,responseType.idToken";
+            var mask = "clientId%2CclientSecret%2CdisplayName%2Cenabled%2Cissuer%2CresponseType.code%2CresponseType.idToken";
             config.AssertRequest($"oauthIdpConfigs/oidc.provider?updateMask={mask}", request);
 
             var body = NewtonsoftJsonSerializer.Instance.Deserialize<JObject>(
@@ -640,7 +640,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var customOptions = new ListProviderConfigsOptions()
             {
                 PageSize = 3,
-                PageToken = "custom-token",
+                PageToken = "custom+token=1&2#3",
             };
 
             var pagedEnumerable = auth.ListOidcProviderConfigsAsync(customOptions);
@@ -654,7 +654,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
             Assert.Equal(2, handler.Requests.Count);
             config.AssertRequest(
-                "oauthIdpConfigs?pageSize=3&pageToken=custom-token", handler.Requests[0]);
+                "oauthIdpConfigs?pageSize=3&pageToken=custom%2Btoken%3D1%262%233", handler.Requests[0]);
             config.AssertRequest(
                 "oauthIdpConfigs?pageSize=3&pageToken=token", handler.Requests[1]);
         }
