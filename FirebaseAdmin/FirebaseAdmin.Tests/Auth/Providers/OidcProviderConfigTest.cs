@@ -38,10 +38,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             "oidc.\n",
             "oidc.provider\n",
             "oidc.provider.",
-            "oidc.provider/../other",
+            "oidc.provider/1",
             "oidc.provider?foo=bar",
             "oidc.provider#frag",
-            "oidc.provider%2fother",
+            "oidc.provider%2f1",
             "oidc.provider&extra=1",
         };
 

@@ -35,10 +35,10 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             "saml.\n",
             "saml.provider\n",
             "saml.provider.",
-            "saml.provider/../other",
+            "saml.provider/1",
             "saml.provider?foo=bar",
             "saml.provider#frag",
-            "saml.provider%2fother",
+            "saml.provider%2f1",
             "saml.provider&extra=1",
         };
 

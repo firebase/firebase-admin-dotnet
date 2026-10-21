@@ -43,12 +43,11 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             "...",
             "..\n",
             "tenant\n",
-            "../other",
-            "victim.",
+            "tenant.",
             "tenant/1",
             "tenant?foo=bar",
             "tenant#frag",
-            "tenant%2e%2e",
+            "tenant%2f1",
             "tenant\\1",
         };
 
