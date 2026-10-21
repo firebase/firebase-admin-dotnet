@@ -25,7 +25,7 @@ namespace FirebaseAdmin.Util
     internal sealed class ErrorHandlingHttpClientArgs<T>
     where T : FirebaseException
     {
-        internal HttpClientFactory HttpClientFactory { get; set; }
+        internal IHttpClientFactory HttpClientFactory { get; set; }
 
         internal GoogleCredential Credential { get; set; }
 
