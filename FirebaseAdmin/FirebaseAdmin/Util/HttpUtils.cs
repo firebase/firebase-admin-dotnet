@@ -37,7 +37,13 @@ namespace FirebaseAdmin.Util
             if (queryParams != null && queryParams.Count > 0)
             {
                 var list = queryParams.OrderBy(kvp => kvp.Key)
-                    .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(Convert.ToString(kvp.Value, CultureInfo.InvariantCulture))}");
+                    .Select(kvp =>
+                    {
+                        var key = Uri.EscapeDataString(kvp.Key);
+                        var value = Uri.EscapeDataString(
+                            Convert.ToString(kvp.Value, CultureInfo.InvariantCulture));
+                        return $"{key}={value}";
+                    });
                 queryString = "?" + string.Join("&", list);
             }
 
