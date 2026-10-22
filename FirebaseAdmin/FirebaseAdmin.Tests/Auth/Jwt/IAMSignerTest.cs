@@ -65,9 +65,9 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         {
             var bytes = Encoding.UTF8.GetBytes("signature");
             var handler = new MockMessageHandler()
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                };
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+            };
             var factory = new MockHttpClientFactory(handler);
             var signer = new IAMSigner(factory, GoogleCredential.FromAccessToken("token"));
             var errorMessage = "Failed to determine service account ID. Make sure to initialize the SDK "
@@ -97,12 +97,12 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         {
             var bytes = Encoding.UTF8.GetBytes("signature");
             var handler = new MockMessageHandler()
+            {
+                Response = new IAMSigner.SignBlobResponse()
                 {
-                    Response = new IAMSigner.SignBlobResponse()
-                        {
-                                Signature = Convert.ToBase64String(bytes),
-                        },
-                };
+                    Signature = Convert.ToBase64String(bytes),
+                },
+            };
             var factory = new MockHttpClientFactory(handler);
             var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
@@ -120,10 +120,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         public async Task WelformedSignError()
         {
             var handler = new MockMessageHandler()
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    Response = @"{""error"": {""message"": ""test reason""}}",
-                };
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = @"{""error"": {""message"": ""test reason""}}",
+            };
             var factory = new MockHttpClientFactory(handler);
             var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
@@ -142,10 +142,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         public async Task WelformedSignErrorWithCode()
         {
             var handler = new MockMessageHandler()
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    Response = @"{""error"": {""message"": ""test reason"", ""status"": ""UNAVAILABLE""}}",
-                };
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = @"{""error"": {""message"": ""test reason"", ""status"": ""UNAVAILABLE""}}",
+            };
             var factory = new MockHttpClientFactory(handler);
             var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
@@ -164,10 +164,10 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
         public async Task UnexpectedSignError()
         {
             var handler = new MockMessageHandler()
-                {
-                    StatusCode = HttpStatusCode.InternalServerError,
-                    Response = "not json",
-                };
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                Response = "not json",
+            };
             var factory = new MockHttpClientFactory(handler);
             var signer = this.CreateFixedAccountIAMSigner(factory);
             Assert.Equal("test-service-account", await signer.GetKeyIdAsync());
