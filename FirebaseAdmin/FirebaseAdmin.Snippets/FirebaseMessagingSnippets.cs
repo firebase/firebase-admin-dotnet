@@ -23,6 +23,7 @@ namespace FirebaseAdmin.Snippets
     {
         internal static async Task SendToTokenAsync()
         {
+#pragma warning disable CS0618
             // [START send_to_token]
             // This registration token comes from the client FCM SDKs.
             var registrationToken = "YOUR_REGISTRATION_TOKEN";
@@ -35,9 +36,7 @@ namespace FirebaseAdmin.Snippets
                     { "score", "850" },
                     { "time", "2:45" },
                 },
-#pragma warning disable CS0618
                 Token = registrationToken,
-#pragma warning restore CS0618
             };
 
             // Send a message to the device corresponding to the provided
@@ -46,6 +45,7 @@ namespace FirebaseAdmin.Snippets
             // Response is a message ID string.
             Console.WriteLine("Successfully sent message: " + response);
             // [END send_to_token]
+#pragma warning restore CS0618
         }
 
         internal static async Task SendToTopicAsync()
@@ -124,6 +124,7 @@ namespace FirebaseAdmin.Snippets
         internal static async Task SendEachAsync()
         {
             var registrationToken = "YOUR_REGISTRATION_TOKEN";
+#pragma warning disable CS0618
             // [START send_all]
             // Create a list containing up to 500 messages.
             var messages = new List<Message>()
@@ -135,9 +136,7 @@ namespace FirebaseAdmin.Snippets
                         Title = "Price drop",
                         Body = "5% off all electronics",
                     },
-#pragma warning disable CS0618
                     Token = registrationToken,
-#pragma warning restore CS0618
                 },
                 new Message()
                 {
@@ -155,10 +154,12 @@ namespace FirebaseAdmin.Snippets
             // for the contents of response.
             Console.WriteLine($"{response.SuccessCount} messages were sent successfully");
             // [END send_all]
+#pragma warning restore CS0618
         }
 
         internal static async Task SendEachForMulticastAsync()
         {
+#pragma warning disable CS0618
             // [START send_multicast]
             // Create a list containing up to 500 registration tokens.
             // These registration tokens come from the client FCM SDKs.
@@ -170,9 +171,7 @@ namespace FirebaseAdmin.Snippets
             };
             var message = new MulticastMessage()
             {
-#pragma warning disable CS0618
                 Tokens = registrationTokens,
-#pragma warning restore CS0618
                 Data = new Dictionary<string, string>()
                 {
                     { "score", "850" },
@@ -185,10 +184,12 @@ namespace FirebaseAdmin.Snippets
             // for the contents of response.
             Console.WriteLine($"{response.SuccessCount} messages were sent successfully");
             // [END send_multicast]
+#pragma warning restore CS0618
         }
 
         internal static async Task SendEachForMulticastAndHandleErrorsAsync()
         {
+#pragma warning disable CS0618
             // [START send_multicast_error]
             // These registration tokens come from the client FCM SDKs.
             var registrationTokens = new List<string>()
@@ -199,9 +200,7 @@ namespace FirebaseAdmin.Snippets
             };
             var message = new MulticastMessage()
             {
-#pragma warning disable CS0618
                 Tokens = registrationTokens,
-#pragma warning restore CS0618
                 Data = new Dictionary<string, string>()
                 {
                     { "score", "850" },
@@ -226,10 +225,12 @@ namespace FirebaseAdmin.Snippets
             }
 
             // [END send_multicast_error]
+#pragma warning restore CS0618
         }
 
         internal static Message CreateAndroidMessage()
         {
+#pragma warning disable CS0618
             // [START android_message]
             var message = new Message
             {
@@ -248,6 +249,33 @@ namespace FirebaseAdmin.Snippets
                 Topic = "industry-tech",
             };
             // [END android_message]
+#pragma warning restore CS0618
+            return message;
+        }
+
+        internal static Message CreateAndroidV2Message()
+        {
+            // [START android_v2_message]
+            var message = new Message
+            {
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    TimeToLive = TimeSpan.FromHours(1),
+                    RemoteNotification = new AndroidRemoteNotification()
+                    {
+                        MutableContent = true,
+                        Notification = new AndroidNotificationV2()
+                        {
+                            Title = "$GOOG up 1.43% on the day",
+                            Body = "$GOOG gained 11.80 points to close at 835.67, up 1.43% on the day.",
+                            Icon = "stock_ticker_update",
+                            Color = "#f45342",
+                        },
+                    },
+                },
+                Topic = "industry-tech",
+            };
+            // [END android_v2_message]
             return message;
         }
 
@@ -301,6 +329,7 @@ namespace FirebaseAdmin.Snippets
 
         internal static Message CreateMultiPlatformsMessage()
         {
+#pragma warning disable CS0618
             // [START multi_platforms_message]
             var message = new Message
             {
@@ -328,6 +357,7 @@ namespace FirebaseAdmin.Snippets
                 Topic = "industry-tech",
             };
             // [END multi_platforms_message]
+#pragma warning restore CS0618
             return message;
         }
 
