@@ -338,7 +338,7 @@ namespace FirebaseAdmin
                 }
             }
 
-            if (this.Options.Credential.ToComputeCredential() != null)
+            if (this.options.Credential.ToComputeCredential() != null)
             {
                 return this.metadataProjectId.Value;
             }
@@ -360,6 +360,7 @@ namespace FirebaseAdmin
             {
                 using (var client = clientFactory.CreateDefaultHttpClient())
                 {
+                    client.Timeout = TimeSpan.FromSeconds(2);
                     client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
                     var resp = await client.GetAsync(MetadataServerUrl).ConfigureAwait(false);
                     resp.EnsureSuccessStatusCode();
