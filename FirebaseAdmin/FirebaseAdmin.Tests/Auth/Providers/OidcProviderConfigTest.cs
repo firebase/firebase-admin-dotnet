@@ -84,7 +84,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task GetConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -104,7 +104,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(
-            nameof(ProviderTestConfig.InvalidProvierIds), MemberType=typeof(ProviderTestConfig))]
+            nameof(ProviderTestConfig.InvalidProvierIds), MemberType = typeof(ProviderTestConfig))]
         public async Task GetConfigNoProviderId(ProviderTestConfig config, string providerId)
         {
             var auth = config.CreateAuth();
@@ -115,7 +115,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task GetConfigInvalidProviderId(ProviderTestConfig config)
         {
             var auth = config.CreateAuth();
@@ -142,7 +142,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task GetConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -165,7 +165,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task CreateConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -206,7 +206,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task CreateConfigMinimal(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -238,7 +238,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task CreateConfigNullArgs(ProviderTestConfig config)
         {
             var auth = config.CreateAuth();
@@ -260,7 +260,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task CreateConfigUnknownError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -288,7 +288,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task UpdateConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -330,7 +330,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task UpdateConfigMinimal(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -360,7 +360,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task UpdateConfigNullArgs(ProviderTestConfig config)
         {
             var auth = config.CreateAuth();
@@ -382,7 +382,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task UpdateConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -411,7 +411,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task DeleteConfig(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -430,7 +430,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(
-            nameof(ProviderTestConfig.InvalidProvierIds), MemberType=typeof(ProviderTestConfig))]
+            nameof(ProviderTestConfig.InvalidProvierIds), MemberType = typeof(ProviderTestConfig))]
         public async Task DeleteConfigNoProviderId(
             ProviderTestConfig config, string providerId)
         {
@@ -441,7 +441,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task DeleteConfigInvalidProviderId(ProviderTestConfig config)
         {
             var auth = config.CreateAuth();
@@ -477,7 +477,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task DeleteConfigNotFoundError(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -500,7 +500,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task ListConfigs(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -528,7 +528,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public void ListOidcForEach(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -555,7 +555,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task ListOidcByPages(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -596,7 +596,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task ListOidcAsRawResponses(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -628,7 +628,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public void ListOidcOptions(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
@@ -678,7 +678,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
+        [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType = typeof(ProviderTestConfig))]
         public async Task ListOidcReadPageSizeTooLarge(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
