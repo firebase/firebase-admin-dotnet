@@ -29,31 +29,44 @@ jobs:
   nightly:
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            framework-version: net462
+          - os: ubuntu-latest
+            framework-version: net6.0
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       DOTNET_NOLOGO: true
+      TARGET_FRAMEWORK: ${{ matrix.framework-version }}
 
     steps:
+    - name: Configure Git for Windows
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.longpaths true
+
     - name: Checkout source for staging
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
         persist-credentials: false
-        
 
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: 6.0.x
-
-    - name: Install Mono
-      run: |
-        sudo apt update
-        sudo apt install -y mono-complete
 
     - name: Install dependencies
       run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
@@ -62,28 +75,36 @@ jobs:
       run: dotnet build FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore
 
     - name: Run unit tests
-      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests --configuration Release --no-restore --no-build
+      run: dotnet test FirebaseAdmin/FirebaseAdmin.Tests --configuration Release --no-restore --no-build --framework "${TARGET_FRAMEWORK}"
 
     - name: Run integration tests
-      run: ./.github/scripts/run_integration_tests.sh
+      run: ./.github/scripts/run_integration_tests.sh "${TARGET_FRAMEWORK}"
       env:
         FIREBASE_SERVICE_ACCT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCT_KEY }}
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
     - name: Package release artifacts
+      if: matrix.os == 'ubuntu-latest'
       run: dotnet pack FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore --no-build
-
 
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
     - name: Archive artifacts
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: Release
         path: FirebaseAdmin/FirebaseAdmin/bin/Release
-    
+
+  notify:
+    needs: nightly
+    if: failure() || cancelled()
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
     - name: Send email on failure
-      if: failure()
+      if: always() && needs.nightly.result == 'failure'
       uses: firebase/firebase-admin-node/.github/actions/send-email@50ab2502c1faaf0685891ee5087a20dfd20eba2a # Admin Node SDK v14.5.0
       with:
         api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
@@ -98,7 +119,7 @@ jobs:
       continue-on-error: true
 
     - name: Send email on cancelled
-      if: cancelled()
+      if: always() && needs.nightly.result == 'cancelled'
       uses: firebase/firebase-admin-node/.github/actions/send-email@50ab2502c1faaf0685891ee5087a20dfd20eba2a # Admin Node SDK v14.5.0
       with:
         api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}

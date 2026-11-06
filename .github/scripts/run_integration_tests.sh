@@ -17,13 +17,27 @@
 set -e
 set -u
 
+readonly FRAMEWORK="${1:-}"
+
+function cleanup() {
+  rm -rf FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources \
+    FirebaseAdmin/FirebaseAdmin.IntegrationTests/bin/Release/*/resources
+  gpgconf --kill gpg-agent >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
 mkdir -p FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources
 
-gpg --quiet --batch --yes --decrypt --passphrase="${FIREBASE_SERVICE_ACCT_KEY}" \
---output FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_cert.json \
-.github/resources/integ-service-account.json.gpg
+gpg --quiet --batch --yes --pinentry-mode loopback --decrypt \
+  --passphrase="${FIREBASE_SERVICE_ACCT_KEY}" \
+  --output FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_cert.json \
+  .github/resources/integ-service-account.json.gpg
 
 echo "${FIREBASE_API_KEY}" > FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_apikey.txt
 
-dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net462
-dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net6.0
+if [[ -n "${FRAMEWORK}" ]]; then
+  dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework "${FRAMEWORK}"
+else
+  dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net462
+  dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net6.0
+fi
