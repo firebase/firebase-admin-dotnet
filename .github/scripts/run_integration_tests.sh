@@ -28,10 +28,10 @@ trap cleanup EXIT
 
 mkdir -p FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources
 
-gpg --quiet --batch --yes --pinentry-mode loopback --decrypt \
-  --passphrase="${FIREBASE_SERVICE_ACCT_KEY}" \
-  --output FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_cert.json \
-  .github/resources/integ-service-account.json.gpg
+printf '%s' "${FIREBASE_SERVICE_ACCT_KEY}" \
+  | gpg --quiet --batch --yes --pinentry-mode loopback --passphrase-fd 0 --decrypt \
+    --output FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_cert.json \
+    .github/resources/integ-service-account.json.gpg
 
 echo "${FIREBASE_API_KEY}" > FirebaseAdmin/FirebaseAdmin.IntegrationTests/resources/integration_apikey.txt
 
