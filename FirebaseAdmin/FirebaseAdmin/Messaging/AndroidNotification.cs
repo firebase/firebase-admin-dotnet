@@ -25,7 +25,9 @@ namespace FirebaseAdmin.Messaging
     /// <summary>
     /// Represents the Android-specific notification options that can be included in a
     /// <see cref="Message"/>.
+    /// Deprecated. Use <see cref="AndroidNotificationV2"/> instead.
     /// </summary>
+    [Obsolete("Deprecated. Use AndroidNotificationV2 instead.")]
     public sealed class AndroidNotification
     {
         /// <summary>
@@ -36,7 +38,7 @@ namespace FirebaseAdmin.Messaging
         public string Title { get; set; }
 
         /// <summary>
-        /// Gets or sets the title of the Android notification. When provided, overrides the title
+        /// Gets or sets the body text of the Android notification. When provided, overrides the body
         /// set via <see cref="Notification.Body"/>.
         /// </summary>
         [JsonProperty("body")]
@@ -176,10 +178,10 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Gets or sets a value indicating whether or not to use the default vibration timings. If set to true, use the Android
-        /// Sets the whether to use the default vibration timings. If set to true, use the Android
-        ///  in <a href="https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml">config.xml</a>.
-        ///  If <see cref="DefaultVibrateTimings"/> is set to true and <see cref="VibrateTimingsMillis"/> is also set,
-        ///  the default value is used instead of the user-specified <see cref="VibrateTimingsMillis"/>.
+        /// framework's default vibrate pattern for the notification. Default values are specified in
+        /// <a href="https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml">config.xml</a>.
+        /// If <see cref="DefaultVibrateTimings"/> is set to true and <see cref="VibrateTimingsMillis"/> is also set,
+        /// the default value is used instead of the user-specified <see cref="VibrateTimingsMillis"/>.
         /// </summary>
         [JsonProperty("default_vibrate_timings")]
         public bool DefaultVibrateTimings { get; set; }

@@ -49,8 +49,15 @@ namespace FirebaseAdmin.Messaging
 
         /// <summary>
         /// Gets or sets the Android-specific information to be included in the message.
+        /// Deprecated. Use <see cref="AndroidV2"/> instead.
         /// </summary>
+        [Obsolete("Deprecated. Use AndroidV2 instead.")]
         public AndroidConfig Android { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Android-specific V2 information to be included in the message.
+        /// </summary>
+        public AndroidConfigV2 AndroidV2 { get; set; }
 
         /// <summary>
         /// Gets or sets the Webpush-specific information to be included in the message.
@@ -86,14 +93,17 @@ namespace FirebaseAdmin.Messaging
                 throw new ArgumentException("Total number of Tokens and FIDs must not exceed 500.");
             }
 
+#pragma warning disable CS0618
             var templateMessage = new Message
             {
                 Android = this.Android?.CopyAndValidate(),
+                AndroidV2 = this.AndroidV2?.CopyAndValidate(),
                 Apns = this.Apns?.CopyAndValidate(),
                 Data = this.Data?.Copy(),
                 Notification = this.Notification?.CopyAndValidate(),
                 Webpush = this.Webpush?.CopyAndValidate(),
             };
+#pragma warning restore CS0618
 
             var messages = new List<Message>(totalCount);
 
@@ -101,17 +111,17 @@ namespace FirebaseAdmin.Messaging
             {
                 foreach (var token in tokensCopy)
                 {
+#pragma warning disable CS0618
                     var message = new Message
                     {
                         Android = templateMessage.Android,
+                        AndroidV2 = templateMessage.AndroidV2,
                         Apns = templateMessage.Apns,
                         Data = templateMessage.Data,
                         Notification = templateMessage.Notification,
                         Webpush = templateMessage.Webpush,
+                        Token = token,
                     };
-
-#pragma warning disable CS0618
-                    message.Token = token;
 #pragma warning restore CS0618
 
                     messages.Add(message);
@@ -122,15 +132,18 @@ namespace FirebaseAdmin.Messaging
             {
                 foreach (var fid in fidsCopy)
                 {
+#pragma warning disable CS0618
                     var message = new Message
                     {
                         Android = templateMessage.Android,
+                        AndroidV2 = templateMessage.AndroidV2,
                         Apns = templateMessage.Apns,
                         Data = templateMessage.Data,
                         Notification = templateMessage.Notification,
                         Webpush = templateMessage.Webpush,
                         Fid = fid,
                     };
+#pragma warning restore CS0618
 
                     messages.Add(message);
                 }

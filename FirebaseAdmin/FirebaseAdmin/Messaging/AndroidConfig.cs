@@ -20,7 +20,9 @@ namespace FirebaseAdmin.Messaging
 {
     /// <summary>
     /// Represents the Android-specific options that can be included in a <see cref="Message"/>.
+    /// Deprecated. Use <see cref="AndroidConfigV2"/> instead.
     /// </summary>
+    [Obsolete("Deprecated. Use AndroidConfigV2 instead.")]
     public sealed class AndroidConfig
     {
         /// <summary>

@@ -116,5 +116,26 @@ namespace FirebaseAdmin.Tests.Messaging
             Assert.Throws<ArgumentException>(() => message.GetMessageList());
         }
 #pragma warning restore CS0618
+
+        [Fact]
+        public void GetMessageListWithAndroidV2()
+        {
+            var androidV2 = new AndroidConfigV2()
+            {
+                BackgroundSync = new AndroidBackgroundSyncMessage(),
+            };
+            var message = new MulticastMessage
+            {
+                Fids = new[] { "test-fid1" },
+                AndroidV2 = androidV2,
+            };
+
+            var messages = message.GetMessageList();
+
+            Assert.Single(messages);
+            Assert.Equal("test-fid1", messages[0].Fid);
+            Assert.NotNull(messages[0].AndroidV2.BackgroundSync);
+            Assert.NotSame(androidV2.BackgroundSync, messages[0].AndroidV2.BackgroundSync);
+        }
     }
 }
