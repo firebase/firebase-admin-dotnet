@@ -78,7 +78,7 @@ dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net462
 
 -   **DO**: Use the centralized `HttpClient` for all API calls.
 -   **DO**: Follow the established `async`/`await` patterns for asynchronous code.
--   **DON'T**: Expose types from the `FirebaseAdmin/FirebaseAdmin/Utils/` directory in any public API.
+-   **DON'T**: Expose types from the `FirebaseAdmin/FirebaseAdmin/Util/` directory in any public API.
 -   **DON'T**: Introduce new third-party dependencies without a compelling reason and discussion with the maintainers.
 
 ## Commit and Pull Request Generation
