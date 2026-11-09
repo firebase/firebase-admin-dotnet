@@ -163,6 +163,12 @@ namespace FirebaseAdmin.Tests
 
             internal Uri Url { get; private set; }
 
+            internal Version Version { get; private set; }
+
+#if NET6_0_OR_GREATER
+            internal HttpVersionPolicy VersionPolicy { get; private set; }
+
+#endif
             internal HttpRequestHeaders Headers { get; private set; }
 
             internal string Body { get; private set; }
@@ -173,6 +179,10 @@ namespace FirebaseAdmin.Tests
                 {
                     Method = request.Method,
                     Url = request.RequestUri,
+                    Version = request.Version,
+#if NET6_0_OR_GREATER
+                    VersionPolicy = request.VersionPolicy,
+#endif
                     Headers = request.Headers,
                     Body = request.Content != null ? await request.Content.ReadAsStringAsync() : null,
                 };

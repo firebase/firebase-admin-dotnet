@@ -1102,6 +1102,7 @@ Content-Type: application/json; charset=UTF-8
             Assert.Empty(response.Errors);
             Assert.Equal(2, handler.Calls);
             this.CheckHeaders(handler.LastRequestHeaders);
+            Assert.All(handler.Requests, this.CheckTopicRequestHttpVersion);
         }
 
         [Fact]
@@ -1143,6 +1144,7 @@ Content-Type: application/json; charset=UTF-8
             Assert.Equal(0, response.FailureCount);
             Assert.Empty(response.Errors);
             Assert.Contains("/v1/projects/test-project/registrations/token1/topicSubscriptions/test-topic?allow_missing=true", handler.Requests.Last().Url.ToString());
+            this.CheckTopicRequestHttpVersion(handler.Requests.Last());
         }
 
         [Fact]
@@ -1255,6 +1257,16 @@ Content-Type: application/json; charset=UTF-8
 
             var metricsHeader = header.GetValues("X-Goog-Api-Client").First();
             Assert.Equal(HttpUtils.GetMetricsHeader(), metricsHeader);
+        }
+
+        private void CheckTopicRequestHttpVersion(MockMessageHandler.IncomingRequest request)
+        {
+#if NET6_0_OR_GREATER
+            Assert.Equal(HttpVersion.Version20, request.Version);
+            Assert.Equal(HttpVersionPolicy.RequestVersionOrLower, request.VersionPolicy);
+#else
+            Assert.Equal(HttpVersion.Version11, request.Version);
+#endif
         }
 
         private int CountLinesWithPrefix(string body, string linePrefix)
