@@ -491,7 +491,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListTenantsForEach(TestConfig config)
+        public async Task ListTenantsForEach(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -501,7 +501,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             var tenants = new List<Tenant>();
 
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(null);
-            foreach (var tenant in pagedEnumerable.ToEnumerable())
+            await foreach (var tenant in pagedEnumerable)
             {
                 tenants.Add(tenant);
             }
@@ -586,7 +586,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListTenantsOptions(TestConfig config)
+        public async Task ListTenantsOptions(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -601,7 +601,7 @@ namespace FirebaseAdmin.Auth.Multitenancy.Tests
             };
 
             var pagedEnumerable = auth.TenantManager.ListTenantsAsync(customOptions);
-            foreach (var tenant in pagedEnumerable.ToEnumerable())
+            await foreach (var tenant in pagedEnumerable)
             {
                 tenants.Add(tenant);
             }

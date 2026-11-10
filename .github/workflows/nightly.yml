@@ -37,6 +37,8 @@ jobs:
             framework-version: net462
           - os: ubuntu-latest
             framework-version: net6.0
+          - os: ubuntu-latest
+            framework-version: net10.0
 
     runs-on: ${{ matrix.os }}
 
@@ -66,7 +68,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          6.0.x
+          10.0.x
 
     - name: Install dependencies
       run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln
@@ -84,13 +88,13 @@ jobs:
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
     - name: Package release artifacts
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.framework-version == 'net10.0'
       run: dotnet pack FirebaseAdmin/FirebaseAdmin.sln --configuration Release --no-restore --no-build
 
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
     - name: Archive artifacts
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.framework-version == 'net10.0'
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: Release

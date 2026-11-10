@@ -18,6 +18,8 @@ jobs:
             framework-version: net462
           - os: ubuntu-latest
             framework-version: net6.0
+          - os: ubuntu-latest
+            framework-version: net10.0
 
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -46,7 +48,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          6.0.x
+          10.0.x
 
     - name: Install dependencies
       run: dotnet restore FirebaseAdmin/FirebaseAdmin.sln

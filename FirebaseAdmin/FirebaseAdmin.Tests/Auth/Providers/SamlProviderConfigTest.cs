@@ -495,7 +495,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
-        public void ListSamlForEach(ProviderTestConfig config)
+        public async Task ListSamlForEach(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -505,7 +505,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var configs = new List<SamlProviderConfig>();
 
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(null);
-            foreach (var user in pagedEnumerable.ToEnumerable())
+            await foreach (var user in pagedEnumerable)
             {
                 configs.Add(user);
             }
@@ -595,7 +595,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
-        public void ListSamlOptions(ProviderTestConfig config)
+        public async Task ListSamlOptions(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -610,7 +610,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             };
 
             var pagedEnumerable = auth.ListSamlProviderConfigsAsync(customOptions);
-            foreach (var user in pagedEnumerable.ToEnumerable())
+            await foreach (var user in pagedEnumerable)
             {
                 configs.Add(user);
             }

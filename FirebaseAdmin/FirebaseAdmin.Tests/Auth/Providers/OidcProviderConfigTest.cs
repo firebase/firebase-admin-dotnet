@@ -529,7 +529,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
-        public void ListOidcForEach(ProviderTestConfig config)
+        public async Task ListOidcForEach(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -539,7 +539,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             var configs = new List<OidcProviderConfig>();
 
             var pagedEnumerable = auth.ListOidcProviderConfigsAsync(null);
-            foreach (var user in pagedEnumerable.ToEnumerable())
+            await foreach (var user in pagedEnumerable)
             {
                 configs.Add(user);
             }
@@ -629,7 +629,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
 
         [Theory]
         [MemberData(nameof(ProviderTestConfig.TestConfigs), MemberType=typeof(ProviderTestConfig))]
-        public void ListOidcOptions(ProviderTestConfig config)
+        public async Task ListOidcOptions(ProviderTestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -644,7 +644,7 @@ namespace FirebaseAdmin.Auth.Providers.Tests
             };
 
             var pagedEnumerable = auth.ListOidcProviderConfigsAsync(customOptions);
-            foreach (var user in pagedEnumerable.ToEnumerable())
+            await foreach (var user in pagedEnumerable)
             {
                 configs.Add(user);
             }

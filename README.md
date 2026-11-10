@@ -60,14 +60,14 @@ We also welcome bug reports, feature requests, and code review feedback.
 
 Admin .NET SDK supports the following frameworks:
 
-* .NET Framework 4.6.2+
+* .NET Framework 4.6.2+ (4.8+ recommended on Windows)
 * .NET Standard 2.0
-* .NET 6.0+ (8.0+ recommended)
+* .NET 6.0+ (10.0+ recommended)
 
-Support for .NET 6.0 and 7.0 is now deprecated.
-The next major version of the Admin SDK will terminate support for these
-versions. Use .NET 8.0 or higher when deploying the Admin SDK.
-accordingly.
+Support for .NET 6.0 and 7.0 is now deprecated, and the next major version of
+the Admin SDK will remove support for these versions. Because .NET 8.0 and 9.0
+have also reached upstream end of support, use .NET 10.0 or higher (or .NET
+Framework 4.8 or higher on Windows) when deploying the Admin SDK.
 
 This is consistent with the frameworks supported by other .NET libraries
 associated with Google Cloud Platform.

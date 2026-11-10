@@ -38,10 +38,13 @@ The Firebase Admin .NET SDK provides C# developers with access to Firebase servi
 
 ### How to Run Tests
 
-The unit tests can be run using the `dotnet test` command. Ensure that the required .NET frameworks (net462 and net6.0) are installed in your environment.
+The unit tests can be run using the `dotnet test` command. Ensure that the required .NET frameworks (net462, net6.0, and net10.0) are installed in your environment.
 
 To run the tests for a specific framework, use the `--framework` flag:
 ```bash
+# Run tests for .NET 10.0
+dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net10.0
+
 # Run tests for .NET 6.0
 dotnet test FirebaseAdmin/FirebaseAdmin.Tests --framework net6.0
 

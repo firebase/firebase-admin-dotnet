@@ -174,7 +174,7 @@ namespace FirebaseAdmin.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", string.Empty);
+                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", null);
             }
         }
 
@@ -215,7 +215,7 @@ namespace FirebaseAdmin.Tests
                 }
                 finally
                 {
-                    Environment.SetEnvironmentVariable(name, string.Empty);
+                    Environment.SetEnvironmentVariable(name, null);
                 }
             }
         }

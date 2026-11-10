@@ -476,7 +476,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListUsersForEach(TestConfig config)
+        public async Task ListUsersForEach(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -486,7 +486,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             var users = new List<ExportedUserRecord>();
 
             var pagedEnumerable = auth.ListUsersAsync(null);
-            foreach (var user in pagedEnumerable.ToEnumerable())
+            await foreach (var user in pagedEnumerable)
             {
                 users.Add(user);
                 if (users.Count % 3 == 0)
@@ -510,7 +510,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
 
         [Theory]
         [MemberData(nameof(TestConfigs))]
-        public void ListUsersCustomOptions(TestConfig config)
+        public async Task ListUsersCustomOptions(TestConfig config)
         {
             var handler = new MockMessageHandler()
             {
@@ -525,7 +525,7 @@ namespace FirebaseAdmin.Auth.Users.Tests
             };
 
             var pagedEnumerable = auth.ListUsersAsync(customOptions);
-            foreach (var user in pagedEnumerable.ToEnumerable())
+            await foreach (var user in pagedEnumerable)
             {
                 users.Add(user);
             }
