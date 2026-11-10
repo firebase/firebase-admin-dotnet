@@ -446,7 +446,6 @@ namespace FirebaseAdmin.Messaging
                         Method = HttpMethod.Post,
                         RequestUri = new Uri(url),
                         Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json"),
-                        Version = new Version(2, 0),
                     };
                 }
                 else
@@ -456,10 +455,13 @@ namespace FirebaseAdmin.Messaging
                     {
                         Method = HttpMethod.Delete,
                         RequestUri = new Uri(url),
-                        Version = new Version(2, 0),
                     };
                 }
 
+#if NET6_0_OR_GREATER
+                request.Version = System.Net.HttpVersion.Version20;
+                request.VersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+#endif
                 AddCommonHeaders(request);
                 request.Headers.Add("X-Goog-Api-Client", HttpUtils.GetMetricsHeader());
 
