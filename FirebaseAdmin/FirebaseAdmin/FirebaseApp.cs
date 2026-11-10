@@ -54,8 +54,9 @@ namespace FirebaseAdmin
 
         private const string DefaultAppName = "[DEFAULT]";
 
-        private const string MetadataServerUrl =
-            "http://metadata.google.internal/computeMetadata/v1/project/project-id";
+        private const string DefaultMetadataHost = "metadata.google.internal";
+
+        private const string MetadataProjectIdPath = "/computeMetadata/v1/project/project-id";
 
         private static readonly Dictionary<string, FirebaseApp> Apps = new Dictionary<string, FirebaseApp>();
 
@@ -318,12 +319,12 @@ namespace FirebaseAdmin
         /// <returns>A project ID string or null.</returns>
         internal string GetProjectId()
         {
-            if (!string.IsNullOrEmpty(this.Options.ProjectId))
+            if (!string.IsNullOrEmpty(this.options.ProjectId))
             {
-                return this.Options.ProjectId;
+                return this.options.ProjectId;
             }
 
-            var projectId = this.Options.Credential.ToServiceAccountCredential()?.ProjectId;
+            var projectId = this.options.Credential.ToServiceAccountCredential()?.ProjectId;
             if (!string.IsNullOrEmpty(projectId))
             {
                 return projectId;
@@ -358,18 +359,29 @@ namespace FirebaseAdmin
         {
             try
             {
+                var host = Environment.GetEnvironmentVariable("GCE_METADATA_HOST");
+                if (string.IsNullOrEmpty(host))
+                {
+                    host = DefaultMetadataHost;
+                }
+
                 using (var client = clientFactory.CreateDefaultHttpClient())
                 {
                     client.Timeout = TimeSpan.FromSeconds(2);
                     client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
-                    var resp = await client.GetAsync(MetadataServerUrl).ConfigureAwait(false);
-                    resp.EnsureSuccessStatusCode();
-                    var projectId = (await resp.Content.ReadAsStringAsync().ConfigureAwait(false)).Trim();
-                    return string.IsNullOrEmpty(projectId) ? null : projectId;
+                    using (var resp = await client.GetAsync($"http://{host}{MetadataProjectIdPath}")
+                        .ConfigureAwait(false))
+                    {
+                        resp.EnsureSuccessStatusCode();
+                        var projectId = (await resp.Content.ReadAsStringAsync()
+                            .ConfigureAwait(false)).Trim();
+                        return string.IsNullOrEmpty(projectId) ? null : projectId;
+                    }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Logger.Debug("Failed to discover project ID from metadata server: {0}", e.Message);
                 return null;
             }
         }

@@ -73,13 +73,12 @@ namespace FirebaseAdmin
         public static ComputeCredential ToComputeCredential(
             this GoogleCredential credential)
         {
-            if (credential.UnderlyingCredential is GoogleCredential)
+            if (credential?.UnderlyingCredential is GoogleCredential underlying)
             {
-                return ((GoogleCredential)credential.UnderlyingCredential)
-                    .ToComputeCredential();
+                return underlying.ToComputeCredential();
             }
 
-            return credential.UnderlyingCredential as ComputeCredential;
+            return credential?.UnderlyingCredential as ComputeCredential;
         }
 
         /// <summary>
