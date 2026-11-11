@@ -43,7 +43,7 @@ namespace FirebaseAdmin.Auth.Jwt
         private readonly Lazy<Task<string>> keyId;
 
         public IAMSigner(
-            HttpClientFactory clientFactory, GoogleCredential credential, RetryOptions retryOptions = null)
+            IHttpClientFactory clientFactory, GoogleCredential credential, RetryOptions retryOptions = null)
         {
             this.httpClient = new ErrorHandlingHttpClient<FirebaseAuthException>(
                 new ErrorHandlingHttpClientArgs<FirebaseAuthException>()
@@ -114,7 +114,7 @@ namespace FirebaseAdmin.Auth.Jwt
         }
 
         private static async Task<string> DiscoverServiceAccountIdAsync(
-            HttpClientFactory clientFactory)
+            IHttpClientFactory clientFactory)
         {
             using (var client = clientFactory.CreateDefaultHttpClient())
             {
