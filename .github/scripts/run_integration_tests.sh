@@ -40,4 +40,5 @@ if [[ -n "${FRAMEWORK}" ]]; then
 else
   dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net462
   dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net6.0
+  dotnet test FirebaseAdmin/FirebaseAdmin.IntegrationTests --configuration Release --framework net10.0
 fi

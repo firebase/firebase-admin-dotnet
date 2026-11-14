@@ -63,10 +63,29 @@ namespace FirebaseAdmin.Auth.Tests
             Assert.True(auth.TokenFactory.IsEmulatorMode);
         }
 
+        [Fact]
+        public void EmptyEmulatorHostEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable(AuthEmulatorHost, string.Empty);
+
+            var app = FirebaseApp.Create(new AppOptions
+            {
+                Credential = MockCredential,
+                ProjectId = "project1",
+            });
+
+            var auth = FirebaseAuth.DefaultInstance;
+
+            Assert.Null(auth.UserManager.EmulatorHost);
+            Assert.Null(auth.TenantManager.EmulatorHost);
+            Assert.False(auth.IdTokenVerifier.IsEmulatorMode);
+            Assert.False(auth.TokenFactory.IsEmulatorMode);
+        }
+
         public virtual void Dispose()
         {
             FirebaseApp.DeleteAll();
-            Environment.SetEnvironmentVariable(AuthEmulatorHost, string.Empty);
+            Environment.SetEnvironmentVariable(AuthEmulatorHost, null);
         }
     }
 }

@@ -98,7 +98,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             internal RSACustomTokenVerifier(string issuer, byte[] publicKey, string tenantId)
             : base(issuer, tenantId)
             {
-                var x509cert = new X509Certificate2(publicKey);
+                var x509cert = JwtTestUtils.LoadCertificate(publicKey);
                 this.rsa = (RSA)x509cert.GetRSAPublicKey();
             }
 

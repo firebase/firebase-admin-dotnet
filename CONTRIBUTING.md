@@ -92,9 +92,9 @@ This section explains how to set up a development environment on Linux or Mac. W
 should be able to import the solution file (`FirebaseAdmin/FirebaseAdmin.sln`) into Visual
 Studio.
 
-Start by installing [.NET](https://dotnet.microsoft.com/en-us/download) 6 or higher or
-[.NET Framework](https://dotnet.microsoft.com/en-us/download/dotnet-framework) 4.6.2 or
-higher. This installs the `dotnet` command-line utility into the system.
+Start by installing [.NET](https://dotnet.microsoft.com/en-us/download) 10 or higher (and
+[.NET Framework](https://dotnet.microsoft.com/en-us/download/dotnet-framework) 4.8 or
+higher on Windows). This installs the `dotnet` command-line utility into the system.
 
 Run the following commands from the command line to get your local environmentset up:
 

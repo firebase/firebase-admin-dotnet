@@ -25,8 +25,14 @@ namespace FirebaseAdmin.Auth
         private static readonly Regex SafeUrlSegmentPattern =
             new Regex("\\A[a-zA-Z0-9_.~-]+\\z", RegexOptions.Compiled);
 
-        internal static string EmulatorHostFromEnvironment =>
-            Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
+        internal static string EmulatorHostFromEnvironment
+        {
+            get
+            {
+                var host = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
+                return string.IsNullOrWhiteSpace(host) ? null : host;
+            }
+        }
 
         internal static bool IsEmulatorModeFromEnvironment =>
             !string.IsNullOrWhiteSpace(EmulatorHostFromEnvironment);

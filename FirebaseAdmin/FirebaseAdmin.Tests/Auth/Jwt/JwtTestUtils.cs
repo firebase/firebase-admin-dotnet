@@ -105,6 +105,15 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             Assert.Contains(HttpUtils.GetMetricsHeader(), request.Headers.GetValues("X-Goog-Api-Client"));
         }
 
+        internal static X509Certificate2 LoadCertificate(byte[] rawData)
+        {
+#if NET9_0_OR_GREATER
+            return X509CertificateLoader.LoadCertificate(rawData);
+#else
+            return new X509Certificate2(rawData);
+#endif
+        }
+
         private static ISigner CreateTestSigner(string filePath)
         {
             var credential = CredentialFactory.FromFile<ServiceAccountCredential>(filePath);
@@ -117,7 +126,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
 
             public ByteArrayPublicKeySource(byte[] publicKey)
             {
-                var x509cert = new X509Certificate2(publicKey);
+                var x509cert = LoadCertificate(publicKey);
                 var rsa = (RSA)x509cert.GetRSAPublicKey();
                 this.rsa = ImmutableList.Create(new PublicKey("test-key-id", rsa));
             }

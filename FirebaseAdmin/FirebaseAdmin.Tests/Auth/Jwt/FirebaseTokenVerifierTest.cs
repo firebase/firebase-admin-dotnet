@@ -88,7 +88,7 @@ namespace FirebaseAdmin.Auth.Jwt.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("GOOGLE_CLOUD_PROJECT", string.Empty);
+                Environment.SetEnvironmentVariable("GOOGLE_CLOUD_PROJECT", null);
             }
         }
 
