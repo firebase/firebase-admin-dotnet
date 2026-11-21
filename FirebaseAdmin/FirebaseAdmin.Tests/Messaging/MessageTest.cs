@@ -119,10 +119,12 @@ namespace FirebaseAdmin.Messaging.Tests
                     Title = "title",
                     Body = "body",
                 },
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     RestrictedPackageName = "test-pkg-name",
                 },
+#pragma warning restore CS0618
                 Apns = new ApnsConfig()
                 {
                     Aps = new Aps()
@@ -145,8 +147,10 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Data, copy.Data);
             Assert.Equal(original.Notification.Title, copy.Notification.Title);
             Assert.Equal(original.Notification.Body, copy.Notification.Body);
+#pragma warning disable CS0618
             Assert.Equal(
                 original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
+#pragma warning restore CS0618
             Assert.Equal(original.Apns.Aps.AlertString, copy.Apns.Aps.AlertString);
             Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
             Assert.Equal(original.FcmOptions.AnalyticsLabel, copy.FcmOptions.AnalyticsLabel);
@@ -164,10 +168,12 @@ namespace FirebaseAdmin.Messaging.Tests
                     Title = "title",
                     Body = "body",
                 },
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     RestrictedPackageName = "test-pkg-name",
                 },
+#pragma warning restore CS0618
                 Apns = new ApnsConfig()
                 {
                     Aps = new Aps()
@@ -190,8 +196,10 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.Equal(original.Data, copy.Data);
             Assert.Equal(original.Notification.Title, copy.Notification.Title);
             Assert.Equal(original.Notification.Body, copy.Notification.Body);
+#pragma warning disable CS0618
             Assert.Equal(
                 original.Android.RestrictedPackageName, copy.Android.RestrictedPackageName);
+#pragma warning restore CS0618
             Assert.Equal(original.Apns.Aps.AlertString, copy.Apns.Aps.AlertString);
             Assert.Equal(original.Webpush.Data, copy.Webpush.Data);
             Assert.Equal(original.FcmOptions.AnalyticsLabel, copy.FcmOptions.AnalyticsLabel);
@@ -205,7 +213,9 @@ namespace FirebaseAdmin.Messaging.Tests
                 Topic = "test-topic",
                 Data = new Dictionary<string, string>(),
                 Notification = new Notification(),
+#pragma warning disable CS0618
                 Android = new AndroidConfig(),
+#pragma warning restore CS0618
                 Apns = new ApnsConfig(),
                 Webpush = new WebpushConfig(),
             };
@@ -213,7 +223,9 @@ namespace FirebaseAdmin.Messaging.Tests
             Assert.NotSame(original, copy);
             Assert.NotSame(original.Data, copy.Data);
             Assert.NotSame(original.Notification, copy.Notification);
+#pragma warning disable CS0618
             Assert.NotSame(original.Android, copy.Android);
+#pragma warning restore CS0618
             Assert.NotSame(original.Apns, copy.Apns);
             Assert.NotSame(original.Webpush, copy.Webpush);
         }
@@ -226,7 +238,9 @@ namespace FirebaseAdmin.Messaging.Tests
                 Fid = "test-fid",
                 Data = new Dictionary<string, string>(),
                 Notification = new Notification(),
+#pragma warning disable CS0618
                 Android = new AndroidConfig(),
+#pragma warning restore CS0618
                 Apns = new ApnsConfig(),
                 Webpush = new WebpushConfig(),
             };
@@ -356,6 +370,7 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     CollapseKey = "collapse-key",
@@ -409,6 +424,7 @@ namespace FirebaseAdmin.Messaging.Tests
                         AnalyticsLabel = "label",
                     },
                 },
+#pragma warning restore CS0618
             };
             var expected = new JObject()
             {
@@ -492,7 +508,9 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
+#pragma warning disable CS0618
                 Android = new AndroidConfig(),
+#pragma warning restore CS0618
             };
             var expected = new JObject()
             {
@@ -508,10 +526,12 @@ namespace FirebaseAdmin.Messaging.Tests
             var message = new Message()
             {
                 Topic = "test-topic",
+#pragma warning disable CS0618
                 Android = new AndroidConfig()
                 {
                     TimeToLive = TimeSpan.FromHours(1),
                 },
+#pragma warning restore CS0618
             };
             var expected = new JObject()
             {
@@ -527,8 +547,181 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void AndroidConfigV2Remote()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    CollapseKey = "collapse-key",
+                    TimeToLive = TimeSpan.FromMilliseconds(10),
+                    RestrictedPackageName = "test-pkg-name",
+                    Data = new Dictionary<string, string>()
+                    {
+                        { "k1", "v1" },
+                        { "k2", "v2" },
+                    },
+                    DirectBootOk = true,
+                    BandwidthConstrainedOk = true,
+                    RestrictedSatelliteOk = true,
+                    RemoteNotification = new AndroidRemoteNotification()
+                    {
+                        MutableContent = true,
+                        UseAsV1DataMessage = true,
+                        Notification = new AndroidNotificationV2()
+                        {
+                            Title = "title",
+                            Body = "body",
+                            Icon = "icon",
+                            Color = "#112233",
+                            Sound = "sound",
+                            Tag = "tag",
+                            ImageUrl = "https://example.com/image.png",
+                            ClickAction = "click-action",
+                            TitleLocKey = "title-loc-key",
+                            TitleLocArgs = new List<string>() { "arg1", "arg2" },
+                            BodyLocKey = "body-loc-key",
+                            BodyLocArgs = new List<string>() { "arg3", "arg4" },
+                            ChannelId = "channel-id",
+                            Ticker = "ticker",
+                            Sticky = false,
+                            EventTimestamp = DateTime.Parse("2020-06-27T16:29:06.032691000-04:00"),
+                            LocalOnly = true,
+                            Priority = NotificationPriority.HIGH,
+                            VibrateTimingsMillis = new long[] { 1000L, 1001L },
+                            DefaultVibrateTimings = false,
+                            DefaultSound = true,
+                            LightSettings = new LightSettings()
+                            {
+                                Color = "#aabbccdd",
+                                LightOnDurationMillis = 1002L,
+                                LightOffDurationMillis = 1003L,
+                            },
+                            DefaultLightSettings = false,
+                            Visibility = NotificationVisibility.PUBLIC,
+                            NotificationCount = 10,
+                            Id = 100,
+                        },
+                    },
+                    FcmOptions = new AndroidFcmOptions()
+                    {
+                        AnalyticsLabel = "label",
+                    },
+                },
+            };
+            var expected = new JObject()
+            {
+                { "topic", "test-topic" },
+                {
+                    "androidV2", new JObject()
+                    {
+                        { "collapse_key", "collapse-key" },
+                        { "ttl", "0.010000000s" },
+                        { "restricted_package_name", "test-pkg-name" },
+                        { "data", new JObject() { { "k1", "v1" }, { "k2", "v2" } } },
+                        { "direct_boot_ok", true },
+                        { "bandwidth_constrained_ok", true },
+                        { "restricted_satellite_ok", true },
+                        {
+                            "remote_notification", new JObject()
+                            {
+                                { "mutable_content", true },
+                                { "use_as_v1_data_message", true },
+                                {
+                                    "notification", new JObject()
+                                    {
+                                        { "title", "title" },
+                                        { "body", "body" },
+                                        { "icon", "icon" },
+                                        { "color", "#112233" },
+                                        { "sound", "sound" },
+                                        { "tag", "tag" },
+                                        { "image", "https://example.com/image.png" },
+                                        { "click_action", "click-action" },
+                                        { "title_loc_key", "title-loc-key" },
+                                        { "title_loc_args", new JArray() { "arg1", "arg2" } },
+                                        { "body_loc_key", "body-loc-key" },
+                                        { "body_loc_args", new JArray() { "arg3", "arg4" } },
+                                        { "channel_id", "channel-id" },
+                                        { "ticker", "ticker" },
+                                        { "sticky", false },
+                                        { "local_only", true },
+                                        { "default_vibrate_timings", false },
+                                        { "default_sound", true },
+                                        {
+                                            "light_settings", new JObject()
+                                            {
+                                                { "light_on_duration", "1.002000000s" },
+                                                { "light_off_duration", "1.003000000s" },
+                                                {
+                                                    "color", new JObject()
+                                                    {
+                                                        { "red", 0.6666667 },
+                                                        #if NET6_0_OR_GREATER
+                                                        { "green", 0.73333335 },
+                                                        #else
+                                                        { "green", 0.733333349 },
+                                                        #endif
+                                                        { "blue", 0.8 },
+                                                        { "alpha", 0.8666667 },
+                                                    }
+                                                },
+                                            }
+                                        },
+                                        { "default_light_settings", false },
+                                        { "notification_count", 10 },
+                                        { "notification_priority", "PRIORITY_HIGH" },
+                                        { "visibility", "PUBLIC" },
+                                        { "vibrate_timings", new JArray() { "1s", "1.001000000s" } },
+                                        { "event_time", "2020-06-27T20:29:06.032691000Z" },
+                                        { "id", 100 },
+                                    }
+                                },
+                            }
+                        },
+                        {
+                            "fcm_options", new JObject()
+                            {
+                                { "analytics_label", "label" },
+                            }
+                        },
+                    }
+                },
+            };
+            this.AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
+        public void AndroidConfigV2BackgroundSync()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    CollapseKey = "collapse-key",
+                    BackgroundSync = new AndroidBackgroundSyncMessage(),
+                },
+            };
+            var expected = new JObject()
+            {
+                { "topic", "test-topic" },
+                {
+                    "androidV2", new JObject()
+                    {
+                        { "collapse_key", "collapse-key" },
+                        { "background_sync", new JObject() },
+                    }
+                },
+            };
+            this.AssertJsonEquals(expected, message);
+        }
+
+        [Fact]
         public void AndroidConfigDeserialization()
         {
+#pragma warning disable CS0618
             var original = new AndroidConfig()
             {
                 CollapseKey = "collapse-key",
@@ -548,8 +741,11 @@ namespace FirebaseAdmin.Messaging.Tests
                     EventTimestamp = DateTime.Parse("2020-06-27T20:29:06.032691000Z"),
                 },
             };
+#pragma warning restore CS0618
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+#pragma warning disable CS0618
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfig>(json);
+#pragma warning restore CS0618
             Assert.Equal(original.CollapseKey, copy.CollapseKey);
             Assert.Equal(original.RestrictedPackageName, copy.RestrictedPackageName);
             Assert.Equal(original.Priority, copy.Priority);
@@ -562,13 +758,79 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void AndroidConfigV2Deserialization()
+        {
+            var original = new AndroidConfigV2()
+            {
+                CollapseKey = "collapse-key",
+                TimeToLive = TimeSpan.FromMilliseconds(10),
+                RestrictedPackageName = "test-pkg-name",
+                Data = new Dictionary<string, string>() { { "k1", "v1" } },
+                RemoteNotification = new AndroidRemoteNotification()
+                {
+                    MutableContent = true,
+                    UseAsV1DataMessage = true,
+                    Notification = new AndroidNotificationV2()
+                    {
+                        Title = "title",
+                        Body = "body",
+                        Id = 100,
+                    },
+                },
+                FcmOptions = new AndroidFcmOptions()
+                {
+                    AnalyticsLabel = "label",
+                },
+            };
+            var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfigV2>(json);
+            Assert.Equal(original.CollapseKey, copy.CollapseKey);
+            Assert.Equal(original.TimeToLive, copy.TimeToLive);
+            Assert.Equal(original.RestrictedPackageName, copy.RestrictedPackageName);
+            Assert.Equal(original.Data, copy.Data);
+            Assert.Equal(original.RemoteNotification.MutableContent, copy.RemoteNotification.MutableContent);
+            Assert.Equal(original.RemoteNotification.UseAsV1DataMessage, copy.RemoteNotification.UseAsV1DataMessage);
+            Assert.Equal(original.RemoteNotification.Notification.Title, copy.RemoteNotification.Notification.Title);
+            Assert.Equal(original.RemoteNotification.Notification.Body, copy.RemoteNotification.Notification.Body);
+            Assert.Equal(original.RemoteNotification.Notification.Id, copy.RemoteNotification.Notification.Id);
+            Assert.Equal(original.FcmOptions.AnalyticsLabel, copy.FcmOptions.AnalyticsLabel);
+        }
+
+        [Fact]
+        public void AndroidConfigV2ZeroFractionalTtlDeserialization()
+        {
+            var json = @"{ ""ttl"": ""1.000000000s"" }";
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfigV2>(json);
+            Assert.Equal(TimeSpan.FromSeconds(1), copy.TimeToLive);
+        }
+
+        [Fact]
+        public void AndroidConfigV2FractionalTtlDeserialization()
+        {
+            var json = @"{ ""ttl"": ""1.5s"" }";
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidConfigV2>(json);
+            Assert.Equal(TimeSpan.FromSeconds(1.5), copy.TimeToLive);
+        }
+
+        [Fact]
+        public void AndroidNotificationV2EventTimeDeserialization()
+        {
+            var json = @"{ ""event_time"": ""2026-07-28T22:00:00Z"" }";
+            var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidNotificationV2>(json);
+            Assert.Equal(DateTimeKind.Utc, copy.EventTimestamp.Value.Kind);
+            Assert.Equal(new DateTime(2026, 7, 28, 22, 0, 0, DateTimeKind.Utc), copy.EventTimestamp);
+        }
+
+        [Fact]
         public void AndroidConfigCopy()
         {
+#pragma warning disable CS0618
             var original = new AndroidConfig()
             {
                 Data = new Dictionary<string, string>(),
                 Notification = new AndroidNotification(),
             };
+#pragma warning restore CS0618
             var copy = original.CopyAndValidate();
             Assert.NotSame(original, copy);
             Assert.NotSame(original.Data, copy.Data);
@@ -578,6 +840,7 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void AndroidNotificationDeserialization()
         {
+#pragma warning disable CS0618
             var original = new AndroidNotification()
             {
                 Title = "title",
@@ -612,8 +875,11 @@ namespace FirebaseAdmin.Messaging.Tests
                 NotificationCount = 10,
                 Proxy = NotificationProxy.IfPriorityLowered,
             };
+#pragma warning restore CS0618
             var json = NewtonsoftJsonSerializer.Instance.Serialize(original);
+#pragma warning disable CS0618
             var copy = NewtonsoftJsonSerializer.Instance.Deserialize<AndroidNotification>(json);
+#pragma warning restore CS0618
             Assert.Equal(original.Title, copy.Title);
             Assert.Equal(original.Body, copy.Body);
             Assert.Equal(original.Icon, copy.Icon);
@@ -647,6 +913,7 @@ namespace FirebaseAdmin.Messaging.Tests
         [Fact]
         public void AndroidNotificationCopy()
         {
+#pragma warning disable CS0618
             var original = new AndroidNotification()
             {
                 TitleLocKey = "title-loc-key",
@@ -654,6 +921,7 @@ namespace FirebaseAdmin.Messaging.Tests
                 BodyLocKey = "body-loc-key",
                 BodyLocArgs = new List<string>() { "arg3", "arg4" },
             };
+#pragma warning restore CS0618
             var copy = original.CopyAndValidate();
             Assert.NotSame(original, copy);
             Assert.NotSame(original.TitleLocArgs, copy.TitleLocArgs);
@@ -661,8 +929,33 @@ namespace FirebaseAdmin.Messaging.Tests
         }
 
         [Fact]
+        public void AndroidConfigV2Copy()
+        {
+            var original = new AndroidConfigV2()
+            {
+                CollapseKey = "collapse-key",
+                Data = new Dictionary<string, string>() { { "k1", "v1" } },
+                RemoteNotification = new AndroidRemoteNotification()
+                {
+                    Notification = new AndroidNotificationV2()
+                    {
+                        Title = "title",
+                    },
+                },
+                FcmOptions = new AndroidFcmOptions(),
+            };
+            var copy = original.CopyAndValidate();
+            Assert.NotSame(original, copy);
+            Assert.NotSame(original.Data, copy.Data);
+            Assert.NotSame(original.RemoteNotification, copy.RemoteNotification);
+            Assert.NotSame(original.RemoteNotification.Notification, copy.RemoteNotification.Notification);
+            Assert.NotSame(original.FcmOptions, copy.FcmOptions);
+        }
+
+        [Fact]
         public void AndroidConfigInvalidTTL()
         {
+#pragma warning disable CS0618
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -672,11 +965,72 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+#pragma warning restore CS0618
+        }
+
+        [Fact]
+        public void AndroidConfigV2InvalidTTL()
+        {
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    TimeToLive = TimeSpan.FromSeconds(-1),
+                    BackgroundSync = new AndroidBackgroundSyncMessage(),
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidConfigV2MutuallyExclusivePayload()
+        {
+            // Both RemoteNotification and BackgroundSync specified
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    RemoteNotification = new AndroidRemoteNotification()
+                    {
+                        Notification = new AndroidNotificationV2() { Title = "title" },
+                    },
+                    BackgroundSync = new AndroidBackgroundSyncMessage(),
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+
+            // Neither specified
+            message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2(),
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidConfigV2MutuallyExclusiveConfig()
+        {
+#pragma warning disable CS0618
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                Android = new AndroidConfig(),
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    BackgroundSync = new AndroidBackgroundSyncMessage(),
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+#pragma warning restore CS0618
         }
 
         [Fact]
         public void AndroidNotificationInvalidColor()
         {
+#pragma warning disable CS0618
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -689,11 +1043,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+#pragma warning restore CS0618
         }
 
         [Fact]
         public void AndroidNotificationInvalidImageUrls()
         {
+#pragma warning disable CS0618
             var imageUrls = new List<string>()
             {
                 string.Empty, "image.png", "invalid-image", "foo bar",
@@ -713,11 +1069,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 };
                 Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
             }
+#pragma warning restore CS0618
         }
 
         [Fact]
         public void AndroidNotificationInvalidTitleLocArgs()
         {
+#pragma warning disable CS0618
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -730,11 +1088,13 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+#pragma warning restore CS0618
         }
 
         [Fact]
         public void AndroidNotificationInvalidBodyLocArgs()
         {
+#pragma warning disable CS0618
             var message = new Message()
             {
                 Topic = "test-topic",
@@ -747,6 +1107,119 @@ namespace FirebaseAdmin.Messaging.Tests
                 },
             };
             Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+#pragma warning restore CS0618
+        }
+
+        [Fact]
+        public void AndroidNotificationV2NullNotification()
+        {
+            // Null notification in remote notification
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    RemoteNotification = new AndroidRemoteNotification()
+                    {
+                        Notification = null,
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidNotificationV2InvalidColor()
+        {
+            // Invalid color format
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    RemoteNotification = new AndroidRemoteNotification()
+                    {
+                        Notification = new AndroidNotificationV2()
+                        {
+                            Title = "title",
+                            Color = "red",
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidNotificationV2InvalidTitleLocArgs()
+        {
+            // TitleLocArgs specified without TitleLocKey
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    RemoteNotification = new AndroidRemoteNotification()
+                    {
+                        Notification = new AndroidNotificationV2()
+                        {
+                            Title = "title",
+                            TitleLocArgs = new List<string>() { "arg" },
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidNotificationV2InvalidBodyLocArgs()
+        {
+            // BodyLocArgs specified without BodyLocKey
+            var message = new Message()
+            {
+                Topic = "test-topic",
+                AndroidV2 = new AndroidConfigV2()
+                {
+                    RemoteNotification = new AndroidRemoteNotification()
+                    {
+                        Notification = new AndroidNotificationV2()
+                        {
+                            Title = "title",
+                            BodyLocArgs = new List<string>() { "arg" },
+                        },
+                    },
+                },
+            };
+            Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+        }
+
+        [Fact]
+        public void AndroidNotificationV2InvalidImageUrls()
+        {
+            var imageUrls = new List<string>()
+            {
+                string.Empty, "image.png", "invalid-image", "foo bar",
+            };
+            foreach (var imageUrl in imageUrls)
+            {
+                var message = new Message()
+                {
+                    Topic = "test-topic",
+                    AndroidV2 = new AndroidConfigV2()
+                    {
+                        RemoteNotification = new AndroidRemoteNotification()
+                        {
+                            Notification = new AndroidNotificationV2()
+                            {
+                                Title = "title",
+                                ImageUrl = imageUrl,
+                            },
+                        },
+                    },
+                };
+                Assert.Throws<ArgumentException>(() => message.CopyAndValidate());
+            }
         }
 
         [Fact]
