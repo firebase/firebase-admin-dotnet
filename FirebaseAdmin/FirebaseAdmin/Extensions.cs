@@ -67,10 +67,10 @@ namespace FirebaseAdmin
         /// factory.
         /// </summary>
         /// <returns>An HTTP client that can be used to make unauthenticated requests.</returns>
-        /// <param name="clientFactory">The <see cref="HttpClientFactory"/> used to create
+        /// <param name="clientFactory">The <see cref="IHttpClientFactory"/> used to create
         /// the HTTP client.</param>
         public static ConfigurableHttpClient CreateDefaultHttpClient(
-            this HttpClientFactory clientFactory)
+            this IHttpClientFactory clientFactory)
         {
             return clientFactory.CreateHttpClient(new CreateHttpClientArgs());
         }

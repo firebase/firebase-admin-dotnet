@@ -63,8 +63,8 @@ namespace FirebaseAdmin
         public string ServiceAccountId { get; set; }
 
         /// <summary>
-        /// Gets or sets the HttpClientFactory to use when making Firebase requests.
+        /// Gets or sets the IHttpClientFactory to use when making Firebase requests.
         /// </summary>
-        public HttpClientFactory HttpClientFactory { get; set; }
+        public IHttpClientFactory HttpClientFactory { get; set; }
     }
 }
