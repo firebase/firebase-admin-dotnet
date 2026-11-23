@@ -63,6 +63,25 @@ namespace FirebaseAdmin
         }
 
         /// <summary>
+        /// Extracts and returns the underlying <see cref="ComputeCredential"/> from a
+        /// <see cref="GoogleCredential"/>. Returns null if the <c>GoogleCredential</c> is not
+        /// based on a compute credential.
+        /// </summary>
+        /// <returns>A compute credential if available, or null.</returns>
+        /// <param name="credential">The Google credential from which to extract compute
+        /// credentials.</param>
+        public static ComputeCredential ToComputeCredential(
+            this GoogleCredential credential)
+        {
+            if (credential?.UnderlyingCredential is GoogleCredential underlying)
+            {
+                return underlying.ToComputeCredential();
+            }
+
+            return credential?.UnderlyingCredential as ComputeCredential;
+        }
+
+        /// <summary>
         /// Creates a default (unauthenticated) <see cref="ConfigurableHttpClient"/> from the
         /// factory.
         /// </summary>

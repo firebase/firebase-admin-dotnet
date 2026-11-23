@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using Google.Apis.Auth.OAuth2;
 using Xunit;
 
@@ -218,6 +221,161 @@ namespace FirebaseAdmin.Tests
                     Environment.SetEnvironmentVariable(name, string.Empty);
                 }
             }
+        }
+
+        [Fact]
+        public void GetProjectIdFromComputeCredential()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "  metadata-project\n",
+            };
+            var options = new AppOptions()
+            {
+                Credential = GoogleCredential.FromComputeCredential(new ComputeCredential()),
+                HttpClientFactory = new MockHttpClientFactory(handler),
+            };
+            var app = FirebaseApp.Create(options);
+
+            Assert.Equal("metadata-project", app.GetProjectId());
+            Assert.Equal("metadata-project", app.GetProjectId());
+            Assert.Equal(1, handler.Calls);
+            Assert.Equal(
+                "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+                handler.Requests[0].Url.ToString());
+            Assert.Equal(
+                "Google",
+                handler.LastRequestHeaders.GetValues("Metadata-Flavor").Single());
+        }
+
+        [Fact]
+        public void GetProjectIdFromComputeCredentialWithMetadataHost()
+        {
+            Environment.SetEnvironmentVariable("GCE_METADATA_HOST", "169.254.169.254:8080");
+            try
+            {
+                var handler = new MockMessageHandler()
+                {
+                    Response = "metadata-project",
+                };
+                var options = new AppOptions()
+                {
+                    Credential = GoogleCredential.FromComputeCredential(new ComputeCredential()),
+                    HttpClientFactory = new MockHttpClientFactory(handler),
+                };
+                var app = FirebaseApp.Create(options);
+
+                Assert.Equal("metadata-project", app.GetProjectId());
+                Assert.Equal(1, handler.Calls);
+                Assert.Equal(
+                    "http://169.254.169.254:8080/computeMetadata/v1/project/project-id",
+                    handler.Requests[0].Url.ToString());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("GCE_METADATA_HOST", null);
+            }
+        }
+
+        [Fact]
+        public void GetProjectIdFromComputeCredentialError()
+        {
+            var handler = new MockMessageHandler()
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+            };
+            var options = new AppOptions()
+            {
+                Credential = GoogleCredential.FromComputeCredential(new ComputeCredential()),
+                HttpClientFactory = new MockHttpClientFactory(handler),
+            };
+            var app = FirebaseApp.Create(options);
+
+            Assert.Null(app.GetProjectId());
+            Assert.Null(app.GetProjectId());
+            Assert.Equal(1, handler.Calls);
+        }
+
+        [Fact]
+        public void GetProjectIdFromComputeCredentialEmptyOrTransportError()
+        {
+            var emptyHandler = new MockMessageHandler()
+            {
+                Response = "   \n",
+            };
+            var emptyApp = FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromComputeCredential(new ComputeCredential()),
+                HttpClientFactory = new MockHttpClientFactory(emptyHandler),
+            });
+
+            Assert.Null(emptyApp.GetProjectId());
+            Assert.Equal(1, emptyHandler.Calls);
+
+            var errorHandler = new MockMessageHandler()
+            {
+                Exception = new HttpRequestException("Network unreachable"),
+            };
+            var errorApp = FirebaseApp.Create(
+                new AppOptions()
+                {
+                    Credential = GoogleCredential.FromComputeCredential(new ComputeCredential()),
+                    HttpClientFactory = new MockHttpClientFactory(errorHandler),
+                },
+                "error-app");
+
+            Assert.Null(errorApp.GetProjectId());
+            Assert.Null(errorApp.GetProjectId());
+            Assert.Equal(1, errorHandler.Calls);
+        }
+
+        [Fact]
+        public void GetProjectIdPrecedenceOverComputeCredential()
+        {
+            var handler = new MockMessageHandler()
+            {
+                Response = "metadata-project",
+            };
+            var options = new AppOptions()
+            {
+                Credential = GoogleCredential.FromComputeCredential(new ComputeCredential()),
+                HttpClientFactory = new MockHttpClientFactory(handler),
+                ProjectId = "explicit-project",
+            };
+            var app = FirebaseApp.Create(options);
+
+            Assert.Equal("explicit-project", app.GetProjectId());
+            Assert.Equal(0, handler.Calls);
+            app.Delete();
+
+            foreach (var name in new[] { "GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT" })
+            {
+                Environment.SetEnvironmentVariable(name, "env-project");
+                try
+                {
+                    var envApp = FirebaseApp.Create(new AppOptions()
+                    {
+                        Credential = GoogleCredential.FromComputeCredential(new ComputeCredential()),
+                        HttpClientFactory = new MockHttpClientFactory(handler),
+                    });
+
+                    Assert.Equal("env-project", envApp.GetProjectId());
+                    Assert.Equal(0, handler.Calls);
+                    envApp.Delete();
+                }
+                finally
+                {
+                    Environment.SetEnvironmentVariable(name, null);
+                }
+            }
+        }
+
+        [Fact]
+        public void ToComputeCredentialNullSafe()
+        {
+            GoogleCredential nullCredential = null;
+            Assert.Null(nullCredential.ToComputeCredential());
+            Assert.Null(GoogleCredential.FromAccessToken("token").ToComputeCredential());
         }
 
         [Fact]

@@ -17,8 +17,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Google;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using Google.Apis.Logging;
 
 [assembly: InternalsVisibleToAttribute("FirebaseAdmin.Tests,PublicKey=" +
@@ -52,6 +54,10 @@ namespace FirebaseAdmin
 
         private const string DefaultAppName = "[DEFAULT]";
 
+        private const string DefaultMetadataHost = "metadata.google.internal";
+
+        private const string MetadataProjectIdPath = "/computeMetadata/v1/project/project-id";
+
         private static readonly Dictionary<string, FirebaseApp> Apps = new Dictionary<string, FirebaseApp>();
 
         private static readonly ILogger Logger = ApplicationContext.Logger.ForType<FirebaseApp>();
@@ -59,6 +65,7 @@ namespace FirebaseAdmin
         // Guards the mutable state local to an app instance.
         private readonly object appLock = new object();
         private readonly AppOptions options;
+        private readonly Lazy<string> metadataProjectId;
 
         // A collection of stateful services initialized using this app instance (e.g.
         // FirebaseAuth). Services are tracked here so they can be cleaned up when the app is
@@ -84,6 +91,10 @@ namespace FirebaseAdmin
                 throw new ArgumentNullException("HttpClientFactory must be set");
             }
 
+            this.metadataProjectId = new Lazy<string>(
+                () => Task.Run(() => DiscoverProjectIdAsync(this.options.HttpClientFactory))
+                    .GetAwaiter().GetResult(),
+                true);
             this.Name = name;
         }
 
@@ -300,20 +311,20 @@ namespace FirebaseAdmin
 
         /// <summary>
         /// Returns the Google Cloud Platform project ID associated with this Firebase app. If a
-        /// project ID is specified in <see cref="AppOptions"/>, that value is returned. If not
+        /// project ID is specified in <see cref="AppOptions"/>, that value is returned. If not,
         /// attempts to determine a project ID from the <see cref="GoogleCredential"/> used to
-        /// initialize the app. Looks up the GOOGLE_CLOUD_PROJECT environment variable when all
-        /// else fails.
+        /// initialize the app. Looks up the GOOGLE_CLOUD_PROJECT environment variable or queries
+        /// the local metadata server when all else fails.
         /// </summary>
         /// <returns>A project ID string or null.</returns>
         internal string GetProjectId()
         {
-            if (!string.IsNullOrEmpty(this.Options.ProjectId))
+            if (!string.IsNullOrEmpty(this.options.ProjectId))
             {
-                return this.Options.ProjectId;
+                return this.options.ProjectId;
             }
 
-            var projectId = this.Options.Credential.ToServiceAccountCredential()?.ProjectId;
+            var projectId = this.options.Credential.ToServiceAccountCredential()?.ProjectId;
             if (!string.IsNullOrEmpty(projectId))
             {
                 return projectId;
@@ -328,6 +339,11 @@ namespace FirebaseAdmin
                 }
             }
 
+            if (this.options.Credential.ToComputeCredential() != null)
+            {
+                return this.metadataProjectId.Value;
+            }
+
             return null;
         }
 
@@ -337,6 +353,37 @@ namespace FirebaseAdmin
             {
                 Credential = GoogleCredential.GetApplicationDefault(),
             };
+        }
+
+        private static async Task<string> DiscoverProjectIdAsync(HttpClientFactory clientFactory)
+        {
+            try
+            {
+                var host = Environment.GetEnvironmentVariable("GCE_METADATA_HOST");
+                if (string.IsNullOrEmpty(host))
+                {
+                    host = DefaultMetadataHost;
+                }
+
+                using (var client = clientFactory.CreateDefaultHttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(2);
+                    client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
+                    using (var resp = await client.GetAsync($"http://{host}{MetadataProjectIdPath}")
+                        .ConfigureAwait(false))
+                    {
+                        resp.EnsureSuccessStatusCode();
+                        var projectId = (await resp.Content.ReadAsStringAsync()
+                            .ConfigureAwait(false)).Trim();
+                        return string.IsNullOrEmpty(projectId) ? null : projectId;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Debug("Failed to discover project ID from metadata server: {0}", e.Message);
+                return null;
+            }
         }
     }
 }
