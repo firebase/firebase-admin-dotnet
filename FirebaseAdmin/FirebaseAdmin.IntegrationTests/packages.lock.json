@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "dependencies": {
     ".NETFramework,Version=v4.6.2": {
       "Microsoft.AspNetCore.WebUtilities": {
@@ -96,30 +96,11 @@
           "System.ValueTuple": "4.6.2"
         }
       },
-      "Google.Api.Gax.Rest": {
-        "type": "Transitive",
-        "resolved": "4.15.2",
-        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
-        "dependencies": {
-          "Google.Api.Gax": "4.15.2",
-          "Google.Apis.Auth": "1.77.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
-        }
-      },
       "Google.Apis": {
         "type": "Transitive",
         "resolved": "1.77.0",
         "contentHash": "zj7MKdZz7lWRM7z2meqh5S9KSf83c1xY8Fa+b1KzYxw9xMugUxcQtwPoxJgFzxKJgLE64dAra0ze++P/Up4k6Q==",
         "dependencies": {
-          "Google.Apis.Core": "1.77.0"
-        }
-      },
-      "Google.Apis.Auth": {
-        "type": "Transitive",
-        "resolved": "1.77.0",
-        "contentHash": "lcgXlzM+JkX0nKKc7KBwTdiei2IbV20PuTe3cVQ2zOhq0j4IiS9I4xlRQY4igdCMLlmobthz5xtHiPr/wxl0Ew==",
-        "dependencies": {
-          "Google.Apis": "1.77.0",
           "Google.Apis.Core": "1.77.0"
         }
       },
@@ -316,6 +297,27 @@
           "Google.Apis.Auth": "[1.77.0, )",
           "System.Collections.Immutable": "[11.0.0, )"
         }
+      },
+      "Google.Api.Gax.Rest": {
+        "type": "CentralTransitive",
+        "requested": "[4.15.2, )",
+        "resolved": "4.15.2",
+        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
+        "dependencies": {
+          "Google.Api.Gax": "4.15.2",
+          "Google.Apis.Auth": "1.77.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
+        }
+      },
+      "Google.Apis.Auth": {
+        "type": "CentralTransitive",
+        "requested": "[1.77.0, )",
+        "resolved": "1.77.0",
+        "contentHash": "lcgXlzM+JkX0nKKc7KBwTdiei2IbV20PuTe3cVQ2zOhq0j4IiS9I4xlRQY4igdCMLlmobthz5xtHiPr/wxl0Ew==",
+        "dependencies": {
+          "Google.Apis": "1.77.0",
+          "Google.Apis.Core": "1.77.0"
+        }
       }
     },
     "net6.0": {
@@ -400,32 +402,12 @@
           "System.Diagnostics.DiagnosticSource": "6.0.2"
         }
       },
-      "Google.Api.Gax.Rest": {
-        "type": "Transitive",
-        "resolved": "4.15.2",
-        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
-        "dependencies": {
-          "Google.Api.Gax": "4.15.2",
-          "Google.Apis.Auth": "1.77.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
-        }
-      },
       "Google.Apis": {
         "type": "Transitive",
         "resolved": "1.77.0",
         "contentHash": "zj7MKdZz7lWRM7z2meqh5S9KSf83c1xY8Fa+b1KzYxw9xMugUxcQtwPoxJgFzxKJgLE64dAra0ze++P/Up4k6Q==",
         "dependencies": {
           "Google.Apis.Core": "1.77.0"
-        }
-      },
-      "Google.Apis.Auth": {
-        "type": "Transitive",
-        "resolved": "1.77.0",
-        "contentHash": "lcgXlzM+JkX0nKKc7KBwTdiei2IbV20PuTe3cVQ2zOhq0j4IiS9I4xlRQY4igdCMLlmobthz5xtHiPr/wxl0Ew==",
-        "dependencies": {
-          "Google.Apis": "1.77.0",
-          "Google.Apis.Core": "1.77.0",
-          "System.Management": "7.0.2"
         }
       },
       "Google.Apis.Core": {
@@ -604,6 +586,28 @@
           "Google.Api.Gax.Rest": "[4.15.2, )",
           "Google.Apis.Auth": "[1.77.0, )",
           "System.Collections.Immutable": "[11.0.0, )"
+        }
+      },
+      "Google.Api.Gax.Rest": {
+        "type": "CentralTransitive",
+        "requested": "[4.15.2, )",
+        "resolved": "4.15.2",
+        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
+        "dependencies": {
+          "Google.Api.Gax": "4.15.2",
+          "Google.Apis.Auth": "1.77.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
+        }
+      },
+      "Google.Apis.Auth": {
+        "type": "CentralTransitive",
+        "requested": "[1.77.0, )",
+        "resolved": "1.77.0",
+        "contentHash": "lcgXlzM+JkX0nKKc7KBwTdiei2IbV20PuTe3cVQ2zOhq0j4IiS9I4xlRQY4igdCMLlmobthz5xtHiPr/wxl0Ew==",
+        "dependencies": {
+          "Google.Apis": "1.77.0",
+          "Google.Apis.Core": "1.77.0",
+          "System.Management": "7.0.2"
         }
       }
     }

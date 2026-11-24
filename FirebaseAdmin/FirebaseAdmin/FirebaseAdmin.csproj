@@ -29,13 +29,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Api.Gax.Rest" Version="4.15.2" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.77.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="11.0.0" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+    <PackageReference Include="Google.Api.Gax.Rest" />
+    <PackageReference Include="Google.Apis.Auth" />
+    <PackageReference Include="System.Collections.Immutable" />
+    <PackageReference Include="StyleCop.Analyzers">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="AsyncUsageAnalyzers" Version="1.0.0-alpha003">
+    <PackageReference Include="AsyncUsageAnalyzers">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <AdditionalFiles Include="../../stylecop.json" />

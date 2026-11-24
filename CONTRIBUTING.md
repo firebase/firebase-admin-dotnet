@@ -90,11 +90,14 @@ information on using pull requests.
 
 This section explains how to set up a development environment on Linux or Mac. Windows users
 should be able to import the solution file (`FirebaseAdmin/FirebaseAdmin.sln`) into Visual
-Studio.
+Studio 2022 (17.2 or higher).
 
-Start by installing [.NET](https://dotnet.microsoft.com/en-us/download) 6 or higher or
-[.NET Framework](https://dotnet.microsoft.com/en-us/download/dotnet-framework) 4.6.2 or
-higher. This installs the `dotnet` command-line utility into the system.
+Start by installing the [.NET SDK](https://dotnet.microsoft.com/en-us/download) 6.0.300 or higher
+and, if targeting .NET Framework on Windows,
+[.NET Framework](https://dotnet.microsoft.com/en-us/download/dotnet-framework) 4.6.2 or higher.
+This installs the `dotnet` command-line utility into the system. NuGet package versions are
+managed centrally in `FirebaseAdmin/Directory.Packages.props`, so add or update versions there
+and run `dotnet restore` to refresh `packages.lock.json`.
 
 Run the following commands from the command line to get your local environmentset up:
 

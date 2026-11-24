@@ -5,6 +5,6 @@
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
   </ItemGroup>
 </Project>
