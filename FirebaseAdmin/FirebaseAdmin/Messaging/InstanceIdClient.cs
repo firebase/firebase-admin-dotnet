@@ -46,7 +46,7 @@ namespace FirebaseAdmin.Messaging
         /// <param name="credential">An instance of the <see cref="GoogleCredential"/> class.</param>
         /// <param name="retryOptions">An instance of the <see cref="RetryOptions"/> class.</param>
         internal InstanceIdClient(
-            HttpClientFactory clientFactory, GoogleCredential credential, RetryOptions retryOptions = null)
+            IHttpClientFactory clientFactory, GoogleCredential credential, RetryOptions retryOptions = null)
         {
             this.httpClient = new ErrorHandlingHttpClient<FirebaseMessagingException>(
                 new ErrorHandlingHttpClientArgs<FirebaseMessagingException>()
