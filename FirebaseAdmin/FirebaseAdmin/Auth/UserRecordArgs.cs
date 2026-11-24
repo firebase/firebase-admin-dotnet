@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using FirebaseAdmin.Auth.Jwt;
@@ -88,6 +89,11 @@ namespace FirebaseAdmin.Auth
             get => this.disabled ?? false;
             set => this.disabled = value;
         }
+
+        /// <summary>
+        ///  Gets or sets the list of providers the user account should have deleted.
+        /// </summary>
+        public IEnumerable<string> ProvidersToDelete { get; set; }
 
         /// <summary>
         /// Gets or sets the password of the user.
@@ -361,6 +367,14 @@ namespace FirebaseAdmin.Auth
                         this.PhoneNumber = CheckPhoneNumber(phoneNumber);
                     }
                 }
+
+                if (args.ProvidersToDelete != null)
+                {
+                    foreach (var providerToDelete in args.ProvidersToDelete)
+                    {
+                        this.AddDeleteProvider(providerToDelete);
+                    }
+                }
             }
 
             [JsonProperty("customAttributes")]
@@ -411,12 +425,12 @@ namespace FirebaseAdmin.Auth
 
             private void AddDeleteProvider(string provider)
             {
-                if (this.DeleteProvider == null)
-                {
-                    this.DeleteProvider = new List<string>();
-                }
+                this.DeleteProvider ??= new List<string>();
 
-                this.DeleteProvider.Add(provider);
+                if (!this.DeleteProvider.Contains(provider))
+                {
+                    this.DeleteProvider.Add(provider);
+                }
             }
         }
 
