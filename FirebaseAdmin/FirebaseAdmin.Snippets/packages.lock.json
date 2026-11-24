@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "dependencies": {
     ".NETFramework,Version=v4.6.2": {
       "Google.Apis.Auth": {
@@ -132,16 +132,6 @@
           "Newtonsoft.Json": "13.0.4",
           "System.Diagnostics.DiagnosticSource": "6.0.2",
           "System.ValueTuple": "4.6.2"
-        }
-      },
-      "Google.Api.Gax.Rest": {
-        "type": "Transitive",
-        "resolved": "4.15.2",
-        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
-        "dependencies": {
-          "Google.Api.Gax": "4.15.2",
-          "Google.Apis.Auth": "1.77.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
         }
       },
       "Google.Apis": {
@@ -522,15 +512,6 @@
         "contentHash": "zXMw96jeDfTZtCvE65y1yicVGuy/4e4tp2KjTDzqIIw2ShzEiLd19cHFUugSfH3oSf+tg/q5P4jmHRKbWczu2w==",
         "dependencies": {
           "Microsoft.AspNetCore.Http.Abstractions": "2.3.10"
-        }
-      },
-      "Microsoft.AspNetCore.WebUtilities": {
-        "type": "Transitive",
-        "resolved": "2.3.12",
-        "contentHash": "wzbAsF9N+9Eftg7+daZwPbfuT8wFQlD1duV/OPHNw5twVVgWkSjjens9QQ4ZrXSY6sd1nRYE6RZGUtZt5NaENA==",
-        "dependencies": {
-          "Microsoft.Net.Http.Headers": "2.3.11",
-          "System.Text.Encodings.Web": "8.0.0"
         }
       },
       "Microsoft.Bcl.AsyncInterfaces": {
@@ -1168,6 +1149,27 @@
           "Google.Apis.Auth": "[1.77.0, )",
           "System.Collections.Immutable": "[11.0.0, )"
         }
+      },
+      "Google.Api.Gax.Rest": {
+        "type": "CentralTransitive",
+        "requested": "[4.15.2, )",
+        "resolved": "4.15.2",
+        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
+        "dependencies": {
+          "Google.Api.Gax": "4.15.2",
+          "Google.Apis.Auth": "1.77.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
+        }
+      },
+      "Microsoft.AspNetCore.WebUtilities": {
+        "type": "CentralTransitive",
+        "requested": "[2.3.14, )",
+        "resolved": "2.3.12",
+        "contentHash": "wzbAsF9N+9Eftg7+daZwPbfuT8wFQlD1duV/OPHNw5twVVgWkSjjens9QQ4ZrXSY6sd1nRYE6RZGUtZt5NaENA==",
+        "dependencies": {
+          "Microsoft.Net.Http.Headers": "2.3.11",
+          "System.Text.Encodings.Web": "8.0.0"
+        }
       }
     },
     "net6.0": {
@@ -1323,16 +1325,6 @@
           "Microsoft.Bcl.AsyncInterfaces": "6.0.0",
           "Newtonsoft.Json": "13.0.4",
           "System.Diagnostics.DiagnosticSource": "6.0.2"
-        }
-      },
-      "Google.Api.Gax.Rest": {
-        "type": "Transitive",
-        "resolved": "4.15.2",
-        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
-        "dependencies": {
-          "Google.Api.Gax": "4.15.2",
-          "Google.Apis.Auth": "1.77.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
         }
       },
       "Google.Apis": {
@@ -1712,15 +1704,6 @@
         "contentHash": "zXMw96jeDfTZtCvE65y1yicVGuy/4e4tp2KjTDzqIIw2ShzEiLd19cHFUugSfH3oSf+tg/q5P4jmHRKbWczu2w==",
         "dependencies": {
           "Microsoft.AspNetCore.Http.Abstractions": "2.3.10"
-        }
-      },
-      "Microsoft.AspNetCore.WebUtilities": {
-        "type": "Transitive",
-        "resolved": "2.3.12",
-        "contentHash": "wzbAsF9N+9Eftg7+daZwPbfuT8wFQlD1duV/OPHNw5twVVgWkSjjens9QQ4ZrXSY6sd1nRYE6RZGUtZt5NaENA==",
-        "dependencies": {
-          "Microsoft.Net.Http.Headers": "2.3.11",
-          "System.Text.Encodings.Web": "8.0.0"
         }
       },
       "Microsoft.Bcl.AsyncInterfaces": {
@@ -3008,6 +2991,27 @@
           "Google.Api.Gax.Rest": "[4.15.2, )",
           "Google.Apis.Auth": "[1.77.0, )",
           "System.Collections.Immutable": "[11.0.0, )"
+        }
+      },
+      "Google.Api.Gax.Rest": {
+        "type": "CentralTransitive",
+        "requested": "[4.15.2, )",
+        "resolved": "4.15.2",
+        "contentHash": "aKJt5A0Y+5YU8YU2rD8olT/sfWagN6EgocvB6zV56wlNGKmNoq1pHhvuB8Gcbu1mxDH0exdyyR2kmbumBfxaFA==",
+        "dependencies": {
+          "Google.Api.Gax": "4.15.2",
+          "Google.Apis.Auth": "1.77.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
+        }
+      },
+      "Microsoft.AspNetCore.WebUtilities": {
+        "type": "CentralTransitive",
+        "requested": "[2.3.14, )",
+        "resolved": "2.3.12",
+        "contentHash": "wzbAsF9N+9Eftg7+daZwPbfuT8wFQlD1duV/OPHNw5twVVgWkSjjens9QQ4ZrXSY6sd1nRYE6RZGUtZt5NaENA==",
+        "dependencies": {
+          "Microsoft.Net.Http.Headers": "2.3.11",
+          "System.Text.Encodings.Web": "8.0.0"
         }
       }
     }
