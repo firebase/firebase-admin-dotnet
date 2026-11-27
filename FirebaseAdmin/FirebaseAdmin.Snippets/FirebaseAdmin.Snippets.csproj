@@ -9,9 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.77.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.13" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.13" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.14" />
     <PackageReference Include="System.Collections.Immutable" Version="11.0.0" />
     <PackageReference Include="System.Text.Json" Version="10.0.15" /> 
     <PackageReference Include="System.Security.Cryptography.Xml" Version="9.0.23" />
